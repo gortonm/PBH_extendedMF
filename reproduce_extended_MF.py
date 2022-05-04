@@ -86,7 +86,7 @@ m_range = 10**np.arange(-20, -10, 0.05)
 f_max_evaporation_mono_extrapolated = prefactor * np.power(m_range, power)
 
 # Range of characteristic masses in log-normal mass function for the power-law approximation
-mc_evaporation_extrapolated = 10**np.linspace(-20, -10, 100)
+mc_evaporation_extrapolated = 10**np.linspace(-18, -12, 100)
 
 # Subaru-HSC constraints
 mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
@@ -103,9 +103,11 @@ for m_c in mc_evaporation:
     
     def f_constraint_function_evap(f_pbh):
         return left_riemann_sum(integrand(m_evaporation_mono, m_c, f_max_evaporation_mono, f_pbh), m_evaporation_mono) - 1
+    
     f_pbh_evap.append(findroot(f_constraint_function_evap, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
 
 for m_c in mc_evaporation_extrapolated:
+    
     def f_constraint_function_evap_extrapolated(f_pbh):
         return left_riemann_sum(integrand(m_range, m_c, f_max_evaporation_mono_extrapolated, f_pbh), m_range) - 1
 
@@ -125,7 +127,7 @@ for m_c in mc_subaru:
 plt.figure()
 plt.plot(m_evaporation_mono, f_max_evaporation_mono, label='Evaporation (extracted)', color='purple')
 plt.plot(m_subaru_mono, f_max_subaru_mono, label='Subaru-HSC (extracted)', color='tab:blue')
-plt.plot(m_range, f_max_evaporation_mono_extrapolated, label='Evaporation (extrapolated)', color='y', linestyle='dotted')
+plt.plot(m_range, f_max_evaporation_mono_extrapolated, label='Evaporation (power-law fit)', color='y', linestyle='dotted')
 
 plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
 plt.ylabel('$f_\mathrm{PBH}$')
@@ -140,7 +142,7 @@ plt.savefig('Extracted_constraints.png')
 plt.figure(figsize=(6,5))
 plt.plot(mc_evaporation[:-1], f_pbh_evap[:-1], label='Computed')
 plt.plot(mc_evaporation_LN, f_pbh_evaporation_LN, label='Extracted')
-plt.plot(mc_evaporation, f_pbh_evap_extrapolated, label='Computed (power-law fit)')
+plt.plot(mc_evaporation_extrapolated, f_pbh_evap_extrapolated, label='Computed (power-law fit)')
 plt.xlabel('$M_c ~[M_\odot]$')
 plt.ylabel('$f_\mathrm{PBH}$')
 plt.title('Log-normal $(\sigma = 2)$')
