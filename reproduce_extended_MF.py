@@ -86,7 +86,7 @@ m_range = 10**np.arange(-20, -10, 0.05)
 f_max_evaporation_mono_extrapolated = prefactor * np.power(m_range, power)
 
 # Range of characteristic masses in log-normal mass function for the power-law approximation
-mc_evaporation_extrapolated = 10**np.linspace(-18, -12, 100)
+mc_evaporation_extrapolated = 10**np.linspace(-15, -13.5, 100)
 
 # Subaru-HSC constraints
 mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
