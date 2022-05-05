@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 
 # Specify the plot style
-mpl.rcParams.update({'font.size': 14,'font.family':'serif'})
+mpl.rcParams.update({'font.size': 30,'font.family':'serif'})
 mpl.rcParams['xtick.major.size'] = 7
 mpl.rcParams['xtick.major.width'] = 1
 mpl.rcParams['xtick.minor.size'] = 3
@@ -81,8 +81,9 @@ mc_evaporation_LN, f_pbh_evaporation_LN = load_data('Gamma-ray_LN.csv')
 power = (np.log10(f_max_evaporation_mono[-1]) - np.log10(f_max_evaporation_mono[0])) / (np.log10(m_evaporation_mono[-1]) - np.log10(m_evaporation_mono[0]))
 prefactor = f_max_evaporation_mono[0] * (m_evaporation_mono[0]) ** (-power)
 prefactor2 = f_max_evaporation_mono[-1] * (m_evaporation_mono[-1]) ** (-power)
+print(power)
 
-m_range = 10**np.arange(-20, -10, 0.05)
+m_range = 10**np.arange(-20, -15.9, 0.05)
 f_max_evaporation_mono_extrapolated = prefactor * np.power(m_range, power)
 
 # Range of characteristic masses in log-normal mass function for the power-law approximation
@@ -124,10 +125,10 @@ for m_c in mc_subaru:
 
 
 # Test plot
-plt.figure()
-plt.plot(m_evaporation_mono, f_max_evaporation_mono, label='Evaporation (extracted)', color='purple')
-plt.plot(m_subaru_mono, f_max_subaru_mono, label='Subaru-HSC (extracted)', color='tab:blue')
-plt.plot(m_range, f_max_evaporation_mono_extrapolated, label='Evaporation (power-law fit)', color='y', linestyle='dotted')
+plt.figure(figsize=(12,8))
+plt.plot(m_evaporation_mono, f_max_evaporation_mono, linewidth = 3, label='Evaporation (extracted)', color='violet')
+plt.plot(m_subaru_mono, f_max_subaru_mono, linewidth = 3, label='Subaru-HSC (extracted)', color='tab:blue')
+plt.plot(m_range, f_max_evaporation_mono_extrapolated, linewidth = 3, label='Evaporation (power-law fit)', color='k', linestyle='dotted')
 
 plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
 plt.ylabel('$f_\mathrm{PBH}$')
@@ -136,30 +137,30 @@ plt.xscale('log')
 plt.yscale('log')
 plt.ylim(1e-4, 1)
 plt.legend()
-plt.savefig('Extracted_constraints.png')
+plt.savefig('./Figures/Extracted_constraints.png')
 
 # Test plot
-plt.figure(figsize=(6,5))
-plt.plot(mc_evaporation[:-1], f_pbh_evap[:-1], label='Computed')
-plt.plot(mc_evaporation_LN, f_pbh_evaporation_LN, label='Extracted')
-plt.plot(mc_evaporation_extrapolated, f_pbh_evap_extrapolated, label='Computed (power-law fit)')
+plt.figure(figsize=(12,8))
+plt.plot(mc_evaporation[:-1], f_pbh_evap[:-1], linewidth = 3, label='Computed')
+plt.plot(mc_evaporation_LN, f_pbh_evaporation_LN, linewidth = 3, label='Extracted')
+#plt.plot(mc_evaporation_extrapolated, f_pbh_evap_extrapolated, linewidth = 3, label='Computed \n (power-law fit)')
 plt.xlabel('$M_c ~[M_\odot]$')
 plt.ylabel('$f_\mathrm{PBH}$')
 plt.title('Log-normal $(\sigma = 2)$')
 plt.xscale('log')
 plt.yscale('log')
 plt.ylim(1e-4, 1)
-plt.legend(fontsize='small')
+plt.legend()
 plt.savefig('./Figures/evaporation_initial.png')
 
-plt.figure(figsize=(6,5))
-plt.plot(mc_subaru, f_pbh_subaru, label='Computed', color='tab:orange')
-plt.plot(mc_subaru_LN[2:-5], f_pbh_subaru_LN[2:-5], label='Extracted', color='tab:blue')
+plt.figure(figsize=(12,8))
+plt.plot(mc_subaru, f_pbh_subaru, linewidth = 3, label='Computed', color='tab:orange')
+plt.plot(mc_subaru_LN[2:-5], f_pbh_subaru_LN[2:-5], linewidth = 3, label='Extracted', color='tab:blue')
 plt.xlabel('$M_c ~[M_\odot]$')
 plt.ylabel('$f_\mathrm{PBH}$')
 plt.title('Log-normal $(\sigma = 2)$')
 plt.xscale('log')
 plt.yscale('log')
-plt.ylim(1e-4, 1)
+plt.ylim(1e-3, 1)
 plt.legend()
 plt.savefig('./Figures/HSC_initial.png')
