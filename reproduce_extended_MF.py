@@ -31,8 +31,65 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 
 sigma = 2
+
+speed_conversion = 1.022704735e-6  # conversion factor from km/s to pc/yr
+density_conversion = 0.026339714 # conversion factor from GeV / cm^3 to solar masses / pc^3
+
+# Astrophysical parameters
+d_s = 770e3  # M31 distance, in pc
+v_0 = 250 * speed_conversion  # Circular speed in M31, in pc / yr
+c, G = 2.99792458e5 * speed_conversion, 4.30091e-3 * speed_conversion ** 2  # convert to units with [distance] = pc, [time] = yr
+r_s = 25e3 # scale radius for M31, in pc
+rho_s = 0.19 * density_conversion # characteristic density in M31, in solar masses / pc^3
+
+# Subaru-HSC survey parameters
+tE_min = 2 / (365.25 * 24 * 60) # minimum event duration observable by Subaru-HSC (in yr)
+tE_max = 7 / (365.25 * 24) # maximum event duration observable by Subaru-HSC (in yr)
+exposure = 8.7e7 * tE_max # exposure for observing M31, in star * yr
+
+n_exp = 4.74 # 95% confidence limit on the number of expected events, for a single candidate event
+
 filepath = './Extracted_files/'
 
+def u_134(x):
+    """ Temporary, needs updating """
+    return 1
+
+def rho_DM(x): # DM density in M31
+    r = d_s * (1-x)
+    return rho_s / ((r/r_s) * (1 + r/r_s)**2)
+
+def efficiency(t_E):
+    if tE_min < t_E < tE_max:
+        return 0.5
+    else:
+        return 0
+
+def einstein_radius(x, m_pbh):
+    """
+    Calculate Einstein radius of a lens.
+
+    Parameters
+    ----------
+    x : Float
+        Fractional line-of-sight distance to M31.
+    m_pbh : Float
+        Lens mass, in solar masses.
+
+    Returns
+    -------
+    Float
+        Einstein radius of a lens at line-of-sight distance d_L, in pc.
+
+    """
+    return 2 * np.sqrt(G * m_pbh * d_s * x * (1-x) / c ** 2)
+
+def v_E(x, m_pbh, t_E):
+    return 2 * u_134(x) * einstein_radius(x, m_pbh) / t_E
+
+def kernel_integrand(x, m_pbh, t_E):
+    return (2 * exposure * d_s / v_0**2) * efficiency(t_E) * rho_DM(x) * v_E(x, m_pbh, t_E)**4 * np.exp(-( v_E(x, m_pbh, t_E) / v_0)**2)
+    
 
 def log_normal_MF(f_pbh, m, m_c):
     return f_pbh * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
@@ -40,11 +97,35 @@ def log_normal_MF(f_pbh, m, m_c):
 def left_riemann_sum(y, x):
     return np.sum(np.diff(x) * y[:-1])
 
-def integrand(m, m_c, f_max, f_pbh):
+def kernel(m_pbh, n_steps = 10000):    
+    tE_values = np.linspace(tE_min, tE_max, n_steps)
+    x_values = np.linspace(0, 1, n_steps)
+    
+    integral = 0
+    
+    # Double integration, needs checking
+    for t_E in np.linspace(tE_min, tE_max, n_steps):
+        
+        internal_integral = 0
+        
+        for x in x_values:
+            internal_integral += np.sum(kernel_integrand(x, m_pbh, t_E)) * np.diff(x_values)
+    
+        integral += np.sum(internal_integral * np.diff(tE_values))
+        
+    return integral
+
+
+def f_max(m_pbh):
+    return n_exp / kernel(m_pbh)
+
+def integrand(m, m_c, f_pbh):
     integrand = []
     for i in range(len(m)):
-        integrand.append(log_normal_MF(f_pbh, m[i], m_c) / f_max[i])
+        integrand.append(log_normal_MF(f_pbh, m[i], m_c) / f_max(m[i]))
     return integrand
+
+
 
 def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
