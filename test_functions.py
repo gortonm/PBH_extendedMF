@@ -8,9 +8,16 @@ Created on Wed May  4 11:49:23 2022
 
 import pytest
 import numpy as np
-from reproduce_extended_MF import log_normal_MF, left_riemann_sum
+from reproduce_extended_MF import rho_DM, einstein_radius, log_normal_MF, left_riemann_sum
 
 class TestClass:
+    
+    def test_rho_DM(self):
+        assert pytest.approx(rho_DM(x=0.5)) == 1.208248429e-6
+    
+    def test_einstein_radius(self):
+        assert pytest.approx(einstein_radius(x=0.5, m_pbh=10)) == 6.070225671e-4
+    
     def test_log_normal_MF(self):
         sigma = 2
         f_pbh = 0.5
