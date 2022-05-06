@@ -87,7 +87,7 @@ def einstein_radius(x, m_pbh):
 def v_E(x, m_pbh, t_E):
     return 2 * u_134(x) * einstein_radius(x, m_pbh) / t_E
 
-def kernel_integrand(x, m_pbh, t_E):
+def kernel_integrand(x, t_E, m_pbh):
     return (2 * exposure * d_s / v_0**2) * efficiency(t_E) * rho_DM(x) * v_E(x, m_pbh, t_E)**4 * np.exp(-( v_E(x, m_pbh, t_E) / v_0)**2)
     
 
@@ -96,6 +96,23 @@ def log_normal_MF(f_pbh, m, m_c):
 
 def left_riemann_sum(y, x):
     return np.sum(np.diff(x) * y[:-1])
+
+def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps = 10000):
+    
+    # f: function to integrate
+    x_values = np.linspace(x_a, x_b, n_steps)
+    y_values = np.linspace(y_a, y_b, n_steps)
+
+    first_integral_fixed_y = []
+    for y in y_values:
+        first_integral_fixed_y.append(left_riemann_sum(f(x_values, y, args), x_values))
+                                          
+    integrand = left_riemann_sum(first_integral_fixed_y, x_values)
+    return integrand
+
+
+def kernel(m_pbh):
+    return double_integral(kernel_integrand, 0, 1, tE_min, tE_max, m_pbh)
 
 def kernel(m_pbh, n_steps = 10000):    
     tE_values = np.linspace(tE_min, tE_max, n_steps)
@@ -123,7 +140,7 @@ def f_max(a_exp, m_pbh):
 def integrand(m, m_c, f_max, f_pbh):
     integrand = []
     for i in range(len(m)):
-        integrand.append(log_normal_MF(f_pbh, m[i], m_c) / f_max(m[i]))
+        integrand.append(log_normal_MF(f_pbh, m[i], m_c) / f_max[i])
     return integrand
 
 
