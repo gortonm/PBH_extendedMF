@@ -50,7 +50,6 @@ def findroot(f, a, b, tolerance, n_max):
     n = 1
     while n <= n_max:
         c = (a + b) / 2
-        print(f(c))
         if f(c) == 0 or abs((b - a) / 2) < tolerance:
             return c
             break
@@ -86,8 +85,6 @@ def findroot3(f, a, b, tolerance, n_max):
     n = 1
     while n <= n_max:
         c = 10 ** ((np.log10(a) + np.log10(b)) / 2)
-
-        print(f(c))
 
         if abs(f(c)) < tolerance:
             return c
@@ -129,6 +126,9 @@ def findroot4(f, a, b, tolerance, n_max):
 def root_func(u):
     return mu(u) - 1.34
 
+filepath = './Data_files/'
+def load_data(filename):
+    return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
 # Specify the plot style
 mpl.rcParams.update({"font.size": 14, "font.family": "serif"})
@@ -151,24 +151,31 @@ mpl.rcParams["legend.edgecolor"] = "lightgrey"
 
 
 # Plot u_1.34 as a function of the source radius, for a point lens
-r_values_lower = np.linspace(0.1, 2.2425, 1000)
+r_values = np.linspace(0.1, 2.5, 1000)
 u_134_values = []
-for r in r_values_lower:
-    u_134 = findroot(root_func, a=0, b=2, tolerance=1e-3, n_max=1000)
+for r in r_values:
+    if r == 0:
+        u_134 = 1.
+    if r > 2.245:
+        u_134 = 0.
+    else:
+        u_134 = findroot(root_func, a=0, b=2, tolerance=1e-3, n_max=1000)
     u_134_values.append(u_134)
 
-r_values_upper = np.linspace(2.2425, 2.5, 5)
-for r in r_values_upper:
-    u_134 = findroot4(root_func, a=0, b=0.5, tolerance=5e-3, n_max=10)
-    u_134_values.append(u_134)
-
-r_values = np.concatenate([r_values_lower, r_values_upper])
+np.savetxt('Data_files/u_134.csv', np.column_stack((r_values, u_134_values)))
 
 plt.figure()
-plt.plot(r_values, u_134_values)
+plt.plot(r_values, u_134_values, label='Directly calculated')
 plt.xlabel("$r_\mathrm{S}$")
 plt.ylabel("$u_{1.34}$")
 plt.ylim(0, 2)
+
+# Function for u_134 with r_S:
+r_values_load, u_134_values_load = load_data('u_134.csv')
+def u_134(r_S):
+    return np.interp(r_S, r_values_load, u_134_values_load, left=1, right=0)
+
+plt.plot(r_values, u_134(r_values), label='Interpolated')
 
 
 # Reproduce Fig. 3 of Smyth+ '20
