@@ -150,19 +150,20 @@ mpl.rc("text", usetex=True)
 mpl.rcParams["legend.edgecolor"] = "lightgrey"
 
 
+
 # Plot u_1.34 as a function of the source radius, for a point lens
-r_values = np.linspace(0.1, 2.5, 1000)
+r_values = np.linspace(0., 2.5, 1000)
 u_134_values = []
 for r in r_values:
     if r == 0:
         u_134 = 1.
-    if r > 2.245:
+    if r > 2.2405:
         u_134 = 0.
     else:
-        u_134 = findroot(root_func, a=0, b=2, tolerance=1e-3, n_max=1000)
+        u_134 = findroot(root_func, a=0, b=2, tolerance=1e-4, n_max=1000)
     u_134_values.append(u_134)
 
-np.savetxt('Data_files/u_134.csv', np.column_stack((r_values, u_134_values)))
+np.savetxt('Data_files/u_134.csv', np.column_stack((r_values, u_134_values)), delimiter=',')
 
 plt.figure()
 plt.plot(r_values, u_134_values, label='Directly calculated')
@@ -175,7 +176,9 @@ r_values_load, u_134_values_load = load_data('u_134.csv')
 def u_134(r_S):
     return np.interp(r_S, r_values_load, u_134_values_load, left=1, right=0)
 
-plt.plot(r_values, u_134(r_values), label='Interpolated')
+plt.plot(r_values, u_134(r_values), label='Interpolated', linestyle='dotted')
+plt.legend()
+
 
 
 # Reproduce Fig. 3 of Smyth+ '20

@@ -43,6 +43,7 @@ v_0 = 250 * speed_conversion  # Circular speed in M31, in pc / yr
 c, G = 2.99792458e5 * speed_conversion, 4.30091e-3 * speed_conversion ** 2  # convert to units with [distance] = pc, [time] = yr
 r_s = 25e3 # scale radius for M31, in pc
 rho_s = 0.19 * density_conversion # characteristic density in M31, in solar masses / pc^3
+r_sol = 2.25461e-8  # solar radius, in pc
 
 # Subaru-HSC survey parameters
 tE_min = 2 / (365.25 * 24 * 60) # minimum event duration observable by Subaru-HSC (in yr)
@@ -51,9 +52,20 @@ exposure = 8.7e7 * tE_max # exposure for observing M31, in star * yr
 
 n_exp = 4.74 # 95% confidence limit on the number of expected events, for a single candidate event
 
-def u_134(x):
-    """ Temporary, needs updating """
-    return 1
+def load_data(filename):
+    return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
+
+def left_riemann_sum(y, x):
+    return np.sum(np.diff(x) * y[:-1])
+
+
+r_source_Rsol, pdf_load = load_data('mean_R_pdf.csv')
+# convert units of source radius from solar radii to parsecs
+r_source_pc = r_source_Rsol * r_sol
+
+# normalise PDF
+normalisation_factor = 1 / (left_riemann_sum(r_source_Rsol, pdf_load))
+pdf_normed = normalisation_factor * pdf_load
 
 def rho_DM(x): # DM density in M31
     r = d_s * (1-x)
@@ -84,18 +96,29 @@ def einstein_radius(x, m_pbh):
     """
     return 2 * np.sqrt(G * m_pbh * d_s * x * (1-x) / c ** 2)
 
-def v_E(x, m_pbh, t_E):
-    return 2 * u_134(x) * einstein_radius(x, m_pbh) / t_E
 
-def kernel_integrand(x, t_E, m_pbh):
-    return (2 * exposure * d_s / v_0**2) * efficiency(t_E) * rho_DM(x) * v_E(x, m_pbh, t_E)**4 * np.exp(-( v_E(x, m_pbh, t_E) / v_0)**2)
+# Linearly interpolated version of the PDF of source radii
+def pdf_source_radii(r_source):
+    return np.interp(r_source, r_source_pc, pdf_normed, left=0, right=0)
+
+# Function for u_134 with r_S:
+r_values_load, u_134_values_load = load_data('u_134.csv')
+def u_134(r_S):
+    return np.interp(r_S, r_values_load, u_134_values_load, left=1, right=0)
+
+# Scaled source radius
+def r_S(x, m_pbh, r_source):
+    return x * r_source / einstein_radius(x, m_pbh)
+
+def v_E(x, t_E, m_pbh, r_source):
+    return 2 * u_134(r_S(x, m_pbh, r_source)) * einstein_radius(x, m_pbh) / t_E
+
+def kernel_integrand(x, t_E, m_pbh, r_source):
+    return (2 * exposure * d_s / v_0**2) * pdf_source_radii(r_source), efficiency(t_E) * rho_DM(x) * v_E(x, t_E, m_pbh, r_source)**4 * np.exp(-( v_E(x, m_pbh, t_E) / v_0)**2)
     
 
 def log_normal_MF(f_pbh, m, m_c):
     return f_pbh * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
-
-def left_riemann_sum(y, x):
-    return np.sum(np.diff(x) * y[:-1])
 
 def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps = 10000):
     
@@ -145,9 +168,6 @@ def integrand(m, m_c, f_max, f_pbh):
 
 
 
-def load_data(filename):
-    return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
-
 def findroot(f, a, b, tolerance, n_max):
     n = 1
     while n <= n_max:
@@ -166,6 +186,8 @@ def findroot(f, a, b, tolerance, n_max):
         else:
             b = c
     print("Method failed")
+
+
 
 
 if "__main__" == __name__:    

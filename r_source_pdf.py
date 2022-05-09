@@ -35,5 +35,8 @@ def pdf_source_radii(R_source):
 
 r_source = np.linspace(0, 20 * r_sol, 100)
 
-plt.plot(R_source_pc, pdf_normed)
-plt.plot(r_source, pdf_source_radii(r_source))
+plt.plot(R_source_pc, pdf_normed, label='Extracted')
+plt.plot(r_source, pdf_source_radii(r_source), label='Interpolated', linestyle='dotted')
+plt.xlabel('$p(R_*)$ [pc]')
+plt.ylabel('$p(R_*)$')
+plt.legend()
