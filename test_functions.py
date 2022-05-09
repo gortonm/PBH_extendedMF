@@ -35,5 +35,4 @@ class TestClass:
 
     # Compare output of numerical double integration to exact value
     def test_double_integral(self):
-        
         assert abs(double_integral(self.integration_function, 11, 14, 7, 10, args=(1), n_steps=10000) - 1719) < 1
