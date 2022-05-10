@@ -8,7 +8,7 @@ Created on Wed May  4 11:49:23 2022
 
 import pytest
 import numpy as np
-from reproduce_extended_MF import rho_DM, einstein_radius, log_normal_MF, left_riemann_sum, double_integral, triple_integral, pdf_source_radii, u_134
+from reproduce_extended_MF import rho_DM, einstein_radius, log_normal_MF, double_integral, triple_integral, pdf_source_radii, u_134
 
 class TestClass:
     
@@ -24,12 +24,7 @@ class TestClass:
         m_c = 1e-10
         m = 1e-11
         assert pytest.approx(log_normal_MF(f_pbh, m, m_c)) == 5.140755370e9 
-        
-    def test_left_riemann_sum(self):
-        x = np.array([0, 1, 3, 5])
-        y = np.array([1, 3, 10, 26])
-        assert pytest.approx(left_riemann_sum(y, x)) == 27
-        
+                
     def test_pdf_source_radii(self):
         assert pdf_source_radii(1e-7) - 0.082293 < 1e-4
         

@@ -173,7 +173,7 @@ plt.ylim(0, 2)
 
 # Function for u_134 with r_S:
 r_values_load, u_134_values_load = load_data('u_134.csv')
-def u_134(r_S):
+def u_134(r_S):f
     return np.interp(r_S, r_values_load, u_134_values_load, left=1, right=0)
 
 plt.plot(r_values, u_134(r_values), label='Interpolated', linestyle='dotted')

@@ -55,16 +55,12 @@ n_exp = 4.74 # 95% confidence limit on the number of expected events, for a sing
 def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
-def left_riemann_sum(y, x):
-    return np.sum(np.diff(x) * y[:-1])
-
-
 r_source_Rsol, pdf_load = load_data('mean_R_pdf.csv')
 # convert units of source radius from solar radii to parsecs
 r_source_pc = r_source_Rsol * r_sol
 
 # normalise PDF
-normalisation_factor = 1 / (left_riemann_sum(pdf_load, r_source_Rsol))
+normalisation_factor = 1 / (np.trapz(pdf_load, r_source_Rsol))
 pdf_normed = normalisation_factor * pdf_load
 
 def rho_DM(x): # DM density in M31
@@ -135,12 +131,17 @@ def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps=10000):
         for x in x_values:
             integrand_1.append(f(x, y, args))
             
-        first_integral_fixed_y.append(left_riemann_sum(integrand_1, x_values))
+        first_integral_fixed_y.append(np.trapz(integrand_1, x_values))
                                           
-    integrand = left_riemann_sum(first_integral_fixed_y, y_values)
+    integrand = np.trapz(first_integral_fixed_y, y_values)
     return integrand
 
 def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=1000):
+    
+    # Possible ways to speed up:
+        # passing arrays of x_values, y_values, z_values as function arguments, so they are not redefined each time
+    
+    
     # f: function to integrate
     x_values = np.linspace(x_a, x_b, n_steps)
     y_values = np.linspace(y_a, y_b, n_steps)
@@ -158,11 +159,11 @@ def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=1000):
             
             #print(integrand_1)
                             
-            first_integral_fixed_y.append(left_riemann_sum(integrand_1, x_values))
+            first_integral_fixed_y.append(np.trapz(integrand_1, x_values))
         
-        second_integral_fixed_z.append(left_riemann_sum(first_integral_fixed_y, y_values))
+        second_integral_fixed_z.append(np.trapz(first_integral_fixed_y, y_values))
     
-    integral = left_riemann_sum(second_integral_fixed_z, z_values)
+    integral = np.trapz(second_integral_fixed_z, z_values)
 
     return integral
     
@@ -239,28 +240,31 @@ if "__main__" == __name__:
     for m_c in mc_evaporation:
         
         def f_constraint_function_evap(f_pbh):
-            return left_riemann_sum(integrand(m_evaporation_mono, m_c, f_max_evaporation_mono, f_pbh), m_evaporation_mono) - 1
+            return np.trapz(integrand(m_evaporation_mono, m_c, f_max_evaporation_mono, f_pbh), m_evaporation_mono) - 1
         
         f_pbh_evap.append(findroot(f_constraint_function_evap, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
     
     for m_c in mc_evaporation_extrapolated:
         
         def f_constraint_function_evap_extrapolated(f_pbh):
-            return left_riemann_sum(integrand(m_range, m_c, f_max_evaporation_mono_extrapolated, f_pbh), m_range) - 1
+            return np.trapz(integrand(m_range, m_c, f_max_evaporation_mono_extrapolated, f_pbh), m_range) - 1
     
         f_pbh_evap_extrapolated.append(findroot(f_constraint_function_evap_extrapolated, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
     """
     # Subaru-HSC constraints
-    mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
+    #mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
+    mc_subaru = 10**np.linspace(-11.5, -9.5, 100)
     m_subaru_mono, f_max_subaru_mono = load_data('Subaru-HSC_mono.csv')
     mc_subaru_LN, f_pbh_subaru_LN = load_data('Subaru-HSC_LN.csv')
+    
+    n_max = 100
     
     # calculate constraints for extended MF from Subaru-HSC
     f_pbh_subaru = []
     for m_c in mc_subaru:
         
         def f_constraint_function_subaru(f_pbh):
-            return left_riemann_sum(integrand(m_subaru_mono, m_c, f_pbh), m_subaru_mono) - 1
+            return np.trapz(integrand(m_subaru_mono, m_c, f_pbh), m_subaru_mono) - 1
        
         f_pbh_subaru.append(findroot(f_constraint_function_subaru, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
     
