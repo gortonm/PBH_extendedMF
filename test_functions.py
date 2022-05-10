@@ -8,7 +8,7 @@ Created on Wed May  4 11:49:23 2022
 
 import pytest
 import numpy as np
-from reproduce_extended_MF import rho_DM, einstein_radius, log_normal_MF, left_riemann_sum, double_integral
+from reproduce_extended_MF import rho_DM, einstein_radius, log_normal_MF, left_riemann_sum, double_integral, triple_integral, pdf_source_radii, u_134
 
 class TestClass:
     
@@ -29,10 +29,22 @@ class TestClass:
         x = np.array([0, 1, 3, 5])
         y = np.array([1, 3, 10, 26])
         assert pytest.approx(left_riemann_sum(y, x)) == 27
+        
+    def test_pdf_source_radii(self):
+        assert pdf_source_radii(1e-7) - 0.082293 < 1e-4
+        
+    def test_u134(self):
+        assert pytest.approx(u_134(1)) == 1.205676
     
-    def integration_function(self, x, y, k):
+    def integration_function_double(self, x, y, k):
         return k * (x**2 + 4*y)
+    
+    def integration_function_triple(self, x, y, z, k):
+        return k * (z*x**2 + 4*y*z**3)
 
     # Compare output of numerical double integration to exact value
     def test_double_integral(self):
-        assert abs(double_integral(self.integration_function, 11, 14, 7, 10, args=(1), n_steps=10000) - 1719) < 1
+        assert abs(double_integral(self.integration_function_double, 11, 14, 7, 10, args=(1), n_steps=10000) - 1719) < 1
+
+    def test_triple_integral(self):
+        assert abs(triple_integral(self.integration_function_triple, 11, 14, 7, 10, 1, 2, args=(1), n_steps=10000) - 3267) < 1

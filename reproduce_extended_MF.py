@@ -64,7 +64,7 @@ r_source_Rsol, pdf_load = load_data('mean_R_pdf.csv')
 r_source_pc = r_source_Rsol * r_sol
 
 # normalise PDF
-normalisation_factor = 1 / (left_riemann_sum(r_source_Rsol, pdf_load))
+normalisation_factor = 1 / (left_riemann_sum(pdf_load, r_source_Rsol))
 pdf_normed = normalisation_factor * pdf_load
 
 def rho_DM(x): # DM density in M31
@@ -96,31 +96,32 @@ def einstein_radius(x, m_pbh):
     """
     return 2 * np.sqrt(G * m_pbh * d_s * x * (1-x) / c ** 2)
 
-
 # Linearly interpolated version of the PDF of source radii
 def pdf_source_radii(r_source):
     return np.interp(r_source, r_source_pc, pdf_normed, left=0, right=0)
 
 # Function for u_134 with r_S:
+filepath = './Data_files/'
 r_values_load, u_134_values_load = load_data('u_134.csv')
 def u_134(r_S):
     return np.interp(r_S, r_values_load, u_134_values_load, left=1, right=0)
 
+filepath = './Extracted_files/'
+
 # Scaled source radius
-def r_S(x, m_pbh, r_source):
+def r_S(x, r_source, m_pbh):
     return x * r_source / einstein_radius(x, m_pbh)
 
-def v_E(x, t_E, m_pbh, r_source):
-    return 2 * u_134(r_S(x, m_pbh, r_source)) * einstein_radius(x, m_pbh) / t_E
+def v_E(x, t_E, r_source, m_pbh):
+    return 2 * u_134(r_S(x, r_source, m_pbh)) * einstein_radius(x, m_pbh) / t_E
 
-def kernel_integrand(x, t_E, m_pbh, r_source):
-    return (2 * exposure * d_s / v_0**2) * pdf_source_radii(r_source), efficiency(t_E) * rho_DM(x) * v_E(x, t_E, m_pbh, r_source)**4 * np.exp(-( v_E(x, m_pbh, t_E) / v_0)**2)
+def kernel_integrand(x, t_E, r_source, m_pbh):
+    return (2 * exposure * d_s / v_0**2) * pdf_source_radii(r_source), efficiency(t_E) * rho_DM(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, m_pbh, t_E) / v_0)**2)
     
-
 def log_normal_MF(f_pbh, m, m_c):
     return f_pbh * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
-def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps = 10000):
+def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps=10000):
     
     # f: function to integrate
     x_values = np.linspace(x_a, x_b, n_steps)
@@ -128,42 +129,59 @@ def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps = 10000):
 
     first_integral_fixed_y = []
     for y in y_values:
-        first_integral_fixed_y.append(left_riemann_sum(f(x_values, y, args), x_values))
-                                          
-    integrand = left_riemann_sum(first_integral_fixed_y, x_values)
-    return integrand
-
-
-def kernel(m_pbh):
-    return double_integral(kernel_integrand, 0, 1, tE_min, tE_max, m_pbh)
-
-def kernel(m_pbh, n_steps = 10000):    
-    tE_values = np.linspace(tE_min, tE_max, n_steps)
-    x_values = np.linspace(0, 1, n_steps)
-    
-    integral = 0
-    
-    # Double integration, needs checking
-    for t_E in np.linspace(tE_min, tE_max, n_steps):
         
-        internal_integral = 0
+        integrand_1 = []
         
         for x in x_values:
-            internal_integral += np.sum(kernel_integrand(x, m_pbh, t_E)) * np.diff(x_values)
+            integrand_1.append(f(x, y, args))
+            
+        first_integral_fixed_y.append(left_riemann_sum(integrand_1, x_values))
+                                          
+    integrand = left_riemann_sum(first_integral_fixed_y, y_values)
+    return integrand
+
+def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=1000):
+    # f: function to integrate
+    x_values = np.linspace(x_a, x_b, n_steps)
+    y_values = np.linspace(y_a, y_b, n_steps)
+    z_values = np.linspace(z_a, z_b, n_steps)
     
-        integral += np.sum(internal_integral * np.diff(tE_values))
+    second_integral_fixed_z = []
         
+    for z in z_values:
+        
+        first_integral_fixed_y = []
+          
+        for y in y_values:
+            
+            integrand_1 = [f(x, y, z, args) for x in x_values]
+                            
+            first_integral_fixed_y.append(left_riemann_sum(integrand_1, x_values))
+        
+        second_integral_fixed_z.append(left_riemann_sum(first_integral_fixed_y, y_values))
+    
+    integral = left_riemann_sum(second_integral_fixed_z, z_values)
+
     return integral
+    
+def triple_integral_test_func(x, y, z, k=1):
+    return k * (z*x**2 + 4*y*z**3)
+
+def double_integral_test_func(x, y, k=1):
+    return k * (x**2 + 4*y)
+
+def kernel(m_pbh):
+    return triple_integral(kernel_integrand, 0, 1, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
 
 """ General methods, applicable to any constraint """
 
 def f_max(a_exp, m_pbh):
     return a_exp / kernel(m_pbh)
 
-def integrand(m, m_c, f_max, f_pbh):
+def integrand(m, m_c, f_pbh):
     integrand = []
     for i in range(len(m)):
-        integrand.append(log_normal_MF(f_pbh, m[i], m_c) / f_max[i])
+        integrand.append(log_normal_MF(f_pbh, m[i], m_c) / f_max(n_exp, m[i]))
     return integrand
 
 
@@ -191,8 +209,10 @@ def findroot(f, a, b, tolerance, n_max):
 
 
 if "__main__" == __name__:    
+    n_max = 1000
 
     # Evaporation constraints (from gamma-rays)
+    """
     mc_evaporation = 10**np.linspace(-18, -15, 100)
     m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
     mc_evaporation_LN, f_pbh_evaporation_LN = load_data('Gamma-ray_LN.csv')
@@ -209,17 +229,10 @@ if "__main__" == __name__:
     
     # Range of characteristic masses in log-normal mass function for the power-law approximation
     mc_evaporation_extrapolated = 10**np.linspace(-15, -13.5, 100)
-    
-    # Subaru-HSC constraints
-    mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
-    m_subaru_mono, f_max_subaru_mono = load_data('Subaru-HSC_mono.csv')
-    mc_subaru_LN, f_pbh_subaru_LN = load_data('Subaru-HSC_LN.csv')
-    
-    
+
     # calculate constraints for extended MF from evaporation
     f_pbh_evap = []
     f_pbh_evap_extrapolated = []
-    n_max = 1000
     
     for m_c in mc_evaporation:
         
@@ -234,22 +247,27 @@ if "__main__" == __name__:
             return left_riemann_sum(integrand(m_range, m_c, f_max_evaporation_mono_extrapolated, f_pbh), m_range) - 1
     
         f_pbh_evap_extrapolated.append(findroot(f_constraint_function_evap_extrapolated, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
+    """
+    # Subaru-HSC constraints
+    mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
+    m_subaru_mono, f_max_subaru_mono = load_data('Subaru-HSC_mono.csv')
+    mc_subaru_LN, f_pbh_subaru_LN = load_data('Subaru-HSC_LN.csv')
     
     # calculate constraints for extended MF from Subaru-HSC
     f_pbh_subaru = []
     for m_c in mc_subaru:
         
         def f_constraint_function_subaru(f_pbh):
-            return left_riemann_sum(integrand(m_subaru_mono, m_c, f_max_subaru_mono, f_pbh), m_subaru_mono) - 1
+            return left_riemann_sum(integrand(m_subaru_mono, m_c, f_pbh), m_subaru_mono) - 1
        
         f_pbh_subaru.append(findroot(f_constraint_function_subaru, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
     
     
     # Test plot
     plt.figure(figsize=(12,8))
-    plt.plot(m_evaporation_mono, f_max_evaporation_mono, linewidth = 3, label='Evaporation (extracted)', color='violet')
+    #plt.plot(m_evaporation_mono, f_max_evaporation_mono, linewidth = 3, label='Evaporation (extracted)', color='violet')
     plt.plot(m_subaru_mono, f_max_subaru_mono, linewidth = 3, label='Subaru-HSC (extracted)', color='tab:blue')
-    plt.plot(m_range, f_max_evaporation_mono_extrapolated, linewidth = 3, label='Evaporation (power-law fit)', color='k', linestyle='dotted')
+    #plt.plot(m_range, f_max_evaporation_mono_extrapolated, linewidth = 3, label='Evaporation (power-law fit)', color='k', linestyle='dotted')
     
     plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
     plt.ylabel('$f_\mathrm{PBH}$')
@@ -259,7 +277,7 @@ if "__main__" == __name__:
     plt.ylim(1e-4, 1)
     plt.legend()
     plt.savefig('./Figures/Extracted_constraints.png')
-    
+    """
     # Test plot
     plt.figure(figsize=(12,8))
     plt.plot(mc_evaporation[:-1], f_pbh_evap[:-1], linewidth = 3, label='Computed')
@@ -273,7 +291,7 @@ if "__main__" == __name__:
     plt.ylim(1e-4, 1)
     plt.legend()
     plt.savefig('./Figures/evaporation_initial.png')
-    
+    """
     plt.figure(figsize=(12,8))
     plt.plot(mc_subaru, f_pbh_subaru, linewidth = 3, label='Computed', color='tab:orange')
     plt.plot(mc_subaru_LN[2:-5], f_pbh_subaru_LN[2:-5], linewidth = 3, label='Extracted', color='tab:blue')
