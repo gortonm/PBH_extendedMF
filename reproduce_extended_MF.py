@@ -116,7 +116,7 @@ def v_E(x, t_E, r_source, m_pbh):
     return 2 * u_134(r_S(x, r_source, m_pbh)) * einstein_radius(x, m_pbh) / t_E
 
 def kernel_integrand(x, t_E, r_source, m_pbh):
-    return (2 * exposure * d_s / v_0**2) * pdf_source_radii(r_source), efficiency(t_E) * rho_DM(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, m_pbh, t_E) / v_0)**2)
+    return (2 * exposure * d_s / v_0**2) * pdf_source_radii(r_source) * efficiency(t_E) * rho_DM(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2)
     
 def log_normal_MF(f_pbh, m, m_c):
     return f_pbh * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
@@ -145,7 +145,7 @@ def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=1000):
     x_values = np.linspace(x_a, x_b, n_steps)
     y_values = np.linspace(y_a, y_b, n_steps)
     z_values = np.linspace(z_a, z_b, n_steps)
-    
+        
     second_integral_fixed_z = []
         
     for z in z_values:
@@ -155,6 +155,8 @@ def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=1000):
         for y in y_values:
             
             integrand_1 = [f(x, y, z, args) for x in x_values]
+            
+            #print(integrand_1)
                             
             first_integral_fixed_y.append(left_riemann_sum(integrand_1, x_values))
         
@@ -276,7 +278,7 @@ if "__main__" == __name__:
     plt.yscale('log')
     plt.ylim(1e-4, 1)
     plt.legend()
-    plt.savefig('./Figures/Extracted_constraints.png')
+    #plt.savefig('./Figures/Extracted_constraints.png')
     """
     # Test plot
     plt.figure(figsize=(12,8))
@@ -302,4 +304,4 @@ if "__main__" == __name__:
     plt.yscale('log')
     plt.ylim(1e-3, 1)
     plt.legend()
-    plt.savefig('./Figures/HSC_initial.png')
+    #plt.savefig('./Figures/HSC_initial.png')
