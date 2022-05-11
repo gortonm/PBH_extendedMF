@@ -115,21 +115,21 @@ def r_S(x, r_source, m_pbh):
     return x * r_source / einstein_radius(x, m_pbh)
 
 def v_E(x, t_E, r_source, m_pbh):
-    print('r_S = ', r_S(x, r_source, m_pbh))
-    print('u_1.34 = ', u_134(r_S(x, r_source, m_pbh)))
-    print('R_E = ', einstein_radius(x, m_pbh))
-    print('t_E =', t_E)
-    print('v_E = ', 2 * u_134(r_S(x, r_source, m_pbh)) * einstein_radius(x, m_pbh) / t_E)
+    #print('r_S = ', r_S(x, r_source, m_pbh))
+    #print('u_1.34 = ', u_134(r_S(x, r_source, m_pbh)))
+    #print('R_E = ', einstein_radius(x, m_pbh))
+    #print('t_E =', t_E)
+    #print('v_E = ', 2 * u_134(r_S(x, r_source, m_pbh)) * einstein_radius(x, m_pbh) / t_E)
     return 2 * u_134(r_S(x, r_source, m_pbh)) * einstein_radius(x, m_pbh) / t_E
 
 def kernel_integrand(x, t_E, r_source, m_pbh):
-    print('new')
-    print(r_source) #=0
-    print(pdf_source_radii(r_source)) # =0
-    print(efficiency(t_E))
-    print(rho_DM(x))
-    print(v_E(x, t_E, r_source, m_pbh)**4) # =0
-    print(np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2))
+    #print('new')
+    #print(r_source) #=0
+    #print(pdf_source_radii(r_source)) # =0
+    #print(efficiency(t_E))
+    #print(rho_DM(x))
+    #print(v_E(x, t_E, r_source, m_pbh)**4) # =0
+    #print(np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2))
     return (2 * exposure * d_s / v_0**2) * pdf_source_radii(r_source) * efficiency(t_E) * rho_DM(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2)
     
 def log_normal_MF(f_pbh, m, m_c):
@@ -193,17 +193,20 @@ def double_integral_test_func(x, y, k=1):
 
 from scipy.integrate import tplquad
 def kernel(m_pbh):
-    #return triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
-    return tplquad(kernel_integrand, r_source_pc[1], max(r_source_pc), lambda x: tE_min, lambda x: tE_max, lambda x, y: x_min, lambda x, y: x_max, args=(m_pbh, ))
+    # kernel_integrand: A Python function or method of at least three variables in the order (z, y, x).
+    return triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
+    #return tplquad(kernel_integrand, r_source_pc[1], max(r_source_pc), lambda x: tE_min, lambda x: tE_max, lambda x, y: x_min, lambda x, y: x_max, args=([m_pbh]))
 """ General methods, applicable to any constraint """
 
 def f_max(a_exp, m_pbh):
     print(kernel(m_pbh))
-    return a_exp / kernel(m_pbh)
+    return a_exp / kernel(m_pbh)[0]
 
 def integrand(m, m_c, f_pbh, a_exp):
     integrand = []
     for i in range(len(m)):
+        print('LN MF', log_normal_MF(f_pbh, m[i], m_c))
+        print('kernel = ', kernel(m[i]))
         integrand.append(log_normal_MF(f_pbh, m[i], m_c) * kernel(m[i]) / a_exp)
     return integrand
 
@@ -272,26 +275,23 @@ if "__main__" == __name__:
         f_pbh_evap_extrapolated.append(findroot(f_constraint_function_evap_extrapolated, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
     """
     # Subaru-HSC constraints
-    #mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
-    mc_subaru = 10**np.linspace(-10.5, -9.5, 10)
+    mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
     m_subaru_mono, f_max_subaru_mono = load_data('Subaru-HSC_mono.csv')
     mc_subaru_LN, f_pbh_subaru_LN = load_data('Subaru-HSC_LN.csv')
-        
-    # calculate constraints for extended MF from Subaru-HSC
-    f_pbh_subaru = []
-    for m_c in mc_subaru:
-        
-        def f_constraint_function_subaru(f_pbh):
-            return np.trapz(integrand(m_subaru_mono, m_c, f_pbh, a_exp=n_exp), m_subaru_mono) - 1
-       
-        f_pbh_subaru.append(findroot(f_constraint_function_subaru, 1, 1e-4, tolerance = 1e-4, n_max = n_max))
     
-        print(np.log10(m_c))
+    
+    
+    # try reproducing monochromatic Subaru-HSC constraints
+    f_pbh_subaru_mono_calculated = []
+    for m in mc_subaru:
+        f_pbh_subaru_mono_calculated.append( kernel(m) / n_exp )
+    
     
     # Test plot
     plt.figure(figsize=(12,8))
     #plt.plot(m_evaporation_mono, f_max_evaporation_mono, linewidth = 3, label='Evaporation (extracted)', color='violet')
     plt.plot(m_subaru_mono, f_max_subaru_mono, linewidth = 3, label='Subaru-HSC (extracted)', color='tab:blue')
+    plt.plot(m_subaru_mono, f_pbh_subaru_mono_calculated, linewidth = 3, label='Subaru-HSC (calculated)', color='tab:blue')
     #plt.plot(m_range, f_max_evaporation_mono_extrapolated, linewidth = 3, label='Evaporation (power-law fit)', color='k', linestyle='dotted')
     
     plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
@@ -317,6 +317,19 @@ if "__main__" == __name__:
     plt.legend()
     plt.savefig('./Figures/evaporation_initial.png')
     """
+    
+    # calculate constraints for extended MF from Subaru-HSC
+    f_pbh_subaru = []
+    for m_c in mc_subaru:
+        
+        def f_constraint_function_subaru(f_pbh):
+            return np.trapz(integrand(m_subaru_mono, m_c, f_pbh, a_exp=n_exp), m_subaru_mono) - 1
+       
+        f_pbh_subaru.append(findroot(f_constraint_function_subaru, 1, 1e-4, tolerance = 1e-4, n_max = n_max))
+    
+        print(np.log10(m_c))    
+    
+    
     plt.figure(figsize=(12,8))
     plt.plot(mc_subaru, f_pbh_subaru, linewidth = 3, label='Computed', color='tab:orange')
     plt.plot(mc_subaru_LN[2:-5], f_pbh_subaru_LN[2:-5], linewidth = 3, label='Extracted', color='tab:blue')
