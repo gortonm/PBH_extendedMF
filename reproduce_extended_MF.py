@@ -35,7 +35,7 @@ filepath = './Extracted_files/'
 
 """ Methods for Subaru-HSC constraints """
 speed_conversion = 1.022704735e-6  # conversion factor from km/s to pc/yr
-density_conversion = 0.026339714 # conversion factor from GeV / cm^3 to solar masses / pc^3
+density_conversion = 37.97560265 # conversion factor from GeV / cm^3 to solar masses / pc^3
 c, G = 2.99792458e5 * speed_conversion, 4.30091e-3 * speed_conversion ** 2  # convert to units with [distance] = pc, [time] = yr
 
 # Astrophysical parameters
