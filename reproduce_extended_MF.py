@@ -36,13 +36,18 @@ filepath = './Extracted_files/'
 """ Methods for Subaru-HSC constraints """
 speed_conversion = 1.022704735e-6  # conversion factor from km/s to pc/yr
 density_conversion = 0.026339714 # conversion factor from GeV / cm^3 to solar masses / pc^3
+c, G = 2.99792458e5 * speed_conversion, 4.30091e-3 * speed_conversion ** 2  # convert to units with [distance] = pc, [time] = yr
 
 # Astrophysical parameters
 d_s = 770e3  # M31 distance, in pc
-v_0 = 250 * speed_conversion  # Circular speed in M31, in pc / yr
-c, G = 2.99792458e5 * speed_conversion, 4.30091e-3 * speed_conversion ** 2  # convert to units with [distance] = pc, [time] = yr
-r_s = 25e3 # scale radius for M31, in pc
-rho_s = 0.19 * density_conversion # characteristic density in M31, in solar masses / pc^3
+v_0_M31 = 250 * speed_conversion  # Circular speed in M31, in pc / yr
+v_0_MW = 220 * speed_conversion # Circular speed in the Milky Way, in pc / yr
+r_s_M31 = 25e3 # scale radius for M31, in pc
+r_s_MW = 21.5e3 # scale radius for the Milky Way, in pc
+rho_s_M31 = 0.19 * density_conversion # characteristic density in M31, in solar masses / pc^3
+rho_s_MW = 0.184 * density_conversion # characteristic density of Milky Way, in solar masses / pc^3
+b, l = np.radians(-21.6), np.radians(121.2) # M31 galactic coordinates, in radians
+sun_distance = 8.5e3 # distance of Sun from centre of MW
 r_sol = 2.25461e-8  # solar radius, in pc
 
 # Subaru-HSC survey parameters
@@ -69,9 +74,16 @@ r_source_pc = r_source_Rsol * r_sol
 normalisation_factor = 1 / (np.trapz(pdf_load, r_source_Rsol))
 pdf_normed = normalisation_factor * pdf_load
 
-def rho_DM(x): # DM density in M31
-    r = d_s * (1-x)
+def rho_NFW(r, r_s, rho_s):
     return rho_s / ((r/r_s) * (1 + r/r_s)**2)
+
+def rho_MW(x): # DM density in Milky Way
+    r_MW = np.sqrt(sun_distance**2 - 2*x*sun_distance*np.cos(b)*np.cos(l) + (x*d_s**2))
+    return rho_NFW(r_MW, r_s_MW, rho_s_MW)    
+
+def rho_M31(x): # DM density in M31
+    r_M31 = d_s * (1-x)
+    return rho_NFW(r_M31, r_s_M31, rho_s_M31)
 
 def efficiency(t_E):
     if tE_min < t_E < tE_max:
@@ -130,7 +142,7 @@ def kernel_integrand(x, t_E, r_source, m_pbh):
     #print(rho_DM(x))
     #print(v_E(x, t_E, r_source, m_pbh)**4) # =0
     #print(np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2))
-    return (2 * exposure * d_s / v_0**2) * pdf_source_radii(r_source) * efficiency(t_E) * rho_DM(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2)
+    return pdf_source_radii(r_source) * efficiency(t_E) * ( (rho_MW(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0_MW)**2) + (rho_M31(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0_M31)**2))))
     
 def log_normal_MF(f_pbh, m, m_c):
     return f_pbh * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
@@ -194,7 +206,7 @@ def double_integral_test_func(x, y, k=1):
 from scipy.integrate import tplquad
 def kernel(m_pbh):
     # kernel_integrand: A Python function or method of at least three variables in the order (z, y, x).
-    return triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
+    return (2 * exposure * d_s / v_0**2) * triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
     #return tplquad(kernel_integrand, r_source_pc[1], max(r_source_pc), lambda x: tE_min, lambda x: tE_max, lambda x, y: x_min, lambda x, y: x_max, args=([m_pbh]))
 """ General methods, applicable to any constraint """
 
@@ -284,14 +296,15 @@ if "__main__" == __name__:
     # try reproducing monochromatic Subaru-HSC constraints
     f_pbh_subaru_mono_calculated = []
     for m in mc_subaru:
+        print(m)
         f_pbh_subaru_mono_calculated.append( kernel(m) / n_exp )
     
     
     # Test plot
     plt.figure(figsize=(12,8))
     #plt.plot(m_evaporation_mono, f_max_evaporation_mono, linewidth = 3, label='Evaporation (extracted)', color='violet')
-    plt.plot(m_subaru_mono, f_max_subaru_mono, linewidth = 3, label='Subaru-HSC (extracted)', color='tab:blue')
-    plt.plot(m_subaru_mono, f_pbh_subaru_mono_calculated, linewidth = 3, label='Subaru-HSC (calculated)', color='tab:blue')
+    plt.plot(m_subaru_mono, f_max_subaru_mono, linewidth = 3, label='Subaru-HSC (extracted)')
+    plt.plot(mc_subaru, f_pbh_subaru_mono_calculated, linewidth = 3, label='Subaru-HSC (calculated)')
     #plt.plot(m_range, f_max_evaporation_mono_extrapolated, linewidth = 3, label='Evaporation (power-law fit)', color='k', linestyle='dotted')
     
     plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
