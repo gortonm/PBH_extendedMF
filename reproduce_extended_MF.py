@@ -80,7 +80,7 @@ def rho_NFW(r, r_s, rho_s):
     return rho_s / ((r/r_s) * (1 + r/r_s)**2)
 
 def rho_MW(x): # DM density in Milky Way
-    r_MW = np.sqrt(sun_distance**2 - 2*x*sun_distance*np.cos(b)*np.cos(l) + (x*d_s**2))
+    r_MW = np.sqrt(sun_distance**2 - 2*x*d_s*sun_distance*np.cos(b)*np.cos(l) + (x*d_s**2))
     return rho_NFW(r_MW, r_s_MW, rho_s_MW)    
 
 def rho_M31(x): # DM density in M31
