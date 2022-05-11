@@ -9,6 +9,8 @@ Created on Wed May  4 11:46:30 2022
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import cProfile
+import pstats
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 30,'font.family':'serif'})
@@ -61,7 +63,7 @@ n_exp = 4.74 # 95% confidence limit on the number of expected events, for a sing
 # minimum and maximum values of x to integrate over
 x_min = 1e-5
 x_max = 1 - x_min
-# can't use x=0, 1 since this gives r=0 in the DM density
+# can't use x=0, 1 since this gives r=0 in the DM density for M31
 
 def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
@@ -244,7 +246,8 @@ def findroot(f, a, b, tolerance, n_max):
     print("Method failed")
 
 
-
+profiler = cProfile.Profile()
+profiler.enable()
 
 if "__main__" == __name__:    
     n_max = 100
@@ -299,6 +302,10 @@ if "__main__" == __name__:
         print(m)
         f_pbh_subaru_mono_calculated.append( kernel(m) / n_exp )
     
+    profiler.disable()    
+    # Export profiler output to file, sorted by cumulative time
+    stats = pstats.Stats(profiler)
+    stats.dump_stats('./cProfile_reports/reproduce_extended_MF_11-5.txt')
     
     # Test plot
     plt.figure(figsize=(12,8))
