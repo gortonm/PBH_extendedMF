@@ -115,6 +115,7 @@ def r_S(x, r_source, m_pbh):
     return x * r_source / einstein_radius(x, m_pbh)
 
 def v_E(x, t_E, r_source, m_pbh):
+    print('r_S = ', r_S(x, r_source, m_pbh))
     print('u_1.34 = ', u_134(r_S(x, r_source, m_pbh)))
     print('R_E = ', einstein_radius(x, m_pbh))
     print('t_E =', t_E)
@@ -200,10 +201,10 @@ def f_max(a_exp, m_pbh):
     print(kernel(m_pbh))
     return a_exp / kernel(m_pbh)
 
-def integrand(m, m_c, f_pbh):
+def integrand(m, m_c, f_pbh, a_exp):
     integrand = []
     for i in range(len(m)):
-        integrand.append(log_normal_MF(f_pbh, m[i], m_c) / f_max(n_exp, m[i]))
+        integrand.append(log_normal_MF(f_pbh, m[i], m_c) * kernel(m[i]) / a_exp)
     return integrand
 
 
@@ -281,7 +282,7 @@ if "__main__" == __name__:
     for m_c in mc_subaru:
         
         def f_constraint_function_subaru(f_pbh):
-            return np.trapz(integrand(m_subaru_mono, m_c, f_pbh), m_subaru_mono) - 1
+            return np.trapz(integrand(m_subaru_mono, m_c, f_pbh, a_exp=n_exp), m_subaru_mono) - 1
        
         f_pbh_subaru.append(findroot(f_constraint_function_subaru, 1, 1e-4, tolerance = 1e-4, n_max = n_max))
     
