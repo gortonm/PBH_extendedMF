@@ -52,6 +52,12 @@ exposure = 8.7e7 * tE_max # exposure for observing M31, in star * yr
 
 n_exp = 4.74 # 95% confidence limit on the number of expected events, for a single candidate event
 
+
+# minimum and maximum values of x to integrate over
+x_min = 1e-5
+x_max = 1 - x_min
+# can't use x=0, 1 since this gives r=0 in the DM density
+
 def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
@@ -109,9 +115,20 @@ def r_S(x, r_source, m_pbh):
     return x * r_source / einstein_radius(x, m_pbh)
 
 def v_E(x, t_E, r_source, m_pbh):
+    print('u_1.34 = ', u_134(r_S(x, r_source, m_pbh)))
+    print('R_E = ', einstein_radius(x, m_pbh))
+    print('t_E =', t_E)
+    print('v_E = ', 2 * u_134(r_S(x, r_source, m_pbh)) * einstein_radius(x, m_pbh) / t_E)
     return 2 * u_134(r_S(x, r_source, m_pbh)) * einstein_radius(x, m_pbh) / t_E
 
 def kernel_integrand(x, t_E, r_source, m_pbh):
+    print('new')
+    print(r_source) #=0
+    print(pdf_source_radii(r_source)) # =0
+    print(efficiency(t_E))
+    print(rho_DM(x))
+    print(v_E(x, t_E, r_source, m_pbh)**4) # =0
+    print(np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2))
     return (2 * exposure * d_s / v_0**2) * pdf_source_radii(r_source) * efficiency(t_E) * rho_DM(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2)
     
 def log_normal_MF(f_pbh, m, m_c):
@@ -136,7 +153,7 @@ def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps=10000):
     integrand = np.trapz(first_integral_fixed_y, y_values)
     return integrand
 
-def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=1000):
+def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=100):
     
     # Possible ways to speed up:
         # passing arrays of x_values, y_values, z_values as function arguments, so they are not redefined each time
@@ -173,12 +190,14 @@ def triple_integral_test_func(x, y, z, k=1):
 def double_integral_test_func(x, y, k=1):
     return k * (x**2 + 4*y)
 
+from scipy.integrate import tplquad
 def kernel(m_pbh):
-    return triple_integral(kernel_integrand, 0, 1, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
-
+    #return triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
+    return tplquad(kernel_integrand, r_source_pc[1], max(r_source_pc), lambda x: tE_min, lambda x: tE_max, lambda x, y: x_min, lambda x, y: x_max, args=(m_pbh, ))
 """ General methods, applicable to any constraint """
 
 def f_max(a_exp, m_pbh):
+    print(kernel(m_pbh))
     return a_exp / kernel(m_pbh)
 
 def integrand(m, m_c, f_pbh):
@@ -212,7 +231,7 @@ def findroot(f, a, b, tolerance, n_max):
 
 
 if "__main__" == __name__:    
-    n_max = 1000
+    n_max = 100
 
     # Evaporation constraints (from gamma-rays)
     """
@@ -253,12 +272,10 @@ if "__main__" == __name__:
     """
     # Subaru-HSC constraints
     #mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
-    mc_subaru = 10**np.linspace(-11.5, -9.5, 100)
+    mc_subaru = 10**np.linspace(-10.5, -9.5, 10)
     m_subaru_mono, f_max_subaru_mono = load_data('Subaru-HSC_mono.csv')
     mc_subaru_LN, f_pbh_subaru_LN = load_data('Subaru-HSC_LN.csv')
-    
-    n_max = 100
-    
+        
     # calculate constraints for extended MF from Subaru-HSC
     f_pbh_subaru = []
     for m_c in mc_subaru:
@@ -266,8 +283,9 @@ if "__main__" == __name__:
         def f_constraint_function_subaru(f_pbh):
             return np.trapz(integrand(m_subaru_mono, m_c, f_pbh), m_subaru_mono) - 1
        
-        f_pbh_subaru.append(findroot(f_constraint_function_subaru, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
+        f_pbh_subaru.append(findroot(f_constraint_function_subaru, 1, 1e-4, tolerance = 1e-4, n_max = n_max))
     
+        print(np.log10(m_c))
     
     # Test plot
     plt.figure(figsize=(12,8))
