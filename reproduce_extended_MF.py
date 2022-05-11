@@ -142,7 +142,7 @@ def kernel_integrand(x, t_E, r_source, m_pbh):
     #print(rho_DM(x))
     #print(v_E(x, t_E, r_source, m_pbh)**4) # =0
     #print(np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0)**2))
-    return pdf_source_radii(r_source) * efficiency(t_E) * ( (rho_MW(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0_MW)**2) + (rho_M31(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0_M31)**2))))
+    return pdf_source_radii(r_source) * efficiency(t_E) * ( (rho_MW(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0_MW)**2) / v_0_MW**2 + (rho_M31(x) * v_E(x, t_E, r_source, m_pbh)**4 * np.exp(-( v_E(x, t_E, r_source, m_pbh) / v_0_M31)**2) / v_0_M31**2)))
     
 def log_normal_MF(f_pbh, m, m_c):
     return f_pbh * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
@@ -206,7 +206,7 @@ def double_integral_test_func(x, y, k=1):
 from scipy.integrate import tplquad
 def kernel(m_pbh):
     # kernel_integrand: A Python function or method of at least three variables in the order (z, y, x).
-    return (2 * exposure * d_s / v_0**2) * triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
+    return (2 * exposure * d_s) * triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
     #return tplquad(kernel_integrand, r_source_pc[1], max(r_source_pc), lambda x: tE_min, lambda x: tE_max, lambda x, y: x_min, lambda x, y: x_max, args=([m_pbh]))
 """ General methods, applicable to any constraint """
 
