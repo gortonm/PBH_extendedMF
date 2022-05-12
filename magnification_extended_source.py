@@ -173,13 +173,14 @@ plt.ylim(0, 2)
 
 # Function for u_134 with r_S:
 r_values_load, u_134_values_load = load_data('u_134.csv')
-def u_134(r_S):f
+def u_134(r_S):
     return np.interp(r_S, r_values_load, u_134_values_load, left=1, right=0)
 
 plt.plot(r_values, u_134(r_values), label='Interpolated', linestyle='dotted')
 plt.legend()
 
-
+# Find threshold amplification at one solar radius
+print(u_134(r_S = 1))
 
 # Reproduce Fig. 3 of Smyth+ '20
 from reproduce_extended_MF import einstein_radius
