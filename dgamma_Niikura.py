@@ -15,7 +15,7 @@ u_0 = 1e-5
 u_T = 1  # threshold impact parameter, chosen to reproduce Fig. 8
 
 def v_r(x, u_min, m_pbh, t_hat):
-    return 2 * einstein_radius(x, m_pbh) * np.sqrt(u_T - u_min**2)
+    return 2 * einstein_radius(x, m_pbh) * np.sqrt(u_T - u_min**2) / t_hat
 
 def dgamma_integrand_MW(x, u_min, args=(m_pbh, t_hat)):
     prefactor = 2 * f_pbh * d_s / (m_pbh)
@@ -35,7 +35,7 @@ def dgamma_M31(m_pbh, t_hat):
 
 
 hours_to_years = 1 / (365.25 * 24)
-t_hat_values = 10.**np.arange(-2, 1) * hours_to_years
+t_hat_values = 10.**np.arange(-2, 1, 0.1) * hours_to_years
 plt.figure()
 
 for m_pbh in 10.**np.arange(-8, -7.9, 1):
@@ -53,6 +53,8 @@ for m_pbh in 10.**np.arange(-8, -7.9, 1):
 
 plt.xscale('log')
 plt.yscale('log')
+plt.ylim(1e-8, 1e-5)
+plt.xlim(1e-2, 10)
 plt.legend()
 plt.xlabel('$\hat{t}$ [hr]')
 plt.ylabel('Event rate [hr]$^{-2}$')
