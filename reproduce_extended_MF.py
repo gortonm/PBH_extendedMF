@@ -37,7 +37,7 @@ filepath = './Extracted_files/'
 
 """ Methods for Subaru-HSC constraints """
 speed_conversion = 1.022704735e-6  # conversion factor from km/s to pc/yr
-density_conversion = 37.97560265 # conversion factor from GeV / cm^3 to solar masses / pc^3
+density_conversion = 0.026332696 # conversion factor from GeV / cm^3 to solar masses / pc^3
 c, G = 2.99792458e5 * speed_conversion, 4.30091e-3 * speed_conversion ** 2  # convert to units with [distance] = pc, [time] = yr
 
 # Astrophysical parameters
@@ -208,19 +208,19 @@ def double_integral_test_func(x, y, k=1):
 from scipy.integrate import tplquad
 def kernel(m_pbh):
     # kernel_integrand: A Python function or method of at least three variables in the order (z, y, x).
-    return (2 * exposure * d_s) * triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
-    #return tplquad(kernel_integrand, r_source_pc[1], max(r_source_pc), lambda x: tE_min, lambda x: tE_max, lambda x, y: x_min, lambda x, y: x_max, args=([m_pbh]))
+    #return (2 * exposure * d_s) * triple_integral(kernel_integrand, x_min, x_max, tE_min, tE_max, min(r_source_Rsol), max(r_source_Rsol), m_pbh)
+    return tplquad(kernel_integrand, r_source_pc[1], max(r_source_pc), lambda x: tE_min, lambda x: tE_max, lambda x, y: x_min, lambda x, y: x_max, args=([m_pbh]))[0]
 """ General methods, applicable to any constraint """
 
 def f_max(a_exp, m_pbh):
-    print(kernel(m_pbh))
+    #print(kernel(m_pbh))
     return a_exp / kernel(m_pbh)[0]
 
 def integrand(m, m_c, f_pbh, a_exp):
     integrand = []
     for i in range(len(m)):
-        print('LN MF', log_normal_MF(f_pbh, m[i], m_c))
-        print('kernel = ', kernel(m[i]))
+        #print('LN MF', log_normal_MF(f_pbh, m[i], m_c))
+        #print('kernel = ', kernel(m[i]))
         integrand.append(log_normal_MF(f_pbh, m[i], m_c) * kernel(m[i]) / a_exp)
     return integrand
 
@@ -290,7 +290,7 @@ if "__main__" == __name__:
         f_pbh_evap_extrapolated.append(findroot(f_constraint_function_evap_extrapolated, 1, 1e-4, tolerance = 1e-8, n_max = n_max))
     """
     # Subaru-HSC constraints
-    mc_subaru = 10**np.linspace(-11.5, -4.5, 100)
+    mc_subaru = 10**np.linspace(-11.5, -9.5, 10)
     m_subaru_mono, f_max_subaru_mono = load_data('Subaru-HSC_mono.csv')
     mc_subaru_LN, f_pbh_subaru_LN = load_data('Subaru-HSC_LN.csv')
     
