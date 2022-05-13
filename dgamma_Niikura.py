@@ -19,6 +19,10 @@ def v_r(x, u_min, m_pbh, t_hat):
     return 2 * einstein_radius(x, m_pbh) * np.sqrt(u_T**2 - u_min**2) / t_hat
 
 def dgamma_integrand_MW(x, u_min, m_pbh, t_hat):
+    #print('v_r = ', v_r(x, u_min, m_pbh, t_hat))
+    #print('v_r / v_c =', v_r(x, u_min, m_pbh, t_hat) / v_0_MW)
+    #print('rho_MW = ', rho_MW(x))
+    #print('sqrt(u_T^2 - u_min^2) = ', np.sqrt(u_T**2 - u_min**2))
     return rho_MW(x) * v_r(x, u_min, m_pbh, t_hat)**4 * np.exp(-(v_r(x, u_min, m_pbh, t_hat) / v_0_MW)**2) / (v_0_MW **2 * np.sqrt(u_T**2 - u_min**2))
 
 def dgamma_integrand_M31(x, u_min, m_pbh, t_hat):

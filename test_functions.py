@@ -36,7 +36,7 @@ class TestClass:
         assert pytest.approx(u_134(1)) == 1.205676
   
     def test_dgamma_integrand_MW(self):
-        assert pytest.approx(dgamma_integrand_MW(x=0.5, u_min=0.5, m_pbh=10, t_hat=10)) == 8.32174524e-22    
+        assert pytest.approx(dgamma_integrand_MW(x=0.5, u_min=0.5, m_pbh=10, t_hat=10)) == 1.643873973e-15   
   
     def integration_function_double(self, x, y, k):
         return k * (x**2 + 4*y)
