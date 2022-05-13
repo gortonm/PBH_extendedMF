@@ -80,7 +80,7 @@ def rho_NFW(r, r_s, rho_s):
     return rho_s / ((r/r_s) * (1 + r/r_s)**2)
 
 def rho_MW(x): # DM density in Milky Way
-    r_MW = np.sqrt(sun_distance**2 - 2*x*d_s*sun_distance*np.cos(b)*np.cos(l) + (x*d_s**2))
+    r_MW = np.sqrt(sun_distance**2 - 2*x*d_s*sun_distance*np.cos(b)*np.cos(l) + (x*d_s)**2)
     return rho_NFW(r_MW, r_s_MW, rho_s_MW)    
 
 def rho_M31(x): # DM density in M31
@@ -168,7 +168,7 @@ def double_integral(f, x_a, x_b, y_a, y_b, n_steps=10000, *args):
     integrand = np.trapz(first_integral_fixed_y, y_values)
     return integrand
 
-def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=100):
+def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, n_steps=10000, *args):
     
     # Possible ways to speed up:
         # passing arrays of x_values, y_values, z_values as function arguments, so they are not redefined each time
@@ -187,7 +187,7 @@ def triple_integral(f, x_a, x_b, y_a, y_b, z_a, z_b, args=(), n_steps=100):
           
         for y in y_values:
             
-            integrand_1 = [f(x, y, z, args) for x in x_values]
+            integrand_1 = [f(x, y, z, *args) for x in x_values]
             
             #print(integrand_1)
                             
