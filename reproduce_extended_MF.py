@@ -149,7 +149,7 @@ def kernel_integrand(x, t_E, r_source, m_pbh):
 def log_normal_MF(f_pbh, m, m_c):
     return f_pbh * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
-def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps=10000):
+def double_integral(f, x_a, x_b, y_a, y_b, n_steps=10000, *args):
     
     # f: function to integrate
     x_values = np.linspace(x_a, x_b, n_steps)
@@ -161,7 +161,7 @@ def double_integral(f, x_a, x_b, y_a, y_b, args=(), n_steps=10000):
         integrand_1 = []
         
         for x in x_values:
-            integrand_1.append(f(x, y, args))
+            integrand_1.append(f(x, y, *args))
             
         first_integral_fixed_y.append(np.trapz(integrand_1, x_values))
                                           

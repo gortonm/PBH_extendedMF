@@ -9,6 +9,7 @@ Created on Wed May  4 11:49:23 2022
 import pytest
 import numpy as np
 from reproduce_extended_MF import rho_M31, einstein_radius, log_normal_MF, double_integral, triple_integral, pdf_source_radii, u_134
+from dgamma_Niikura import dgamma_integrand_MW
 
 class TestClass:
     
@@ -33,16 +34,22 @@ class TestClass:
         
     def test_u134(self):
         assert pytest.approx(u_134(1)) == 1.205676
-    
+  
+    def test_dgamma_integrand_MW(self):
+        assert pytest.approx(dgamma_integrand_MW(x=0.5, u_min=0.5, m_pbh=10, t_hat=10)) == 8.32174524e-22    
+  
     def integration_function_double(self, x, y, k):
         return k * (x**2 + 4*y)
     
     def integration_function_triple(self, x, y, z, k):
         return k * (z*x**2 + 4*y*z**3)
 
+    n_steps = 10000
+    
     # Compare output of numerical double integration to exact value
     def test_double_integral(self):
-        assert abs(double_integral(self.integration_function_double, 11, 14, 7, 10, args=(1), n_steps=10000) - 1719) < 1
+        assert abs(double_integral(self.integration_function_double, 11, 14, 7, 10, self.n_steps, 1) - 1719) < 1
 
     def test_triple_integral(self):
-        assert abs(triple_integral(self.integration_function_triple, 11, 14, 7, 10, 1, 2, args=(1), n_steps=10000) - 3267) < 1
+        assert abs(triple_integral(self.integration_function_triple, 11, 14, 7, 10, 1, 2, self.n_steps, 1) - 3267) < 1
+        
