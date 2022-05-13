@@ -12,26 +12,27 @@ import matplotlib.pyplot as plt
 
 f_pbh = 1
 u_0 = 1e-5
-u_T = 1  # threshold impact parameter, chosen to reproduce Fig. 8
+u_T = 1  # threshold impact parameter, chosen to reproduce Fig. 8 of Niikura+ '19
+n_steps = 1000
 
 def v_r(x, u_min, m_pbh, t_hat):
-    return 2 * einstein_radius(x, m_pbh) * np.sqrt(u_T - u_min**2) / t_hat
+    return 2 * einstein_radius(x, m_pbh) * np.sqrt(u_T**2 - u_min**2) / t_hat
 
-def dgamma_integrand_MW(x, u_min, args=(m_pbh, t_hat)):
+def dgamma_integrand_MW(x, u_min, m_pbh, t_hat):
     prefactor = 2 * f_pbh * d_s / (m_pbh)
-    first_term = rho_MW(x) * v_r(x, u_min, m_pbh, t_hat)**4 * np.exp(-(v_r(x, u_min, m_pbh, t_hat) / v_0_MW)**2) / (v_0_MW **2 * np.sqrt(u_T - u_min**2))
+    first_term = rho_MW(x) * v_r(x, u_min, m_pbh, t_hat)**4 * np.exp(-(v_r(x, u_min, m_pbh, t_hat) / v_0_MW)**2) / (v_0_MW **2 * np.sqrt(u_T**2 - u_min**2))
     return prefactor * first_term
 
-def dgamma_integrand_M31(x, u_min, args=(m_pbh, t_hat)):
+def dgamma_integrand_M31(x, u_min, m_pbh, t_hat):
     prefactor = 2 * f_pbh * d_s / (m_pbh)
-    first_term = rho_M31(x) * v_r(x, u_min, m_pbh, t_hat)**4 * np.exp(-(v_r(x, u_min, m_pbh, t_hat) / v_0_M31)**2) / (v_0_M31 **2 * np.sqrt(u_T - u_min**2))
+    first_term = rho_M31(x) * v_r(x, u_min, m_pbh, t_hat)**4 * np.exp(-(v_r(x, u_min, m_pbh, t_hat) / v_0_M31)**2) / (v_0_M31 **2 * np.sqrt(u_T**2 - u_min**2))
     return prefactor * first_term
 
 def dgamma_MW(m_pbh, t_hat):
-    return double_integral(dgamma_integrand_MW, x_min, x_max, u_0, u_T - u_0, args=(m_pbh, t_hat), n_steps=1000) / t_hat**4
+    return double_integral(dgamma_integrand_MW, x_min, x_max, u_0, u_T - u_0, n_steps, m_pbh, t_hat)
 
 def dgamma_M31(m_pbh, t_hat):
-    return double_integral(dgamma_integrand_M31, x_min, x_max, u_0, u_T - u_0, args=(m_pbh, t_hat), n_steps=1000) / t_hat**4
+    return double_integral(dgamma_integrand_M31, x_min, x_max, u_0, u_T - u_0, n_steps, m_pbh, t_hat)
 
 
 hours_to_years = 1 / (365.25 * 24)
