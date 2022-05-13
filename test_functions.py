@@ -17,7 +17,7 @@ class TestClass:
         assert pytest.approx(rho_M31(x=0.5)) == 1.207926502e-6
         
     def test_rho_MW(self):
-        assert pytest.approx(rho_M31(x=0.5)) == 7.336997e-6
+        assert pytest.approx(rho_MW(x=0.5)) == 7.336997e-6
     
     def test_einstein_radius(self):
         assert pytest.approx(einstein_radius(x=0.5, m_pbh=10)) == 6.070225671e-4
