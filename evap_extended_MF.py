@@ -52,13 +52,8 @@ def f_constraint_function_evap(f_pbh):
     #print(np.trapz(integrand(m_range, m_c, f_pbh), m_range) - 1)
     return np.trapz(integrand(m_range, m_c, f_pbh), m_range) - 1
 
-
-def integral_analytic(m_c, m, epsilon):
-    return erf((((epsilon + 3) * sigma**2) + np.log(m/m_c))/(np.sqrt(2) * sigma)) 
-
-def constraint_analytic(m_range, m_c, epsilon):
-    prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2)
-    return prefactor / (integral_analytic(m_c, max(m_range), epsilon) - integral_analytic(m_c, min(m_range), epsilon))
+def constraint_analytic(m_c, epsilon):
+    return 2e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5*sigma**2*(epsilon+3)**2)
 
 def findroot(f, a, b, tolerance_1, tolerance_2, n_max):
     n = 1
@@ -101,7 +96,7 @@ if "__main__" == __name__:
         
         print(m_c)
         #f_pbh_evap.append(findroot(f_constraint_function_evap, 5, 1e-6, tolerance_1 = 1e-5, tolerance_2 = 1e-8, n_max = n_max))
-        f_pbh_evap_analytic.append(constraint_analytic(m_range=m_range, m_c=m_c, epsilon=0.4))
+        f_pbh_evap_analytic.append(constraint_analytic(m_c=m_c, epsilon=0.4))
         f_pbh_evap.append(1/np.trapz(integrand(m_range, m_c, f_pbh=1), m_range))
         
     plt.figure()
