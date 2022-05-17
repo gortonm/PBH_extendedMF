@@ -82,7 +82,7 @@ if "__main__" == __name__:
     
     plt.figure(figsize=(12,9))
     plt.plot(m_evap_Carr21, f_evap_Carr21, linewidth = 3, label='Carr+ 21 (Fig. 20 LH panel)')
-    plt.plot(m_evap_Carr10, f_evap_Carr10, linewidth = 3, label='Carr+ 10 (Fig. 7)')
+    plt.plot(m_evap_Carr10, f_evap_Carr10, linewidth = 3, label='Carr+ 10 (Fig. 5)')
     
     plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
     plt.ylabel('$f_\mathrm{PBH}$')
