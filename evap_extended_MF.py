@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from reproduce_extended_MF import log_normal_MF
 
+from scipy.special import erf
+
 # Specify the plot style
 mpl.rcParams.update({'font.size': 20,'font.family':'serif'})
 mpl.rcParams['xtick.major.size'] = 7
@@ -39,7 +41,7 @@ sigma = 2
 def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
-def f_evap(m, epsilon=0.1):    # Eq. 62 of Carr+ '21
+def f_evap(m, epsilon=0.4):    # Eq. 62 of Carr+ '21
     return 2e-8 * np.array(m/m_star)**(3+epsilon)
 
 def integrand(m, m_c, f_pbh):
@@ -50,6 +52,15 @@ def f_constraint_function_evap(f_pbh):
     #print(np.trapz(integrand(m_range, m_c, f_pbh), m_range) - 1)
     return np.trapz(integrand(m_range, m_c, f_pbh), m_range) - 1
 
+
+def integral_analytic(m_c, m, epsilon):
+    prefactor = (m_star)**(3+epsilon) / (2e-8 * np.sqrt(2*np.pi) * sigma)
+    #integral = np.sqrt(np.pi/2)*sigma*(-m_c**-(epsilon + 3))*np.exp(1/2 * (epsilon + 3)**2 * sigma**2) * erf(((epsilon + 3) * sigma**2 + np.log(m/m_c))/(np.sqrt(2) * sigma))
+    integral = np.sqrt(np.pi/2)*sigma*(-m_c**-(epsilon + 3))*np.exp(0.5 * (epsilon + 3)**2 * sigma**2) * erf(((epsilon + 3) * sigma**2 + np.log(m/m_c))/(np.sqrt(2) * sigma))    
+    return prefactor * integral
+
+def constraint_analytic(m_range, m_c, epsilon):
+    return 1 / (integral_analytic(m_c, max(m_range), epsilon) - integral_analytic(m_c, min(m_range), epsilon))
 
 def findroot(f, a, b, tolerance_1, tolerance_2, n_max):
     n = 1
@@ -84,19 +95,24 @@ if "__main__" == __name__:
 
     # calculate constraints for extended MF from evaporation
     f_pbh_evap = []
+    f_pbh_evap_analytic = []
     
     for m_c in mc_evaporation:
         
-        m_range = 10**np.linspace(np.log10(m_c) - 15, np.log10(m_c) + 15, 100000)
+        m_range = 10**np.linspace(min(m_star, np.log10(m_c) - 15), np.log10(m_c) + 15, 100000)
         
         print(m_c)
-        f_pbh_evap.append(findroot(f_constraint_function_evap, 5, 1e-6, tolerance_1 = 1e-5, tolerance_2 = 1e-8, n_max = n_max))
-    
+        #f_pbh_evap.append(findroot(f_constraint_function_evap, 5, 1e-6, tolerance_1 = 1e-5, tolerance_2 = 1e-8, n_max = n_max))
+        f_pbh_evap_analytic.append(constraint_analytic(m_range=m_range, m_c=m_c, epsilon=0.4))
+        f_pbh_evap.append(1/np.trapz(integrand(m_range, m_c, f_pbh=1), m_range))
+        
     plt.figure()
     plt.plot(mc_evaporation_LN, f_pbh_evaporation_LN, label='Extracted (Carr+ 21)')
     plt.plot(mc_evaporation_LN_Carr17, f_pbh_evaporation_LN_Carr17, label='Extracted (Carr+ 17)')
 
     plt.plot(mc_evaporation, f_pbh_evap, label='Calculated')
+    plt.plot(mc_evaporation, np.array(f_pbh_evap_analytic), label='Calculated (analytic)')
+
     plt.xlabel('$M_\mathrm{c}~[M_\odot]$')
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.xscale('log')
