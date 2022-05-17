@@ -80,13 +80,26 @@ if "__main__" == __name__:
     m_evap_Carr10 = np.array(m_evap_Carr10_g) / 1.989e33
     f_evap_Carr10 = 3.81e8 * np.array(beta_prime_evap_Carr10) * np.array(m_evap_Carr10)**(-1/2)
     
+    m_evap_Carr16_g, f_evap_Carr16 = load_data('Carr16.csv')
+    m_evap_Carr16 = np.array(m_evap_Carr16_g) / 1.989e33
+    
+    m_evap_BC_A_g, f_evap_BC_A = load_data('BC19_prop_A_bkg.csv')
+    m_evap_BC_B_g, f_evap_BC_B = load_data('BC19_prop_B_bkg.csv')
+    m_evap_BC_A = np.array(m_evap_BC_A_g) / 1.989e33
+    m_evap_BC_B = np.array(m_evap_BC_B_g) / 1.989e33
+    
     plt.figure(figsize=(12,9))
     plt.plot(m_evap_Carr21, f_evap_Carr21, linewidth = 3, label='Carr+ 21 (Fig. 20 LH panel)')
     plt.plot(m_evap_Carr10, f_evap_Carr10, linewidth = 3, label='Carr+ 10 (Fig. 5)')
     
+    plt.plot(m_evap_BC_A, f_evap_BC_A, linewidth = 3, label='Boudaud \& Cirelli 19 (prop A, bkg)')
+    plt.plot(m_evap_BC_B, f_evap_BC_B, linewidth = 3, label='Boudaud \& Cirelli 19 (prop B, bkg)')
+    plt.plot(m_evap_Carr16, f_evap_Carr16, linewidth = 3, label='Carr+ 16')
+
+    
     plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
     plt.ylabel('$f_\mathrm{PBH}$')
-    plt.title('Subaru-HSC (monochromatic)')
+    plt.title('Evaporation (monochromatic)')
     plt.xscale('log')
     plt.yscale('log')
     plt.legend(fontsize='small')
