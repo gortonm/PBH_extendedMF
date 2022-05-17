@@ -51,9 +51,7 @@ if "__main__" == __name__:
     m_subaru_Smyth_g, f_subaru_Smyth = load_data('Smyth+20.csv')
     m_subaru_Smyth = np.array(m_subaru_Smyth_g) / 1.989e33
     
-    # Test plot
     plt.figure(figsize=(12,9))
-    #plt.plot(m_evaporation_mono, f_max_evaporation_mono, linewidth = 3, label='Evaporation (extracted)', color='violet')
     plt.plot(m_subaru_Carr, f_subaru_Carr, linewidth = 3, label='Carr+ 21 (Fig. 20 LH panel)')
     plt.plot(m_subaru_Croon_R90_0, f_subaru_Croon_R90_0, linewidth = 3, label='Croon+ 20 BS $(R_{90} = 0)$')
     plt.plot(m_subaru_Croon_BS_R90_1, f_subaru_Croon_BS_R90_1, linewidth = 3, label='Croon+ 20 BS $(R_{90} = 0.1 R_\odot)$')
@@ -65,10 +63,31 @@ if "__main__" == __name__:
     
     plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
     plt.ylabel('$f_\mathrm{PBH}$')
-    plt.title('Monochromatic')
+    plt.title('Subaru-HSC (monochromatic)')
     plt.xscale('log')
     plt.yscale('log')
     plt.ylim(1e-3, 1)
     plt.xlim(1e-12, 1e-5)
     plt.legend(fontsize='small')
     plt.savefig('./Figures/comparison_Subaru.png')
+    
+    
+    
+    # Evaporation constraints
+    m_evap_Carr21, f_evap_Carr21 = load_data('Gamma-ray_mono.csv')
+    
+    m_evap_Carr10_g, beta_prime_evap_Carr10 = load_data('Carr+10_beta_prime.csv')
+    m_evap_Carr10 = np.array(m_evap_Carr10_g) / 1.989e33
+    f_evap_Carr10 = 3.81e8 * np.array(beta_prime_evap_Carr10) * np.array(m_evap_Carr10)**(-1/2)
+    
+    plt.figure(figsize=(12,9))
+    plt.plot(m_evap_Carr21, f_evap_Carr21, linewidth = 3, label='Carr+ 21 (Fig. 20 LH panel)')
+    plt.plot(m_evap_Carr10, f_evap_Carr10, linewidth = 3, label='Carr+ 10 (Fig. 7)')
+    
+    plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.title('Subaru-HSC (monochromatic)')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.legend(fontsize='small')
+    plt.savefig('./Figures/comparison_evap.png')
