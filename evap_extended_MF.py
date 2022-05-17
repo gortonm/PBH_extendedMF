@@ -79,6 +79,11 @@ def findroot(f, a, b, tolerance_1, tolerance_2, n_max):
 
 n_max = 100
 
+def power_law_fit(x, y):
+    alpha = np.log10(y[-1] / y[1]) / np.log10(x[-1] / x[1])
+    beta = y[5] * x[5]**(-alpha)
+    return alpha, beta
+
 if "__main__" == __name__:
         
     mc_evaporation = 10**np.linspace(-17, -11, 100)
@@ -95,13 +100,18 @@ if "__main__" == __name__:
         m_range = 10**np.linspace(min(m_star, np.log10(m_c) - 20), np.log10(m_c) + 20, 100000)
         
         print(m_c)
-        #f_pbh_evap.append(findroot(f_constraint_function_evap, 5, 1e-6, tolerance_1 = 1e-5, tolerance_2 = 1e-8, n_max = n_max))
+        #f_pbh_evap_analytic.append(0.3 * constraint_analytic(m_c=m_c, epsilon=-0.4))  # gives an oddly good fit
         f_pbh_evap_analytic.append(constraint_analytic(m_c=m_c, epsilon=0.4))
         f_pbh_evap.append(1/np.trapz(integrand(m_range, m_c, f_pbh=1), m_range))
         
     plt.figure()
     plt.plot(mc_evaporation_LN, f_pbh_evaporation_LN, label='Extracted (Carr+ 21)')
     plt.plot(mc_evaporation_LN_Carr17, f_pbh_evaporation_LN_Carr17, label='Extracted (Carr+ 17)')
+    
+    alpha, beta = power_law_fit(mc_evaporation_LN, f_pbh_evaporation_LN)
+    print(alpha)
+    print(beta)
+    plt.plot(mc_evaporation_LN, (beta * mc_evaporation_LN**alpha) , label='Power law fit')
 
     plt.plot(mc_evaporation, f_pbh_evap, label='Calculated')
     plt.plot(mc_evaporation, np.array(f_pbh_evap_analytic), label='Calculated (analytic)', linestyle='dotted')
