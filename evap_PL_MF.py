@@ -40,6 +40,8 @@ m_min = m_star
 
 #m_2 = np.power(5e9, 1/(3+epsilon)) * m_star
 m_2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
+m_2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
+
 print(m_2)
 
 def load_data(filename):
@@ -90,6 +92,11 @@ def findroot(f, a, b, tolerance_1, tolerance_2, n_max):
     print("Method failed")
 
 
+def constraint_function_numeric(f_pbh):
+    m_range = 10**np.linspace(np.log10(m_star), np.log10(m_2), 100000)
+    return f_pbh * np.trapz(integrand(m_range, m_max), m_range) - 1
+
+
 n_max = 100
 
 def power_law_fit(x, y):
@@ -113,7 +120,8 @@ if "__main__" == __name__:
         
         print(m_max)
         f_pbh_evap_analytic.append(constraint_analytic(m_range=m_range, m_max=m_max, epsilon=0.4))
-        f_pbh_evap.append(1/np.trapz(integrand(m_range, m_max), m_range))
+        #f_pbh_evap.append(1/np.trapz(integrand(m_range, m_max), m_range))
+        f_pbh_evap.append(constraint_function_numeric(findroot(constraint_function_numeric, 0., 2., tolerance_1 = 1e-4, tolerance_2 = 1e-4, n_max=1000)))
         
     plt.figure()
     plt.plot(mc_evaporation_PL, f_pbh_evaporation_PL, label='Extracted (Carr+ 21)')
