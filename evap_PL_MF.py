@@ -38,15 +38,23 @@ epsilon = 0.4
 
 m_min = m_star
 
-m_2 = np.power(5e9, 1/(3+epsilon)) * m_star
-
-
+#m_2 = np.power(5e9, 1/(3+epsilon)) * m_star
+m_2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
+print(m_2)
 
 def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
-def power_law_MF(m, m_max):
-    return (gamma / (m_max**gamma - m_min**gamma)) * m**(gamma-1)
+def power_law_MF(m_values, m_max):
+    MF_values = []
+    for m in m_values:
+        if m < m_min:
+            MF_values.append(0)
+        elif m > m_max:
+            MF_values.append(0)
+        else:
+            MF_values.append((gamma / (m_max**gamma - m_min**gamma)) * m**(gamma-1))
+    return MF_values
 
 def f_evap(m, epsilon=0.4):    # Eq. 62 of Carr+ '21
     return 2e-8 * np.array(m/m_star)**(3+epsilon)
@@ -57,7 +65,8 @@ def integrand(m, m_max):
 def constraint_analytic(m_range, m_max, epsilon):
     m2 = max(m_range)
     m1 = min(m_range)
-    return 2e-8 * ((m_max**gamma - m_min**gamma) / gamma) * (gamma - (3+epsilon)) * (m2**(gamma-(3+epsilon)) - m1**(gamma-(3+epsilon)) )**(-1) / (m_star**(3+epsilon))
+    print('m2 = ', m2)
+    return 2e-8 * ((m_max**gamma - m_min**gamma) / gamma) * (gamma - (3+epsilon)) * (min(m2, m_max)**(gamma-(3+epsilon)) - max(m1, m_min)**(gamma-(3+epsilon)) )**(-1) / (m_star**(3+epsilon))
 
 def findroot(f, a, b, tolerance_1, tolerance_2, n_max):
     n = 1
@@ -90,7 +99,7 @@ def power_law_fit(x, y):
 
 if "__main__" == __name__:
         
-    mc_evaporation = 10**np.linspace(-17, -11, 100)
+    mc_evaporation = 10**np.linspace(-16, -10, 100)
     mc_evaporation_PL, f_pbh_evaporation_PL = load_data('PL_gamma=1_evap.csv')
 
     # calculate constraints for extended MF from evaporation
@@ -100,7 +109,7 @@ if "__main__" == __name__:
     for m_c in mc_evaporation:
         m_max=m_c*np.exp(1/gamma)
         
-        m_range = 10**np.linspace(max(np.log10(2*m_star), np.log10(m_max) - 20), np.log10(m_2), 100000)
+        m_range = 10**np.linspace(np.log10(m_star), np.log10(m_2), 100000)
         
         print(m_max)
         f_pbh_evap_analytic.append(constraint_analytic(m_range=m_range, m_max=m_max, epsilon=0.4))

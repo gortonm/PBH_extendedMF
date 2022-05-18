@@ -35,8 +35,12 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 filepath = './Extracted_files/'
 
-m_star = 5.1e14 / 1.989e33
+m_star = 4e14 / 1.989e33    # use value of M_* from Carr+ '17
 sigma = 2
+epsilon = 0.4
+
+#m_2 = np.power(5e9, 1/(3+epsilon)) * m_star
+m_2 = 7e16 / 1.989e33
 
 def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
@@ -52,8 +56,12 @@ def f_constraint_function_evap(f_pbh):
     #print(np.trapz(integrand(m_range, m_c, f_pbh), m_range) - 1)
     return np.trapz(integrand(m_range, m_c, f_pbh), m_range) - 1
 
-def constraint_analytic(m_c, epsilon):
-    return 2e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5*sigma**2*(epsilon+3)**2)
+def integral_analytic(m_c, m, epsilon):
+    return erf((((epsilon + 3) * sigma**2) + np.log(m/m_c))/(np.sqrt(2) * sigma)) 
+
+def constraint_analytic(m_range, m_c, epsilon):
+    prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2)
+    return prefactor / (integral_analytic(m_c, max(m_range), epsilon) - integral_analytic(m_c, min(m_range), epsilon))
 
 def findroot(f, a, b, tolerance_1, tolerance_2, n_max):
     n = 1
@@ -97,21 +105,21 @@ if "__main__" == __name__:
     
     for m_c in mc_evaporation:
         
-        m_range = 10**np.linspace(min(m_star, np.log10(m_c) - 20), np.log10(m_c) + 20, 100000)
+        m_range = 10**np.linspace(np.log10(0.24*m_star), np.log10(m_2), 100000)
         
         print(m_c)
         #f_pbh_evap_analytic.append(0.3 * constraint_analytic(m_c=m_c, epsilon=-0.4))  # gives an oddly good fit
-        f_pbh_evap_analytic.append(constraint_analytic(m_c=m_c, epsilon=0.4))
+        f_pbh_evap_analytic.append(constraint_analytic(m_range=m_range, m_c=m_c, epsilon=0.4))
         f_pbh_evap.append(1/np.trapz(integrand(m_range, m_c, f_pbh=1), m_range))
         
     plt.figure()
     plt.plot(mc_evaporation_LN, f_pbh_evaporation_LN, label='Extracted (Carr+ 21)')
     plt.plot(mc_evaporation_LN_Carr17, f_pbh_evaporation_LN_Carr17, label='Extracted (Carr+ 17)')
     
-    alpha, beta = power_law_fit(mc_evaporation_LN, f_pbh_evaporation_LN)
-    print(alpha)
-    print(beta)
-    plt.plot(mc_evaporation_LN, (beta * mc_evaporation_LN**alpha) , label='Power law fit')
+    #alpha, beta = power_law_fit(mc_evaporation_LN, f_pbh_evaporation_LN)
+    #print(alpha)
+    #print(beta)
+    #plt.plot(mc_evaporation_LN, (beta * mc_evaporation_LN**alpha), label='Power law fit')
 
     plt.plot(mc_evaporation, f_pbh_evap, label='Calculated')
     plt.plot(mc_evaporation, np.array(f_pbh_evap_analytic), label='Calculated (analytic)', linestyle='dotted')
