@@ -97,12 +97,12 @@ if "__main__" == __name__:
     f_pbh_evap = []
     f_pbh_evap_analytic = []
     
-    for m_max in mc_evaporation:
+    for m_c in mc_evaporation:
+        m_max=m_c*np.exp(1/gamma)
         
         m_range = 10**np.linspace(max(np.log10(2*m_star), np.log10(m_max) - 20), np.log10(m_2), 100000)
         
         print(m_max)
-        #f_pbh_evap_analytic.append(0.3 * constraint_analytic(m_c=m_c, epsilon=-0.4))  # gives an oddly good fit
         f_pbh_evap_analytic.append(constraint_analytic(m_range=m_range, m_max=m_max, epsilon=0.4))
         f_pbh_evap.append(1/np.trapz(integrand(m_range, m_max), m_range))
         
