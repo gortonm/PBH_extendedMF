@@ -94,6 +94,24 @@ if "__main__" == __name__:
     plt.ylim(10**(-4), 1)
     plt.title('Log-normal ($\sigma = {:.0f}$)'.format(sigma))
     plt.tight_layout()
-    #plt.savefig('Figures/evap_constraints_updated_analytic_numeric.pdf')
+
     
-    
+    if "__main__" == __name__:
+
+        # Plot constraints for a monochromatic MF
+       
+        plt.figure(figsize=(12,8))
+        plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
+
+        for m_star in np.array([4e14, 5e14]) / 1.989e33:
+            plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$'.format(m_star*1.989e33), linestyle = 'dotted', linewidth=6)
+        
+        plt.xlabel('$M~[M_\odot]$')
+        plt.ylabel('$f_\mathrm{PBH}$')
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.legend()
+        plt.title('Monochromatic')
+        plt.tight_layout()
+        
+
