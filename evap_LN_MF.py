@@ -37,8 +37,7 @@ m_star = 5e14 / 1.989e33    # use value of M_* from Carr+ '17
 sigma = 2
 epsilon = 0.4
 
-m2 = 7e16 / 1.989e33
-#m2 = 1e18 / 1.989e33
+m2 = 1e18 / 1.989e33
 m1 = m_star
 
 def log_normal_MF(m, m_c):
