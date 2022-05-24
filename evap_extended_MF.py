@@ -257,21 +257,34 @@ if "__main__" == __name__:
     #plt.savefig('Figures/evap_constraints_updated_0_inf.pdf')
 
     
-m_range = np.linspace(1e-20, 1e-10, 10000)
+m_range = np.linspace(1e-20, 1e-15, 10000)
 print(np.trapz(log_normal_MF(f_pbh=1, m=m_range, m_c=1e14 / 1.989e33), m_range))
 print(np.trapz(log_normal_MF(f_pbh=1, m=m_range, m_c=1e16 / 1.989e33), m_range))
 print(np.trapz(log_normal_MF(f_pbh=1, m=m_range, m_c=1e18 / 1.989e33), m_range))
 
 plt.figure()
 for m_c in np.array([10**(-14.5), 10**(-14), 10**(-13.5)]):
-    plt.plot(m_range, log_normal_MF(f_pbh=1, m=m_range, m_c=m_c), label='$M_c = 1e{:.1f} M_\odot$'.format(np.log10(m_c)) )
+    plt.plot(m_range, log_normal_MF(f_pbh=1, m=m_range, m_c=m_c), label=r'$M_c = 1e{:.1f} M_\odot$'.format(np.log10(m_c)) )
     
 plt.xlabel('$M~[M_\odot]$')
 plt.ylabel('$\psi(M, f_\mathrm{PBH} = 1)$')
-plt.vlines(m_star, ymin=1e10, ymax=1e13, linestyle='dotted', color='k')
-plt.vlines(1e18/1.989e33, ymin=1e10, ymax=1e13, linestyle='dotted', color='k')
-
-plt.legend()
-plt.xscale('log')
+plt.vlines(m_star, ymin=1e10, ymax=5e14, linestyle='dotted', color='k', label=r'$M_* = {:3.1e} M_\odot$'.format(m_star))
+plt.legend(fontsize='small')
+#plt.xscale('log')
 #plt.yscale('log')
 plt.tight_layout()
+plt.savefig('./Figures/LN_MF_cutoff_solmass.pdf')
+
+
+plt.figure()
+for m_c in np.array([10**(-14.5), 10**(-14), 10**(-13.5)]):
+    plt.plot(1.989e33*np.array(m_range), log_normal_MF(f_pbh=1, m=m_range, m_c=m_c), label=r'$M_c = {:3.1e}$ g'.format(m_c*1.989e33) )
+    
+plt.xlabel('$M$ [g]')
+plt.ylabel('$\psi(M, f_\mathrm{PBH} = 1)$')
+plt.vlines(m_star, ymin=1e10, ymax=5e14, linestyle='dotted', color='k', label=r'$M_* = {:3.1e}$ g'.format(m_star*1.989e33))
+plt.legend(fontsize='small')
+#plt.xscale('log')
+#plt.yscale('log')
+plt.tight_layout()
+plt.savefig('./Figures/LN_MF_cutoff_g.pdf')
