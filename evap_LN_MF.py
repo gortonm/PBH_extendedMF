@@ -37,7 +37,8 @@ m_star = 5e14 / 1.989e33    # use value of M_* from Carr+ '17
 sigma = 2
 epsilon = 0.4
 
-m2 = 1e18 / 1.989e33
+m2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
+m2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
 m1 = m_star
 
 def log_normal_MF(m, m_c):
@@ -104,7 +105,14 @@ if "__main__" == __name__:
         plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
 
         for m_star in np.array([4e14, 5e14]) / 1.989e33:
-            plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$'.format(m_star*1.989e33), linestyle = 'dotted', linewidth=6)
+            plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$ g, $\epsilon$={:.2f}'.format(m_star*1.989e33, epsilon), linestyle = 'dotted', linewidth=6)
+
+        for m_star in np.array([5.1e14]) / 1.989e33:
+            epsilon= 0.43
+            plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$ g, $\epsilon$={:.2f}'.format(m_star*1.989e33, epsilon), linestyle = 'dotted', linewidth=6)
+
+        
+        plt.plot(m_evaporation_mono, f_evap(m_evaporation_mono), linestyle='dashed', label='Interpolated')
         
         plt.xlabel('$M~[M_\odot]$')
         plt.ylabel('$f_\mathrm{PBH}$')
