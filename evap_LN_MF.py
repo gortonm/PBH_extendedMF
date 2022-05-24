@@ -48,7 +48,7 @@ def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
 def integrand(m, m_c):
-    return log_normal_MF(m, m_c) / f_evap(m)    
+    return log_normal_MF(m, m_c) / f_evap(m)
 
 def constraint_mono_analytic(m):
     return 2e-8 * np.array(m/m_star)**(3+epsilon)
@@ -93,7 +93,7 @@ if "__main__" == __name__:
     plt.yscale('log')
     plt.legend()
     plt.ylim(10**(-4), 1)
-    plt.title('Log-normal ($\sigma = {:.0f}$)'.format(sigma))
+    plt.title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + '$M_1, M_2 = ({:.1e}, {:.1e})$ g'.format(m1/1.989e33, m2/1.989e33))
     plt.tight_layout()
 
     
