@@ -62,11 +62,13 @@ def integral_analytic(m_c, m):
     return erf((((epsilon + 3) * sigma**2) + np.log(m/m_c))/(np.sqrt(2) * sigma)) 
 
 def constraint_analytic(m_range, m_c):
-    prefactor = 2e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
+    prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
     return prefactor / (integral_analytic(m_c, max(m_range)) - integral_analytic(m_c, min(m_range)))
 
-m_c_evaporation = 10**np.linspace(-20, -10, 100)
+m_c_evaporation = 10**np.linspace(-18, -13, 100)
 m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
+
+m_c_subaru = 10**np.linspace(-15, -4, 100)
 m_subaru_mono, f_max_subaru_mono = load_data('Subaru-HSC_mono.csv')
 
 def f_evap(m):
@@ -75,17 +77,15 @@ def f_evap(m):
 def f_subaru(m):
     return np.interp(m, m_subaru_mono, f_max_subaru_mono)
 
-
 # Try creating some new data to match the monochromatic MF constraint
-f_interp_data = constraint_mono_analytic(m_evaporation_mono)
 def integrand_2(m, m_c):
-    return log_normal_MF(m, m_c) / np.interp(m, np.array(m_evaporation_mono), f_interp_data)
+    return log_normal_MF(m, m_c) / constraint_mono_analytic(m)
 
 
 if "__main__" == __name__:
 
     # Plot evaporation constraints for a log-normal MF
-    plt.figure(figsize=(12,8))
+    fig, ax1 = plt.subplots(figsize=(12,8))
     m_c_evaporation_LN, f_pbh_evaporation_LN = load_data('Gamma-ray_LN.csv')
 
     f_pbh_evap = []
@@ -95,50 +95,62 @@ if "__main__" == __name__:
     for m_c in m_c_evaporation:
 
         m_range = 10**np.linspace(np.log10(max(m1, m_star)), np.log10(m2), 100000)
+        #m_range = np.linspace(max(m1, m_star), m2, 100000)   # no noticeable difference
                 
         f_pbh_evap.append(1/np.trapz(integrand(m=m_range, m_c=m_c), m_range))
         f_pbh_evap_2.append(1/np.trapz(integrand_2(m=m_range, m_c=m_c), m_range))
 
         f_pbh_evap_analytic.append(constraint_analytic(m_range, m_c))
         
-    plt.plot(m_c_evaporation, f_pbh_evap, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
-    plt.plot(m_c_evaporation, f_pbh_evap_2, label='Trapezium rule (2)', linestyle = 'dotted', linewidth=6)
-    plt.plot(m_c_evaporation, f_pbh_evap_analytic, label='Analytic', linestyle = 'dotted', linewidth=6)
-    plt.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
-
-    plt.xlabel('$M_\mathrm{c}~[M_\odot]$')
-    plt.ylabel('$f_\mathrm{PBH}$')
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.legend()
-    plt.ylim(10**(-4), 1)
-    plt.title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $(M_1, M_2) = ({:.0e}, {:.0e})$ g'.format(m1*1.989e33, m2*1.989e33))
+    ax1.plot(m_c_evaporation, f_pbh_evap, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
+    ax1.plot(m_c_evaporation, f_pbh_evap_2, label='Trapezium rule ($f_\mathrm{max}$ analytic)', linestyle = 'dotted', linewidth=4)
+    ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='Analytic', linestyle = 'dotted', linewidth=6)
+    ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')    
+    ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
+    ax1.set_ylabel('$f_\mathrm{PBH}$')
+    ax1.set_xscale('log')
+    ax1.set_yscale('log')
+    ax1.legend()
+    ax1.set_ylim(10**(-4), 1)
+    
+    ax2 = plt.gca().twiny()
+    ax2.plot(np.array(m_c_evaporation)*1.989e33, np.zeros(len(m_c_evaporation)))
+    ax2.set_xlabel('$M_\mathrm{c}~[g]$')
+    ax2.set_xscale('log')    
+    ax2.tick_params(axis='x')
+    
+    ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $(M_1, M_2) = ({:.0e}, {:.0e})$ g'.format(m1*1.989e33, m2*1.989e33), pad=20)
     plt.tight_layout()
 
- 
+    """
     # Plot Subaru-HSC constraints for a log-normal MF
-    plt.figure(figsize=(12,8))
-    m_subaru_LN, f_max_subaru_LN = load_data('Subaru-HSC_LN.csv')
-
-    mc_subaru = 10**np.linspace(-15, -4, 100)
+    fig, ax1 = plt.subplots(figsize=(12,8))
+    m_c_subaru_LN, f_max_subaru_LN = load_data('Subaru-HSC_LN.csv')
     f_pbh_subaru = []
     
-    for m_c in mc_subaru:
+    for m_c in m_c_subaru:
 
-        #m_range = 10**np.linspace(min(m_subaru_mono), max(m_subaru_mono), 100000)
-        m_range = np.linspace(min(m_subaru_mono), max(m_subaru_mono), 100000)
+        m_range = 10**np.linspace(np.log10(min(m_subaru_mono)), np.log10(max(m_subaru_mono)), 100000)
+        #m_range = np.linspace(min(m_subaru_mono), max(m_subaru_mono), 100000)
         f_pbh_subaru.append(1/np.trapz(integrand_subaru(m=m_range, m_c=m_c), m_range))
         
-    plt.plot(mc_subaru, f_pbh_subaru, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
-    plt.plot(m_subaru_LN, f_max_subaru_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
+    ax1.plot(m_c_subaru, f_pbh_subaru, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
+    ax1.plot(m_c_subaru_LN, f_max_subaru_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
 
-    plt.xlabel('$M_\mathrm{c}~[M_\odot]$')
-    plt.ylabel('$f_\mathrm{PBH}$')
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.legend()
-    plt.ylim(10**(-4), 1)
-    plt.title('Log-normal ($\sigma = {:.0f}$)'.format(sigma))
+    ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
+    ax1.set_ylabel('$f_\mathrm{PBH}$')
+    ax1.set_xscale('log')
+    ax1.set_yscale('log')
+    ax1.legend()
+    ax1.set_ylim(10**(-4), 1)
+    
+    ax2 = plt.gca().twiny()
+    ax2.plot(np.array(m_c_subaru)*1.989e33, np.zeros(len(m_c_subaru)))
+    ax2.set_xlabel('$M_\mathrm{c}~[g]$')
+    ax2.set_xscale('log')    
+    ax2.tick_params(axis='x')
+    
+    ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma), pad=20)
     plt.tight_layout()
  
 
@@ -163,5 +175,5 @@ if "__main__" == __name__:
     plt.legend()
     plt.title('Monochromatic')
     plt.tight_layout()
-        
+    """
 
