@@ -263,7 +263,7 @@ print(np.trapz(log_normal_MF(f_pbh=1, m=m_range, m_c=1e16 / 1.989e33), m_range))
 print(np.trapz(log_normal_MF(f_pbh=1, m=m_range, m_c=1e18 / 1.989e33), m_range))
 
 plt.figure()
-for m_c in np.array([10**(-16), 10**(-15), 10**(-14)]):
+for m_c in np.array([10**(-17), 10**(-16), 10**(-15), 10**(-14)]):
     plt.plot(m_range, log_normal_MF(f_pbh=1, m=m_range, m_c=m_c), label=r'$M_c = 1e{:.1f} M_\odot$'.format(np.log10(m_c)) )
     
 plt.xlabel('$M~[M_\odot]$')
@@ -277,7 +277,7 @@ plt.savefig('./Figures/LN_MF_cutoff_solmass_lower_mc.pdf')
 
 
 plt.figure()
-for m_c in np.array([10**(-16), 10**(-15), 10**(-14)]):
+for m_c in np.array([10**(-17), 10**(-16), 10**(-15), 10**(-14)]):
     plt.plot(1.989e33*np.array(m_range), log_normal_MF(f_pbh=1, m=m_range, m_c=m_c), label=r'$M_c = {:3.1e}$ g'.format(m_c*1.989e33) )
     
 plt.xlabel('$M$ [g]')
@@ -290,10 +290,27 @@ plt.tight_layout()
 plt.savefig('./Figures/LN_MF_cutoff_g_lower_mc.pdf')
 
 
+
 # Find ratio of the area under a LN MF with different M_c values
 def cdf(m_c):
-    return 1 + erf(np.log(m_star/m_c) / (sigma * np.sqrt(2)))
+    return 0.5 * (1 + erf(np.log(m_star/m_c) / (sigma * np.sqrt(2))))
 
 print(cdf(m_c = 1e-15) / cdf(m_c = 1e-16))
 print(cdf(m_c = 1e-16) / cdf(m_c = 1e-17))
 print(cdf(m_c = 1e-17) / cdf(m_c = 1e-18))
+
+
+# Plot fraction under curve with M < M_* for a range of M_c:
+fig, ax1 = plt.subplots(figsize=(6.5,5))
+m_c_values = 10**np.linspace(-17, -13, 20)
+ax1.plot(m_c_values, cdf(m_c_values))
+ax1.set_xlabel('$M~[M_\odot]$')
+ax1.set_ylabel('Fraction with $M < M_*$')
+ax1.set_xscale('log')
+
+ax2 = plt.gca().twiny()
+ax2.plot(np.array(m_c_values)*1.989e33, np.zeros(len(m_c_values)), linewidth=0)
+ax2.set_xlabel('$M$~[g]')
+ax2.set_xscale('log')
+plt.tight_layout()
+plt.savefig('./Figures/fraction_under_M*_LN.pdf')
