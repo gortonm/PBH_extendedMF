@@ -6,6 +6,9 @@ Created on Tue May 17 10:08:29 2022
 @author: ppxmg2
 """
 
+# Compare constraints extracted from figures of other papers to those
+# shown in the LH panel of Fig. 20 of Carr+ '21
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl

@@ -6,6 +6,9 @@ Created on Tue May 17 13:32:36 2022
 @author: ppxmg2
 """
 
+# Constraints for a log-normal MF, using various assumptions about the 
+# normalisation and integration limits.
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -33,7 +36,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 filepath = './Extracted_files/'
 
-m_star = 4e14 / 1.989e33    # use value of M_* from Carr+ '17
+m_star = 5e14 / 1.989e33    # 24/5: updated value of M_*, reflecting the better fit found to the monochromatic MF constraints
 sigma = 2
 epsilon = 0.4
 
