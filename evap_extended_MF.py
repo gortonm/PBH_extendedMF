@@ -288,3 +288,12 @@ plt.legend(fontsize='small')
 #plt.yscale('log')
 plt.tight_layout()
 plt.savefig('./Figures/LN_MF_cutoff_g_lower_mc.pdf')
+
+
+# Find ratio of the area under a LN MF with different M_c values
+def cdf(m_c):
+    return 1 + erf(np.log(m_star/m_c) / (sigma * np.sqrt(2)))
+
+print(cdf(m_c = 1e-15) / cdf(m_c = 1e-16))
+print(cdf(m_c = 1e-16) / cdf(m_c = 1e-17))
+print(cdf(m_c = 1e-17) / cdf(m_c = 1e-18))
