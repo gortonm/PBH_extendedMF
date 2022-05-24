@@ -38,8 +38,10 @@ sigma = 2
 epsilon = 0.4
 
 m2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
-m2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
+#m2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
+m2 = np.power(5e9, 1/(3+epsilon)) * m_star    # using value of M_2 for which f_max(M_2) = 100
 m1 = m_star
+m1 = 1e15 / 1.989e33
 
 def log_normal_MF(m, m_c):
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
@@ -49,6 +51,9 @@ def load_data(filename):
 
 def integrand(m, m_c):
     return log_normal_MF(m, m_c) / f_evap(m)
+
+def integrand_subaru(m, m_c):
+    return log_normal_MF(m, m_c) / f_subaru(m)
 
 def constraint_mono_analytic(m):
     return 2e-8 * np.array(m/m_star)**(3+epsilon)
@@ -62,28 +67,42 @@ def constraint_analytic(m_range, m_c):
 
 m_c_evaporation = 10**np.linspace(-20, -10, 100)
 m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
+m_subaru_mono, f_max_subaru_mono = load_data('Subaru-HSC_mono.csv')
 
 def f_evap(m):
-    return np.interp(m, np.array(m_evaporation_mono), f_max_evaporation_mono)
+    return np.interp(m, m_evaporation_mono, f_max_evaporation_mono)
+
+def f_subaru(m):
+    return np.interp(m, m_subaru_mono, f_max_subaru_mono)
+
+
+# Try creating some new data to match the monochromatic MF constraint
+f_interp_data = constraint_mono_analytic(m_evaporation_mono)
+def integrand_2(m, m_c):
+    return log_normal_MF(m, m_c) / np.interp(m, np.array(m_evaporation_mono), f_interp_data)
 
 
 if "__main__" == __name__:
 
-    # Plot constraints for a log-normal MF
-   
+    # Plot evaporation constraints for a log-normal MF
     plt.figure(figsize=(12,8))
     m_c_evaporation_LN, f_pbh_evaporation_LN = load_data('Gamma-ray_LN.csv')
 
     f_pbh_evap = []
+    f_pbh_evap_2 = []
     f_pbh_evap_analytic = []
+    
     for m_c in m_c_evaporation:
 
-        m_range = 10**np.linspace(np.log10(max(m1, m_star)), np.log10(m2), 10000)
+        m_range = 10**np.linspace(np.log10(max(m1, m_star)), np.log10(m2), 100000)
                 
         f_pbh_evap.append(1/np.trapz(integrand(m=m_range, m_c=m_c), m_range))
+        f_pbh_evap_2.append(1/np.trapz(integrand_2(m=m_range, m_c=m_c), m_range))
+
         f_pbh_evap_analytic.append(constraint_analytic(m_range, m_c))
         
     plt.plot(m_c_evaporation, f_pbh_evap, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
+    plt.plot(m_c_evaporation, f_pbh_evap_2, label='Trapezium rule (2)', linestyle = 'dotted', linewidth=6)
     plt.plot(m_c_evaporation, f_pbh_evap_analytic, label='Analytic', linestyle = 'dotted', linewidth=6)
     plt.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
 
@@ -93,33 +112,56 @@ if "__main__" == __name__:
     plt.yscale('log')
     plt.legend()
     plt.ylim(10**(-4), 1)
-    plt.title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + '$M_1, M_2 = ({:.1e}, {:.1e})$ g'.format(m1/1.989e33, m2/1.989e33))
+    plt.title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $(M_1, M_2) = ({:.0e}, {:.0e})$ g'.format(m1*1.989e33, m2*1.989e33))
     plt.tight_layout()
 
+ 
+    # Plot Subaru-HSC constraints for a log-normal MF
+    plt.figure(figsize=(12,8))
+    m_subaru_LN, f_max_subaru_LN = load_data('Subaru-HSC_LN.csv')
+
+    mc_subaru = 10**np.linspace(-15, -4, 100)
+    f_pbh_subaru = []
     
-    if "__main__" == __name__:
+    for m_c in mc_subaru:
 
-        # Plot constraints for a monochromatic MF
-       
-        plt.figure(figsize=(12,8))
-        plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
-
-        for m_star in np.array([4e14, 5e14]) / 1.989e33:
-            plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$ g, $\epsilon$={:.2f}'.format(m_star*1.989e33, epsilon), linestyle = 'dotted', linewidth=6)
-
-        for m_star in np.array([5.1e14]) / 1.989e33:
-            epsilon= 0.43
-            plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$ g, $\epsilon$={:.2f}'.format(m_star*1.989e33, epsilon), linestyle = 'dotted', linewidth=6)
-
+        #m_range = 10**np.linspace(min(m_subaru_mono), max(m_subaru_mono), 100000)
+        m_range = np.linspace(min(m_subaru_mono), max(m_subaru_mono), 100000)
+        f_pbh_subaru.append(1/np.trapz(integrand_subaru(m=m_range, m_c=m_c), m_range))
         
-        plt.plot(m_evaporation_mono, f_evap(m_evaporation_mono), linestyle='dashed', label='Interpolated')
-        
-        plt.xlabel('$M~[M_\odot]$')
-        plt.ylabel('$f_\mathrm{PBH}$')
-        plt.xscale('log')
-        plt.yscale('log')
-        plt.legend()
-        plt.title('Monochromatic')
-        plt.tight_layout()
+    plt.plot(mc_subaru, f_pbh_subaru, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
+    plt.plot(m_subaru_LN, f_max_subaru_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
+
+    plt.xlabel('$M_\mathrm{c}~[M_\odot]$')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.legend()
+    plt.ylim(10**(-4), 1)
+    plt.title('Log-normal ($\sigma = {:.0f}$)'.format(sigma))
+    plt.tight_layout()
+ 
+
+    # Plot evaporation constraints for a monochromatic MF
+    plt.figure(figsize=(12,8))
+    plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
+
+    for m_star in np.array([4e14, 5e14]) / 1.989e33:
+        plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$ g, $\epsilon$={:.2f}'.format(m_star*1.989e33, epsilon), linestyle = 'dotted', linewidth=6)
+
+    for m_star in np.array([5.1e14]) / 1.989e33:
+        epsilon= 0.43
+        plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$ g, $\epsilon$={:.2f}'.format(m_star*1.989e33, epsilon), linestyle = 'dotted', linewidth=6)
+
+    
+    plt.plot(m_evaporation_mono, f_evap(m_evaporation_mono), linestyle='dashed', label='Interpolated')
+    
+    plt.xlabel('$M~[M_\odot]$')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.legend()
+    plt.title('Monochromatic')
+    plt.tight_layout()
         
 
