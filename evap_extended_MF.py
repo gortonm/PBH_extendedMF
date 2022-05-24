@@ -257,13 +257,13 @@ if "__main__" == __name__:
     #plt.savefig('Figures/evap_constraints_updated_0_inf.pdf')
 
     
-m_range = np.linspace(1e-20, 1e-15, 10000)
+m_range = 10**np.linspace(-30, -15, 10000)
 print(np.trapz(log_normal_MF(f_pbh=1, m=m_range, m_c=1e14 / 1.989e33), m_range))
 print(np.trapz(log_normal_MF(f_pbh=1, m=m_range, m_c=1e16 / 1.989e33), m_range))
 print(np.trapz(log_normal_MF(f_pbh=1, m=m_range, m_c=1e18 / 1.989e33), m_range))
 
 plt.figure()
-for m_c in np.array([10**(-14.5), 10**(-14), 10**(-13.5)]):
+for m_c in np.array([10**(-16), 10**(-15), 10**(-14)]):
     plt.plot(m_range, log_normal_MF(f_pbh=1, m=m_range, m_c=m_c), label=r'$M_c = 1e{:.1f} M_\odot$'.format(np.log10(m_c)) )
     
 plt.xlabel('$M~[M_\odot]$')
@@ -273,11 +273,11 @@ plt.legend(fontsize='small')
 #plt.xscale('log')
 #plt.yscale('log')
 plt.tight_layout()
-plt.savefig('./Figures/LN_MF_cutoff_solmass.pdf')
+plt.savefig('./Figures/LN_MF_cutoff_solmass_lower_mc.pdf')
 
 
 plt.figure()
-for m_c in np.array([10**(-14.5), 10**(-14), 10**(-13.5)]):
+for m_c in np.array([10**(-16), 10**(-15), 10**(-14)]):
     plt.plot(1.989e33*np.array(m_range), log_normal_MF(f_pbh=1, m=m_range, m_c=m_c), label=r'$M_c = {:3.1e}$ g'.format(m_c*1.989e33) )
     
 plt.xlabel('$M$ [g]')
@@ -287,4 +287,4 @@ plt.legend(fontsize='small')
 #plt.xscale('log')
 #plt.yscale('log')
 plt.tight_layout()
-plt.savefig('./Figures/LN_MF_cutoff_g.pdf')
+plt.savefig('./Figures/LN_MF_cutoff_g_lower_mc.pdf')
