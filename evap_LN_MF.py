@@ -35,7 +35,7 @@ filepath = './Extracted_files/'
 
 m_star = 5e14 / 1.989e33    # use value of M_* from Carr+ '17
 sigma = 2
-epsilon = -0.4
+epsilon = 0.4
 
 #m2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
 m2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
@@ -70,9 +70,6 @@ def constraint_analytic_m1zero(m2, m_c):
     prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
     return prefactor / (integral_analytic(m_c, m2) + 1)
 
-def constraint_analytic_m1zero(m2, m_c):
-    prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
-    return prefactor / 2
 
 
 m_c_evaporation = 10**np.linspace(-18, -13, 100)
