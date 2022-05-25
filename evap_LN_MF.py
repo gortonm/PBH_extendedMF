@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue May 17 13:32:36 2022
-
 @author: ppxmg2
 """
 
@@ -37,8 +36,8 @@ m_star = 5e14 / 1.989e33    # use value of M_* from Carr+ '17
 sigma = 2
 epsilon = 0.4
 
-#m2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
-m2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
+m2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
+#m2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
 #m2 = np.power(5e9, 1/(3+epsilon)) * m_star    # using value of M_2 for which f_max(M_2) = 100
 m1 = m_star
 #m1 = 1e15 / 1.989e33
@@ -65,12 +64,6 @@ def integral_analytic(m_c, m):
 def constraint_analytic(m_range, m_c):
     prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
     return prefactor / (integral_analytic(m_c, max(m_range)) - integral_analytic(m_c, min(m_range)))
-
-def constraint_analytic_m1zero(m2, m_c):
-    prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
-    return prefactor / (integral_analytic(m_c, m2) + 1)
-
-
 
 m_c_evaporation = 10**np.linspace(-18, -13, 100)
 m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
@@ -101,13 +94,30 @@ if "__main__" == __name__:
     #m1 = min(m_evaporation_mono)
     #m2 = max(m_evaporation_mono)
     
-    for i, m2 in enumerate(np.array([7e16, 1e18]) / 1.989e33):
+    for m1 in ([2*m_star, m_star, 0.1*m_star]):
         f_pbh_evap_analytic = []
 
         for m_c in m_c_evaporation:
-            f_pbh_evap_analytic.append(constraint_analytic_m1zero(m2, m_c))
             
-        ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='$M_1 = {:.0e}$ g (${:.0e}M_\odot)$'.format(m2 * 1.989e33, m2), linestyle = 'dotted', linewidth=5-i)
+            m_range = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)           
+            
+            if m1 == 0:
+                m_range = 10**np.linspace(np.log10(1e-50), np.log10(m2), 10000)
+            
+            #m_range = np.linspace(max(m1, m_star), m2, 100000)   # no noticeable difference
+                    
+            f_pbh_evap.append(1/np.trapz(integrand(m=m_range, m_c=m_c), m_range))
+            f_pbh_evap_2.append(1/np.trapz(integrand_2(m=m_range, m_c=m_c), m_range))
+        
+            f_pbh_evap_analytic.append(constraint_analytic(m_range, m_c))
+            
+        #ax1.plot(m_c_evaporation, f_pbh_evap, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
+        #ax1.plot(m_c_evaporation, f_pbh_evap_2, label='Trapezium rule ($f_\mathrm{max}$ analytic)', linestyle = 'dotted', linewidth=4)
+        print(m2)
+        if m1 == m_star:
+            ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='$M_1 = M_* = {:.0e}$ g (${:.0e}M_\odot)$'.format(m1 * 1.989e33, m1), linestyle = 'dotted', linewidth=5)
+        else:
+            ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='$M_1 = {:.0e}$ g (${:.0e}M_\odot)$'.format(m1 * 1.989e33, m1), linestyle = 'dotted', linewidth=5)
         
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')    
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
@@ -125,7 +135,7 @@ if "__main__" == __name__:
     ax2.tick_params(axis='x')
     
     #ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $(M_1, M_2) = ({:.0e}, {:.0e})$ g'.format(m1*1.989e33, m2*1.989e33), pad=20)
-    ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $M_1 = 0$', pad=20)
+    ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $M_2 = {:.0e}$ g (${:.0e}M_\odot)$'.format(m2*1.989e33, m2), pad=20)
     
     plt.tight_layout()
 
@@ -136,14 +146,12 @@ if "__main__" == __name__:
     f_pbh_subaru = []
     
     for m_c in m_c_subaru:
-
         m_range = 10**np.linspace(np.log10(min(m_subaru_mono)), np.log10(max(m_subaru_mono)), 10000)
         #m_range = np.linspace(min(m_subaru_mono), max(m_subaru_mono), 100000)
         f_pbh_subaru.append(1/np.trapz(integrand_subaru(m=m_range, m_c=m_c), m_range))
         
     ax1.plot(m_c_subaru, f_pbh_subaru, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
     ax1.plot(m_c_subaru_LN, f_max_subaru_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
-
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
     ax1.set_xscale('log')
@@ -160,18 +168,14 @@ if "__main__" == __name__:
     ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma), pad=20)
     plt.tight_layout()
  
-
     # Plot evaporation constraints for a monochromatic MF
     plt.figure(figsize=(12,8))
     plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
-
     for m_star in np.array([4e14, 5e14]) / 1.989e33:
         plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$ g, $\epsilon$={:.2f}'.format(m_star*1.989e33, epsilon), linestyle = 'dotted', linewidth=6)
-
     for m_star in np.array([5.1e14]) / 1.989e33:
         epsilon= 0.43
         plt.plot(m_evaporation_mono, constraint_mono_analytic(m_evaporation_mono), label='$M_* = {:.1e}$ g, $\epsilon$={:.2f}'.format(m_star*1.989e33, epsilon), linestyle = 'dotted', linewidth=6)
-
     
     plt.plot(m_evaporation_mono, f_evap(m_evaporation_mono), linestyle='dashed', label='Interpolated')
     
