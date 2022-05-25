@@ -92,9 +92,12 @@ if "__main__" == __name__:
     f_pbh_evap_2 = []
     f_pbh_evap_analytic = []
     
+    m1 = min(m_evaporation_mono)
+    m2 = max(m_evaporation_mono)
+    
     for m_c in m_c_evaporation:
-
-        m_range = 10**np.linspace(np.log10(max(m1, m_star)), np.log10(m2), 100000)
+        
+        m_range = 10**np.linspace(np.log10(max(m1, m_star)), np.log10(m2), 10000)
         #m_range = np.linspace(max(m1, m_star), m2, 100000)   # no noticeable difference
                 
         f_pbh_evap.append(1/np.trapz(integrand(m=m_range, m_c=m_c), m_range))
@@ -104,7 +107,7 @@ if "__main__" == __name__:
         
     ax1.plot(m_c_evaporation, f_pbh_evap, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
     ax1.plot(m_c_evaporation, f_pbh_evap_2, label='Trapezium rule ($f_\mathrm{max}$ analytic)', linestyle = 'dotted', linewidth=4)
-    ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='Analytic', linestyle = 'dotted', linewidth=6)
+    ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='Analytic', linestyle = 'dotted', linewidth=5)
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')    
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
@@ -130,7 +133,7 @@ if "__main__" == __name__:
     
     for m_c in m_c_subaru:
 
-        m_range = 10**np.linspace(np.log10(min(m_subaru_mono)), np.log10(max(m_subaru_mono)), 100000)
+        m_range = 10**np.linspace(np.log10(min(m_subaru_mono)), np.log10(max(m_subaru_mono)), 10000)
         #m_range = np.linspace(min(m_subaru_mono), max(m_subaru_mono), 100000)
         f_pbh_subaru.append(1/np.trapz(integrand_subaru(m=m_range, m_c=m_c), m_range))
         
