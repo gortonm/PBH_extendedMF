@@ -70,6 +70,11 @@ def constraint_analytic_m1zero(m2, m_c):
     prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
     return prefactor / (integral_analytic(m_c, m2) + 1)
 
+def constraint_analytic_m1zero(m2, m_c):
+    prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
+    return prefactor / 2
+
+
 m_c_evaporation = 10**np.linspace(-18, -13, 100)
 m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
 
