@@ -66,6 +66,10 @@ def constraint_analytic(m_range, m_c):
     prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
     return prefactor / (integral_analytic(m_c, max(m_range)) - integral_analytic(m_c, min(m_range)))
 
+def constraint_analytic_m1zero(m2, m_c):
+    prefactor = 4e-8 * (m_c / m_star)**(3+epsilon) * np.exp(-0.5 * (epsilon + 3)**2 * sigma**2) 
+    return prefactor / (integral_analytic(m_c, m2) + 1)
+
 m_c_evaporation = 10**np.linspace(-18, -13, 100)
 m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
 
@@ -95,29 +99,13 @@ if "__main__" == __name__:
     #m1 = min(m_evaporation_mono)
     #m2 = max(m_evaporation_mono)
     
-    for m1 in ([2*m_star, m_star, 0.1*m_star]):
+    for i, m2 in enumerate(np.array([7e16, 1e18]) / 1.989e33):
         f_pbh_evap_analytic = []
 
         for m_c in m_c_evaporation:
+            f_pbh_evap_analytic.append(constraint_analytic_m1zero(m2, m_c))
             
-            m_range = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)           
-            
-            if m1 == 0:
-                m_range = 10**np.linspace(np.log10(1e-50), np.log10(m2), 10000)
-            
-            #m_range = np.linspace(max(m1, m_star), m2, 100000)   # no noticeable difference
-                    
-            f_pbh_evap.append(1/np.trapz(integrand(m=m_range, m_c=m_c), m_range))
-            f_pbh_evap_2.append(1/np.trapz(integrand_2(m=m_range, m_c=m_c), m_range))
-        
-            f_pbh_evap_analytic.append(constraint_analytic(m_range, m_c))
-            
-        #ax1.plot(m_c_evaporation, f_pbh_evap, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
-        #ax1.plot(m_c_evaporation, f_pbh_evap_2, label='Trapezium rule ($f_\mathrm{max}$ analytic)', linestyle = 'dotted', linewidth=4)
-        if m1 == m_star:
-            ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='$M_1 = M_* = {:.0e}$ g (${:.0e}M_\odot)$'.format(m1 * 1.989e33, m1), linestyle = 'dotted', linewidth=5)
-        else:
-            ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='$M_1 = {:.0e}$ g (${:.0e}M_\odot)$'.format(m1 * 1.989e33, m1), linestyle = 'dotted', linewidth=5)
+        ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='$M_1 = {:.0e}$ g (${:.0e}M_\odot)$'.format(m2 * 1.989e33, m2), linestyle = 'dotted', linewidth=5-i)
         
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')    
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
@@ -135,7 +123,7 @@ if "__main__" == __name__:
     ax2.tick_params(axis='x')
     
     #ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $(M_1, M_2) = ({:.0e}, {:.0e})$ g'.format(m1*1.989e33, m2*1.989e33), pad=20)
-    ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $M_2 = {:.0e}$ g (${:.0e}M_\odot)$'.format(m2*1.989e33, m2), pad=20)
+    ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma) + ', $M_1 = 0$', pad=20)
     
     plt.tight_layout()
 
@@ -193,4 +181,3 @@ if "__main__" == __name__:
     plt.title('Monochromatic')
     plt.tight_layout()
     """
-
