@@ -53,8 +53,8 @@ def load_data(filename):
 
 
 def f(beta_prime, m):
-    #return 1.7e8 * beta_prime / np.sqrt(m)    # prefactor from Carr, Kuhnel & Sandstad '16 Eq. 8
-    return 1.7e8 * beta_prime / np.sqrt(m)   # prefactor from email from Vaskonen
+    return 4.11e8 * beta_prime / np.sqrt(m)    # prefactor from Carr, Kuhnel & Sandstad '16 Eq. 8
+    #return 1.7e8 * beta_prime / np.sqrt(m)   # prefactor from email from Vaskonen
 
 
 def f_evap_analytic_1(m):
@@ -73,7 +73,7 @@ def f_evap_analytic_3(m):
 
 
 def integral_1(m_c):
-    m1 = 1e-30
+    m1 = 1e-50
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
@@ -83,7 +83,8 @@ def integral_1(m_c):
 
 def integral_2(m_c):
     m1 = m_star
-    m2 = np.power(5e9, 1/(3+epsilon)) * m_star
+    #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
+    m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
     integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_2(m_values)
