@@ -73,7 +73,7 @@ def f_evap_analytic_3(m):
 
 
 def integral_1(m_c):
-    m1 = 1e-50
+    m1 = 1e-70
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
@@ -101,6 +101,11 @@ def integral_3(m_c):
 
 
 def combined_constraint(m_c):
+    print('M_c = ', m_c)
+    print(integral_1(m_c))
+    print(integral_2(m_c))
+    print(integral_3(m_c))
+    # first integral is consistently the largest
     return np.power((integral_1(m_c)**2 + integral_2(m_c)**2 + integral_3(m_c)**2), -0.5)
 
 
