@@ -53,7 +53,8 @@ def load_data(filename):
 
 
 def f(beta_prime, m):
-    return 3.3e8 * np.sqrt(m) * beta_prime
+    #return 1.7e8 * beta_prime / np.sqrt(m)    # prefactor from Carr, Kuhnel & Sandstad '16 Eq. 8
+    return 1.7e8 * beta_prime / np.sqrt(m)   # prefactor from email from Vaskonen
 
 
 def f_evap_analytic_1(m):
@@ -63,7 +64,6 @@ def f_evap_analytic_1(m):
 
 def f_evap_analytic_2(m):
     beta_prime = 4e-26 * (m/m_star)**(3.5+epsilon)
-    print(f(beta_prime, m))
     return f(beta_prime, m)
 
 
