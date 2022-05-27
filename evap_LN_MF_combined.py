@@ -43,7 +43,6 @@ m1 = m_star
 #m1 = 1e15 / 1.989e33
 #m1 = 1e-20
 
-
 def log_normal_MF(m, m_c):
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
@@ -52,61 +51,61 @@ def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
 
-def f(beta_prime, m):
-    return 4.11e8 * beta_prime / np.sqrt(m)    # prefactor from Carr, Kuhnel & Sandstad '16 Eq. 8
-    #return 1.7e8 * beta_prime / np.sqrt(m)   # prefactor from email from Vaskonen
+def f(beta_prime, m, prefactor):
+    #prefactor = 1.7e8
+    return prefactor * beta_prime / np.sqrt(m)    # prefactor from Carr, Kuhnel & Sandstad '16 Eq. 8
 
 
-def f_evap_analytic_1(m):
+def f_evap_analytic_1(m, prefactor):
     beta_prime = 3e-27 * (m/m_star)**(-2.5-2*epsilon)
-    return f(beta_prime, m)
+    return f(beta_prime, m, prefactor)
     
 
-def f_evap_analytic_2(m):
+def f_evap_analytic_2(m, prefactor):
     beta_prime = 4e-26 * (m/m_star)**(3.5+epsilon)
-    return f(beta_prime, m)
+    return f(beta_prime, m, prefactor)
 
 
-def f_evap_analytic_3(m):
+def f_evap_analytic_3(m, prefactor):
     beta_prime = 3e-30 * (m/(1e13 / 1.989e33))**3.1
-    return f(beta_prime, m)
+    return f(beta_prime, m, prefactor)
 
 
-def integral_1(m_c):
+def integral_1(m_c, prefactor):
     m1 = 1e-70
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
-    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_1(m_values)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_1(m_values, prefactor)
     return np.trapz(integrand, m_values)
 
 
-def integral_2(m_c):
+def integral_2(m_c, prefactor):
     m1 = m_star
     #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
     m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
-    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_2(m_values)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_2(m_values, prefactor)
     return np.trapz(integrand, m_values)
 
 
-def integral_3(m_c):
+def integral_3(m_, prefactor):
     m1 = 2.5e13 / 1.989e33
     m2 = 2.4e14 / 1.989e33
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)
     
-    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_3(m_values)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_3(m_values, prefactor)
     return np.trapz(integrand, m_values)
 
 
-def combined_constraint(m_c):
+def combined_constraint(m_c, prefactor):
     print('M_c = ', m_c)
-    print(integral_1(m_c))
-    print(integral_2(m_c))
-    print(integral_3(m_c))
+    print(integral_1(m_c, prefactor))
+    print(integral_2(m_c, prefactor))
+    print(integral_3(m_c, prefactor))
     # first integral is consistently the largest
-    return np.power((integral_1(m_c)**2 + integral_2(m_c)**2 + integral_3(m_c)**2), -0.5)
+    return np.power((integral_1(m_c, prefactor)**2 + integral_2(m_c, prefactor)**2 + integral_3(m_c, prefactor)**2), -0.5)
 
 
 m_c_evaporation = 10**np.linspace(-18, -13, 100)
@@ -118,14 +117,17 @@ if "__main__" == __name__:
     # Plot evaporation constraints for a log-normal MF
     fig, ax1 = plt.subplots(figsize=(12,8))
     m_c_evaporation_LN, f_pbh_evaporation_LN = load_data('Gamma-ray_LN.csv')
-
-    f_pbh_evap = []
-    
-    for m_c in m_c_evaporation:
-        f_pbh_evap.append(combined_constraint(m_c))
                     
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
-    ax1.plot(m_c_evaporation, f_pbh_evap, linestyle='dotted', linewidth=5, label='Calculated')
+    
+    for prefactor in ([1.7e8, 4.11e8]):
+        
+         f_pbh_evap = []
+         
+         for m_c in m_c_evaporation:
+             f_pbh_evap.append(combined_constraint(m_c, prefactor))
+       
+         ax1.plot(m_c_evaporation, f_pbh_evap, linestyle='dotted', linewidth=5, label='Calculated, Prefactor = {:.2e}'.format(prefactor))
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
     ax1.set_xscale('log')
