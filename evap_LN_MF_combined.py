@@ -79,7 +79,7 @@ def f_evap_CMB(m, prefactor):
 
 
 def integral_gamma_1(m_c, prefactor):
-    m1 = 1e-70
+    m1 = 3e13 / 1.989e33
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
@@ -90,7 +90,7 @@ def integral_gamma_1(m_c, prefactor):
 def integral_gamma_2(m_c, prefactor):
     m1 = m_star
     #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
-    m2 = 1e10
+    m2 = 7e16 / 1.989e33
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
     integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2(m_values, prefactor)
