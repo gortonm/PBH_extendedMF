@@ -52,7 +52,6 @@ def load_data(filename):
 
 
 def f(beta_prime, m, prefactor):
-    #prefactor = 1.7e8
     return prefactor * beta_prime / np.sqrt(m)    # prefactor from Carr, Kuhnel & Sandstad '16 Eq. 8
 
 
@@ -105,6 +104,7 @@ def combined_constraint(m_c, prefactor):
     print(integral_2(m_c, prefactor))
     print(integral_3(m_c, prefactor))
     # first integral is consistently the largest
+    
     return np.power((integral_1(m_c, prefactor)**2 + integral_2(m_c, prefactor)**2 + integral_3(m_c, prefactor)**2), -0.5)
 
 
@@ -113,6 +113,20 @@ m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
 
 
 if "__main__" == __name__:
+    
+    
+    # Plot the evaporation constraints for a monochromatic MF
+    m_values = 10**np.linspace(-18, -15, 100)
+    plt.figure()
+    plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
+    for prefactor in ([1.7e8, 4.11e8, 3.5e7]):
+        plt.plot(m_values, f_evap_analytic_2(m_values, prefactor), linestyle='dotted', linewidth=5, label=r"Calculated, $f_\mathrm{max}(M)"+r"= {:.2e} \beta'(M)$".format(prefactor) + " $(M/M_\odot)^{-1/2}$")
+    plt.xlabel('$M_\mathrm{c}~[M_\odot]$')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.legend()
+      
 
     # Plot evaporation constraints for a log-normal MF
     fig, ax1 = plt.subplots(figsize=(12,8))
@@ -120,14 +134,14 @@ if "__main__" == __name__:
                     
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
     
-    for prefactor in ([1.7e8, 4.11e8]):
+    for prefactor in ([1.7e8, 4.11e8, 3.5e7]):
         
          f_pbh_evap = []
          
          for m_c in m_c_evaporation:
              f_pbh_evap.append(combined_constraint(m_c, prefactor))
        
-         ax1.plot(m_c_evaporation, f_pbh_evap, linestyle='dotted', linewidth=5, label='Calculated, Prefactor = {:.2e}'.format(prefactor))
+         ax1.plot(m_c_evaporation, f_pbh_evap, linestyle='dotted', linewidth=5, label=r"Calculated, $f_\mathrm{max}(M)"+r"= {:.2e} \beta'(M)$".format(prefactor) + " $(M/M_\odot)^{-1/2}$")
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
     ax1.set_xscale('log')
