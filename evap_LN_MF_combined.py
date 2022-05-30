@@ -55,7 +55,7 @@ def f(beta_prime, m, prefactor):
     return prefactor * beta_prime / np.sqrt(m)    # prefactor from Carr, Kuhnel & Sandstad '16 Eq. 8
 
 
-def f_evap_analytic_1(m, prefactor):
+def f_evap_gamma_1(m, prefactor):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary flux dominates (M < M_*)
     # Eq. 32 Carr+ '21
@@ -63,7 +63,7 @@ def f_evap_analytic_1(m, prefactor):
     return f(beta_prime, m, prefactor)
     
 
-def f_evap_analytic_2(m, prefactor):
+def f_evap_gamma_2(m, prefactor):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary photon emission negligible (M > M_*)
     # Eq. 33 Carr+ '21
@@ -71,49 +71,57 @@ def f_evap_analytic_2(m, prefactor):
     return f(beta_prime, m, prefactor)
 
 
-def f_evap_analytic_3(m, prefactor):
+def f_evap_CMB(m, prefactor):
     # CMB anisotropies
     # Eq. 28 Carr+ '21
     beta_prime = 3e-30 * (m/(1e13 / 1.989e33))**3.1
     return f(beta_prime, m, prefactor)
 
 
-def integral_1(m_c, prefactor):
+def integral_gamma_1(m_c, prefactor):
     m1 = 1e-70
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
-    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_1(m_values, prefactor)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_1(m_values, prefactor)
     return np.trapz(integrand, m_values)
 
 
-def integral_2(m_c, prefactor):
+def integral_gamma_2(m_c, prefactor):
     m1 = m_star
     #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
     m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
-    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_2(m_values, prefactor)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2(m_values, prefactor)
     return np.trapz(integrand, m_values)
 
 
-def integral_3(m_, prefactor):
+def integral_CMB(m_, prefactor):
     m1 = 2.5e13 / 1.989e33
     m2 = 2.4e14 / 1.989e33
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)
     
-    integrand = log_normal_MF(m_values, m_c) / f_evap_analytic_3(m_values, prefactor)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_CMB(m_values, prefactor)
     return np.trapz(integrand, m_values)
 
 
-def combined_constraint(m_c, prefactor):
+def combined_constraint_gamma(m_c, prefactor):
     print('M_c = ', m_c)
-    print(integral_1(m_c, prefactor))
-    print(integral_2(m_c, prefactor))
-    print(integral_3(m_c, prefactor))
+    print(integral_gamma_1(m_c, prefactor))
+    print(integral_gamma_2(m_c, prefactor))
     # first integral is consistently the largest
     
-    return np.power((integral_1(m_c, prefactor)**2 + integral_2(m_c, prefactor)**2 + integral_3(m_c, prefactor)**2), -0.5)
+    return np.power(integral_gamma_1(m_c, prefactor)**2 + integral_gamma_2(m_c, prefactor)**2, -0.5)
+
+def combined_constraint_gamma_CMB(m_c, prefactor):
+    print('M_c = ', m_c)
+    print(integral_gamma_1(m_c, prefactor))
+    print(integral_gamma_2(m_c, prefactor))
+    print(integral_CMB(m_c, prefactor))
+    # first integral is consistently the largest
+    
+    return np.power((integral_gamma_1(m_c, prefactor)**2 + integral_gamma_2(m_c, prefactor)**2 + integral_CMB(m_c, prefactor)**2), -0.5)
 
 
 m_c_evaporation = 10**np.linspace(-18, -13, 100)
@@ -128,7 +136,7 @@ if "__main__" == __name__:
     plt.figure()
     plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
     for prefactor in ([1.7e8, 4.11e8, 3.5e7]):
-        plt.plot(m_values, f_evap_analytic_2(m_values, prefactor), linestyle='dotted', linewidth=5, label=r"Calculated, $f_\mathrm{max}(M)"+r"= {:.2e} \beta'(M)$".format(prefactor) + " $(M/M_\odot)^{-1/2}$")
+        plt.plot(m_values, f_evap_gamma_2(m_values, prefactor), linestyle='dotted', linewidth=5, label=r"Calculated, $f_\mathrm{max}(M)"+r"= {:.2e} \beta'(M)$".format(prefactor) + " $(M/M_\odot)^{-1/2}$")
     plt.xlabel('$M_\mathrm{c}~[M_\odot]$')
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.xscale('log')
@@ -142,21 +150,29 @@ if "__main__" == __name__:
                     
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
     
-    for prefactor in ([1.7e8, 4.11e8, 3.5e7]):
-        
-         f_pbh_evap = []
-         
-         for m_c in m_c_evaporation:
-             f_pbh_evap.append(combined_constraint(m_c, prefactor))
-       
-         ax1.plot(m_c_evaporation, f_pbh_evap, linestyle='dotted', linewidth=5, label=r"Calculated, $f_\mathrm{max}(M)"+r"= {:.2e} \beta'(M)$".format(prefactor) + " $(M/M_\odot)^{-1/2}$")
+    prefactor = 1.7e8
+    
+    f_pbh_evap = []
+    f_pbh_evap_gamma = []
+    f_pbh_evap_gamma_CMB = []
+
+    for m_c in m_c_evaporation:
+        f_pbh_evap.append(1/integral_gamma_2(m_c, prefactor))
+        f_pbh_evap_gamma.append(combined_constraint_gamma(m_c, prefactor))
+        f_pbh_evap_gamma_CMB.append(combined_constraint_gamma_CMB(m_c, prefactor))
+  
+    ax1.plot(m_c_evaporation, f_pbh_evap, linestyle='dotted', linewidth=5, label=r"Gamma-ray $(M > M_*)$")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma, linestyle='dotted', linewidth=5, label=r"Gamma-ray (all)")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_CMB, linestyle='dotted', linewidth=4, label=r"Gamma-ray (all) + CMB anisotropies")
+
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
     ax1.set_xscale('log')
     ax1.set_yscale('log')
+    ax1.set_ylim(1e-4, 1)
+    ax1.set_xlim(1e-15, 1e-13)
+
     ax1.legend()
-    #ax1.set_ylim(10**(-4), 1)
-    #ax1.set_xlim(1e-16, 1e-12)
     
     ax2 = plt.gca().twiny()
     ax2.plot(np.array(m_c_evaporation)*1.989e33, np.zeros(len(m_c_evaporation)))
