@@ -56,16 +56,24 @@ def f(beta_prime, m, prefactor):
 
 
 def f_evap_analytic_1(m, prefactor):
-    beta_prime = 3e-27 * (m/m_star)**(-2.5-2*epsilon)
+    # Extragalactic and Galactic gamma-ray backgrounds 
+    # Secondary flux dominates (M < M_*)
+    # Eq. 32 Carr+ '21
+    beta_prime = 5e-28 * (m/m_star)**(-2.5-2*epsilon)
     return f(beta_prime, m, prefactor)
     
 
 def f_evap_analytic_2(m, prefactor):
-    beta_prime = 4e-26 * (m/m_star)**(3.5+epsilon)
+    # Extragalactic and Galactic gamma-ray backgrounds 
+    # Secondary photon emission negligible (M > M_*)
+    # Eq. 33 Carr+ '21
+    beta_prime = 5e-26 * (m/m_star)**(3.5+epsilon)
     return f(beta_prime, m, prefactor)
 
 
 def f_evap_analytic_3(m, prefactor):
+    # CMB anisotropies
+    # Eq. 28 Carr+ '21
     beta_prime = 3e-30 * (m/(1e13 / 1.989e33))**3.1
     return f(beta_prime, m, prefactor)
 
