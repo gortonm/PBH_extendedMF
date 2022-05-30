@@ -58,7 +58,7 @@ def f(beta_prime, m, prefactor):
 def f_evap_gamma_1(m, prefactor):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary flux dominates (M < M_*)
-    # Eq. 32 Carr+ '21
+    # Eq. (5.9) Carr+ '10
     beta_prime = 3e-27 * (m/m_star)**(-2.5-2*epsilon)
     return f(beta_prime, m, prefactor)
     
