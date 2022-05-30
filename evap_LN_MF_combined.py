@@ -59,27 +59,28 @@ def f_evap_gamma_1(m, prefactor):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary flux dominates (M < M_*)
     # Eq. 32 Carr+ '21
-    beta_prime = 5e-28 * (m/m_star)**(-2.5-2*epsilon)
+    beta_prime = 3e-27 * (m/m_star)**(-2.5-2*epsilon)
     return f(beta_prime, m, prefactor)
     
 
 def f_evap_gamma_2(m, prefactor):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary photon emission negligible (M > M_*)
-    # Eq. 33 Carr+ '21
-    beta_prime = 5e-26 * (m/m_star)**(3.5+epsilon)
+    # Eq. (5.10) Carr+ '10
+    beta_prime = 4e-26 * (m/m_star)**(3.5+epsilon)
     return f(beta_prime, m, prefactor)
 
 
 def f_evap_CMB(m, prefactor):
     # CMB anisotropies
-    # Eq. 28 Carr+ '21
+    # Eq. (6.12) Carr+ '10
     beta_prime = 3e-30 * (m/(1e13 / 1.989e33))**3.1
     return f(beta_prime, m, prefactor)
 
 
 def integral_gamma_1(m_c, prefactor):
     m1 = 3e13 / 1.989e33
+    m1 = 1e-50
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
@@ -90,7 +91,8 @@ def integral_gamma_1(m_c, prefactor):
 def integral_gamma_2(m_c, prefactor):
     m1 = m_star
     #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
-    m2 = 7e16 / 1.989e33
+    #m2 = 7e16 / 1.989e33
+    m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
     integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2(m_values, prefactor)
@@ -123,6 +125,12 @@ def combined_constraint_gamma_CMB(m_c, prefactor):
     
     return np.power((integral_gamma_1(m_c, prefactor)**2 + integral_gamma_2(m_c, prefactor)**2 + integral_CMB(m_c, prefactor)**2), -0.5)
 
+# returns a number as a string in standard form
+def string_scientific(val):
+    exponent = np.floor(np.log10(val))
+    coefficient = val / 10**exponent
+    return r'${:.2f} \times 10^{:.0f}$'.format(coefficient, exponent)
+
 
 m_c_evaporation = 10**np.linspace(-18, -13, 100)
 m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
@@ -135,8 +143,8 @@ if "__main__" == __name__:
     m_values = 10**np.linspace(-18, -15, 100)
     plt.figure()
     plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
-    for prefactor in ([1.7e8, 4.11e8, 3.5e7]):
-        plt.plot(m_values, f_evap_gamma_2(m_values, prefactor), linestyle='dotted', linewidth=5, label=r"Calculated, $f_\mathrm{max}(M)"+r"= {:.2e} \beta'(M)$".format(prefactor) + " $(M/M_\odot)^{-1/2}$")
+    for prefactor in ([1.7e8, 3.5e8, 3.8e8]):
+        plt.plot(m_values, f_evap_gamma_2(m_values, prefactor), linestyle='dotted', linewidth=5, label=r"Calculated, $f_\mathrm{max}(M) = $" +  string_scientific(prefactor) + r"$ \beta'(M) (M/M_\odot)^{-1/2}$")
     plt.xlabel('$M_\mathrm{c}~[M_\odot]$')
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.xscale('log')
@@ -150,7 +158,7 @@ if "__main__" == __name__:
                     
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label='Extracted (Carr 21)')
     
-    prefactor = 1.7e8
+    prefactor = 3.5e8
     
     f_pbh_evap = []
     f_pbh_evap_gamma = []
@@ -182,3 +190,4 @@ if "__main__" == __name__:
     
     ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma), pad=20)
     plt.tight_layout()
+    
