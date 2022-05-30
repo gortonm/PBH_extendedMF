@@ -36,8 +36,8 @@ m_star = 5e14 / 1.989e33    # use value of M_* from Carr+ '17
 sigma = 2
 epsilon = 0.4
 
-m2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
-#m2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
+#m2 = 7e16 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Carr+ '10
+m2 = 1e18 / 1.989e33    # using maximum mass applicable for extragalactic gamma-ray constraints from Table I of Carr, Kuhnel & Sandstad '16
 #m2 = np.power(5e9, 1/(3+epsilon)) * m_star    # using value of M_2 for which f_max(M_2) = 100
 m1 = m_star
 #m1 = 1e15 / 1.989e33
@@ -91,8 +91,6 @@ if "__main__" == __name__:
     f_pbh_evap = []
     f_pbh_evap_2 = []
     
-    #m1 = min(m_evaporation_mono)
-    #m2 = max(m_evaporation_mono)
     
     for m1 in ([2*m_star, m_star, 0.1*m_star]):
         f_pbh_evap_analytic = []
@@ -104,16 +102,14 @@ if "__main__" == __name__:
             if m1 == 0:
                 m_range = 10**np.linspace(np.log10(1e-50), np.log10(m2), 10000)
             
-            #m_range = np.linspace(max(m1, m_star), m2, 100000)   # no noticeable difference
                     
             f_pbh_evap.append(1/np.trapz(integrand(m=m_range, m_c=m_c), m_range))
             f_pbh_evap_2.append(1/np.trapz(integrand_2(m=m_range, m_c=m_c), m_range))
         
             f_pbh_evap_analytic.append(constraint_analytic(m_range, m_c))
             
-        #ax1.plot(m_c_evaporation, f_pbh_evap, label='Trapezium rule', linestyle = 'dotted', linewidth=6)
-        #ax1.plot(m_c_evaporation, f_pbh_evap_2, label='Trapezium rule ($f_\mathrm{max}$ analytic)', linestyle = 'dotted', linewidth=4)
         print(m2)
+        
         if m1 == m_star:
             ax1.plot(m_c_evaporation, f_pbh_evap_analytic, label='$M_1 = M_* = {:.0e}$ g (${:.0e}M_\odot)$'.format(m1 * 1.989e33, m1), linestyle = 'dotted', linewidth=5)
         else:
