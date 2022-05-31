@@ -103,8 +103,8 @@ def f_evap_gamma_3_Carr21(m):
     return f_Carr21(beta_prime, m)
 
 def integral_gamma_1_Carr10(m_c):
-    m1 = 3e13 / 1.989e33
-    #m1 = 1e-50
+    #m1 = 3e13 / 1.989e33
+    m1 = 1e-50
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
@@ -112,8 +112,8 @@ def integral_gamma_1_Carr10(m_c):
     return np.trapz(integrand, m_values)
 
 def integral_gamma_1_Carr21(m_c):
-    m1 = 3e13 / 1.989e33
-    #m1 = 1e-50
+    #m1 = 3e13 / 1.989e33
+    m1 = 1e-50
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
@@ -124,8 +124,8 @@ def integral_gamma_1_Carr21(m_c):
 def integral_gamma_2_Carr10(m_c):
     m1 = m_star
     #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
-    m2 = 7e16 / 1.989e33
-    #m2 = 1e10
+    #m2 = 7e16 / 1.989e33
+    m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
     integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2_Carr10(m_values)
@@ -135,8 +135,8 @@ def integral_gamma_2_Carr10(m_c):
 def integral_gamma_2_Carr21(m_c):
     m1 = m_star
     #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
-    m2 = 7e16 / 1.989e33
-    #m2 = 1e10
+    #m2 = 7e16 / 1.989e33
+    m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
     integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2_Carr21(m_values)
