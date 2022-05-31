@@ -104,7 +104,7 @@ def f_evap_gamma_3_Carr21(m):
 
 def integral_gamma_1_Carr10(m_c):
     m1 = 3e13 / 1.989e33
-    m1 = 1e-50
+    #m1 = 1e-50
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
@@ -113,7 +113,7 @@ def integral_gamma_1_Carr10(m_c):
 
 def integral_gamma_1_Carr21(m_c):
     m1 = 3e13 / 1.989e33
-    m1 = 1e-50
+    #m1 = 1e-50
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
@@ -144,9 +144,7 @@ def integral_gamma_2_Carr21(m_c):
 
 def integral_gamma_3_Carr21(m_c):
     m1 = 2.5e13 / 1.989e33
-    #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
     m2 = 2.4e14 / 1.989e33
-    #m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
     integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_3_Carr21(m_values)
@@ -284,7 +282,7 @@ if "__main__" == __name__:
     ax1.plot(m_c_evaporation, f_pbh_evap_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) only")
     ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33)")
     ax1.plot(m_c_evaporation, f_pbh_evap_all_Carr21, linestyle='dotted', linewidth=3, label=r"Using Eq. (32), Eq. (33) and Eq. (28)")
-    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
+    #ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
 
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
