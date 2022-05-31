@@ -56,8 +56,9 @@ def load_data(filename):
 
 def f_Carr10(beta_prime, m):
     # use Eq. (7.1) from Carr+ '10
-    return 4.11e8 * beta_prime / np.sqrt(m)
-    
+    #return 4.11e8 * beta_prime / np.sqrt(m)
+    return 3.5e8 * beta_prime / np.sqrt(m)
+  
 def f_Carr21(beta_prime, m):
     # use Eq. (57) from Carr+ '21
     return 3.81e8 * beta_prime / np.sqrt(m)
@@ -191,8 +192,8 @@ if "__main__" == __name__:
     #plt.plot(m_values, f_evap_gamma_2_Carr10(m_values, use_beta=False), linestyle='dotted', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
     #plt.plot(m_values, f_evap_gamma_2_Carr10(m_values, use_beta=True), linestyle='dotted', linewidth=5, label=r"Carr+ '10 (using $\beta'$ for $\beta$ in Eq. (7.1))")
 
-    plt.plot(m_values, f_evap_gamma_2_Carr21(m_values, use_beta=False), linestyle='dotted', linewidth=4, label=r"Using Carr+ '21 Eq. (33)")
-    plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr21(m_values, use_beta=False)), linestyle='dotted', color='k', linewidth=3, label=r"Using halved prefactor in Carr+ '21 Eq. (33)")
+    plt.plot(m_values, f_evap_gamma_2_Carr21(m_values, use_beta=False), linestyle='dotted', linewidth=4, color='tab:orange', 'label=r"Using Carr+ '21 Eq. (33)")
+    plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr21(m_values, use_beta=False)), linestyle='dotted', color='tab:green', linewidth=4, label=r"Using halved prefactor in Carr+ '21 Eq. (33)")
 
     plt.xlabel('$M~[M_\odot]$')
     plt.ylabel('$f_\mathrm{max}(M)$')
@@ -209,7 +210,7 @@ if "__main__" == __name__:
     plt.figure(figsize=(10, 8))
     plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=6, label="Extracted (Carr+' 21 Fig. 20)")
     
-    #plt.plot(m_values, 2e-8 * (m_values/m_star)**(3+epsilon), linewidth=4, linestyle='dotted', color='k', label=r"$f_\mathrm{max} = 2\times10^{8}(M/M_*)^{3+\epsilon}$")
+    plt.plot(m_values, 2e-8 * (m_values/m_star)**(3+epsilon), linewidth=4, linestyle='dotted', color='k', label=r"$f_\mathrm{max} = 2\times10^{8}(M/M_*)^{3+\epsilon}$")
 
     
     plt.plot(m_values, f_evap_gamma_2_Carr10(m_values, use_beta=False), linestyle='dotted', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
@@ -273,6 +274,43 @@ if "__main__" == __name__:
                     
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label="Extracted (Carr+' 21 Fig. 20)")
         
+    f_pbh_evap_Carr21 = []
+    f_pbh_evap_gamma_Carr21_halved = []
+
+    for m_c in m_c_evaporation:
+        f_pbh_evap_Carr21.append(1/integral_gamma_2_Carr21(m_c))
+        f_pbh_evap_gamma_Carr21_halved.append(0.5*combined_constraint_gamma_Carr21(m_c))
+  
+    ax1.plot(m_c_evaporation, f_pbh_evap_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) only")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33)")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
+
+    ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
+    ax1.set_ylabel('$f_\mathrm{PBH}$')
+    ax1.set_xscale('log')
+    ax1.set_yscale('log')
+    ax1.set_ylim(1e-4, 1)
+    ax1.set_xlim(1e-15, 1e-13)
+
+    ax1.legend()
+    
+    ax2 = plt.gca().twiny()
+    ax2.plot(np.array(m_c_evaporation)*1.989e33, np.zeros(len(m_c_evaporation)))
+    ax2.set_xlabel('$M_\mathrm{c}~[g]$')
+    ax2.set_xscale('log')    
+    ax2.tick_params(axis='x')
+    
+    ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma), pad=20)
+    plt.tight_layout()
+    
+    
+    
+    # Plot evaporation constraints for a log-normal MF (using expected expressions for beta)
+    fig, ax1 = plt.subplots(figsize=(12,8))
+    m_c_evaporation_LN, f_pbh_evaporation_LN = load_data('Gamma-ray_LN.csv')
+                    
+    ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label="Extracted (Carr+' 21 Fig. 20)")
+        
     f_pbh_evap_Carr10 = []
     f_pbh_evap_Carr21 = []
     f_pbh_evap_gamma_Carr10 = []
@@ -305,4 +343,3 @@ if "__main__" == __name__:
     
     ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma), pad=20)
     plt.tight_layout()
-    
