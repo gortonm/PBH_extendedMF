@@ -67,104 +67,100 @@ def find_beta_prime(beta_prime):
     return beta_prime * np.sqrt(gamma)
 
 
-def f_evap_gamma_1_Carr10(m, use_beta=False):
+def f_evap_gamma_1_Carr10(m):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary flux dominates (M < M_*)
     # Eq. (5.9) Carr+ '10
     beta_prime = 3e-27 * (m/m_star)**(-2.5-2*epsilon) 
-    
-    if use_beta:
-        return f_Carr10(find_beta_prime(beta_prime), m)
-    else:
-        return f_Carr10(beta_prime, m)
+    return f_Carr10(beta_prime, m)
 
 
-def f_evap_gamma_1_Carr21(m, use_beta=False):
+def f_evap_gamma_1_Carr21(m):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary flux dominates (M < M_*)
     # Eq. (32) Carr+ '21
     beta_prime = 5e-28 * (m/m_star)**(-2.5-2*epsilon)
-
-    if use_beta:
-        return f_Carr21(find_beta_prime(beta_prime), m)
-    else:
-        return f_Carr21(beta_prime, m)
+    return f_Carr21(beta_prime, m)
     
 
-def f_evap_gamma_2_Carr10(m, use_beta=False):
+def f_evap_gamma_2_Carr10(m):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary photon emission negligible (M > M_*)
     # Eq. (5.10) Carr+ '10
     beta_prime = 4e-26 * (m/m_star)**(3.5+epsilon)
-    
-    if use_beta:
-        return f_Carr10(find_beta_prime(beta_prime), m)
-    else:
-        return f_Carr10(beta_prime, m)
+    return f_Carr10(beta_prime, m)
 
 
-def f_evap_gamma_2_Carr21(m, use_beta=False):
+def f_evap_gamma_2_Carr21(m):
     # Extragalactic and Galactic gamma-ray backgrounds 
     # Secondary photon emission negligible (M > M_*)
     # Eq. (33) Carr+ '21
     beta_prime = 5e-26 * (m/m_star)**(3.5+epsilon)
-    
-    if use_beta:
-        return f_Carr21(find_beta_prime(beta_prime), m)
-    else:
-        return f_Carr21(beta_prime, m)
+    return f_Carr21(beta_prime, m)
 
+def f_evap_gamma_3_Carr21(m):
+    beta_prime = 3e-30 * (m / (1e13/1.989e33))**(3.1)
+    return f_Carr21(beta_prime, m)
 
-def integral_gamma_1_Carr10(m_c, use_beta=False):
+def integral_gamma_1_Carr10(m_c):
     m1 = 3e13 / 1.989e33
     m1 = 1e-50
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
-    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_1_Carr10(m_values, use_beta)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_1_Carr10(m_values)
     return np.trapz(integrand, m_values)
 
-def integral_gamma_1_Carr21(m_c, use_beta):
+def integral_gamma_1_Carr21(m_c):
     m1 = 3e13 / 1.989e33
     m1 = 1e-50
     m2 = m_star
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
 
-    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_1_Carr21(m_values, use_beta)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_1_Carr21(m_values)
     return np.trapz(integrand, m_values)
 
 
-def integral_gamma_2_Carr10(m_c, use_beta=False):
+def integral_gamma_2_Carr10(m_c):
     m1 = m_star
     #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
     m2 = 7e16 / 1.989e33
     #m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
-    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2_Carr10(m_values, use_beta)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2_Carr10(m_values)
     return np.trapz(integrand, m_values)
 
 
-def integral_gamma_2_Carr21(m_c, use_beta=False):
+def integral_gamma_2_Carr21(m_c):
     m1 = m_star
     #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
     m2 = 7e16 / 1.989e33
     #m2 = 1e10
     m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
     
-    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2_Carr21(m_values, use_beta)
+    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_2_Carr21(m_values)
+    return np.trapz(integrand, m_values)
+
+def integral_gamma_3_Carr21(m_c):
+    m1 = 2.5e13 / 1.989e33
+    #m2 = np.power(5e9, 1/(3+epsilon)) * m_star
+    m2 = 2.4e14 / 1.989e33
+    #m2 = 1e10
+    m_values = 10**np.linspace(np.log10(m1), np.log10(m2), 10000)    
+    
+    integrand = log_normal_MF(m_values, m_c) / f_evap_gamma_3_Carr21(m_values)
     return np.trapz(integrand, m_values)
 
 
+def combined_constraint_gamma_Carr10(m_c):
+    return np.power(integral_gamma_1_Carr10(m_c)**2 + integral_gamma_2_Carr10(m_c)**2, -0.5)
 
-def combined_constraint_gamma_Carr10(m_c, use_beta=False):
-    return np.power(integral_gamma_1_Carr10(m_c, use_beta)**2 + integral_gamma_2_Carr10(m_c, use_beta)**2, -0.5)
+def combined_constraint_gamma_Carr21(m_c):
+    return np.power(integral_gamma_1_Carr21(m_c)**2 + integral_gamma_2_Carr21(m_c)**2, -0.5)
 
-def combined_constraint_gamma_Carr21(m_c, use_beta=False):
-    return np.power(integral_gamma_1_Carr21(m_c, use_beta)**2 + integral_gamma_2_Carr21(m_c, use_beta)**2, -0.5)
-
-def combined_constraint_all_Carr21(m_c, use_beta=False):
-    return np.power(integral_gamma_1_Carr21(m_c, use_beta)**2 + integral_gamma_2_Carr21(m_c, use_beta)**2, -0.5)
+def combined_constraint_all_Carr21(m_c):
+    return np.power(integral_gamma_1_Carr21(m_c)**2 + integral_gamma_2_Carr21(m_c)**2 + integral_gamma_3_Carr21(m_c)**2, -0.5)
 
 
 # returns a number as a string in standard form
@@ -189,18 +185,18 @@ if "__main__" == __name__:
     #plt.plot(m_values, 2e-8 * (m_values/m_star)**(3+epsilon), linewidth=4, linestyle='dotted', color='k', label=r"$f_\mathrm{max} = 2\times10^{8}(M/M_*)^{3+\epsilon}$")
 
     
-    #plt.plot(m_values, f_evap_gamma_2_Carr10(m_values, use_beta=False), linestyle='dotted', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
-    #plt.plot(m_values, f_evap_gamma_2_Carr10(m_values, use_beta=True), linestyle='dotted', linewidth=5, label=r"Carr+ '10 (using $\beta'$ for $\beta$ in Eq. (7.1))")
+    #plt.plot(m_values, f_evap_gamma_2_Carr10(m_values), linestyle='dotted', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
+    #plt.plot(m_values, f_evap_gamma_2_Carr10(m_values), linestyle='dotted', linewidth=5, label=r"Carr+ '10 (using $\beta'$ for $\beta$ in Eq. (7.1))")
 
-    plt.plot(m_values, f_evap_gamma_2_Carr21(m_values, use_beta=False), linestyle='dotted', linewidth=4, color='tab:orange', 'label=r"Using Carr+ '21 Eq. (33)")
-    plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr21(m_values, use_beta=False)), linestyle='dotted', color='tab:green', linewidth=4, label=r"Using halved prefactor in Carr+ '21 Eq. (33)")
+    plt.plot(m_values, f_evap_gamma_2_Carr21(m_values), linestyle='dotted', color='tab:orange', linewidth=4, label=r"Using Carr+ '21 Eq. (33)")
+    plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr21(m_values)), linestyle='dotted', color='tab:green', linewidth=4, label=r"Using halved prefactor in Carr+ '21 Eq. (33)")
 
     plt.xlabel('$M~[M_\odot]$')
     plt.ylabel('$f_\mathrm{max}(M)$')
     plt.xscale('log')
     plt.yscale('log')
-    plt.xlim(min(m_evaporation_mono), max(m_evaporation_mono))
-    plt.ylim(min(f_max_evaporation_mono), max(f_max_evaporation_mono))
+    plt.xlim(0.8*min(m_evaporation_mono), 1.2*max(m_evaporation_mono))
+    plt.ylim(0.8*min(f_max_evaporation_mono), 1.2*max(f_max_evaporation_mono))
     plt.legend()
     plt.tight_layout()
 
@@ -213,8 +209,8 @@ if "__main__" == __name__:
     plt.plot(m_values, 2e-8 * (m_values/m_star)**(3+epsilon), linewidth=4, linestyle='dotted', color='k', label=r"$f_\mathrm{max} = 2\times10^{8}(M/M_*)^{3+\epsilon}$")
 
     
-    plt.plot(m_values, f_evap_gamma_2_Carr10(m_values, use_beta=False), linestyle='dotted', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
-    plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr10(m_values, use_beta=False)), linestyle='dotted', color='k', linewidth=3, label=r"Using halved prefactor in Carr+ '10 Eq. (5.10)")
+    plt.plot(m_values, f_evap_gamma_2_Carr10(m_values), linestyle='dotted', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
+    plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr10(m_values)), linestyle='dotted', color='k', linewidth=3, label=r"Using halved prefactor in Carr+ '10 Eq. (5.10)")
 
     plt.xlabel('$M~[M_\odot]$')
     plt.ylabel('$f_\mathrm{max}$(M)')
@@ -275,14 +271,19 @@ if "__main__" == __name__:
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label="Extracted (Carr+' 21 Fig. 20)")
         
     f_pbh_evap_Carr21 = []
+    f_pbh_evap_gamma_Carr21 = []
     f_pbh_evap_gamma_Carr21_halved = []
+    f_pbh_evap_all_Carr21 = []
 
     for m_c in m_c_evaporation:
         f_pbh_evap_Carr21.append(1/integral_gamma_2_Carr21(m_c))
+        f_pbh_evap_gamma_Carr21.append(combined_constraint_gamma_Carr21(m_c))
         f_pbh_evap_gamma_Carr21_halved.append(0.5*combined_constraint_gamma_Carr21(m_c))
+        f_pbh_evap_all_Carr21.append(combined_constraint_all_Carr21(m_c))
   
     ax1.plot(m_c_evaporation, f_pbh_evap_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) only")
     ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33)")
+    ax1.plot(m_c_evaporation, f_pbh_evap_all_Carr21, linestyle='dotted', linewidth=3, label=r"Using Eq. (32), Eq. (33) and Eq. (28)")
     ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
 
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
