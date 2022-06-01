@@ -207,8 +207,8 @@ if "__main__" == __name__:
     plt.plot(m_values, 2e-8 * (m_values/m_star)**(3+epsilon), linewidth=4, linestyle='dotted', color='k', label=r"$f_\mathrm{max} = 2\times10^{8}(M/M_*)^{3+\epsilon}$")
 
     
-    plt.plot(m_values, f_evap_gamma_2_Carr10(m_values), linestyle='dotted', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
-    plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr10(m_values)), linestyle='dotted', color='k', linewidth=3, label=r"Using halved prefactor in Carr+ '10 Eq. (5.10)")
+    plt.plot(m_values, f_evap_gamma_2_Carr10(m_values), linestyle='dotted', 'color='tab:orange', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
+    plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr10(m_values)), linestyle='dotted', color='tab:green', linewidth=3, label=r"Using halved prefactor in Carr+ '10 Eq. (5.10)")
 
     plt.xlabel('$M~[M_\odot]$')
     plt.ylabel('$f_\mathrm{max}$(M)')
@@ -282,7 +282,7 @@ if "__main__" == __name__:
     ax1.plot(m_c_evaporation, f_pbh_evap_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) only")
     ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33)")
     ax1.plot(m_c_evaporation, f_pbh_evap_all_Carr21, linestyle='dotted', linewidth=3, label=r"Using Eq. (32), Eq. (33) and Eq. (28)")
-    #ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
 
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
