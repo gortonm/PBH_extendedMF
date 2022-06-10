@@ -170,6 +170,11 @@ def string_scientific(val):
 
 m_c_evaporation = 10**np.linspace(-18, -13, 100)
 m_evaporation_mono, f_max_evaporation_mono = load_data('Gamma-ray_mono.csv')
+m_evaporation_LN_LH, f_max_evaporation_LN_LH = load_data('Carr+21_Gamma_ray_LN_LH.csv')
+m_evaporation_LN_RH, f_max_evaporation_LN_RH = load_data('Carr+21_Gamma_ray_LN_RH.csv')
+
+m_evaporation_mono_LH, f_max_evaporation_mono_LH = load_data('Carr+21_Gamma_ray_mono_LH.csv')
+m_evaporation_mono_RH, f_max_evaporation_mono_RH = load_data('Carr+21_Gamma_ray_mono_RH.csv')
 
 
 if "__main__" == __name__:
@@ -178,8 +183,10 @@ if "__main__" == __name__:
     # Plot the evaporation constraints for a monochromatic MF
     m_values = 10**np.linspace(-18, -15, 100)
     plt.figure(figsize=(10, 8))
-    plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=6, label="Extracted (Carr+' 21 Fig. 20)")
-    
+    plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=4, label="Extracted (Carr+' 21 Fig. 20)")
+    #plt.plot(m_evaporation_mono_LH, f_max_evaporation_mono_LH, color='grey', alpha=1, linewidth=1)
+    #plt.plot(m_evaporation_mono_RH, f_max_evaporation_mono_RH, color='grey', alpha=1, linewidth=1)
+   
     #plt.plot(m_values, 2e-8 * (m_values/m_star)**(3+epsilon), linewidth=4, linestyle='dotted', color='k', label=r"$f_\mathrm{max} = 2\times10^{8}(M/M_*)^{3+\epsilon}$")
 
     
@@ -193,10 +200,15 @@ if "__main__" == __name__:
     plt.ylabel('$f_\mathrm{max}(M)$')
     plt.xscale('log')
     plt.yscale('log')
-    plt.xlim(0.8*min(m_evaporation_mono), 1.2*max(m_evaporation_mono))
-    plt.ylim(0.8*min(f_max_evaporation_mono), 1.2*max(f_max_evaporation_mono))
+    plt.ylim(1e-4, 1)
+    plt.xlim(1e-18, 1e4)
+
+    #plt.xlim(0.8*min(m_evaporation_mono), 1.2*max(m_evaporation_mono))
+    #plt.ylim(0.8*min(f_max_evaporation_mono), 1.2*max(f_max_evaporation_mono))
     plt.legend()
+    plt.title('Monochromatic', pad=20)
     plt.tight_layout()
+
 
 
     # Plot the evaporation constraints for a monochromatic MF
@@ -204,10 +216,10 @@ if "__main__" == __name__:
     plt.figure(figsize=(10, 8))
     plt.plot(m_evaporation_mono, f_max_evaporation_mono, color='k', alpha=0.25, linewidth=6, label="Extracted (Carr+' 21 Fig. 20)")
     
-    plt.plot(m_values, 2e-8 * (m_values/m_star)**(3+epsilon), linewidth=4, linestyle='dotted', color='k', label=r"$f_\mathrm{max} = 2\times10^{8}(M/M_*)^{3+\epsilon}$")
+    plt.plot(m_values, 2e-8 * (m_values/m_star)**(3+epsilon), linewidth=4, linestyle='dotted', color='k', label=r"$f_\mathrm{max} = 2 \times 10^{8}(M/M_*)^{3+\epsilon}$")
 
     
-    plt.plot(m_values, f_evap_gamma_2_Carr10(m_values), linestyle='dotted', 'color='tab:orange', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
+    plt.plot(m_values, f_evap_gamma_2_Carr10(m_values), linestyle='dotted', color='tab:orange', linewidth=5, label=r"Using Carr+ '10 Eq. (5.10)")
     plt.plot(m_values, 0.5*np.array(f_evap_gamma_2_Carr10(m_values)), linestyle='dotted', color='tab:green', linewidth=3, label=r"Using halved prefactor in Carr+ '10 Eq. (5.10)")
 
     plt.xlabel('$M~[M_\odot]$')
@@ -248,7 +260,7 @@ if "__main__" == __name__:
     ax1.set_xscale('log')
     ax1.set_yscale('log')
     ax1.set_ylim(1e-4, 1)
-    ax1.set_xlim(1e-15, 1e-13)
+    ax1.set_xlim(1e-18, 1e4)
 
     ax1.legend()
     
@@ -280,9 +292,9 @@ if "__main__" == __name__:
         f_pbh_evap_all_Carr21.append(combined_constraint_all_Carr21(m_c))
   
     ax1.plot(m_c_evaporation, f_pbh_evap_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) only")
-    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33)")
-    ax1.plot(m_c_evaporation, f_pbh_evap_all_Carr21, linestyle='dotted', linewidth=3, label=r"Using Eq. (32), Eq. (33) and Eq. (28)")
-    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, label=r"Using Carr+ '21  Eq. (32) and Eq. (33)")
+    ax1.plot(m_c_evaporation, f_pbh_evap_all_Carr21, linestyle='dotted', linewidth=3, label=r"Using Carr+ '21 Eq. (32), Eq. (33) and Eq. (28)")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Carr+ '21 Eq. (32) and Eq. (33) " + "\n " + " (halved prefactors)")
 
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
@@ -305,11 +317,13 @@ if "__main__" == __name__:
     
     
     # Plot evaporation constraints for a log-normal MF (using expected expressions for beta)
-    fig, ax1 = plt.subplots(figsize=(12,8))
+    fig, ax1 = plt.subplots(figsize=(10,8))
     m_c_evaporation_LN, f_pbh_evaporation_LN = load_data('Gamma-ray_LN.csv')
                     
     ax1.plot(m_c_evaporation_LN, f_pbh_evaporation_LN, color='k', alpha=0.25, linewidth=4, label="Extracted (Carr+' 21 Fig. 20)")
-        
+    #ax1.plot(m_evaporation_LN_LH, f_max_evaporation_LN_LH, color='k', alpha=0.25, linewidth=1)        
+    #ax1.plot(m_evaporation_LN_RH, f_max_evaporation_LN_RH, color='k', alpha=0.25, linewidth=1)        
+
     f_pbh_evap_Carr10 = []
     f_pbh_evap_Carr21 = []
     f_pbh_evap_gamma_Carr10 = []
@@ -321,24 +335,26 @@ if "__main__" == __name__:
         f_pbh_evap_gamma_Carr10.append(combined_constraint_gamma_Carr10(m_c))
         f_pbh_evap_gamma_Carr21_halved.append(0.5*combined_constraint_gamma_Carr21(m_c))
   
-    ax1.plot(m_c_evaporation, f_pbh_evap_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) only")
-    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33)")
-    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
+    #ax1.plot(m_c_evaporation, f_pbh_evap_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) only")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, color='tab:orange', label=r"Using Carr+ '21 Eq. (32) and Eq. (33)")
+    ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, color='tab:green', label=r"Using Carr+ '21 Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
+
 
     ax1.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax1.set_ylabel('$f_\mathrm{PBH}$')
     ax1.set_xscale('log')
     ax1.set_yscale('log')
-    ax1.set_ylim(1e-4, 1)
-    ax1.set_xlim(1e-15, 1e-13)
+    ax1.set_ylim(10**(-4), 1)
+    ax1.set_xlim(1e-18, 1e4)
 
     ax1.legend()
-    
+    """
     ax2 = plt.gca().twiny()
     ax2.plot(np.array(m_c_evaporation)*1.989e33, np.zeros(len(m_c_evaporation)))
     ax2.set_xlabel('$M_\mathrm{c}~[g]$')
     ax2.set_xscale('log')    
     ax2.tick_params(axis='x')
+    """
+    ax1.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma), pad=20)
     
-    ax2.set_title('Log-normal ($\sigma = {:.0f}$)'.format(sigma), pad=20)
     plt.tight_layout()
