@@ -37,7 +37,7 @@ filepath = './Extracted_files/'
 def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
-
+m_BC19_propA_nobkg, f_BC19_propA_nobkg = load_data('Prop_A_wo_bkg.csv')
 m_BC19_propA_bkg, f_BC19_propA_bkg = load_data('Prop_A_with_bkg.csv')
 m_BC19_propB_nobkg, f_BC19_propB_nobkg = load_data('Prop_B_wo_bkg_upper.csv')
 m_BC19_propB_bkg, f_BC19_propB_bkg = load_data('Prop_B_with_bkg.csv')
@@ -45,20 +45,34 @@ m_BC19_propB_bkg, f_BC19_propB_bkg = load_data('Prop_B_with_bkg.csv')
 m_L19_NFW_3000pc, f_L19_NFW_3000pc = load_data('Laha19_NFW_3kpc.csv')
 m_L19_Iso_1500pc, f_L19_Iso_1500pc = load_data('Laha19_Iso_1.5kpc.csv')
 
+m_DG19_all, f_DG19_all = load_data('DG19_Fig1_all.csv')
+m_DG19_less1MeV, f_DG19_less1MeV = load_data('DG19_Fig1_less1MeV.csv')
+
 m_B22_SK, f_B22_SK = load_data('Bernal+21_SK.csv')
 
 if "__main__" == __name__:        
     
     
-    plt.figure(figsize=(14,8))
-    plt.plot(m_BC19_propA_bkg, f_BC19_propA_bkg, linewidth = 3, color='b', linestyle='dotted', label='Voyager 1 (Prop A, w/ background)')
-    plt.plot(m_BC19_propB_nobkg, f_BC19_propB_nobkg, linewidth = 3, color='b', linestyle='dashed', label='Voyager 1 (Prop B, w/o background)')
-    plt.plot(m_BC19_propB_bkg, f_BC19_propB_bkg, linewidth = 3, color='b', label='Voyager 1 (Prop B, w/ background)')
+    plt.figure(figsize=(14,9))
+    BC19_1, = plt.plot(m_BC19_propA_bkg, f_BC19_propA_bkg, linewidth = 3, color='b', linestyle='dotted', label='Prop A, w/ background')
+    BC19_2, = plt.plot(m_BC19_propA_nobkg, f_BC19_propA_nobkg, linewidth = 3, color='b', label='Prop A, w/o background')
+    BC19_3, = plt.plot(m_BC19_propB_bkg, f_BC19_propB_bkg, linewidth = 3, color='purple', linestyle='dotted', label='Prop B, w/ background')
+    BC19_4, = plt.plot(m_BC19_propB_nobkg, f_BC19_propB_nobkg, linewidth = 3, color='purple', label='Prop B, w/o background')
 
-    plt.plot(m_L19_NFW_3000pc, f_L19_NFW_3000pc, linewidth = 3, color='r', label="511 keV (NFW, 3 kpc)")
-    plt.plot(m_L19_Iso_1500pc, f_L19_Iso_1500pc, linewidth = 3, color='r', linestyle='dashed', label="511 keV (Iso, 1.5 kpc)")
+    #legend_1 = plt.legend(handles=[BC19_1, BC19_2], title='Voyager 1 (BC19)', fontsize='small', loc='right')
+    legend_1 = plt.legend(handles=[BC19_1, BC19_2, BC19_3, BC19_4], title='Voyager 1 (BC19)', fontsize='small', loc='right')
+    
 
-    plt.plot(m_B22_SK, f_B22_SK, linewidth = 3, color='y', label="Super-Kamiokande")
+    DG19_1, = plt.plot(m_DG19_all, f_DG19_all, linewidth = 3, color='orange', label="DG19 (all positron injection energies)")
+    DG19_2, = plt.plot(m_DG19_less1MeV, f_DG19_less1MeV, linewidth = 3, color='orange', linestyle='dashed', label="DG19 (positron injection energy $<$ 1 MeV)")
+
+    L19_1, = plt.plot(m_L19_NFW_3000pc, f_L19_NFW_3000pc, linewidth = 3, color='r', label="L19 (NFW, 3 kpc)")
+    L19_2, = plt.plot(m_L19_Iso_1500pc, f_L19_Iso_1500pc, linewidth = 3, color='r', linestyle='dashed', label="L19 (Iso, 1.5 kpc)")
+    
+    legend_2 = plt.legend(handles=[DG19_1, DG19_2, L19_1, L19_2], title='511 keV', fontsize='small', loc='lower right')
+    #legend_2 = plt.legend(handles=[L19_1, L19_2], title='511 keV', fontsize='small', loc='lower right')
+
+    #plt.plot(m_B22_SK, f_B22_SK, linewidth = 3, color='y', label="Super-Kamiokande")
     
     plt.xlabel('$M_\mathrm{PBH}~[M_\odot]$')
     plt.ylabel('$f_\mathrm{PBH}$')
@@ -67,5 +81,6 @@ if "__main__" == __name__:
     plt.yscale('log')
     plt.xlim(1e15, 10**17.5)
     plt.ylim(1e-7, 1)
-    plt.legend(fontsize='small')
-    plt.savefig('./Figures/constraints_comparison_evap.pdf')
+    plt.gca().add_artist(legend_1)
+    plt.gca().add_artist(legend_2)
+    plt.savefig('./Figures/constraints_comparison_evap_bkg_no_bkg_noDG19.pdf')
