@@ -54,6 +54,6 @@ m_DM = 0.										# DM mass in GeV
 spin_DM = 0.										# DM spin
 dof_DM = 0.										# number of DM degrees of freedom
 
-primary_only = 0								# 1=no secondary spectrum, 0=secondary spectrum computed
+primary_only = 2								# 1=no secondary spectrum, 0=secondary spectrum computed
 
 hadronization_choice = 3							# 0=PYTHIA at the BBN epoch, 1=HERWIG at the BBN epoch, 2=PYTHIA (new) at the present epoch, 3=HAZMA at the present epoch
