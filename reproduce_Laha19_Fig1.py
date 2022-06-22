@@ -110,7 +110,8 @@ def load_data(filename):
 R = 1.5
 m_pbh_L19_Iso_1500pc, f_pbh_L19_Iso_1500pc = load_data('Laha19_Iso_1.5kpc.csv')
 
-f_pbh_values = []
+f_pbh_P_values = []
+f_pbh_PS_values = []
 m_pbh_values = []
 
 # PBH mass (in grams)
@@ -130,6 +131,11 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+    
+    # Cut off secondary spectra above 3 MeV
+    secondary_spectrum_cutoff = secondary_spectrum[energies_secondary < 3e-3]
+    energies_secondary_cutoff = energies_secondary[energies_secondary < 3e-3]
+    
     #print(secondary_spectrum)
     #print(energies_secondary)
     
@@ -146,18 +152,22 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     """
     
     integral_primary = np.trapz(primary_spectrum, energies_primary)
-    integral_secondary = np.trapz(secondary_spectrum, energies_secondary)
+    integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
     integral = integral_primary + integral_secondary
     
-    f_pbh = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral * (R - r_s * np.arctan(R/r_s)))
-    f_pbh_values.append(f_pbh)
-    
+    f_pbh_P = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral_primary * (R - r_s * np.arctan(R/r_s)))
+    f_pbh_PS = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral * (R - r_s * np.arctan(R/r_s)))
+    f_pbh_P_values.append(f_pbh_P)
+    f_pbh_PS_values.append(f_pbh_PS)
+   
 plt.figure()
 plt.plot(m_pbh_L19_Iso_1500pc, f_pbh_L19_Iso_1500pc)
-plt.plot(m_pbh_values, f_pbh_values, 'x')
+plt.plot(m_pbh_values, f_pbh_P_values, 'x', label='Primary spectrum only')
+plt.plot(m_pbh_values, f_pbh_PS_values, 'x', label='Primary and secondary spectra')
 plt.plot()
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
 plt.xscale('log')
 plt.yscale('log')
+plt.legend()
 plt.tight_layout()
