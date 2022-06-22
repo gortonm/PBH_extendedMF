@@ -156,7 +156,7 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     plt.ylim(0, 1.1*max(primary_spectrum))
     plt.xlabel('Energy E [GeV]')
     plt.ylabel('$\mathrm{d}^2 n_e / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
-    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}g/".format(coefficient, exponent) + ' g')
+    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
     plt.legend()
     plt.tight_layout()
     
@@ -164,6 +164,8 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     integral_primary = np.trapz(primary_spectrum_cutoff, energies_primary_cutoff)
     integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
     integral = integral_primary + integral_secondary
+    
+    integral_primary = np.sum(primary_spectrum_cutoff[:-1] * np.diff(energies_primary_cutoff))
     
     f_pbh_P = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral_primary * (R - r_s * np.arctan(R/r_s)))
     f_pbh_PS = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral * (R - r_s * np.arctan(R/r_s)))
@@ -173,7 +175,7 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
 plt.figure()
 plt.plot(m_pbh_L19_Iso_1500pc, f_pbh_L19_Iso_1500pc)
 plt.plot(m_pbh_values, f_pbh_P_values, 'x', label='Primary spectrum only')
-plt.plot(m_pbh_values, f_pbh_PS_values, 'x', label='Primary and secondary spectra')
+#plt.plot(m_pbh_values, f_pbh_PS_values, 'x', label='Primary and secondary spectra')
 plt.plot()
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
