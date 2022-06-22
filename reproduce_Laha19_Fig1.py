@@ -38,7 +38,7 @@ g_to_GeV = 5.61e23    # convert 1 gram to GeV / c^2
 
 # Parameters
 r_odot = 8.5    # galactocentric radius of Sun, in kpc (Ng+ '14)
-E_min = 5.11e-6    # minimum positron energy to consider, in GeV
+E_min = 5.11e-4    # minimum positron energy to consider, in GeV
 E_max = 3e-3     # maximum positron energy to consider, in GeV
 
 # Parameters (isothermal density profile)
@@ -99,7 +99,7 @@ def read_blackhawk_spectra(fname, col=1):
 def string_scientific(val):
     exponent = np.floor(np.log10(val))
     coefficient = val / 10**exponent
-    return r'${:.1f} \times 10^{:.0f}$'.format(coefficient, exponent)
+    return r'${:.0f} \times 10^{:d}$'.format(coefficient, int(exponent))
 
 file_path_extracted = './Extracted_files/'
 def load_data(filename):
@@ -124,6 +124,7 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     coefficient = m_pbh / 10**exponent
 
     file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    
     # Load electron primary spectrum
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
     #print(primary_spectrum)
@@ -132,26 +133,35 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
-    # Cut off secondary spectra above 3 MeV
-    secondary_spectrum_cutoff = secondary_spectrum[energies_secondary < 3e-3]
-    energies_secondary_cutoff = energies_secondary[energies_secondary < 3e-3]
+    
+    # Cut off primary spectra below 511 keV (already cut-off above 3 MeV)
+    primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
+    energies_primary_cutoff = energies_primary[energies_primary > E_min]
+
+    
+    # Cut off secondary spectra below 511 keV, and above 3 MeV
+    secondary_spectrum_cutoff_1 = secondary_spectrum[energies_secondary < E_max]
+    energies_secondary_cutoff_1 = energies_secondary[energies_secondary < E_max]
+    secondary_spectrum_cutoff = secondary_spectrum_cutoff_1[energies_secondary_cutoff_1 > E_min]
+    energies_secondary_cutoff = energies_secondary_cutoff_1[energies_secondary_cutoff_1 > E_min]
     
     #print(secondary_spectrum)
     #print(energies_secondary)
     
-    """
+    
     plt.figure()
     plt.plot(energies_primary, primary_spectrum, label='Primary')
-    plt.plot(energies_secondary, secondary_spectrum, label='Secondary')
+    plt.plot(energies_secondary, secondary_spectrum, 'x', label='Secondary')
     plt.xlim(E_min, E_max)
-    plt.ylim(0, max(primary_spectrum))
+    plt.ylim(0, 1.1*max(primary_spectrum))
     plt.xlabel('Energy E [GeV]')
     plt.ylabel('$\mathrm{d}^2 n_e / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
-    plt.title('$M_\mathrm{PBH}$ ' + string_scientific(m_pbh) + ' g')
+    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}g/".format(coefficient, exponent) + ' g')
+    plt.legend()
     plt.tight_layout()
-    """
     
-    integral_primary = np.trapz(primary_spectrum, energies_primary)
+    
+    integral_primary = np.trapz(primary_spectrum_cutoff, energies_primary_cutoff)
     integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
     integral = integral_primary + integral_secondary
     
