@@ -123,7 +123,7 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
 
-    file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    file_path_data = "../blackhawk_v1.0/results/Laha19_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
     
     # Load electron primary spectrum
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
