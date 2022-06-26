@@ -123,7 +123,7 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
 
-    file_path_data = "../blackhawk_v1.0/results/Laha19_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    file_path_data = "../BlackHawk_v2.1/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
     
     # Load electron primary spectrum
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
@@ -145,10 +145,33 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     secondary_spectrum_cutoff = secondary_spectrum_cutoff_1[energies_secondary_cutoff_1 > E_min]
     energies_secondary_cutoff = energies_secondary_cutoff_1[energies_secondary_cutoff_1 > E_min]
     
-    #print(secondary_spectrum)
-    #print(energies_secondary)
+
+    # Load photon primary spectrum
+    photon_energies_primary, photon_primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)    
+    # Load photon secondary spectrum
+    photon_energies_secondary, photon_secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
     
+    # Peak photon energy, from Eq. 14 of Swagat's summary of Hawking radiation calculations.
+    peak_energy = 2.983e13 / m_pbh
+    # Compare analytic result for the peak photon energy to the true maximum value.
+    print(peak_energy / photon_energies_primary[np.argmax(photon_primary_spectrum)])
     
+    plt.figure()
+    plt.plot(photon_energies_primary, photon_primary_spectrum, label='Primary')
+    plt.plot(photon_energies_secondary, photon_secondary_spectrum, 'x', label='Secondary')
+    plt.xlim(E_min, E_max)
+    plt.ylim(0, 1.1*max(photon_primary_spectrum))
+    plt.xlabel('Energy E [GeV]')
+    plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
+    
+    # plot the peak energy
+    plt.vlines(peak_energy, ymin=0, ymax=1.1*max(photon_primary_spectrum), color='k', linestyle='dotted')
+    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
+    plt.legend()
+    plt.tight_layout()
+
+    
+    """
     plt.figure()
     plt.plot(energies_primary, primary_spectrum, label='Primary')
     plt.plot(energies_secondary, secondary_spectrum, 'x', label='Secondary')
@@ -156,10 +179,10 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     plt.ylim(0, 1.1*max(primary_spectrum))
     plt.xlabel('Energy E [GeV]')
     plt.ylabel('$\mathrm{d}^2 n_e / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
-    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
+        plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
     plt.legend()
     plt.tight_layout()
-    
+    """
     
     integral_primary = np.trapz(primary_spectrum_cutoff, energies_primary_cutoff)
     integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
@@ -183,3 +206,9 @@ plt.xscale('log')
 plt.yscale('log')
 plt.legend()
 plt.tight_layout()
+
+
+# compute Hawking temperature in K:
+print((3.16152677e-26 / (8*np.pi)) * 2.99792458e5**2 / (4.30091e-3 * 3.0857e16 * 1.380649e-23))
+print(1.989e33 * (3.16152677e-26 / (8*np.pi)) * 2.99792458e5**2 / (4.30091e-3 * 3.0857e16 * 1.380649e-23))
+print(2.431e-4 * 1.989e33 * (3.16152677e-26 / (8*np.pi)) * 2.99792458e5**2 / (4.30091e-3 * 3.0857e16 * 1.380649e-23))
