@@ -46,7 +46,7 @@ rho_0 = 0.376   # local DM density [GeV / c^2 cm^{-3}] (Table 3 de Salas+ '19 19
 r_s = 11   # scale radius [kpc] (Table 3 de Salas+ '19 1906.06133)
 gamma = 1   # inner slope
 
-def rho_NFW(r, r_s):
+def rho(r, r_s):
     return rho_0 * (r_s/r)**gamma * (1 + (r/r_s))**(gamma-3)
 
 def r(l, psi):
@@ -54,7 +54,7 @@ def r(l, psi):
 
 def j_psi(psi, r_s, n_steps=10000):
     l_values = np.linspace(0, r_0, n_steps)
-    return np.trapz(rho_NFW(r(l_values, psi), r_s)**2, l_values)
+    return np.trapz(rho(r(l_values, psi), r_s)**2, l_values)
 
 # unit conversion factor from units of integral output to those used in 2010.04797 [MeV cm^{-2} sr^{-1}]
 unit_conversion_Coogan = 3.0857e24
@@ -66,11 +66,12 @@ def j(delta_omega, r_s, n_steps=10000):
     lim = np.sqrt(delta_omega / np.pi) / 2   # integration limit on psi (in radians)
     psi_values = np.linspace(1e-6, lim, n_steps)
     integrand_values = [psi * j_psi(psi, r_s) for psi in psi_values]
-    return (4 * np.pi / (delta_omega)) * np.trapz(integrand_values, psi_values)
+    return (1 / delta_omega) * np.trapz(integrand_values, psi_values)
 
+print("NFW")
 print(j(delta_omega, r_s) * unit_conversion_Coogan)
 
-
+print("Generalised NFW")
 # Parameters (generalised NFW)
 rho_0 = 0.387   # local DM density [GeV / c^2 cm^{-3}] (Table 3 de Salas+ '19 1906.06133)
 r_s = 8.1   # scale radius [kpc] (Table 3 de Salas+ '19 1906.06133)
@@ -78,3 +79,14 @@ gamma = 1.2   # inner slope
 
 print(j(delta_omega, r_s) * unit_conversion_Coogan)
 
+
+print("Einasto")
+def rho(r, r_s):
+    return rho_0 * np.exp( - (2/alpha) * ( (r/r_s)**alpha - 1))
+
+# Parameters (Einasto)
+print("Einasto (varying r_s and alpha)")
+rho_0 = 0.388   # local DM density [GeV / c^2 cm^{-3}] (maximum value from Table 3 de Salas+ '19 1906.06133)
+for r_s in [6.5, 9.2, 14.5]:
+    for alpha in [0.09, 0.18, 0.39]:
+        print(j(delta_omega, r_s) * unit_conversion_Coogan)
