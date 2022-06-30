@@ -8,6 +8,7 @@ Created on Tue Jun 21 15:30:09 2022
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from reproduce_extended_MF import triple_integral
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 20,'font.family':'serif'})
@@ -40,63 +41,40 @@ g_to_GeV = 5.61e23    # convert 1 gram to GeV / c^2
 
 """ Need checking"""
 # Parameters
-r_0 = 8.5    # galactocentric radius of Sun, in kpc
+r_0 = 8.12    # galactocentric radius of Sun, in kpc (Table I caption: Coogan, Morrison & Profumo '20 2010.04797)
 #E_min = 5.11e-4    # minimum positron energy to consider, in GeV
 E_min = 1e-4
 E_max = 6e-3
 #E_max = 3e-3     # maximum positron energy to consider, in GeV
 
 # Parameters (NFW density profile)
-rho_0 = 0.3   # local DM density [GeV / c^2 cm^{-3}] (Ng+ '14 middle value)
+rho_0 = 0.376   # local DM density [GeV / c^2 cm^{-3}] (Table 3 de Salas+ '19 1906.06133)
+a = 11   # scale radius [kpc] (Table 3 de Salas+ '19 1906.06133)
 
-def rho_NFW(r, a):
+def rho_NFW(r):
     return rho_0 * ((r/a) * (1 + (r/a))**2)**(-1)
 
-def r(l, psi):
-    return np.sqrt(l**2 + r_0**2 - 2*l*r_0*np.cos(psi))
+def r(los, b, l):
+    return np.sqrt(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l))
 
-def j_psi(psi, a, n_steps=10000):
-    l_values = np.linspace(0, r_0, n_steps)
-    return np.trapz(rho_NFW(r(l_values, psi), a)**2, l_values) / (r_0 * rho_0**2)
+def j_integrand(los, b, l):
+    return rho_NFW(r(los, b, l))
 
-""" Reproduce Fig. 6 of Bergström, Ullio & Buckley '98 (astro-ph/9712318)"""
-a = 25   # scale radius, in kpc
-psi_values = np.linspace(0, np.pi, 100)
-j_psi_values = [j_psi(psi, a) for psi in psi_values]
+def j(delta_b, delta_l, n_steps=1000):
+    b_min, b_max = -delta_b/2, delta_b/2
+    l_min, l_max = -delta_l/2, delta_l/2
+    return triple_integral(j_integrand, 0, r_0, b_min, b_max, l_min, l_max, n_steps=n_steps) / (delta_b * delta_l)
 
-plt.figure()
-plt.plot((180/np.pi)*psi_values, j_psi_values)
-plt.xlabel('$\psi$ (deg)')
-plt.ylabel('$J(\psi)$')
-plt.yscale('log')
-plt.xlim(0, 180)
-plt.ylim(0.3, 4e3)
-plt.tight_layout()
+delta_omega = 2.39e-2    # 5 square degree observing region around the galactic centre
+# ranges of b and l for
+delta_b, delta_l = np.sqrt(delta_omega), np.sqrt(delta_omega)
+print(j(delta_b, delta_l))
 
-""" Reproduce Fig. 7 of Bergström, Ullio & Buckley '98 (astro-ph/9712318)"""
-delta_omega = 1e-3   # solid angle view of detector
 
-def j(delta_omega, a, n_steps=10000):
-    lim = np.sqrt(delta_omega) / 2   # integration limit on psi (in radians)
-    psi_values = np.linspace(1e-5, lim, n_steps)
-    integrand_values = [psi * j_psi(psi, a) for psi in psi_values]
-    return (4 * np.pi / (delta_omega)) * np.trapz(integrand_values, psi_values)
-
-j_0_values = []
-a_values = 10**np.linspace(np.log10(4), np.log10(90), 10)
-
-plt.figure()
-rho_0 = 0.3
-plt.plot(25, j(delta_omega, a=25), '^')
-plt.xlabel('Core radius $a$ (kpc)')
-plt.ylabel(r'$\langle J(0) \rangle (\Delta \Omega = 10^{-3}$sr$)$')
-plt.yscale('log')
-plt.xscale('log')
-plt.xlim(1, 100)
-plt.ylim(1, 1e5)
-plt.tight_layout()
-    
-    
+# Asymmetric case, including the whole range observed by COMPTEL
+delta_b = 2 * np.radians(20)
+delta_l = 2 * np.radians(60)
+print(j(delta_b, delta_l))
 
 def read_col(fname, first_row=0, col=1, convert=int, sep=None, skip_lines=1):
     """Read text files with columns separated by `sep`.
