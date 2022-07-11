@@ -123,12 +123,13 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
 
-    file_path_data = "../BlackHawk_v2.1/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    #file_path_data = "../BlackHawk_v2.1/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    file_path_data = "../Downloads/version_finale/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)   # v2.1
+    #file_path_data = "../blackhawk_v1.0/results/Laha19_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
     
     # Load electron primary spectrum
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
-    #print(primary_spectrum)
-    #print(energies_primary)
     
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
@@ -145,32 +146,6 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     secondary_spectrum_cutoff = secondary_spectrum_cutoff_1[energies_secondary_cutoff_1 > E_min]
     energies_secondary_cutoff = energies_secondary_cutoff_1[energies_secondary_cutoff_1 > E_min]
     
-
-    # Load photon primary spectrum
-    photon_energies_primary, photon_primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)    
-    # Load photon secondary spectrum
-    photon_energies_secondary, photon_secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
-    
-    # Peak photon energy, from Eq. 14 of Swagat's summary of Hawking radiation calculations.
-    peak_energy = 2.983e13 / m_pbh
-    # Compare analytic result for the peak photon energy to the true maximum value.
-    print(peak_energy / photon_energies_primary[np.argmax(photon_primary_spectrum)])
-    
-    plt.figure()
-    plt.plot(photon_energies_primary, photon_primary_spectrum, label='Primary')
-    plt.plot(photon_energies_secondary, photon_secondary_spectrum, 'x', label='Secondary')
-    plt.xlim(E_min, E_max)
-    plt.ylim(0, 1.1*max(photon_primary_spectrum))
-    plt.xlabel('Energy E [GeV]')
-    plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
-    
-    # plot the peak energy
-    plt.vlines(peak_energy, ymin=0, ymax=1.1*max(photon_primary_spectrum), color='k', linestyle='dotted')
-    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
-    plt.legend()
-    plt.tight_layout()
-
-    
     """
     plt.figure()
     plt.plot(energies_primary, primary_spectrum, label='Primary')
@@ -179,16 +154,20 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     plt.ylim(0, 1.1*max(primary_spectrum))
     plt.xlabel('Energy E [GeV]')
     plt.ylabel('$\mathrm{d}^2 n_e / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
-        plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
+    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
     plt.legend()
     plt.tight_layout()
     """
     
-    integral_primary = np.trapz(primary_spectrum_cutoff, energies_primary_cutoff)
+    energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+    primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
+    
+    #integral_primary = np.trapz(primary_spectrum_cutoff, energies_primary_cutoff)
+    integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
     integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
     integral = integral_primary + integral_secondary
     
-    integral_primary = np.sum(primary_spectrum_cutoff[:-1] * np.diff(energies_primary_cutoff))
+    #integral_primary = np.sum(primary_spectrum_cutoff[:-1] * np.diff(energies_primary_cutoff))
     
     f_pbh_P = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral_primary * (R - r_s * np.arctan(R/r_s)))
     f_pbh_PS = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral * (R - r_s * np.arctan(R/r_s)))
@@ -197,8 +176,10 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
    
 plt.figure()
 plt.plot(m_pbh_L19_Iso_1500pc, f_pbh_L19_Iso_1500pc)
-plt.plot(m_pbh_values, f_pbh_P_values, 'x', label='Primary spectrum only')
+plt.plot(m_pbh_values, f_pbh_P_values, 'x', label='Iso, 1.5 kpc')
 #plt.plot(m_pbh_values, f_pbh_PS_values, 'x', label='Primary and secondary spectra')
+plt.xlim(1e16, 10**(17.1))
+plt.ylim(10**(-3.4), 1)
 plt.plot()
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
