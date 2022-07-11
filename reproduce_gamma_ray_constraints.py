@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from reproduce_extended_MF import triple_integral
+from scipy.integrate import tplquad
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 20,'font.family':'serif'})
@@ -29,6 +30,17 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
+
+"""Test for tplquad"""
+def func(z, y, x):
+    return z*x**2 + 4*y*z**3
+
+x_min, x_max = 11, 14
+y_min, y_max = 7, 10
+z_min, z_max = 1, 2
+
+tplquad(func, x_min, x_max, y_min, y_max, z_min, z_max)   # returns 3267.0, as expected
+
 # Script to reproduce constraints on PBHs from (extra)galactic gamma rays, 
 # using results from BlackHawk 
 
@@ -37,9 +49,6 @@ s_to_yr = 1 / (365.25 * 86400)   # convert 1 s to yr
 cm_to_kpc = 3.2408e-22    # convert 1 cm to kpc
 g_to_GeV = 5.61e23    # convert 1 gram to GeV / c^2
 
-
-
-""" Need checking"""
 # Parameters
 r_0 = 8.12    # galactocentric radius of Sun, in kpc (Table I caption: Coogan, Morrison & Profumo '20 2010.04797)
 #E_min = 5.11e-4    # minimum positron energy to consider, in GeV
@@ -55,26 +64,50 @@ def rho_NFW(r):
     return rho_0 * ((r/a) * (1 + (r/a))**2)**(-1)
 
 def r(los, b, l):
-    return np.sqrt(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l))
+    return max(1e-7, np.sqrt(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l)))
 
 def j_integrand(los, b, l):
     return rho_NFW(r(los, b, l))
 
-def j(delta_b, delta_l, n_steps=1000):
+def j(delta_b, delta_l, n_steps=10000):
     b_min, b_max = -delta_b/2, delta_b/2
     l_min, l_max = -delta_l/2, delta_l/2
-    return triple_integral(j_integrand, 0, r_0, b_min, b_max, l_min, l_max, n_steps=n_steps) / (delta_b * delta_l)
+    #return triple_integral(j_integrand, 0, r_0, b_min, b_max, l_min, l_max, n_steps=n_steps) / (delta_b * delta_l)
+    return np.array(tplquad(j_integrand, l_min, l_max, b_min, b_max, 1e-4, r_0)) / (delta_b * delta_l)
 
+# unit conversion factor from units of integral output to those used in 2010.04797 [MeV cm^{-2} sr^{-1}]
+unit_conversion_Coogan = 3.0857e24
+
+print("NFW")
+print("Delta Omega = 5 deg^2")
 delta_omega = 2.39e-2    # 5 square degree observing region around the galactic centre
 # ranges of b and l for
 delta_b, delta_l = np.sqrt(delta_omega), np.sqrt(delta_omega)
-print(j(delta_b, delta_l))
+print(j(delta_b, delta_l) * unit_conversion_Coogan)
 
 
+print("|b| < 20 deg, |l| < 60 deg")
 # Asymmetric case, including the whole range observed by COMPTEL
-delta_b = 2 * np.radians(20)
-delta_l = 2 * np.radians(60)
-print(j(delta_b, delta_l))
+delta_b = np.radians(20)
+delta_l = np.radians(60)
+print(j(delta_b, delta_l) * unit_conversion_Coogan)
+
+
+print("Einasto")
+def rho_Einasto(r):
+    return rho_0 * np.exp( - (2/alpha) * ( (r/r_s)**alpha - 1))
+
+def j_integrand(los, b, l):
+    return rho_Einasto(r(los, b, l))
+
+delta_b, delta_l = np.sqrt(delta_omega), np.sqrt(delta_omega)
+# Parameters (Einasto)
+print("Einasto (varying r_s and alpha)")
+rho_0 = 0.388   # local DM density [GeV / c^2 cm^{-3}] (maximum value from Table 3 de Salas+ '19 1906.06133)
+for r_s in [6.5, 9.2, 14.5]:
+    for alpha in [0.09, 0.18, 0.39]:
+        print(j(delta_omega, r_s) * unit_conversion_Coogan)
+
 
 def read_col(fname, first_row=0, col=1, convert=int, sep=None, skip_lines=1):
     """Read text files with columns separated by `sep`.
@@ -121,7 +154,7 @@ def read_blackhawk_spectra(fname, col=1):
     for i in range(2, len(spectrum_data)):
         spectrum.append(float(spectrum_data[i]))
         
-    return np.array(energies) * 0.5, 2 * np.array(spectrum)
+    return np.array(energies), np.array(spectrum)
 
 
 # returns a number as a string in standard form
