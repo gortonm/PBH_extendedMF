@@ -61,19 +61,30 @@ rho_0 = 0.376   # local DM density [GeV / c^2 cm^{-3}] (Table 3 de Salas+ '19 19
 a = 11   # scale radius [kpc] (Table 3 de Salas+ '19 1906.06133)
 
 def rho_NFW(r):
+    if abs((r/a) * (1 + (r/a))**2) < 1e-9:
+        print('r = ', r)
     return rho_0 * ((r/a) * (1 + (r/a))**2)**(-1)
 
 def r(los, b, l):
-    return max(1e-7, np.sqrt(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l)))
+    if abs(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l)) < 1e-15:
+        print('r = ', los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l))
+        print('los = ', los)
+        print('b = ', b)
+        print('l = ', l)
+    return np.sqrt(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l))
 
 def j_integrand(los, b, l):
-    return rho_NFW(r(los, b, l))
+    return rho_NFW(r(los, b, l)) * np.cos(b)
 
-def j(delta_b, delta_l, n_steps=10000):
-    b_min, b_max = -delta_b/2, delta_b/2
-    l_min, l_max = -delta_l/2, delta_l/2
+def j(delta_b, delta_l):
+    b_min, b_max = -delta_b, delta_b
+    l_min, l_max = -delta_l, delta_l
+    #delta_omega = np.pi * (l_max - l_min) * (np.sin(b_max) - np.sin(b_min))
+    delta_omega = np.pi * (l_max - l_min) * (b_max - b_min)
+    print(b_max * (180/np.pi))
+    print('delta_omega = ', delta_omega)
     #return triple_integral(j_integrand, 0, r_0, b_min, b_max, l_min, l_max, n_steps=n_steps) / (delta_b * delta_l)
-    return np.array(tplquad(j_integrand, l_min, l_max, b_min, b_max, 1e-4, r_0)) / (delta_b * delta_l)
+    return np.array(tplquad(j_integrand, l_min, l_max, b_min, b_max, 0, 0.99999*r_0)) / delta_omega
 
 # unit conversion factor from units of integral output to those used in 2010.04797 [MeV cm^{-2} sr^{-1}]
 unit_conversion_Coogan = 3.0857e24
@@ -81,8 +92,9 @@ unit_conversion_Coogan = 3.0857e24
 print("NFW")
 print("Delta Omega = 5 deg^2")
 delta_omega = 2.39e-2    # 5 square degree observing region around the galactic centre
-# ranges of b and l for
-delta_b, delta_l = np.sqrt(delta_omega), np.sqrt(delta_omega)
+# ranges of b and l for a 5 deg^2 observing region
+delta_b, delta_l = 0.5*np.sqrt(delta_omega/np.pi), 0.5*np.sqrt(delta_omega/np.pi)
+#delta_b, delta_l = 0.5*np.sqrt(delta_omega), 0.5*np.sqrt(delta_omega)
 print(j(delta_b, delta_l) * unit_conversion_Coogan)
 
 
@@ -93,6 +105,25 @@ delta_l = np.radians(60)
 print(j(delta_b, delta_l) * unit_conversion_Coogan)
 
 
+# Plot integrand
+l_values = np.linspace(-delta_b, delta_b, 100)
+los_values = np.linspace(1e-3, r_0, 100)
+
+l_grid, los_grid = np.meshgrid(l_values, los_values)
+integrand_grid = j_integrand(los_grid, delta_b/2, l_grid)
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+surf = ax.plot_surface(l_grid, los_grid, integrand_grid)
+ax.set_xlabel('$l$')
+ax.set_ylabel('Line of sight distance $L$ [kpc]')
+ax.set_zlabel('Integrand')
+
+b = 0.1
+los = 5
+plt.plot(l_values, j_integrand(los, b, l_values))
+plt.xlabel('$l$ [radians]')
+plt.ylabel('$J_D$')
+
 print("Einasto")
 def rho_Einasto(r):
     return rho_0 * np.exp( - (2/alpha) * ( (r/r_s)**alpha - 1))
@@ -100,7 +131,7 @@ def rho_Einasto(r):
 def j_integrand(los, b, l):
     return rho_Einasto(r(los, b, l))
 
-delta_b, delta_l = np.sqrt(delta_omega), np.sqrt(delta_omega)
+delta_b, delta_l = np.sqrt(delta_omega/np.pi), np.sqrt(delta_omega/np.pi)
 # Parameters (Einasto)
 print("Einasto (varying r_s and alpha)")
 rho_0 = 0.388   # local DM density [GeV / c^2 cm^{-3}] (maximum value from Table 3 de Salas+ '19 1906.06133)
