@@ -140,6 +140,14 @@ for r_s in [6.5, 9.2, 14.5]:
         print(j(delta_omega, r_s) * unit_conversion_Coogan)
 
 
+
+
+
+
+
+
+"""Try to reproduce constraints from Auffinger '22 Fig. 2 from COMPTEL"""
+
 def read_col(fname, first_row=0, col=1, convert=int, sep=None, skip_lines=1):
     """Read text files with columns separated by `sep`.
 
@@ -194,9 +202,81 @@ def string_scientific(val):
     coefficient = val / 10**exponent
     return r'${:.0f} \times 10^{:d}$'.format(coefficient, int(exponent))
 
-file_path_extracted = './Extracted_files/'
-def load_data(filename):
+
+file_path_extracted = './Extracted_files/A22_COMPTEL/'
+
+def load_data(filename, file_path_extracted = './Extracted_files/'):
     return np.genfromtxt(file_path_extracted+filename, delimiter=',', unpack=True)
+
+lower_bin, upper_bin = load_data('lower_bin.csv', file_path_extracted = './Extracted_files/A22_COMPTEL/'), load_data('upper_bin.csv', file_path_extracted = './Extracted_files/A22_COMPTEL/')
+mean_flux = load_data('means.csv', file_path_extracted = './Extracted_files/A22_COMPTEL/')
+
+# energy bins
+bins = []
+for i in range(len(upper_bin)):
+    bins.append(np.array([lower_bin[i], upper_bin[i]]))
+
+
+cm_to_GeV = 5.06773e13
+
+
+def J_gal(J, delta_omega):
+    return J * r_0 * rho_0 / delta_omega
+
+def calc_f_pbh(m_pbh, J_gal, spectrum, flux_error, flux_mean, E_low_X, E_up_X, CL=0):
+    prefactor = 4 * np.pi * m_pbh / J_gal
+   
+    spectrum_cutoff_1 = spectrum[spectrum > E_low_X]
+    spectrum_cutoff = spectrum_cutoff_1[spectrum_cutoff_1 < E_up_X]    
+   
+    energies_interp = 10**np.linspace(np.log10(E_low_X), np.log10(E_up_X), 1000)
+    spectrum_interp = np.interp(energies_interp, spectrum_cutoff)
+    
+    integral = np.trapz(spectrum_interp, energies_interp)
+    
+    return cm_to_GeV * prefactor * (E_up_X - E_low_X) * (flux_mean + CL*flux_error) / integral
+
+m_pbh_values = [4e15, 6e15, 8e15, 1e16, 2e16, 4e16, 6e16, 8e16, 1e17]
+f_pbh_values = []
+
+J_COMPTEL, delta_omega_COMPTEL = 6.82, np.pi * (60 * 20 * (np.pi/180)**2)
+J_INTEGRAL, delta_omega_INTEGRAL = 3.65, np.pi * (30 * 15 * (np.pi/180)**2)
+
+J_gal = J_gal(J_COMPTEL, delta_omega_COMPTEL)
+
+for m_pbh in m_pbh_values:
+    
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
+        
+    file_path_spectra = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    # Load photon primary spectrum
+    energies, spectrum = read_blackhawk_spectra(file_path_spectra + "instantaneous_primary_spectra.txt", col=1)
+
+    f_pbh = 1.
+    
+    for i in range(0, 2):
+        E_low_X, E_up_X = lower_bin[0][i], upper_bin[0][i]
+        E_mean_X = mean_flux[1][i]
+
+        if calc_f_pbh(m_pbh, J_gal, spectrum, flux_error=0, flux_mean=E_mean_X, E_low_X=E_low_X, E_up_X=E_up_X) < f_pbh:
+            f_pbh = calc_f_pbh(m_pbh, J_gal, spectrum, flux_error=0, flux_mean=E_mean_X, E_low_X=E_low_X, E_up_X=E_up_X)
+
+    f_pbh_values.append(f_pbh)
+    
+plt.figure()
+plt.plot(m_pbh_values, f_pbh_values, 'x')
+plt.xlim(min(m_pbh_values), max(m_pbh_values))
+plt.ylim(1e-6, 1)
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$f_\mathrm{PBH}')
+plt.xscale('log')
+plt.yscale('log')
+plt.legend()
+plt.tight_layout()
+
+
+
 
 """
 # distance from galactic centre to include positrons from, in kpc
