@@ -91,3 +91,15 @@ plt.ylabel('$E^2 {\\rm d}\Phi/{\\rm d}E\,\, ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
+
+#%% Find bin widths in Auffinger and CMP '21
+
+bin_widths_Auffinger = E_Auffinger_bin_upper - E_Auffinger_bin_lower
+bin_widths_Essig13 = bins_upper_Essig13 - bins_lower_Essig13
+
+print((bin_widths_Auffinger)[-1])
+print((bin_widths_Essig13)[-1])
+
+
+print((bin_widths_Auffinger)[0])
+print((bin_widths_Essig13)[2])
