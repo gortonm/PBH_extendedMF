@@ -30,7 +30,7 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
-
+#%%
 """Test for tplquad"""
 def func(z, y, x):
     return z*x**2 + 4*y*z**3
@@ -41,6 +41,7 @@ z_min, z_max = 1, 2
 
 tplquad(func, x_min, x_max, y_min, y_max, z_min, z_max)   # returns 3267.0, as expected
 
+#%%
 # Script to reproduce constraints on PBHs from (extra)galactic gamma rays, 
 # using results from BlackHawk 
 
@@ -89,6 +90,7 @@ def j(delta_b, delta_l):
 # unit conversion factor from units of integral output to those used in 2010.04797 [MeV cm^{-2} sr^{-1}]
 unit_conversion_Coogan = 3.0857e24
 
+#%%
 print("NFW")
 print("Delta Omega = 5 deg^2")
 delta_omega = 2.39e-2    # 5 square degree observing region around the galactic centre
@@ -145,8 +147,25 @@ for r_s in [6.5, 9.2, 14.5]:
 
 
 
-
+#%%
 """Try to reproduce constraints from Auffinger '22 Fig. 2 from COMPTEL"""
+
+# Unit conversion factors
+s_to_yr = 1 / (365.25 * 86400)   # convert 1 s to yr
+cm_to_kpc = 3.2408e-22    # convert 1 cm to kpc
+g_to_GeV = 5.61e23    # convert 1 gram to GeV / c^2
+
+# Parameters
+r_0 = 8.12    # galactocentric radius of Sun, in kpc (Table I caption: Coogan, Morrison & Profumo '20 2010.04797)
+#E_min = 5.11e-4    # minimum positron energy to consider, in GeV
+E_min = 1e-4
+E_max = 6e-3
+#E_max = 3e-3     # maximum positron energy to consider, in GeV
+
+# Parameters (NFW density profile)
+rho_0 = 0.376   # local DM density [GeV / c^2 cm^{-3}] (Table 3 de Salas+ '19 1906.06133)
+a = 11   # scale radius [kpc] (Table 3 de Salas+ '19 1906.06133)
+
 
 def read_col(fname, first_row=0, col=1, convert=int, sep=None, skip_lines=1):
     """Read text files with columns separated by `sep`.
@@ -278,7 +297,7 @@ plt.tight_layout()
 
 
 
-"""
+file_path_extracted = './Extracted_files/'
 # distance from galactic centre to include positrons from, in kpc
 R = 1.5
 m_pbh_L19_Iso_1500pc, f_pbh_L19_Iso_1500pc = load_data('Laha19_Iso_1.5kpc.csv')
@@ -343,7 +362,7 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     plt.tight_layout()
     
     
-    
+    """
     energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
     primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
     
@@ -358,7 +377,7 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     f_pbh_PS = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral * (R - r_s * np.arctan(R/r_s)))
     f_pbh_P_values.append(f_pbh_P)
     f_pbh_PS_values.append(f_pbh_PS)
-   
+    """
 plt.figure()
 plt.plot(m_pbh_L19_Iso_1500pc, f_pbh_L19_Iso_1500pc)
 plt.plot(m_pbh_values, f_pbh_P_values, 'x', label='Iso, 1.5 kpc')
@@ -372,5 +391,82 @@ plt.xscale('log')
 plt.yscale('log')
 plt.legend()
 plt.tight_layout()
-"""
 
+
+
+#%% Plot NFW density profiles with parameter values used in Auffinger '22 vs CMP '21"""
+
+
+def rho_NFW(r, rho_0, r_s):
+    return rho_0 * ((r/r_s) * (1 + (r/r_s))**2)**(-1)
+
+def r(los, b, l, r_0):
+    return np.sqrt(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l))
+
+
+# Auffinger '22 parameters
+rho_0_Auffinger = 0.0125
+r_s_Auffinger = 17
+r_0_Auffinger = 8.5
+
+# CMP '21 parameters
+rho_0_CMP = 0.00990
+r_s_CMP = 11
+r_0_CMP = 8.12
+
+r_values = np.linspace(1e-3, 20, 100)
+los_values = np.linspace(1e-3, 8, 100)
+
+plt.figure()
+plt.plot(r_values, rho_NFW(r_values, rho_0_Auffinger, r_s_Auffinger), label="Auffinger '22")
+plt.plot(r_values, rho_NFW(r_values, rho_0_CMP, r_s_CMP), label="CMP '21")
+plt.legend()
+plt.xlabel('$r$ [kpc]')
+plt.ylabel(r'$\rho_\mathrm{NFW}~[M_\odot~\mathrm{pc}^{-3}]$')
+plt.xscale('log')
+#plt.yscale('log')
+plt.tight_layout()
+
+b_deg, l_deg = 0.5, 0.5
+b = b_deg * np.pi/180
+l = l_deg * np.pi/180
+plt.figure()
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger, r_s_Auffinger), label="Auffinger '22")
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_CMP), rho_0_CMP, r_s_CMP), label="CMP '21")
+plt.legend()
+plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.2f}, {:.2f}) deg)'.format(b_deg, l_deg))
+plt.ylabel(r'$\rho_\mathrm{NFW}~[M_\odot~\mathrm{pc}^{-3}]$')
+plt.tight_layout()
+
+b_deg, l_deg = 0.5, 0.5
+b = b_deg * np.pi/180
+l = l_deg * np.pi/180
+plt.figure()
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger, r_s_Auffinger) / rho_NFW(r(los_values, b, l, r_0_CMP), rho_0_CMP, r_s_CMP))
+plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.2f}, {:.2f}) deg)'.format(b_deg, l_deg))
+plt.ylabel(r'$\rho_\mathrm{Auff} / \rho_\mathrm{CMP}$')
+plt.tight_layout()
+
+b_deg, l_deg = 15, 30
+b = b_deg * np.pi/180
+l = l_deg * np.pi/180
+plt.figure()
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger, r_s_Auffinger) / rho_NFW(r(los_values, b, l, r_0_CMP), rho_0_CMP, r_s_CMP))
+plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.0f}, {:.0f}) deg)'.format(b_deg, l_deg))
+plt.ylabel(r'$\rho_\mathrm{Auff} / \rho_\mathrm{CMP}$')
+plt.tight_layout()
+
+
+
+b_deg, l_deg = 0., 0.
+b = b_deg * np.pi/180
+l = l_deg * np.pi/180
+plt.figure()
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger, r_s_Auffinger), label="Auffinger '22")
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_CMP), rho_0_CMP, r_s_CMP), label="CMP '21")
+plt.legend()
+plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.2f}, {:.2f}) deg)'.format(b_deg, l_deg))
+plt.ylabel(r'$\rho_\mathrm{NFW}~[M_\odot~\mathrm{pc}^{-3}]$')
+#plt.xscale('log')
+#plt.yscale('log')
+plt.tight_layout()
