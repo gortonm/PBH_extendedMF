@@ -165,7 +165,7 @@ def load_data(filename):
     return np.genfromtxt(file_path_extracted+filename, delimiter=',', unpack=True)
 
 # PBH mass (in grams)
-for m_pbh in np.array([1, 4, 10]) * 10**16:
+for m_pbh in np.array([0.4, 1, 4, 10]) * 10**16:
     print("\n\nM_PBH = " + string_scientific(m_pbh) + "g:")
         
     exponent = np.floor(np.log10(m_pbh))
@@ -175,22 +175,26 @@ for m_pbh in np.array([1, 4, 10]) * 10**16:
     # Load photon spectra from BlackHawk outputs
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
     
+    """
     # Plot photon spectra for different PBH masses to illustrate differences
     plt.figure()
-    plt.plot(energies_primary, primary_spectrum)
-    plt.xlim(min(energies_primary), max(energies_primary[primary_spectrum>1e18]))
+    plt.plot(1e3 * energies_primary, primary_spectrum)
+    plt.xlim(1e3 * min(energies_primary), 1e3 * max(energies_primary[primary_spectrum>1e18]))
     plt.ylim(0, 1.1*max(primary_spectrum))
-    plt.xlabel('Energy E [GeV]')
+    plt.xlabel('Energy E [MeV]')
     plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
     plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
     plt.tight_layout()
-    
+    """
     # Find value of the integral of the photon spectrum over the energy range given
     # by the energy bins in COMPTEL data
     
+    CMP_energy_integrals = []
+    Auffinger_energy_integrals = []
+    
     # COMPTEL data used in Coogan, Morrison & Profumo (2021) (2010.04797)
     print("\nCMP '21:")
-    for i in (2, 4, 8):
+    for i in range(0, 9):
         print("bin " + str(i+1))
         E_min = E_Essig13_bin_lower[i] / 1e3    # convert from MeV to GeV
         E_max = E_Essig13_bin_upper[i] / 1e3    # convert from MeV to GeV
@@ -202,7 +206,9 @@ for m_pbh in np.array([1, 4, 10]) * 10**16:
         energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
         primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
         integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
-        print(integral_primary)
+        print(integral_primary / (E_max - E_min))
+        
+        CMP_energy_integrals.append(integral_primary / (E_max - E_min))
         
     # COMPTEL data used in Auffinger (2022) (2201.01265)
     print("\nAuffinger '22:")
@@ -219,5 +225,72 @@ for m_pbh in np.array([1, 4, 10]) * 10**16:
         energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
         primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
         integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
-        print(integral_primary)
+        print(integral_primary / (E_max - E_min))
+        
+        Auffinger_energy_integrals.append(integral_primary / (E_max - E_min))
+        
+    plt.figure()
+    plt.plot(E_Auffinger_mean, Auffinger_energy_integrals, 'x', label="Auffinger '22")
+    plt.plot(E_Essig13_mean, CMP_energy_integrals, 'x', label="CMP '21")
+    plt.xlabel('Energy [MeV]')
+    plt.ylabel('Energy integral / bin width')
+    plt.yscale('log')
+    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
+    plt.legend()
+    plt.tight_layout()
+
+    print('Ratio of maximum scaled integrals = ', max(Auffinger_energy_integrals) / max(CMP_energy_integrals))
+
+#%% Find minimum 'flux quantity'
+
+# PBH mass (in grams)
+for m_pbh in np.array([0.4, 1, 4, 10]) * 10**16:
+    print("\nM_PBH = " + string_scientific(m_pbh) + "g:")
+        
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)   # v2.1
+    
+    # Load photon spectra from BlackHawk outputs
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
+    
+    # Find flux measured (plus an error, if appropriate), divided by the 
+    # integral of the photon spectrum over the energy (energy range given by the
+    # bin width), multiplied by the bin width
+    
+    CMP_flux_quantity = []
+    Auffinger_flux_quantity = []
+    
+    # COMPTEL data used in Coogan, Morrison & Profumo (2021) (2010.04797)
+    for i in range(0, 9):
+        E_min = E_Essig13_bin_lower[i] / 1e3    # convert from MeV to GeV
+        E_max = E_Essig13_bin_upper[i] / 1e3    # convert from MeV to GeV
+
+        primary_spectrum_cutoff = 1e3 * primary_spectrum[energies_primary > E_min]
+        energies_primary_cutoff = energies_primary[energies_primary > E_min]
+
+        # Load photon primary spectrum
+        energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
+        integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
+        
+        CMP_flux_quantity.append(spec_Essig_13_2sigma[i] * (E_max - E_min) / integral_primary)
+        
+    # COMPTEL data used in Auffinger (2022) (2201.01265)
+    for i in range(0, 3):
+        
+        E_min = E_Auffinger_bin_lower[i] / 1e3    # convert from MeV to GeV
+        E_max = E_Auffinger_bin_upper[i] / 1e3    # convert from MeV to GeV
+        
+        primary_spectrum_cutoff = 1e3 * primary_spectrum[energies_primary > E_min]
+        energies_primary_cutoff = energies_primary[energies_primary > E_min]
+        
+        # Load photon primary spectrum
+        energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
+        integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
+        
+        Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
+        
+    print('Ratio of minimum flux quantities = ', min(Auffinger_flux_quantity) / min(CMP_flux_quantity))
 
