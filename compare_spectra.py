@@ -172,8 +172,23 @@ for m_pbh in np.array([1, 4, 10]) * 10**16:
     coefficient = m_pbh / 10**exponent
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)   # v2.1
     
-    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)    
+    # Load photon spectra from BlackHawk outputs
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
     
+    # Plot photon spectra for different PBH masses to illustrate differences
+    plt.figure()
+    plt.plot(energies_primary, primary_spectrum)
+    plt.xlim(min(energies_primary), max(energies_primary[primary_spectrum>1e18]))
+    plt.ylim(0, 1.1*max(primary_spectrum))
+    plt.xlabel('Energy E [GeV]')
+    plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
+    plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
+    plt.tight_layout()
+    
+    # Find value of the integral of the photon spectrum over the energy range given
+    # by the energy bins in COMPTEL data
+    
+    # COMPTEL data used in Coogan, Morrison & Profumo (2021) (2010.04797)
     print("\nCMP '21:")
     for i in (2, 4, 8):
         print("bin " + str(i+1))
@@ -188,7 +203,8 @@ for m_pbh in np.array([1, 4, 10]) * 10**16:
         primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
         integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
         print(integral_primary)
-   
+        
+    # COMPTEL data used in Auffinger (2022) (2201.01265)
     print("\nAuffinger '22:")
     for i in range(0, 3):
         print("bin " + str(i+1))
