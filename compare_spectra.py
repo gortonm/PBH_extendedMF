@@ -103,3 +103,105 @@ print((bin_widths_Essig13)[-1])
 
 print((bin_widths_Auffinger)[0])
 print((bin_widths_Essig13)[2])
+
+#%% Find integral over different bins
+
+def read_col(fname, first_row=0, col=1, convert=int, sep=None, skip_lines=1):
+    """Read text files with columns separated by `sep`.
+
+    fname - file name
+    col - index of column to read
+    convert - function to convert column entry with
+    sep - column separator
+    If sep is not specified or is None, any
+    whitespace string is a separator and empty strings are
+    removed from the result.
+    """
+    
+    data = []
+    
+    with open(fname) as fobj:
+        i=0
+        for line in fobj:
+            i += 1
+            #print(line)
+            
+            if i >= first_row:
+                #print(line.split(sep=sep)[col])
+                data.append(line.split(sep=sep)[col])
+    return data    
+     
+def read_blackhawk_spectra(fname, col=1):
+    """Read spectra files for a particular particle species, calculated
+    from BlackHawk.
+
+    fname - file name
+    col - index of column to read (i.e. which particle type to use)
+        - photons: col = 1 (primary and secondary spectra)
+        - 7 for electrons (primary spectra)
+    """
+    energies_data = read_col(fname, first_row=2, col=0, convert=float)
+    spectrum_data = read_col(fname, first_row=2, col=col, convert=float)
+    
+    energies = []
+    for i in range(2, len(energies_data)):
+        energies.append(float(energies_data[i]))
+
+    spectrum = []
+    for i in range(2, len(spectrum_data)):
+        spectrum.append(float(spectrum_data[i]))
+        
+    return np.array(energies), np.array(spectrum)
+
+
+# returns a number as a string in standard form
+def string_scientific(val):
+    exponent = np.floor(np.log10(val))
+    coefficient = val / 10**exponent
+    return r'${:.0f} \times 10^{:d}$'.format(coefficient, int(exponent))
+
+file_path_extracted = './Extracted_files/'
+def load_data(filename):
+    return np.genfromtxt(file_path_extracted+filename, delimiter=',', unpack=True)
+
+# PBH mass (in grams)
+for m_pbh in np.array([1, 4, 10]) * 10**16:
+    print("\n\nM_PBH = " + string_scientific(m_pbh) + "g:")
+        
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)   # v2.1
+    
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)    
+    
+    print("\nCMP '21:")
+    for i in (2, 4, 8):
+        print("bin " + str(i+1))
+        E_min = E_Essig13_bin_lower[i] / 1e3    # convert from MeV to GeV
+        E_max = E_Essig13_bin_upper[i] / 1e3    # convert from MeV to GeV
+
+        primary_spectrum_cutoff = 1e3 * primary_spectrum[energies_primary > E_min]
+        energies_primary_cutoff = energies_primary[energies_primary > E_min]
+
+        # Load photon primary spectrum
+        energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
+        integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
+        print(integral_primary)
+   
+    print("\nAuffinger '22:")
+    for i in range(0, 3):
+        print("bin " + str(i+1))
+        
+        E_min = E_Auffinger_bin_lower[i] / 1e3    # convert from MeV to GeV
+        E_max = E_Auffinger_bin_upper[i] / 1e3    # convert from MeV to GeV
+        
+        primary_spectrum_cutoff = 1e3 * primary_spectrum[energies_primary > E_min]
+        energies_primary_cutoff = energies_primary[energies_primary > E_min]
+        
+        # Load photon primary spectrum
+        energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
+        integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
+        print(integral_primary)
+
