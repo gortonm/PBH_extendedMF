@@ -447,6 +447,36 @@ plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.2f}, {:.2f}) deg)'.format(b_d
 plt.ylabel(r'$\rho_\mathrm{Auff} / \rho_\mathrm{CMP}$')
 plt.tight_layout()
 
+b_deg, l_deg = 5, 5
+b = b_deg * np.pi/180
+l = l_deg * np.pi/180
+plt.figure()
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger, r_s_Auffinger) / rho_NFW(r(los_values, b, l, r_0_CMP), rho_0_CMP, r_s_CMP))
+plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.0f}, {:.0f}) deg)'.format(b_deg, l_deg))
+plt.ylabel(r'$\rho_\mathrm{Auff} / \rho_\mathrm{CMP}$')
+plt.tight_layout()
+
+
+b_deg, l_deg = 0, 0
+b = b_deg * np.pi/180
+l = l_deg * np.pi/180
+plt.figure()
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger, r_s_Auffinger) / rho_NFW(r(los_values, b, l, r_0_CMP), rho_0_CMP, r_s_CMP))
+plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.0f}, {:.0f}) deg)'.format(b_deg, l_deg))
+plt.ylabel(r'$\rho_\mathrm{Auff} / \rho_\mathrm{CMP}$')
+plt.tight_layout()
+
+
+b_deg, l_deg = 5, 5
+b = b_deg * np.pi/180
+l = l_deg * np.pi/180
+plt.figure()
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger, r_s_Auffinger) / rho_NFW(r(los_values, b, l, r_0_CMP), rho_0_CMP, r_s_CMP))
+plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.0f}, {:.0f}) deg)'.format(b_deg, l_deg))
+plt.ylabel(r'$\rho_\mathrm{Auff} / \rho_\mathrm{CMP}$')
+plt.tight_layout()
+
+
 b_deg, l_deg = 15, 30
 b = b_deg * np.pi/180
 l = l_deg * np.pi/180
@@ -455,6 +485,17 @@ plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger
 plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.0f}, {:.0f}) deg)'.format(b_deg, l_deg))
 plt.ylabel(r'$\rho_\mathrm{Auff} / \rho_\mathrm{CMP}$')
 plt.tight_layout()
+
+
+b_deg, l_deg = 20, 60
+b = b_deg * np.pi/180
+l = l_deg * np.pi/180
+plt.figure()
+plt.plot(los_values, rho_NFW(r(los_values, b, l, r_0_Auffinger), rho_0_Auffinger, r_s_Auffinger) / rho_NFW(r(los_values, b, l, r_0_CMP), rho_0_CMP, r_s_CMP))
+plt.xlabel('l.o.s. distance [kpc], $((b, l)$ = ({:.0f}, {:.0f}) deg)'.format(b_deg, l_deg))
+plt.ylabel(r'$\rho_\mathrm{Auff} / \rho_\mathrm{CMP}$')
+plt.tight_layout()
+
 
 
 
