@@ -302,15 +302,15 @@ print(cdf(m_c = 1e-17) / cdf(m_c = 1e-18))
 
 # Plot fraction under curve with M < M_* for a range of M_c:
 fig, ax1 = plt.subplots(figsize=(6.5,5))
-m_c_values = 10**np.linspace(-17, -13, 20)
+m_c_values = 10**np.linspace(-18, -13, 20)
 ax1.plot(m_c_values, cdf(m_c_values))
-ax1.set_xlabel('$M~[M_\odot]$')
+ax1.set_xlabel('$M_c~[M_\odot]$')
 ax1.set_ylabel('Fraction with $M < M_*$')
 ax1.set_xscale('log')
 
 ax2 = plt.gca().twiny()
 ax2.plot(np.array(m_c_values)*1.989e33, np.zeros(len(m_c_values)), linewidth=0)
-ax2.set_xlabel('$M$~[g]')
+ax2.set_xlabel('$M_c$~[g]')
 ax2.set_xscale('log')
 plt.tight_layout()
 plt.savefig('./Figures/fraction_under_M*_LN.pdf')

@@ -41,11 +41,15 @@ m_pbh_D20_Fig2_LH, f_pbh_D20_Fig2_LH = load_data('Dasgupta+20_Fig2_LH.csv')
 
 m_pbh_D20, beta_D20 = load_data('Auffinger21_Fig10_D20.csv')
 
+m_pbh_L19, f_pbh_L19 = load_data('Laha19_NFW_3kpc.csv')
+
+
 f_D20 = f_Carr21(beta_D20, m_pbh_D20)
 
-plt.figure(figsize=(6, 4))
+plt.figure(figsize=(7, 4))
 plt.plot(m_pbh_D20_Fig2_LH, f_pbh_D20_Fig2_LH, label="Dasgupta '20 Fig. 2 (extracted)")
-plt.plot(m_pbh_D20, f_D20, label="Auffinger '22 Fig. 10 \n (converted to $f_\mathrm{PBH}$)")
+plt.plot(m_pbh_L19, f_pbh_L19, linestyle='dashed', label="Laha '19 Fig. 1 (extracted) \n NFW, 3kpc")
+plt.plot(m_pbh_D20, f_D20, linestyle='dotted', label="Auffinger '22 Fig. 10 \n (converted to $f_\mathrm{PBH}$)")
 plt.ylabel('$f_\mathrm{PBH}$')
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.tight_layout()

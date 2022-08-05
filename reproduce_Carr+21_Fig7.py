@@ -83,12 +83,14 @@ if "__main__" == __name__:
     # Plot the evaporation constraints for a monochromatic MF
     m_values_1 = 10**np.linspace(np.log10(m1), np.log10(m_star), 100)
     m_values_2 = 10**np.linspace(np.log10(m_star), np.log10(m2), 100)
-
-    plt.plot(m_values_1, beta_prime_gamma_1_Carr10(m_values_1), linestyle='dotted', linewidth=5, label=r"Carr+ '10")
-    plt.plot(m_values_2, beta_prime_gamma_2_Carr10(m_values_2), linestyle='dotted', linewidth=5, label=r"Carr+ '10")
     
-    plt.plot(m_values_1, beta_prime_gamma_1_Carr21(m_values_1), linestyle='dotted', linewidth=4, label=r"Carr+ '21")
-    plt.plot(m_values_2, beta_prime_gamma_2_Carr21(m_values_2), linestyle='dotted', linewidth=4, label=r"Carr+ '21")
+    plt.figure(figsize=(12, 8))
+
+    plt.plot(m_values_1, beta_prime_gamma_1_Carr10(m_values_1), linestyle='dotted', linewidth=5, label=r"Carr+ '10 Eq. (5.9)")
+    plt.plot(m_values_2, beta_prime_gamma_2_Carr10(m_values_2), linestyle='dotted', linewidth=5, label=r"Carr+ '10 Eq. (5.10)")
+    
+    plt.plot(m_values_1, beta_prime_gamma_1_Carr21(m_values_1), linestyle='dotted', linewidth=4, label=r"Carr+ '21 Eq. (32) ")
+    plt.plot(m_values_2, beta_prime_gamma_2_Carr21(m_values_2), linestyle='dotted', linewidth=4, label=r"Carr+ '21 Eq. (33)")
     
     plt.plot(m, beta_prime, linewidth=6, color='k', alpha=0.25)
     
@@ -99,5 +101,5 @@ if "__main__" == __name__:
     plt.ylabel(r"$\beta'(M)$")
     plt.xlabel('$M~[g]$')
     plt.legend()
-      
+    plt.tight_layout()
 

@@ -45,7 +45,10 @@ E_max = 3e-3     # maximum positron energy to consider, in GeV
 rho_0 = 0.4   # local DM density [GeV / c^2 cm^{-3}] (Ng+ '14 middle value)
 r_s = 3.5    # scale radius, in kpc (Ng+ '14)
 # prefactor for isothermal density profile
-prefactor = 6.3e50 * (s_to_yr) / (4 * np.pi * rho_0 * (r_s**2 + r_odot**2))
+prefactor_Iso = 6.3e50 * (s_to_yr) / (4 * np.pi * rho_0 * (r_s**2 + r_odot**2))
+# prefactor for NFW density profile
+prefactor_NFW = 6.3e50 * (s_to_yr) / (4 * np.pi * rho_0 * (r_s + r_odot)**2)
+
 
 def read_col(fname, first_row=0, col=1, convert=int, sep=None, skip_lines=1):
     """Read text files with columns separated by `sep`.
@@ -110,8 +113,8 @@ def load_data(filename):
 R = 1.5
 m_pbh_L19_Iso_1500pc, f_pbh_L19_Iso_1500pc = load_data('Laha19_Iso_1.5kpc.csv')
 
-f_pbh_P_values = []
-f_pbh_PS_values = []
+f_pbh_Iso_values = []
+f_pbh_NFW_values = []
 m_pbh_values = []
 
 # PBH mass (in grams)
@@ -190,25 +193,27 @@ for m_pbh in np.linspace(1, 10, 10) * 10**16:
     
     integral_primary = np.sum(primary_spectrum_cutoff[:-1] * np.diff(energies_primary_cutoff))
     
-    f_pbh_P = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral_primary * (R - r_s * np.arctan(R/r_s)))
-    f_pbh_PS = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor / (integral * (R - r_s * np.arctan(R/r_s)))
-    f_pbh_P_values.append(f_pbh_P)
-    f_pbh_PS_values.append(f_pbh_PS)
+    # Isothermal density profile
+    f_pbh_Iso = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_Iso / (integral_primary * (R - r_s * np.arctan(R/r_s)))
+    f_pbh_Iso_values.append(f_pbh_Iso)
+    
+    # NFW density profile
+    f_pbh_NFW = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_NFW / (integral_primary * (np.log(1 + (R/r_s)) - R / (R + r_s)))
+    f_pbh_NFW_values.append(f_pbh_NFW)
+
    
 plt.figure()
 plt.plot(m_pbh_L19_Iso_1500pc, f_pbh_L19_Iso_1500pc)
-plt.plot(m_pbh_values, f_pbh_P_values, 'x', label='Primary spectrum only')
-#plt.plot(m_pbh_values, f_pbh_PS_values, 'x', label='Primary and secondary spectra')
+plt.plot(m_pbh_values, f_pbh_Iso_values, 'x', label='Iso, 1.5 kpc')
+plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='NFW, 1.5 kpc')
+
+plt.xlim(1e16, 10**(17.1))
+plt.ylim(10**(-3.4), 1)
 plt.plot()
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
 plt.xscale('log')
-plt.yscale('log')
+#plt.yscale('log')
 plt.legend()
 plt.tight_layout()
 
-
-# compute Hawking temperature in K:
-print((3.16152677e-26 / (8*np.pi)) * 2.99792458e5**2 / (4.30091e-3 * 3.0857e16 * 1.380649e-23))
-print(1.989e33 * (3.16152677e-26 / (8*np.pi)) * 2.99792458e5**2 / (4.30091e-3 * 3.0857e16 * 1.380649e-23))
-print(2.431e-4 * 1.989e33 * (3.16152677e-26 / (8*np.pi)) * 2.99792458e5**2 / (4.30091e-3 * 3.0857e16 * 1.380649e-23))
