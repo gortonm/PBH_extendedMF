@@ -93,12 +93,16 @@ def string_scientific(val):
 
 # Coogan, Morrison & Profumo '21 (2010.04797) cites Essig+ '13 (1309.4091) for
 # their constraints on the flux, see Fig. 1 of Essig+ '13
-E_Essig13_mean, spec_Essig13_mean = load_data('COMPTEL_Essig13_mean.csv')
-E_Essig13_1sigma, spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper.csv')
+E_Essig13_mean, Esquare_spec_Essig13_mean = load_data('COMPTEL_Essig13_mean.csv')
+E_Essig13_1sigma, Esquare_spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper.csv')
 
+# Intensity (rather than E^2 * intensity)
+spec_Essig13_mean = Esquare_spec_Essig13_mean / E_Essig13_mean**2
+spec_Essig13_1sigma = Esquare_spec_Essig13_1sigma / E_Essig13_1sigma**2
+
+# Bin widths from Essig '13
 E_Essig13_bin_lower, a = load_data('COMPTEL_Essig13_lower_x.csv')
 E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
-
 
 error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
 spec_Essig_13_2sigma = spec_Essig13_1sigma + 2*(error_Essig13)
@@ -112,9 +116,6 @@ E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
 
 bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
-
-
-#%% Estimate the constraint on f_PBH, using the J-factor values from Essig '13 Table I
 
 
 # Coogan, Morrison & Profumo '21 (2010.04797) cites Essig+ '13 (1309.4091) for
@@ -206,12 +207,9 @@ for m_pbh in m_pbh_values:
         E_min = E_Essig13_bin_lower[i]    # convert from MeV to GeV
         E_max = E_Essig13_bin_upper[i]    # convert from MeV to GeV
 
-        primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
-        energies_primary_cutoff = energies_primary[energies_primary > E_min]
-
         # Load photon primary spectrum
         energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
-        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
+        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary, primary_spectrum)
         integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
         
         CMP_flux_quantity.append(spec_Essig_13_2sigma[i] * (E_max - E_min) / integral_primary)
@@ -220,14 +218,11 @@ for m_pbh in m_pbh_values:
     for i in range(0, 3):
         
         E_min = E_Auffinger_bin_lower[i]    # convert from MeV to GeV
-        E_max = E_Auffinger_bin_upper[i]    # convert from MeV to GeV
-        
-        primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
-        energies_primary_cutoff = energies_primary[energies_primary > E_min]
+        E_max = E_Auffinger_bin_upper[i]    # convert from MeV to GeV       
         
         # Load photon primary spectrum
         energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
-        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary_cutoff, primary_spectrum_cutoff)
+        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary, primary_spectrum)
         integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
         
         Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
