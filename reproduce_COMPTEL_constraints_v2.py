@@ -168,7 +168,7 @@ J_A22 = J_dimensionless_CMP21 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Au
 f_PBH_A22 = []
 f_PBH_CMP21 = []
 
-m_pbh_values = np.array([0.01, 0.03, 0.06, 0.08, 0.1, 0.3, 0.4, 0.6, 0.8, 1, 2, 4, 6, 8]) * 10**16
+m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1, 2, 3, 4, 6, 8]) * 10**16
 for m_pbh in m_pbh_values:
         
     exponent = np.floor(np.log10(m_pbh))
@@ -217,9 +217,11 @@ for m_pbh in m_pbh_values:
 # Load result extracted from Fig. 3 of CMP '21
 file_path_extracted = './Extracted_files/'
 m_pbh_CMP21_extracted, f_PBH_CMP21_extracted = load_data("CMP21_Fig3.csv")
+m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
 
 plt.figure(figsize=(7,7))
 plt.plot(m_pbh_CMP21_extracted, f_PBH_CMP21_extracted, label="Extracted (CMP '21)")
+plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Extracted (Auffinger '22)")
 plt.plot(m_pbh_values[m_pbh_values > 2e15], np.array(f_PBH_CMP21)[m_pbh_values > 2e15], 'x', label="CMP '21")
 plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22")
 
