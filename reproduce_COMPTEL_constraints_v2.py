@@ -104,11 +104,6 @@ spec_Essig13_1sigma = Esquare_spec_Essig13_1sigma / E_Essig13_1sigma**2
 E_Essig13_bin_lower, a = load_data('COMPTEL_Essig13_lower_x.csv')
 E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
 
-error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
-spec_Essig_13_2sigma = spec_Essig13_1sigma + 2*(error_Essig13)
-bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
-bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
-
 # Flux constraints from Auffinger '22 Fig. 2
 E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
 E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
@@ -116,21 +111,6 @@ E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
 
 bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
-
-
-# Coogan, Morrison & Profumo '21 (2010.04797) cites Essig+ '13 (1309.4091) for
-# their constraints on the flux, see Fig. 1 of Essig+ '13
-E_Essig13_mean, spec_Essig13_mean = load_data('COMPTEL_Essig13_mean.csv')
-E_Essig13_1sigma, spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper.csv')
-
-E_Essig13_bin_lower, a = load_data('COMPTEL_Essig13_lower_x.csv')
-E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
-
-# Flux constraints from Auffinger '22 Fig. 2
-E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
-E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
-E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
-
 
 # convert energy units from MeV to GeV:
 E_Essig13_mean = E_Essig13_mean / 1e3
@@ -170,7 +150,7 @@ r_0_CMP = 8.12 * 1e3    # galactocentric distance of Sun, in pc
 
 J_dimensionless_CMP21 = 6.82   # dimensionless J-factor from Essig '13 Table I
 
-# range of galactic latitude/longitude observed by the surveys
+# range of galactic latitude/longitude observed by COMPTEL
 b_max_CMP, l_max_CMP = np.radians(20), np.radians(60)
 delta_Omega_CMP = 2 * l_max_CMP * (np.sin(b_max_CMP) - np.sin(-b_max_CMP))
 
@@ -186,11 +166,10 @@ f_PBH_CMP21 = []
 
 m_pbh_values = np.array([0.3, 0.4, 0.6, 0.8, 1, 2, 4, 6, 8]) * 10**16
 for m_pbh in m_pbh_values:
-    print("\nM_PBH = " + string_scientific(m_pbh) + "g:")
         
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
-    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)   # v2.1
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
     
     # Load photon spectra from BlackHawk outputs
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
