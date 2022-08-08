@@ -134,7 +134,7 @@ bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
 bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
-
+g_to_solar_mass = 1 / 1.989e33     # convert g to solar masses
 pc_to_cm = 3.09e18    # convert pc to cm
 
 # Astrophysical parameters
@@ -153,18 +153,22 @@ J_dimensionless_CMP21 = 6.82   # dimensionless J-factor from Essig '13 Table I
 # range of galactic latitude/longitude observed by COMPTEL
 b_max_CMP, l_max_CMP = np.radians(20), np.radians(60)
 delta_Omega_CMP = 2 * l_max_CMP * (np.sin(b_max_CMP) - np.sin(-b_max_CMP))
+delta_Omega_Auffinger = 4 * l_max_CMP * b_max_CMP
+
 
 b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
 delta_Omega_Auffinger = 2 * l_max_Auffinger * (np.sin(b_max_Auffinger) - np.sin(-b_max_Auffinger))
+delta_Omega_Auffinger = 4 * l_max_Auffinger * b_max_Auffinger
 
 # find J-factor, as defined in A22 and CMP21
 J_CMP21 = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
+J_A22 = J_dimensionless_CMP21 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Auffinger
 
 # Calculate "flux quantities"
 f_PBH_A22 = []
 f_PBH_CMP21 = []
 
-m_pbh_values = np.array([0.3, 0.4, 0.6, 0.8, 1, 2, 4, 6, 8]) * 10**16
+m_pbh_values = np.array([0.01, 0.03, 0.06, 0.08, 0.1, 0.3, 0.4, 0.6, 0.8, 1, 2, 4, 6, 8]) * 10**16
 for m_pbh in m_pbh_values:
         
     exponent = np.floor(np.log10(m_pbh))
@@ -172,7 +176,7 @@ for m_pbh in m_pbh_values:
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
     
     # Load photon spectra from BlackHawk outputs
-    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
     
     # Find flux measured (plus an error, if appropriate), divided by the 
     # integral of the photon spectrum over the energy (energy range given by the
@@ -205,15 +209,25 @@ for m_pbh in m_pbh_values:
         integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
         
         Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
-            
-    f_PBH_CMP21.append(4 * np.pi * m_pbh * min(CMP_flux_quantity) / J_CMP21)
     
-plt.figure(figsize=(5,4))
-plt.plot(m_pbh_values, f_PBH_CMP21, 'x', label="CMP '21")
+    f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_CMP21)
+    f_PBH_CMP21.append(4 * np.pi * m_pbh * min(CMP_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_CMP21)
+
+
+# Load result extracted from Fig. 3 of CMP '21
+file_path_extracted = './Extracted_files/'
+m_pbh_CMP21_extracted, f_PBH_CMP21_extracted = load_data("CMP21_Fig3.csv")
+
+plt.figure(figsize=(7,7))
+plt.plot(m_pbh_CMP21_extracted, f_PBH_CMP21_extracted, label="Extracted (CMP '21)")
+plt.plot(m_pbh_values[m_pbh_values > 2e15], np.array(f_PBH_CMP21)[m_pbh_values > 2e15], 'x', label="CMP '21")
+plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22")
+
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
 plt.tight_layout()
-plt.legend()
+plt.legend(fontsize='small')
 plt.xscale('log')
 plt.yscale('log')
-plt.xlim(3e15, 1.1e17)
+plt.xlim(1e14, 1e18)
+plt.ylim(1e-10, 1)
