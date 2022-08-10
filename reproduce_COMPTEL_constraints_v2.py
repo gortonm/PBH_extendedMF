@@ -136,6 +136,7 @@ bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
 g_to_solar_mass = 1 / 1.989e33     # convert g to solar masses
 pc_to_cm = 3.09e18    # convert pc to cm
+MeV_to_g = 1.782662e-27    # convert MeV/c^2 to g
 
 # Astrophysical parameters
 
@@ -146,23 +147,22 @@ r_0_Auffinger = 8.5 * 1e3    # galactocentric distance of Sun, in pc
 # CMP '21
 rho_0_CMP = 0.00990     # DM density at the Sun, in solar masses / pc^3
 r_s_CMP = 11 * 1e3   # scale radius, in pc
-r_0_CMP = 8.12 * 1e3    # galactocentric distance of Sun, in pc
+r_0_CMP = 8.122 * 1e3    # galactocentric distance of Sun, in pc
 
 J_dimensionless_CMP21 = 6.82   # dimensionless J-factor from Essig '13 Table I
 
 # range of galactic latitude/longitude observed by COMPTEL
 b_max_CMP, l_max_CMP = np.radians(20), np.radians(60)
-delta_Omega_CMP = 2 * l_max_CMP * (np.sin(b_max_CMP) - np.sin(-b_max_CMP))
 delta_Omega_Auffinger = 4 * l_max_CMP * b_max_CMP
 
 
 b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-delta_Omega_Auffinger = 2 * l_max_Auffinger * (np.sin(b_max_Auffinger) - np.sin(-b_max_Auffinger))
 delta_Omega_Auffinger = 4 * l_max_Auffinger * b_max_Auffinger
 
 # find J-factor, as defined in A22 and CMP21
-J_CMP21 = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
-J_A22 = J_dimensionless_CMP21 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Auffinger
+#J_CMP21 = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
+J_CMP21 = 4.866e25  * (MeV_to_g)    # from Table I of CMP21, converted to units of GeV pc^{-2}
+J_A22 = 3.65 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Auffinger
 
 # Calculate "flux quantities"
 f_PBH_A22 = []
@@ -210,8 +210,8 @@ for m_pbh in m_pbh_values:
         
         Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
     
-    f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_CMP21)
-    f_PBH_CMP21.append(4 * np.pi * m_pbh * min(CMP_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_CMP21)
+    f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass)  / J_A22)
+    f_PBH_CMP21.append(4 * np.pi * m_pbh * min(CMP_flux_quantity) / J_CMP21 )
 
 
 # Load result extracted from Fig. 3 of CMP '21
@@ -233,3 +233,83 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlim(1e14, 1e18)
 plt.ylim(1e-10, 1)
+
+
+#%% Attempt to calculate J-factor for CMP '21
+from scipy.integrate import tplquad
+
+MeV_to_Modot = 8.96260432e-61
+
+def rho_NFW(r):
+    return rho_0_CMP * ((r/r_s_CMP) * (1 + (r/r_s_CMP))**2)**(-1)
+
+def r(los, b, l):
+    return np.sqrt(los**2 + r_0_CMP**2 - 2*r_0_CMP*los*np.cos(b)*np.cos(l))
+
+def j_integrand(los, b, l):
+    return 4 * rho_NFW(r(los, b, l)) * np.cos(b)
+    #return rho_NFW(r(los, b, l))
+
+def j(b_max, l_max):
+    delta_omega = 4 * np.pi * l_max * np.sin(b_max)
+    print(b_max * (180/np.pi))
+    print('delta_omega = ', delta_omega)
+    return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_0_CMP)) * (1/MeV_to_Modot) * (1/pc_to_cm)**2 / delta_omega
+
+def findroot(f, a, b, tolerance, n_max):
+    n = 1
+    while n <= n_max:
+        c = (a + b) / 2
+        if f(c) == 0 or (b - a) / 2 < tolerance:
+            print(n)
+            return c
+            break
+        n += 1
+        
+        # set new interval
+        if np.sign(f(c)) == np.sign(f(a)):
+            a = c
+        else:
+            b = c
+    print("Method failed")
+    
+r_0_Essig13 = 8.5 * 1e3
+def j_dimensionless(b_max, l_max):
+    delta_omega = 4 * np.pi * l_max * np.sin(b_max)    
+    return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_0_Essig13)) / (rho_0_CMP * r_0_CMP * delta_omega)
+
+    
+print(j_dimensionless(b_max_CMP, l_max_CMP))
+
+print(j(np.radians(2.5), np.radians(2.5)))
+print(j(b_max_CMP, l_max_CMP))
+   
+    
+    
+    
+"""
+def arcsech(x):
+    return np.log( (1 + np.sqrt(1-x**2))/ x)
+
+def X(s):
+    if 0 <= s <= 1:
+        return arcsech(s) / np.sqrt(1 - s**2)
+    else: 
+        return arcsech(s) / np.sqrt(s**2 - `)
+    
+def f_j_factor(d):
+    return (4 * np.pi * rho_0_CMP * r_s_CMP**3 / d**2) * (np.log(d*theta/(2*r_S_CMP)) + X(d*theta / r_s)) - d
+
+r_0_Essig13 = 8.5 * 1e3
+
+
+print(j_dimensionless(b_max_CMP, l_max_CMP))
+
+print(j(np.radians(2.5), np.radians(2.5)))
+print(j(b_max_CMP, l_max_CMP))
+
+
+
+R = np.sqrt(b**2 + l**2)
+theta = np.tan(b/l)
+"""
