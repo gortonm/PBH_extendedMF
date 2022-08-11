@@ -147,17 +147,17 @@ r_0_Auffinger = 8.5 * 1e3    # galactocentric distance of Sun, in pc
 # CMP '21
 rho_0_CMP = 0.00990     # DM density at the Sun, in solar masses / pc^3
 r_s_CMP = 11 * 1e3   # scale radius, in pc
-r_0_CMP = 8.122 * 1e3    # galactocentric distance of Sun, in pc
+r_0_CMP = 8.12 * 1e3    # galactocentric distance of Sun, in pc
 
 J_dimensionless_CMP21 = 6.82   # dimensionless J-factor from Essig '13 Table I
 
 # range of galactic latitude/longitude observed by COMPTEL
 b_max_CMP, l_max_CMP = np.radians(20), np.radians(60)
-delta_Omega_Auffinger = 4 * l_max_CMP * b_max_CMP
+delta_Omega_Auffinger = 4 * l_max_CMP * np.sin(b_max_CMP)
 
 
 b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-delta_Omega_Auffinger = 4 * l_max_Auffinger * b_max_Auffinger
+delta_Omega_Auffinger = 4 * l_max_CMP * np.sin(b_max_CMP)
 
 # find J-factor, as defined in A22 and CMP21
 #J_CMP21 = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
@@ -185,6 +185,8 @@ for m_pbh in m_pbh_values:
     CMP_flux_quantity = []
     Auffinger_flux_quantity = []
     
+    CMP21 = True
+    A22 = False
     # COMPTEL data used in Coogan, Morrison & Profumo (2021) (2010.04797)
     for i in range(0, 9):
         E_min = E_Essig13_bin_lower[i]    # convert from MeV to GeV
@@ -198,6 +200,7 @@ for m_pbh in m_pbh_values:
         CMP_flux_quantity.append(spec_Essig_13_2sigma[i] * (E_max - E_min) / integral_primary)
         
     # COMPTEL data used in Auffinger (2022) (2201.01265)
+    A22 = True
     for i in range(0, 3):
         
         E_min = E_Auffinger_bin_lower[i]    # convert from MeV to GeV
@@ -213,6 +216,8 @@ for m_pbh in m_pbh_values:
     f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass)  / J_A22)
     f_PBH_CMP21.append(4 * np.pi * m_pbh * min(CMP_flux_quantity) / J_CMP21 )
 
+    print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
+    print('Bin with minimum f_{PBH, i} : ', np.argmin(Auffinger_flux_quantity))
 
 # Load result extracted from Fig. 3 of CMP '21
 file_path_extracted = './Extracted_files/'
@@ -220,10 +225,10 @@ m_pbh_CMP21_extracted, f_PBH_CMP21_extracted = load_data("CMP21_Fig3.csv")
 m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
 
 plt.figure(figsize=(7,7))
-plt.plot(m_pbh_CMP21_extracted, f_PBH_CMP21_extracted, label="Extracted (CMP '21)")
-plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Extracted (Auffinger '22)")
-plt.plot(m_pbh_values[m_pbh_values > 2e15], np.array(f_PBH_CMP21)[m_pbh_values > 2e15], 'x', label="CMP '21")
-plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22")
+plt.plot(m_pbh_CMP21_extracted, f_PBH_CMP21_extracted, label="CMP '21 (Extracted)")
+plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
+plt.plot(m_pbh_values[m_pbh_values > 2e15], np.array(f_PBH_CMP21)[m_pbh_values > 2e15], 'x', label="CMP '21 (Reproduced)")
+plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22 (Reproduced)")
 
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
@@ -241,51 +246,81 @@ from scipy.integrate import tplquad
 MeV_to_Modot = 8.96260432e-61
 
 def rho_NFW(r):
-    return rho_0_CMP * ((r/r_s_CMP) * (1 + (r/r_s_CMP))**2)**(-1)
+    if CMP21:
+        rho_0 = rho_0_CMP
+        r_s = r_s_CMP
+    elif A22:
+        rho_0 = rho_0_Auffinger
+        r_s = r_s_Auffinger
+        
+    #print(r_s)
+    return rho_0 * ((r/r_s) * (1 + (r/r_s))**2)**(-1)
 
 def r(los, b, l):
-    return np.sqrt(los**2 + r_0_CMP**2 - 2*r_0_CMP*los*np.cos(b)*np.cos(l))
+    if CMP21:
+        r_0 = r_0_CMP
+    elif A22:
+        r_0 = r_0_Auffinger
+    return np.sqrt(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l))
 
 def j_integrand(los, b, l):
-    return 4 * rho_NFW(r(los, b, l)) * np.cos(b)
+    return rho_NFW(r(los, b, l)) * np.cos(b)
     #return rho_NFW(r(los, b, l))
 
 def j(b_max, l_max):
-    delta_omega = 4 * np.pi * l_max * np.sin(b_max)
+    delta_omega = 4 * l_max * np.sin(b_max)  # correct (Table I Cirelli+ '2011) 
     print(b_max * (180/np.pi))
     print('delta_omega = ', delta_omega)
+    if CMP21:
+        r_0 = r_0_CMP
+    elif A22:
+        r_0 = r_0_Auffinger
     return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_0_CMP)) * (1/MeV_to_Modot) * (1/pc_to_cm)**2 / delta_omega
-
-def findroot(f, a, b, tolerance, n_max):
-    n = 1
-    while n <= n_max:
-        c = (a + b) / 2
-        if f(c) == 0 or (b - a) / 2 < tolerance:
-            print(n)
-            return c
-            break
-        n += 1
-        
-        # set new interval
-        if np.sign(f(c)) == np.sign(f(a)):
-            a = c
-        else:
-            b = c
-    print("Method failed")
     
 r_0_Essig13 = 8.5 * 1e3
+rho_0_Essig13 = 0.3 * 0.026331617
 def j_dimensionless(b_max, l_max):
-    delta_omega = 4 * np.pi * l_max * np.sin(b_max)    
-    return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_0_Essig13)) / (rho_0_CMP * r_0_CMP * delta_omega)
+    delta_omega = 4 * l_max * np.sin(b_max)  # correct (Table I Cirelli+ '2011)   
+    return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_0_Essig13)) / (rho_0_Essig13 * r_0_Essig13 * delta_omega)
 
-    
-print(j_dimensionless(b_max_CMP, l_max_CMP))
 
-print(j(np.radians(2.5), np.radians(2.5)))
-print(j(b_max_CMP, l_max_CMP))
-   
-    
-    
+
+def r2(los, theta):
+    return np.sqrt(los**2 + r_0_CMP**2 - 2*r_0_CMP*los*np.cos(theta))
+
+
+from reproduce_extended_MF import double_integral, triple_integral
+from scipy.integrate import dblquad
+
+def j_psi(psi, n_steps=10000):
+    los_values = np.linspace(0, r_0_CMP, n_steps)
+    return np.trapz(rho_NFW(r2(los_values, psi)), los_values)
+
+def j_theta(theta_max):
+    delta_omega = 2 * np.pi * (1-np.cos(theta_max))
+    print(delta_omega)
+    theta_values = np.linspace(1e-5, theta_max, 10000)
+    r_0_CMP21 = True
+    integrand_values = [np.sin(theta) * j_psi(theta) for theta in theta_values]
+    return (2 * np.pi / (delta_omega)) * np.trapz(integrand_values, theta_values) * (1/MeV_to_Modot) * (1/pc_to_cm)**2
+"""
+CMP21 = True
+A22 = False    
+print(j_dimensionless(b_max_CMP, l_max_CMP) / 3.65)
+
+CMP21 = False
+A22 = True
+print(j_dimensionless(b_max_Auffinger, l_max_Auffinger) / 6.82)
+
+CMP21 = True
+A22 = False
+print(j(b_max_CMP, l_max_CMP) / 4.866e25)
+"""
+#print(j(np.radians(5), np.radians(5)))
+#print(j(np.radians(5), np.radians(30)))
+
+CMP21 = True
+print(j_theta(np.radians(5)) / 1.597e26)
     
 """
 def arcsech(x):
