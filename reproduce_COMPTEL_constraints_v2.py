@@ -217,7 +217,8 @@ for m_pbh in m_pbh_values:
     f_PBH_CMP21.append(4 * np.pi * m_pbh * min(CMP_flux_quantity) / J_CMP21 )
 
     print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
-    print('Bin with minimum f_{PBH, i} : ', np.argmin(Auffinger_flux_quantity))
+    print("Bin with minimum f_{PBH, i} [Auffinger] : ", np.argmin(Auffinger_flux_quantity))
+    print("Bin with minimum f_{PBH, i} [CMP '21'] : ", np.argmin(CMP_flux_quantity))
 
 # Load result extracted from Fig. 3 of CMP '21
 file_path_extracted = './Extracted_files/'

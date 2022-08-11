@@ -39,22 +39,45 @@ def load_data(filename):
 
 # Coogan, Morrison & Profumo '21 (2010.04797) cites Essig+ '13 (1309.4091) for
 # their constraints on the flux, see Fig. 1 of Essig+ '13
+# NOTE: loading E^2 * intensity
 E_Essig13_mean, spec_Essig13_mean = load_data('COMPTEL_Essig13_mean.csv')
 E_Essig13_1sigma, spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper.csv')
 
+# Bin widths from Essig '13
 E_Essig13_bin_lower, a = load_data('COMPTEL_Essig13_lower_x.csv')
 E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
 
+# Flux constraints from Auffinger '22 Fig. 2 (bottom left panel)
+# NOTE: loading E^2 * intensity
+E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
+E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
+E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
 
+bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
+bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
+
+plt.plot(E_Auffinger_mean, spec_Auffinger_mean)
+plt.yscale('log')
+plt.xscale('log')
+
+# convert energy units from MeV to GeV:
+E_Essig13_mean = E_Essig13_mean / 1e3
+E_Essig13_1sigma = E_Essig13_1sigma / 1e3
+E_Essig13_bin_lower = E_Essig13_bin_lower / 1e3
+E_Essig13_bin_upper = E_Essig13_bin_upper / 1e3
+spec_Essig13_1sigma = spec_Essig13_1sigma * 1e3
+spec_Essig13_mean = spec_Essig13_mean * 1e3
+    
+E_Auffinger_mean = E_Auffinger_mean / 1e3
+E_Auffinger_bin_lower = E_Auffinger_bin_lower / 1e3
+E_Auffinger_bin_upper = E_Auffinger_bin_upper / 1e3
+spec_Auffinger_mean = spec_Auffinger_mean * 1e3
+
+# calculate errors and bin edges
 error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
 spec_Essig_13_2sigma = spec_Essig13_1sigma + 2*(error_Essig13)
 bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
 bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
-
-# Flux constraints from Auffinger '22 Fig. 2
-E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
-E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
-E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
 
 bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
@@ -66,8 +89,9 @@ bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 plt.figure(figsize=(9, 8))
 plt.ylim(1e-6, 3e-2)
 plt.tight_layout()
-plt.errorbar(E_Auffinger_mean, spec_Auffinger_mean / E_Auffinger_mean**2, xerr=(bins_lower_Auffinger, bins_upper_Auffinger), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Auffinger '22 (mean flux)")
-plt.errorbar(E_Essig13_mean, spec_Essig_13_2sigma / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="CMP '21 \n (mean flux + 2 " + r"$\times$ error bar)")
+plt.errorbar(E_Auffinger_mean * 1e3, 1e-6 * spec_Auffinger_mean / E_Auffinger_mean**2, xerr=(bins_lower_Auffinger, bins_upper_Auffinger), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Auffinger '22 (mean flux)")
+plt.errorbar(E_Essig13_mean * 1e3, 1e-6 * spec_Essig13_mean / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="CMP '21 \n (mean flux)")
+plt.errorbar(E_Essig13_mean * 1e3, 1e-6 * spec_Essig_13_2sigma / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="CMP '21 \n (mean flux + 2 " + r"$\times$ error bar)")
 plt.legend(fontsize='small')
 plt.xlabel('E [MeV]')
 plt.ylabel('${\\rm d}\Phi/{\\rm d}E\,\, ({\\rm MeV^{-1}} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
@@ -244,7 +268,14 @@ for m_pbh in np.array([0.4, 1, 4, 10]) * 10**16:
 #%% Find minimum 'flux quantity'
 
 # PBH mass (in grams)
-for m_pbh in np.array([0.4, 1, 4, 10]) * 10**16:
+#for m_pbh in np.array([0.4, 1, 4, 10]) * 10**16:
+    
+    
+min_flux_quantities_A22 = []
+min_flux_quantities_CMP21 = []
+
+m_pbh_values = np.array([0.3, 0.4, 0.6, 0.8, 1, 2, 4, 6, 8]) * 10**16
+for m_pbh in m_pbh_values:
     print("\nM_PBH = " + string_scientific(m_pbh) + "g:")
         
     exponent = np.floor(np.log10(m_pbh))
@@ -252,7 +283,7 @@ for m_pbh in np.array([0.4, 1, 4, 10]) * 10**16:
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)   # v2.1
     
     # Load photon spectra from BlackHawk outputs
-    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
     
     # Find flux measured (plus an error, if appropriate), divided by the 
     # integral of the photon spectrum over the energy (energy range given by the
@@ -293,4 +324,28 @@ for m_pbh in np.array([0.4, 1, 4, 10]) * 10**16:
         Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
         
     print('Ratio of minimum flux quantities = ', min(Auffinger_flux_quantity) / min(CMP_flux_quantity))
+    
+    min_flux_quantities_A22.append(min(Auffinger_flux_quantity))
+    print('M_{PBH} [g] : ', m_pbh)
+    print('Bin with minimum f_{PBH, i} : ', np.argmin(Auffinger_flux_quantity))
+    min_flux_quantities_CMP21.append(min(CMP_flux_quantity))
 
+plt.figure(figsize=(8,6))
+plt.plot(m_pbh_values, min_flux_quantities_A22, 'x', label="Auffinger '22")
+plt.plot(m_pbh_values, min_flux_quantities_CMP21, 'x', label="CMP '21")
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('Terms depending on photon energy')
+plt.tight_layout()
+plt.legend()
+plt.xscale('log')
+plt.yscale('log')
+plt.xlim(9e14, 1.1e17)
+
+
+plt.figure(figsize=(6,6))
+plt.plot(m_pbh_values, np.array(min_flux_quantities_A22)/np.array(min_flux_quantities_CMP21), 'x')
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.title('Ratio of terms depending \n on photon energy (A22/CMP21)')
+plt.tight_layout()
+plt.xscale('log')
+plt.xlim(9e14, 1.1e17)
