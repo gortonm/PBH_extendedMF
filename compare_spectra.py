@@ -53,25 +53,23 @@ E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.c
 E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
 E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
 
+
 bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
-plt.plot(E_Auffinger_mean, spec_Auffinger_mean)
-plt.yscale('log')
-plt.xscale('log')
 
-# convert energy units from MeV to GeV:
-E_Essig13_mean = E_Essig13_mean / 1e3
-E_Essig13_1sigma = E_Essig13_1sigma / 1e3
-E_Essig13_bin_lower = E_Essig13_bin_lower / 1e3
-E_Essig13_bin_upper = E_Essig13_bin_upper / 1e3
-spec_Essig13_1sigma = spec_Essig13_1sigma * 1e3
-spec_Essig13_mean = spec_Essig13_mean * 1e3
-    
-E_Auffinger_mean = E_Auffinger_mean / 1e3
-E_Auffinger_bin_lower = E_Auffinger_bin_lower / 1e3
-E_Auffinger_bin_upper = E_Auffinger_bin_upper / 1e3
-spec_Auffinger_mean = spec_Auffinger_mean * 1e3
+# Flux constraints from Bouchet+ '11 Fig. 7
+# NOTE: loading E^2 * intensity
+E_Bouchet_mean, spec_Bouchet_mean = load_data('Bouchet_Fig7_COMPTEL_mean.csv')
+E_Bouchet_bin_lower, a = load_data('Bouchet_Fig7_COMPTEL_lower.csv')
+E_Bouchet_bin_upper, a  = load_data('Bouchet_Fig7_COMPTEL_upper.csv')
+
+
+bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
+bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
+
+bins_upper_Bouchet = E_Bouchet_bin_upper - E_Bouchet_mean
+bins_lower_Bouchet = E_Bouchet_mean - E_Bouchet_bin_lower
 
 # calculate errors and bin edges
 error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
@@ -79,25 +77,58 @@ spec_Essig_13_2sigma = spec_Essig13_1sigma + 2*(error_Essig13)
 bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
 bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
 
-bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
-bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
+
+
+# Plot energy^2 times spectra, to compare Auffinger '22 Fig. 2 with
+# Bouchet et al. (2011) Fig. 7
+plt.figure(figsize=(9, 8))
+plt.ylim(1e-3, 3e-2)
+plt.tight_layout()
+plt.errorbar(E_Auffinger_mean, spec_Auffinger_mean, xerr=(bins_lower_Auffinger, bins_upper_Auffinger), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Auffinger '22 (mean flux)")
+plt.errorbar(E_Bouchet_mean, spec_Bouchet_mean, xerr=(bins_lower_Bouchet, bins_upper_Bouchet), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Bouchet '11 (mean flux)")
+plt.legend(fontsize='small')
+plt.xlabel('E [MeV]')
+plt.ylabel('$E^2 {\\rm d}\Phi/{\\rm d}E\,\, ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
+plt.xscale('log')
+plt.yscale('log')
+plt.tight_layout()
+
+
+
 
 
 # Plot comparison spectra used to constrain PBH abundance
 # For Coogan, Morrison & Profumo '21, plot mean flux + 2 * error bar 
 # For Auffinger '22, plot mean flux 
 plt.figure(figsize=(9, 8))
-plt.ylim(1e-6, 3e-2)
+plt.ylim(1e-4, 1e4)
 plt.tight_layout()
-plt.errorbar(E_Auffinger_mean * 1e3, 1e-6 * spec_Auffinger_mean / E_Auffinger_mean**2, xerr=(bins_lower_Auffinger, bins_upper_Auffinger), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Auffinger '22 (mean flux)")
-plt.errorbar(E_Essig13_mean * 1e3, 1e-6 * spec_Essig13_mean / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="CMP '21 \n (mean flux)")
-plt.errorbar(E_Essig13_mean * 1e3, 1e-6 * spec_Essig_13_2sigma / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="CMP '21 \n (mean flux + 2 " + r"$\times$ error bar)")
+plt.errorbar(E_Auffinger_mean, spec_Auffinger_mean / E_Auffinger_mean**2, xerr=(bins_lower_Auffinger, bins_upper_Auffinger), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Auffinger '22 (mean flux)")
+plt.errorbar(E_Essig13_mean, spec_Essig_13_2sigma / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="CMP '21 \n (mean flux + 2 " + r"$\times$ error bar)")
 plt.legend(fontsize='small')
 plt.xlabel('E [MeV]')
 plt.ylabel('${\\rm d}\Phi/{\\rm d}E\,\, ({\\rm MeV^{-1}} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
+
+
+# Plot comparison spectra used to constrain PBH abundance
+# For Coogan, Morrison & Profumo '21, plot mean flux + 2 * error bar 
+# For Auffinger '22, plot mean flux 
+plt.figure(figsize=(9, 8))
+plt.ylim(1e-7, 1e-1)
+plt.xlim(0.3, 100)
+plt.tight_layout()
+# To do: add points from Kappadath '98 Fig. VII.4
+plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13)/E_Essig13_mean**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
+plt.legend(fontsize='small')
+plt.xlabel('E [MeV]')
+plt.ylabel('Flux $({\\rm MeV^{-1}} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
+plt.xscale('log')
+plt.yscale('log')
+plt.tight_layout()
+
 
 
 # Plot energy^2 times spectra used to constrain PBH abundance, to illustrate
@@ -115,6 +146,24 @@ plt.ylabel('$E^2 {\\rm d}\Phi/{\\rm d}E\,\, ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
+
+
+
+
+
+# convert energy units from MeV to GeV:
+E_Essig13_mean = E_Essig13_mean / 1e3
+E_Essig13_1sigma = E_Essig13_1sigma / 1e3
+E_Essig13_bin_lower = E_Essig13_bin_lower / 1e3
+E_Essig13_bin_upper = E_Essig13_bin_upper / 1e3
+spec_Essig13_1sigma = spec_Essig13_1sigma * 1e3
+spec_Essig13_mean = spec_Essig13_mean * 1e3
+    
+E_Auffinger_mean = E_Auffinger_mean / 1e3
+E_Auffinger_bin_lower = E_Auffinger_bin_lower / 1e3
+E_Auffinger_bin_upper = E_Auffinger_bin_upper / 1e3
+spec_Auffinger_mean = spec_Auffinger_mean * 1e3
+
 
 #%% Find bin widths in Auffinger and CMP '21
 
