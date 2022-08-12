@@ -244,6 +244,8 @@ plt.ylim(1e-10, 1)
 #%% Check that I can reproduce CMP '21 Figure 2
 m_pbh_values = [5.3e14, 3.5e15]
 
+E_CMP21_Fig2, spec_CMP21_Fig2 = load_data('CMP21_Fig2_5.3e14g.csv')
+
 for m_pbh in m_pbh_values:
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
@@ -253,8 +255,15 @@ for m_pbh in m_pbh_values:
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
 
     plt.figure()
-    plt.plot(1e3 * np.array(energies_primary), 1e-3 * np.array(primary_spectrum), label='Primary')
-    plt.plot(1e3 * np.array(energies_secondary), 1e-3 * np.array(secondary_spectrum), label='Total')
+    
+    E_CMP21_Fig2, spec_CMP21_Fig2 = load_data("CMP21_Fig2_{:.1f}e{:.0f}g.csv".format(coefficient, exponent))
+    
+    if m_pbh == 5.3e14:
+        plt.plot(E_CMP21_Fig2, spec_CMP21_Fig2, label='Extracted', color='k', alpha=0.2  )
+    
+    plt.plot(1e3 * np.array(energies_primary), 1e-3 * np.array(primary_spectrum), linestyle='dashed', label='Primary')
+    plt.plot(1e3 * np.array(energies_secondary), 1e-3 * np.array(secondary_spectrum), linestyle='dotted', linewidth=3, label='Total')
+        
     plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
     plt.xlabel('Energy [MeV]')
     plt.ylabel(r'$\frac{\mathrm{d}N_\gamma}{\mathrm{d}E_\gamma\mathrm{d}t}~(\mathrm{MeV}^{-1}\mathrm{s}^{-1})$')
