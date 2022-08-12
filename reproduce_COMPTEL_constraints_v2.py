@@ -253,8 +253,9 @@ for m_pbh in m_pbh_values:
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
 
     plt.figure()
-    plt.plot(1e-3 * np.array(energies_primary), 1e3 * np.array(primary_spectrum), label='Primary')
-    plt.plot(1e-3 * np.array(energies_secondary), 1e3 * np.array(secondary_spectrum), label='Total')
+    plt.plot(1e3 * np.array(energies_primary), 1e-3 * np.array(primary_spectrum), label='Primary')
+    plt.plot(1e3 * np.array(energies_secondary), 1e-3 * np.array(secondary_spectrum), label='Total')
+    plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
     plt.xlabel('Energy [MeV]')
     plt.ylabel(r'$\frac{\mathrm{d}N_\gamma}{\mathrm{d}E_\gamma\mathrm{d}t}~(\mathrm{MeV}^{-1}\mathrm{s}^{-1})$')
     plt.ylim(1e16, 1e21)
@@ -262,6 +263,31 @@ for m_pbh in m_pbh_values:
     plt.yscale('log')
     plt.xscale('log')
     plt.legend()
+    plt.tight_layout()
+    
+m_pbh_values = [3.5e16, 1.8e17]
+
+for m_pbh in m_pbh_values:
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
+    file_path_data = "../blackhawk_v2.0/results/CMP21_Fig2_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
+    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
+
+    plt.figure()
+    plt.plot(1e3 * np.array(energies_primary), 1e-3 * np.array(primary_spectrum), label='Primary')
+    plt.plot(1e3 * np.array(energies_secondary), 1e-3 * np.array(secondary_spectrum), label='Total')
+    plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
+    plt.xlabel('Energy [MeV]')
+    plt.ylabel(r'$\frac{\mathrm{d}N_\gamma}{\mathrm{d}E_\gamma\mathrm{d}t}~(\mathrm{MeV}^{-1}\mathrm{s}^{-1})$')
+    plt.ylim(1e15, 1e20)
+    plt.xlim(1e-3, 1e3)
+    plt.yscale('log')
+    plt.xscale('log')
+    plt.legend()
+    plt.tight_layout()
+
 
 #%% Attempt to calculate J-factor for CMP '21
 from scipy.integrate import tplquad
