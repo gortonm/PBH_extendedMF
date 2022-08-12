@@ -58,7 +58,7 @@ bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
 
-# Flux constraints from Bouchet+ '11 Fig. 7
+# Flux from Bouchet+ '11 Fig. 7
 # NOTE: loading E^2 * intensity
 E_Bouchet_mean, spec_Bouchet_mean = load_data('Bouchet_Fig7_COMPTEL_mean.csv')
 E_Bouchet_bin_lower, a = load_data('Bouchet_Fig7_COMPTEL_lower.csv')
@@ -70,6 +70,21 @@ bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
 bins_upper_Bouchet = E_Bouchet_bin_upper - E_Bouchet_mean
 bins_lower_Bouchet = E_Bouchet_mean - E_Bouchet_bin_lower
+
+
+# Flux from Kappadath '98 Fig. VII.4
+file_path_extracted = './Extracted_files/COMPTEL_spectrum/'
+E_Kappadath_mean, spec_Kappadath_mean = load_data('Kappadath_COMPTEL_mean.csv')
+a, spec_Kappadath_upper = load_data('Kappadath_COMPTEL_upper_y.csv')
+a, spec_Kappadath_lower = load_data('Kappadath_COMPTEL_lower_y.csv')
+E_Kappadath_bin_lower, a = load_data('Kappadath_COMPTEL_lower_x.csv')
+E_Kappadath_bin_upper, a  = load_data('Kappadath_COMPTEL_upper_x.csv')
+
+bins_upper_Kappadath = E_Kappadath_bin_upper - E_Kappadath_mean
+bins_lower_Kappadath = E_Kappadath_mean - E_Kappadath_bin_lower
+error_spec_upper_Kappadath = spec_Kappadath_upper - spec_Kappadath_mean
+error_spec_lower_Kappadath = spec_Kappadath_mean - spec_Kappadath_lower
+
 
 # calculate errors and bin edges
 error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
@@ -113,15 +128,21 @@ plt.yscale('log')
 plt.tight_layout()
 
 
-# Plot comparison spectra used to constrain PBH abundance
-# For Coogan, Morrison & Profumo '21, plot mean flux + 2 * error bar 
-# For Auffinger '22, plot mean flux 
+
+
+
+
+
+# Plot photon spectrum from Essig et al. '13, to compare to the flux shown
+# in Kappadath '98 Fig. VII.4
 plt.figure(figsize=(9, 8))
 plt.ylim(1e-7, 1e-1)
 plt.xlim(0.3, 100)
 plt.tight_layout()
 # To do: add points from Kappadath '98 Fig. VII.4
 plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13)/E_Essig13_mean**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
+plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean, xerr=(bins_lower_Kappadath, bins_upper_Kappadath), yerr=(error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
+
 plt.legend(fontsize='small')
 plt.xlabel('E [MeV]')
 plt.ylabel('Flux $({\\rm MeV^{-1}} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
