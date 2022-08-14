@@ -104,6 +104,9 @@ spec_Essig13_1sigma = Esquare_spec_Essig13_1sigma / E_Essig13_1sigma**2
 E_Essig13_bin_lower, a = load_data('COMPTEL_Essig13_lower_x.csv')
 E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
 
+
+
+
 # Flux constraints from Auffinger '22 Fig. 2
 E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
 E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
@@ -127,24 +130,24 @@ spec_Auffinger_mean = spec_Auffinger_mean * 1e3
 
 # calculate errors and bin edges
 error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
-spec_Essig_13_2sigma = spec_Essig13_1sigma + 2*(error_Essig13)
+spec_Essig_13_2sigma = spec_Essig13_mean + 2*(error_Essig13)
 bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
 bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
 
 bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
-g_to_solar_mass = 1 / 1.989e33     # convert g to solar masses
+g_to_solar_mass = 1 / 1.989e33    # convert g to solar masses
 pc_to_cm = 3.09e18    # convert pc to cm
 MeV_to_g = 1.782662e-27    # convert MeV/c^2 to g
 
 # Astrophysical parameters
 
-# Auffinger '22
+# Auffinger '22 (values from McMillan et al. '11)
 rho_0_Auffinger = 0.0125     # DM density at the Sun, in solar masses / pc^3
 r_s_Auffinger = 17 * 1e3    # scale radius, in pc
 r_0_Auffinger = 8.5 * 1e3    # galactocentric distance of Sun, in pc
-# CMP '21
+# CMP '21 (values from de Salas et al. '19)
 rho_0_CMP = 0.00990     # DM density at the Sun, in solar masses / pc^3
 r_s_CMP = 11 * 1e3   # scale radius, in pc
 r_0_CMP = 8.12 * 1e3    # galactocentric distance of Sun, in pc
@@ -157,12 +160,13 @@ delta_Omega_Auffinger = 4 * l_max_CMP * np.sin(b_max_CMP)
 
 
 b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-delta_Omega_Auffinger = 4 * l_max_CMP * np.sin(b_max_CMP)
+delta_Omega_CMP = 4 * l_max_CMP * np.sin(b_max_CMP)
 
 # find J-factor, as defined in A22 and CMP21
 #J_CMP21 = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
 J_CMP21 = 4.866e25  * (MeV_to_g)    # from Table I of CMP21, converted to units of GeV pc^{-2}
 J_A22 = 3.65 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Auffinger
+J_CMP21_scaled = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
 
 # Calculate "flux quantities"
 f_PBH_A22 = []
@@ -244,7 +248,6 @@ plt.ylim(1e-10, 1)
 #%% Check that I can reproduce CMP '21 Figure 2
 m_pbh_values = [5.3e14, 3.5e15]
 
-E_CMP21_Fig2, spec_CMP21_Fig2 = load_data('CMP21_Fig2_5.3e14g.csv')
 
 for m_pbh in m_pbh_values:
     exponent = np.floor(np.log10(m_pbh))
@@ -255,12 +258,10 @@ for m_pbh in m_pbh_values:
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
 
     plt.figure()
-    
+
     E_CMP21_Fig2, spec_CMP21_Fig2 = load_data("CMP21_Fig2_{:.1f}e{:.0f}g.csv".format(coefficient, exponent))
     
-    if m_pbh == 5.3e14:
-        plt.plot(E_CMP21_Fig2, spec_CMP21_Fig2, label='Extracted', color='k', alpha=0.2  )
-    
+    plt.plot(E_CMP21_Fig2, spec_CMP21_Fig2, label='Extracted', color='k', alpha=0.2  )
     plt.plot(1e3 * np.array(energies_primary), 1e-3 * np.array(primary_spectrum), linestyle='dashed', label='Primary')
     plt.plot(1e3 * np.array(energies_secondary), 1e-3 * np.array(secondary_spectrum), linestyle='dotted', linewidth=3, label='Total')
         
@@ -285,8 +286,11 @@ for m_pbh in m_pbh_values:
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
 
     plt.figure()
-    plt.plot(1e3 * np.array(energies_primary), 1e-3 * np.array(primary_spectrum), label='Primary')
-    plt.plot(1e3 * np.array(energies_secondary), 1e-3 * np.array(secondary_spectrum), label='Total')
+    E_CMP21_Fig2, spec_CMP21_Fig2 = load_data("CMP21_Fig2_{:.1f}e{:.0f}g.csv".format(coefficient, exponent))
+    
+    plt.plot(E_CMP21_Fig2, spec_CMP21_Fig2, label='Extracted', color='k', alpha=0.2  )
+    plt.plot(1e3 * np.array(energies_primary), 1e-3 * np.array(primary_spectrum), linestyle='dashed', label='Primary')
+    plt.plot(1e3 * np.array(energies_secondary), 1e-3 * np.array(secondary_spectrum), linestyle='dotted', linewidth=3, label='Total')
     plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
     plt.xlabel('Energy [MeV]')
     plt.ylabel(r'$\frac{\mathrm{d}N_\gamma}{\mathrm{d}E_\gamma\mathrm{d}t}~(\mathrm{MeV}^{-1}\mathrm{s}^{-1})$')
@@ -359,6 +363,17 @@ def j_theta(theta_max):
     print(delta_omega)
     theta_values = np.linspace(1e-5, theta_max, 10000)
     r_0_CMP21 = True
+    
+    # try calculating value sinfor integrand = theta * j_psi(theta)
+    integrand_values = [theta * j_psi(theta) for theta in theta_values]
+    integral = (2 * np.pi / (delta_omega)) * np.trapz(integrand_values, theta_values) * (1/MeV_to_Modot) * (1/pc_to_cm)**2
+    print(integral / 1.597e26)
+    
+    # try calculating value for integrand = theta * j_psi(theta)
+    integrand_values = [np.sin(theta) * j_psi(theta) for theta in theta_values]
+    integral = (2 * np.pi / (delta_omega)) * np.trapz(integrand_values, theta_values) * (1/MeV_to_Modot) * (1/pc_to_cm)**2
+    print(integral / 1.597e26)
+    
     integrand_values = [np.sin(theta) * j_psi(theta) for theta in theta_values]
     return (2 * np.pi / (delta_omega)) * np.trapz(integrand_values, theta_values) * (1/MeV_to_Modot) * (1/pc_to_cm)**2
 """
@@ -369,10 +384,6 @@ print(j_dimensionless(b_max_CMP, l_max_CMP) / 3.65)
 CMP21 = False
 A22 = True
 print(j_dimensionless(b_max_Auffinger, l_max_Auffinger) / 6.82)
-
-CMP21 = True
-A22 = False
-print(j(b_max_CMP, l_max_CMP) / 4.866e25)
 """
 #print(j(np.radians(5), np.radians(5)))
 #print(j(np.radians(5), np.radians(30)))
