@@ -139,10 +139,10 @@ plt.figure(figsize=(9, 8))
 plt.ylim(1e-7, 1e-1)
 plt.xlim(0.3, 100)
 plt.tight_layout()
-# To do: add points from Kappadath '98 Fig. VII.4
 plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13)/E_Essig13_mean**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
 plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean, xerr=(bins_lower_Kappadath, bins_upper_Kappadath), yerr=(error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
-
+# Essig+ '13 does not match well with Kappadath '98 Fig. VII.4
+# Kappadath '98 matches well with Kappadath '98 Fig. VII.4
 plt.legend(fontsize='small')
 plt.xlabel('E [MeV]')
 plt.ylabel('Flux $({\\rm MeV^{-1}} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
@@ -150,6 +150,26 @@ plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
 
+
+
+# Plot E^2 * photon spectrum from Essig et al. '13, to compare to the flux shown
+# in Kappadath '98 Fig. VII.4
+plt.figure(figsize=(9, 8))
+plt.ylim(1e-4, 1e-1)
+plt.xlim(0.3, 100)
+plt.tight_layout()
+plt.errorbar(E_Essig13_mean, spec_Essig13_mean, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
+plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean * E_Kappadath_mean**2, xerr=(bins_lower_Kappadath, bins_upper_Kappadath), yerr=E_Kappadath_mean**2 * (error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
+# Essig+ '13 matches well with Fig. 1 of Essig+ '13
+# Kappadath '98 doesn't match well with Fig. 1 of Essig+ '13
+plt.legend(fontsize='small')
+plt.xlabel('E [MeV]')
+plt.ylabel(r'$E^2 \times $Flux ' + '$({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
+plt.xscale('log')
+plt.yscale('log')
+plt.tight_layout()
+
+print(spec_Essig13_mean / (spec_Kappadath_mean * E_Kappadath_mean**2))
 
 
 # Plot energy^2 times spectra used to constrain PBH abundance, to illustrate
