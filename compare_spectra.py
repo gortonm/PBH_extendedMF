@@ -47,6 +47,8 @@ E_Essig13_1sigma, spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper.csv')
 E_Essig13_bin_lower, a = load_data('COMPTEL_Essig13_lower_x.csv')
 E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
 
+E_Essig13_mean = 10**((np.log10(E_Essig13_bin_upper) + np.log10(E_Essig13_bin_lower))/2)    # better x-axis fit, slightly worse y-axis fit
+
 # Flux constraints from Auffinger '22 Fig. 2 (bottom left panel)
 # NOTE: loading E^2 * intensity
 E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
@@ -71,7 +73,7 @@ bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 bins_upper_Bouchet = E_Bouchet_bin_upper - E_Bouchet_mean
 bins_lower_Bouchet = E_Bouchet_mean - E_Bouchet_bin_lower
 
-
+"""
 # Flux from Kappadath '98 Fig. VII.4
 file_path_extracted = './Extracted_files/COMPTEL_spectrum/'
 E_Kappadath_mean, spec_Kappadath_mean = load_data('Kappadath_COMPTEL_mean.csv')
@@ -84,16 +86,31 @@ bins_upper_Kappadath = E_Kappadath_bin_upper - E_Kappadath_mean
 bins_lower_Kappadath = E_Kappadath_mean - E_Kappadath_bin_lower
 error_spec_upper_Kappadath = spec_Kappadath_upper - spec_Kappadath_mean
 error_spec_lower_Kappadath = spec_Kappadath_mean - spec_Kappadath_lower
+"""
+# Flux from Kappadath '98 Table VII.2
+E_Kappadath_bin_lower = np.array([0.8, 1.2, 1.8, 2.7, 4.2, 6, 9, 12, 17])
+E_Kappadath_bin_upper = np.array([1.2, 1.8, 2.7, 4.2, 6, 9, 12, 17, 30])
+#E_bins_lower_Kappadath = 10**((np.log10(E_Kappadath_bin_upper) - np.log10(E_Kappadath_bin_lower)) / 2)
+#E_bins_upper_Kappadath = E_bins_lower_Kappadath    # bin width is symmetric around the central energy
+E_bins_lower_Kappadath = (E_Kappadath_bin_upper - E_Kappadath_bin_lower)/ 2
+E_bins_upper_Kappadath = E_bins_lower_Kappadath
 
+#E_Kappadath_mean = (E_Kappadath_bin_lower + E_Kappadath_bin_upper) / 2     # provides a better fit on the x-axis for Essig et al. '13
+E_Kappadath_mean = 10**((np.log10(E_Kappadath_bin_lower) + np.log10(E_Kappadath_bin_upper))/ 2)
+
+
+spec_Kappadath_mean = np.array([0.00465, 0.0020, 0.00121, 0.000245, 6.88e-5, 2.88e-5, 1.88e-5, 11.13e-6, 2.77e-6])
+error_spec_upper_Kappadath = np.array([0.0039, 0.00105, 0.00044, 0.00015, 4.24e-5, 1.88e-5, 4.82e-6, 3.10e-6, 1.58e-6])
+error_spec_lower_Kappadath = error_spec_upper_Kappadath
 
 # calculate errors and bin edges
 error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
-spec_Essig_13_2sigma = spec_Essig13_1sigma + 2*(error_Essig13)
+spec_Essig_13_2sigma = spec_Essig13_1sigma + (error_Essig13)
 bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
 bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
 
 
-
+"""
 # Plot energy^2 times spectra, to compare Auffinger '22 Fig. 2 with
 # Bouchet et al. (2011) Fig. 7
 plt.figure(figsize=(9, 8))
@@ -107,9 +124,6 @@ plt.ylabel('$E^2 {\\rm d}\Phi/{\\rm d}E\,\, ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
-
-
-
 
 
 # Plot comparison spectra used to constrain PBH abundance
@@ -127,10 +141,7 @@ plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
 
-
-
-
-
+"""
 
 
 # Plot photon spectrum from Essig et al. '13, to compare to the flux shown
@@ -140,7 +151,8 @@ plt.ylim(1e-7, 1e-1)
 plt.xlim(0.3, 100)
 plt.tight_layout()
 plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13)/E_Essig13_mean**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
-plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean, xerr=(bins_lower_Kappadath, bins_upper_Kappadath), yerr=(error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
+plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_bin_lower**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13)/E_Essig13_bin_lower**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
+plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean, xerr=(E_bins_lower_Kappadath, E_bins_upper_Kappadath), yerr=(error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
 # Essig+ '13 does not match well with Kappadath '98 Fig. VII.4
 # Kappadath '98 matches well with Kappadath '98 Fig. VII.4
 plt.legend(fontsize='small')
@@ -151,15 +163,15 @@ plt.yscale('log')
 plt.tight_layout()
 
 
-
 # Plot E^2 * photon spectrum from Essig et al. '13, to compare to the flux shown
 # in Kappadath '98 Fig. VII.4
 plt.figure(figsize=(9, 8))
 plt.ylim(1e-4, 1e-1)
 plt.xlim(0.3, 100)
 plt.tight_layout()
-plt.errorbar(E_Essig13_mean, spec_Essig13_mean, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
-plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean * E_Kappadath_mean**2, xerr=(bins_lower_Kappadath, bins_upper_Kappadath), yerr=E_Kappadath_mean**2 * (error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
+plt.errorbar(E_Essig13_mean, spec_Essig13_mean, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13), capsize=5, marker='x', elinewidth=2, linewidth=0, label="Essig '13")
+plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean * E_Kappadath_bin_lower**2, xerr=(E_bins_lower_Kappadath, E_bins_upper_Kappadath), yerr=E_Kappadath_bin_lower**2 * (error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
+plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean * E_Kappadath_mean**2, xerr=(E_bins_lower_Kappadath, E_bins_upper_Kappadath), yerr=E_Kappadath_mean**2 * (error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
 # Essig+ '13 matches well with Fig. 1 of Essig+ '13
 # Kappadath '98 doesn't match well with Fig. 1 of Essig+ '13
 plt.legend(fontsize='small')
@@ -171,7 +183,7 @@ plt.tight_layout()
 
 print(spec_Essig13_mean / (spec_Kappadath_mean * E_Kappadath_mean**2))
 
-
+"""
 # Plot energy^2 times spectra used to constrain PBH abundance, to illustrate
 # the differences more clearly.
 # For Coogan, Morrison & Profumo '21, plot mean flux + 2 * error bar 
@@ -187,7 +199,7 @@ plt.ylabel('$E^2 {\\rm d}\Phi/{\\rm d}E\,\, ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
-
+"""
 
 
 
