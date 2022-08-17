@@ -94,7 +94,7 @@ def string_scientific(val):
 # Coogan, Morrison & Profumo '21 (2010.04797) cites Essig+ '13 (1309.4091) for
 # their constraints on the flux, see Fig. 1 of Essig+ '13
 E_Essig13_mean, Esquare_spec_Essig13_mean = load_data('COMPTEL_Essig13_mean.csv')
-E_Essig13_1sigma, Esquare_spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper.csv')
+E_Essig13_1sigma, Esquare_spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper_y.csv')
 
 # Intensity (rather than E^2 * intensity)
 spec_Essig13_mean = Esquare_spec_Essig13_mean / E_Essig13_mean**2
@@ -165,20 +165,29 @@ delta_Omega_CMP = 4 * l_max_CMP * np.sin(b_max_CMP)
 # find J-factor, as defined in A22 and CMP21
 #J_CMP21 = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
 J_CMP21 = 4.866e25  * (MeV_to_g)    # from Table I of CMP21, converted to units of GeV pc^{-2}
-J_A22 = 3.65 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Auffinger
+#J_A22 = 3.65 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Auffinger
+J_A22 = 6.88826464e+02
 J_CMP21_scaled = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
 
 # Calculate "flux quantities"
 f_PBH_A22 = []
 f_PBH_CMP21 = []
 
-m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.2, 0.3, 0.4, 0.6, 0.8, 1, 2, 3, 4, 6, 8]) * 10**16
+m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+#m_pbh_values = 10**np.arange(15, 16.5, 0.1)
+
 for m_pbh in m_pbh_values:
         
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
-    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
     
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    
+    """
+    exponent = np.log10(m_pbh)
+    print(exponent)
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "1e{:.1f}g/".format(exponent)
+    """
     # Load photon spectra from BlackHawk outputs
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
     
@@ -205,6 +214,9 @@ for m_pbh in m_pbh_values:
         
     # COMPTEL data used in Auffinger (2022) (2201.01265)
     A22 = True
+    
+    
+    
     for i in range(0, 3):
         
         E_min = E_Auffinger_bin_lower[i]    # convert from MeV to GeV
@@ -221,6 +233,7 @@ for m_pbh in m_pbh_values:
     f_PBH_CMP21.append(4 * np.pi * m_pbh * min(CMP_flux_quantity) / J_CMP21 )
 
     print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
+    #print('M_{PBH}: 1e' + ' {:.1f} g'.format(np.log10(m_pbh)))
     print("Bin with minimum f_{PBH, i} [Auffinger] : ", np.argmin(Auffinger_flux_quantity))
     print("Bin with minimum f_{PBH, i} [CMP '21'] : ", np.argmin(CMP_flux_quantity))
 
@@ -230,9 +243,9 @@ m_pbh_CMP21_extracted, f_PBH_CMP21_extracted = load_data("CMP21_Fig3.csv")
 m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
 
 plt.figure(figsize=(7,7))
-plt.plot(m_pbh_CMP21_extracted, f_PBH_CMP21_extracted, label="CMP '21 (Extracted)")
+#plt.plot(m_pbh_CMP21_extracted, f_PBH_CMP21_extracted, label="CMP '21 (Extracted)")
 plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
-plt.plot(m_pbh_values[m_pbh_values > 2e15], np.array(f_PBH_CMP21)[m_pbh_values > 2e15], 'x', label="CMP '21 (Reproduced)")
+#plt.plot(m_pbh_values[m_pbh_values > 2e15], np.array(f_PBH_CMP21)[m_pbh_values > 2e15], 'x', label="CMP '21 (Reproduced)")
 plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22 (Reproduced)")
 
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -243,6 +256,130 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlim(1e14, 1e18)
 plt.ylim(1e-10, 1)
+
+#%% Investigate which bins are causing the constraint, and why
+
+
+m_pbh_values = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 6, 8]) * 10**16
+
+#fig_flux, ax_flux = plt.subplots()
+fig_integral, ax_integral = plt.subplots()
+fig_integral2, ax_integral2 = plt.subplots()
+fig_ratio, ax_ratio = plt.subplots()
+
+for i in range(0, 3):
+    
+    E_min = E_Auffinger_bin_lower[i]
+    E_max = E_Auffinger_bin_upper[i]       
+
+    flux = []
+    integral = []
+    ratio = []
+    
+    for m_pbh in m_pbh_values:
+            
+        exponent = np.floor(np.log10(m_pbh))
+        coefficient = m_pbh / 10**exponent
+        
+        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+        
+        # Load photon spectra from BlackHawk outputs
+        energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
+        energies_total, spectrum_total = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
+                            
+        # Load photon primary spectrum
+        energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+        spectrum_total_interp = np.interp(energies_total_interp, energies_total, spectrum_total)
+        integral_primary = np.trapz(spectrum_total_interp, energies_total_interp)
+        
+        flux.append(spec_Auffinger_mean[i] * (E_max - E_min))
+        integral.append(integral_primary) 
+        ratio.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
+        
+        if 6e15 <= m_pbh <= 1e16:
+            if i == 0:
+                # Plot photon spectra for different PBH masses to illustrate differences
+                plt.figure()
+                plt.plot(energies_primary, spectrum_primary, label='Primary')
+                plt.plot(energies_total, spectrum_total, linestyle='dashed', label='Total')
+                plt.xlim(1e-4, 0.03)
+                plt.ylim(1e15, 5e21)
+                plt.xlabel('Energy E [GeV]')
+                plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
+                plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
+                
+                #plt.yscale('log')
+                #plt.xscale('log')
+                plt.tight_layout()
+                plt.legend()
+                
+                plt.axvline(E_Auffinger_bin_lower[0], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_lower[1], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_lower[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
+
+            
+        if m_pbh == 8e16 or m_pbh == 4e15:
+            if i == 0:
+                # Plot photon spectra for different PBH masses to illustrate differences
+                plt.figure()
+                plt.plot(energies_primary, spectrum_primary, label='Primary')
+                plt.plot(energies_total, spectrum_total, linestyle='dashed', label='Total')
+                plt.xlim(1e-4, 0.03)
+                plt.ylim(1e18, 1e24)
+
+                plt.ylim(1e15, 5e21)
+                plt.xlabel('Energy E [GeV]')
+                plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
+                plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
+                
+                #plt.yscale('log')
+                #plt.xscale('log')
+                plt.tight_layout()
+                plt.legend()
+
+                plt.axvline(E_Auffinger_bin_lower[0], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_lower[1], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_lower[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
+
+    
+    print(flux[0])
+    #ax_flux.plot(m_pbh_values, flux, 'x', label=str(i+1))
+    ax_integral.plot(m_pbh_values, integral, 'x', label=str(i+1))
+    ax_integral2.plot(m_pbh_values, integral / (E_max - E_min), 'x', label=str(i+1))
+    ax_ratio.plot(m_pbh_values, ratio, 'x', label=str(i+1))
+    
+"""
+ax_flux.set_yscale('log')
+ax_flux.set_xscale('log')
+ax_flux.set_ylabel('Measured flux $[\mathrm{cm}^{-2} \cdot \mathrm{s}^{-1} \cdot \mathrm{sr}^{-1}]$')
+ax_flux.set_xlabel('$M_\mathrm{PBH}$ [g]')
+ax_flux.legend()
+fig_flux.tight_layout()
+"""
+ax_integral.set_yscale('log')
+ax_integral.set_xscale('log')
+ax_integral.set_ylabel('Integral $[\mathrm{s}^{-1}]$')
+ax_integral.set_xlabel('$M_\mathrm{PBH}$ [g]')
+ax_integral.legend()
+fig_integral.tight_layout()
+
+
+ax_integral2.set_yscale('log')
+ax_integral2.set_xscale('log')
+ax_integral2.set_ylabel('Integral / (bin width) $[\mathrm{GeV}^{-1}\mathrm{s}^{-1}]$')
+ax_integral2.set_xlabel('$M_\mathrm{PBH}$ [g]')
+ax_integral2.legend()
+fig_integral2.tight_layout()
+
+
+ax_ratio.set_yscale('log')
+ax_ratio.set_xscale('log')
+ax_ratio.set_ylabel('Ratio')
+ax_ratio.set_xlabel('$M_\mathrm{PBH}$ [g]')
+ax_ratio.legend()
+fig_ratio.tight_layout()
 
 
 #%% Check that I can reproduce CMP '21 Figure 2
