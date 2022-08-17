@@ -112,7 +112,7 @@ bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
 bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
 
 
-"""
+
 # Plot energy^2 times spectra, to compare Auffinger '22 Fig. 2 with
 # Bouchet et al. (2011) Fig. 7
 plt.figure(figsize=(9, 8))
@@ -143,7 +143,7 @@ plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
 
-"""
+
 
 
 # Plot photon spectrum from Essig et al. '13, to compare to the flux shown
@@ -191,7 +191,7 @@ print(spec_Essig13_lower / E_Essig13_mean**2)
 print(spec_Essig13_mean / (spec_Kappadath_mean * E_Essig13_mean**2))
 print((spec_Essig13_mean + error_Essig13_upper) / ((spec_Kappadath_mean + error_spec_upper_Kappadath) * E_Essig13_mean**2))
 print(1 /((spec_Essig13_mean - error_Essig13_lower) / ((spec_Kappadath_mean - error_spec_lower_Kappadath) * E_Essig13_mean**2)))
-print(1 /((spec_Essig13_mean - error_Essig13_upper) / ((spec_Kappadath_mean - error_spec_lower_Kappadath) * E_Essig13_mean**2)))
+print(((spec_Essig13_mean - error_Essig13_upper) / ((spec_Kappadath_mean - error_spec_lower_Kappadath) * E_Essig13_mean**2)))
 
 """
 # Plot energy^2 times spectra used to constrain PBH abundance, to illustrate
@@ -461,3 +461,71 @@ plt.title('Ratio of terms depending \n on photon energy (A22/CMP21)')
 plt.tight_layout()
 plt.xscale('log')
 plt.xlim(9e14, 1.1e17)
+
+#%% Compare Strong '94, Strong+ '99 and Bouchet+ '11
+
+file_path_extracted = './Extracted_files/COMPTEL_Esquare_spectrum/'
+
+
+# Load Strong '94 intensity
+E_Strong94_x, spec_Strong94_x = load_data('Strong94_COMPTEL_mean.csv')
+E_Strong94_lower, a = load_data('Strong94_COMPTEL_lower_x.csv')
+E_Strong94_upper, a = load_data('Strong94_COMPTEL_upper_x.csv')
+a, spec_Strong94_y_lower_free = load_data('Strong94_COMPTEL_Xgamma_free_lower_y.csv')
+a, spec_Strong94_y_upper_free = load_data('Strong94_COMPTEL_Xgamma_free_upper_y.csv')
+a, spec_Strong94_y_lower = load_data('Strong94_COMPTEL_Xgamma_lower_y.csv')
+a, spec_Strong94_y_upper = load_data('Strong94_COMPTEL_Xgamma_upper_y.csv')
+
+E_Strong94_mean = 0.5 * np.array(E_Strong94_lower + E_Strong94_upper)
+spec_Strong94_free_mean = 0.5 * np.array(spec_Strong94_y_lower_free + spec_Strong94_y_upper_free)
+spec_Strong94_mean = 0.5 * np.array(spec_Strong94_y_lower + spec_Strong94_y_upper)
+
+error_E_lower_Strong94 = E_Strong94_mean - E_Strong94_lower
+error_E_upper_Strong94 = E_Strong94_upper - E_Strong94_mean
+error_spec_lower_Strong94 = spec_Strong94_mean - spec_Strong94_y_lower
+error_spec_upper_Strong94 = spec_Strong94_y_upper - spec_Strong94_mean
+error_spec_lower_Strong94_free = spec_Strong94_y_upper_free - spec_Strong94_free_mean
+error_spec_upper_Strong94_free = spec_Strong94_y_upper_free - spec_Strong94_free_mean
+
+# Load Strong '99 E^2 * intensity
+E_Strong99_x, spec_Strong99_x = load_data('COMPTEL_Strong99_x.csv')
+E_Strong99_y_lower, spec_Strong99_y_lower = load_data('COMPTEL_Strong99_lower_y.csv')
+E_Strong99_y_upper, spec_Strong99_y_upper  = load_data('COMPTEL_Strong99_upper_y.csv')
+spec_Strong99_y_lower = spec_Strong99_y_lower[:-1]
+spec_Strong99_y_upper = spec_Strong99_y_upper[:-1]
+
+E_Strong99_lower = E_Strong99_x[:-1]
+E_Strong99_upper = E_Strong99_x[1:]
+E_Strong99_mean = 0.5 * np.array(E_Strong99_lower + E_Strong99_upper)
+spec_Strong99_mean = 0.5 * np.array(spec_Strong99_y_lower + spec_Strong99_y_upper)
+
+error_E_lower_Strong99 = E_Strong99_mean - E_Strong99_lower
+error_E_upper_Strong99 = E_Strong99_upper - E_Strong99_mean
+error_spec_lower_Strong99 = spec_Strong99_mean - spec_Strong99_y_lower
+error_spec_upper_Strong99 = spec_Strong99_y_upper - spec_Strong99_mean
+
+
+# Load Bouchet+ '11 E^2 * intensity
+E_Bouchet_mean, spec_Bouchet_mean = load_data('Bouchet_Fig7_COMPTEL_mean.csv')
+E_Bouchet_bin_lower, a = load_data('Bouchet_Fig7_COMPTEL_lower.csv')
+E_Bouchet_bin_upper, a  = load_data('Bouchet_Fig7_COMPTEL_upper.csv')
+
+error_E_Bouchet_lower = E_Bouchet_mean - E_Bouchet_bin_lower
+error_E_Bouchet_upper = E_Bouchet_bin_upper - E_Bouchet_mean
+
+
+
+plt.figure(figsize=(9, 8))
+#plt.ylim(1e-3, 3e-2)
+plt.tight_layout()
+plt.errorbar(E_Bouchet_mean, spec_Bouchet_mean, xerr=(error_E_Bouchet_lower, error_E_Bouchet_upper), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Bouchet et al. '11")
+plt.errorbar(E_Strong99_mean, spec_Strong99_mean, xerr=(error_E_lower_Strong99, error_E_upper_Strong99), yerr=(error_spec_lower_Strong99, error_spec_upper_Strong99), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '99")
+plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94, error_spec_upper_Strong94), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94")
+plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_free_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94_free, error_spec_upper_Strong94_free), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94 ($X_\gamma$ free)")
+
+plt.legend(fontsize='small')
+plt.xlabel('E [MeV]')
+plt.ylabel('$E^2 $' + r'$\times {\\rm Intensity} ~ ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
+plt.xscale('log')
+plt.yscale('log')
+plt.tight_layout()
