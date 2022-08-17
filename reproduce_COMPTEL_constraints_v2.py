@@ -8,6 +8,7 @@ Created on Wed Jul 13 11:51:13 2022
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from J_factor_A22 import j_avg
 
 # Script to compare the fluxes used in the calculations of Auffinger '22
 # Fig. 3 (2201.01265), to the constraints from Coogan, Morrison & Profumo '21
@@ -108,10 +109,17 @@ E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
 
 
 # Flux constraints from Auffinger '22 Fig. 2
+
 E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
 E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
 E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
 
+"""
+# Flux constraints from Strong et al. '94 Fig. 2
+E_Auffinger_mean, spec_Auffinger_mean = load_data('Strong94_COMPTEL_mean.csv')
+E_Auffinger_bin_lower, a = load_data('Strong94_COMPTEL_lower_x.csv')
+E_Auffinger_bin_upper, a  = load_data('Strong94_COMPTEL_upper_x.csv')
+"""
 bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
@@ -122,7 +130,8 @@ E_Essig13_bin_lower = E_Essig13_bin_lower / 1e3
 E_Essig13_bin_upper = E_Essig13_bin_upper / 1e3
 spec_Essig13_1sigma = spec_Essig13_1sigma * 1e3
 spec_Essig13_mean = spec_Essig13_mean * 1e3
-    
+
+
 E_Auffinger_mean = E_Auffinger_mean / 1e3
 E_Auffinger_bin_lower = E_Auffinger_bin_lower / 1e3
 E_Auffinger_bin_upper = E_Auffinger_bin_upper / 1e3
@@ -156,17 +165,16 @@ J_dimensionless_CMP21 = 6.82   # dimensionless J-factor from Essig '13 Table I
 
 # range of galactic latitude/longitude observed by COMPTEL
 b_max_CMP, l_max_CMP = np.radians(20), np.radians(60)
-delta_Omega_Auffinger = 4 * l_max_CMP * np.sin(b_max_CMP)
-
+delta_Omega_CMP = 4 * l_max_CMP * np.sin(b_max_CMP)
 
 b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-delta_Omega_CMP = 4 * l_max_CMP * np.sin(b_max_CMP)
+delta_Omega_Auffinger = 4 * l_max_Auffinger * np.sin(b_max_Auffinger)
 
 # find J-factor, as defined in A22 and CMP21
 #J_CMP21 = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
 J_CMP21 = 4.866e25  * (MeV_to_g)    # from Table I of CMP21, converted to units of GeV pc^{-2}
 #J_A22 = 3.65 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Auffinger
-J_A22 = 6.88826464e+02
+J_A22 = 2 * j_avg(b_max_Auffinger, l_max_Auffinger)
 J_CMP21_scaled = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
 
 # Calculate "flux quantities"
@@ -260,7 +268,7 @@ plt.ylim(1e-10, 1)
 #%% Investigate which bins are causing the constraint, and why
 
 
-m_pbh_values = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 2, 3, 4, 6, 8]) * 10**16
+m_pbh_values = np.array([0.4, 0.6, 0.8, 1, 1.2, 1.5, 4]) * 10**16
 
 #fig_flux, ax_flux = plt.subplots()
 fig_integral, ax_integral = plt.subplots()
@@ -281,7 +289,7 @@ for i in range(0, 3):
         exponent = np.floor(np.log10(m_pbh))
         coefficient = m_pbh / 10**exponent
         
-        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
         
         # Load photon spectra from BlackHawk outputs
         energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=1)
@@ -296,7 +304,7 @@ for i in range(0, 3):
         integral.append(integral_primary) 
         ratio.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
         
-        if 6e15 <= m_pbh <= 1e16:
+        if 6e15 <= m_pbh <= 2e16:
             if i == 0:
                 # Plot photon spectra for different PBH masses to illustrate differences
                 plt.figure()
@@ -319,7 +327,7 @@ for i in range(0, 3):
                 plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
 
             
-        if m_pbh == 8e16 or m_pbh == 4e15:
+        if m_pbh == 4e16 or m_pbh == 4e15:
             if i == 0:
                 # Plot photon spectra for different PBH masses to illustrate differences
                 plt.figure()
@@ -437,120 +445,3 @@ for m_pbh in m_pbh_values:
     plt.xscale('log')
     plt.legend()
     plt.tight_layout()
-
-
-#%% Attempt to calculate J-factor for CMP '21
-from scipy.integrate import tplquad
-
-MeV_to_Modot = 8.96260432e-61
-
-def rho_NFW(r):
-    if CMP21:
-        rho_0 = rho_0_CMP
-        r_s = r_s_CMP
-    elif A22:
-        rho_0 = rho_0_Auffinger
-        r_s = r_s_Auffinger
-        
-    #print(r_s)
-    return rho_0 * ((r/r_s) * (1 + (r/r_s))**2)**(-1)
-
-def r(los, b, l):
-    if CMP21:
-        r_0 = r_0_CMP
-    elif A22:
-        r_0 = r_0_Auffinger
-    return np.sqrt(los**2 + r_0**2 - 2*r_0*los*np.cos(b)*np.cos(l))
-
-def j_integrand(los, b, l):
-    return rho_NFW(r(los, b, l)) * np.cos(b)
-    #return rho_NFW(r(los, b, l))
-
-def j(b_max, l_max):
-    delta_omega = 4 * l_max * np.sin(b_max)  # correct (Table I Cirelli+ '2011) 
-    print(b_max * (180/np.pi))
-    print('delta_omega = ', delta_omega)
-    if CMP21:
-        r_0 = r_0_CMP
-    elif A22:
-        r_0 = r_0_Auffinger
-    return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_0_CMP)) * (1/MeV_to_Modot) * (1/pc_to_cm)**2 / delta_omega
-    
-r_0_Essig13 = 8.5 * 1e3
-rho_0_Essig13 = 0.3 * 0.026331617
-def j_dimensionless(b_max, l_max):
-    delta_omega = 4 * l_max * np.sin(b_max)  # correct (Table I Cirelli+ '2011)   
-    return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_0_Essig13)) / (rho_0_Essig13 * r_0_Essig13 * delta_omega)
-
-
-
-def r2(los, theta):
-    return np.sqrt(los**2 + r_0_CMP**2 - 2*r_0_CMP*los*np.cos(theta))
-
-
-from reproduce_extended_MF import double_integral, triple_integral
-from scipy.integrate import dblquad
-
-def j_psi(psi, n_steps=10000):
-    los_values = np.linspace(0, r_0_CMP, n_steps)
-    return np.trapz(rho_NFW(r2(los_values, psi)), los_values)
-
-def j_theta(theta_max):
-    delta_omega = 2 * np.pi * (1-np.cos(theta_max))
-    print(delta_omega)
-    theta_values = np.linspace(1e-5, theta_max, 10000)
-    r_0_CMP21 = True
-    
-    # try calculating value sinfor integrand = theta * j_psi(theta)
-    integrand_values = [theta * j_psi(theta) for theta in theta_values]
-    integral = (2 * np.pi / (delta_omega)) * np.trapz(integrand_values, theta_values) * (1/MeV_to_Modot) * (1/pc_to_cm)**2
-    print(integral / 1.597e26)
-    
-    # try calculating value for integrand = theta * j_psi(theta)
-    integrand_values = [np.sin(theta) * j_psi(theta) for theta in theta_values]
-    integral = (2 * np.pi / (delta_omega)) * np.trapz(integrand_values, theta_values) * (1/MeV_to_Modot) * (1/pc_to_cm)**2
-    print(integral / 1.597e26)
-    
-    integrand_values = [np.sin(theta) * j_psi(theta) for theta in theta_values]
-    return (2 * np.pi / (delta_omega)) * np.trapz(integrand_values, theta_values) * (1/MeV_to_Modot) * (1/pc_to_cm)**2
-"""
-CMP21 = True
-A22 = False    
-print(j_dimensionless(b_max_CMP, l_max_CMP) / 3.65)
-
-CMP21 = False
-A22 = True
-print(j_dimensionless(b_max_Auffinger, l_max_Auffinger) / 6.82)
-"""
-#print(j(np.radians(5), np.radians(5)))
-#print(j(np.radians(5), np.radians(30)))
-
-CMP21 = True
-print(j_theta(np.radians(5)) / 1.597e26)
-    
-"""
-def arcsech(x):
-    return np.log( (1 + np.sqrt(1-x**2))/ x)
-
-def X(s):
-    if 0 <= s <= 1:
-        return arcsech(s) / np.sqrt(1 - s**2)
-    else: 
-        return arcsech(s) / np.sqrt(s**2 - `)
-    
-def f_j_factor(d):
-    return (4 * np.pi * rho_0_CMP * r_s_CMP**3 / d**2) * (np.log(d*theta/(2*r_S_CMP)) + X(d*theta / r_s)) - d
-
-r_0_Essig13 = 8.5 * 1e3
-
-
-print(j_dimensionless(b_max_CMP, l_max_CMP))
-
-print(j(np.radians(2.5), np.radians(2.5)))
-print(j(b_max_CMP, l_max_CMP))
-
-
-
-R = np.sqrt(b**2 + l**2)
-theta = np.tan(b/l)
-"""
