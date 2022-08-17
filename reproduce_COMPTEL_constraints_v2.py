@@ -92,29 +92,11 @@ def string_scientific(val):
     return r'${:.0f} \times 10^{:d}$'.format(coefficient, int(exponent))
 
 
-# Coogan, Morrison & Profumo '21 (2010.04797) cites Essig+ '13 (1309.4091) for
-# their constraints on the flux, see Fig. 1 of Essig+ '13
-E_Essig13_mean, Esquare_spec_Essig13_mean = load_data('COMPTEL_Essig13_mean.csv')
-E_Essig13_1sigma, Esquare_spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper_y.csv')
-
-# Intensity (rather than E^2 * intensity)
-spec_Essig13_mean = Esquare_spec_Essig13_mean / E_Essig13_mean**2
-spec_Essig13_1sigma = Esquare_spec_Essig13_1sigma / E_Essig13_1sigma**2
-
-# Bin widths from Essig '13
-E_Essig13_bin_lower, a = load_data('COMPTEL_Essig13_lower_x.csv')
-E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
-
-
-
-
 # Flux constraints from Auffinger '22 Fig. 2
-
 E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
 E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
 E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
-print(E_Auffinger_mean)
-print(spec_Auffinger_mean)
+
 """
 E_Auffinger_mean, spec_Auffinger_mean = load_data('Bouchet_Fig7_COMPTEL_mean.csv')
 E_Auffinger_bin_lower, a = load_data('Bouchet_Fig7_COMPTEL_lower.csv')
@@ -122,70 +104,35 @@ E_Auffinger_bin_upper, a  = load_data('Bouchet_Fig7_COMPTEL_upper.csv')
 print(E_Auffinger_mean)
 print(spec_Auffinger_mean)
 """
-spec_Auffinger_mean = spec_Auffinger_mean / E_Auffinger_mean**2
-
-bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
-bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
 
 # convert energy units from MeV to GeV:
-E_Essig13_mean = E_Essig13_mean / 1e3
-E_Essig13_1sigma = E_Essig13_1sigma / 1e3
-E_Essig13_bin_lower = E_Essig13_bin_lower / 1e3
-E_Essig13_bin_upper = E_Essig13_bin_upper / 1e3
-spec_Essig13_1sigma = spec_Essig13_1sigma * 1e3
-spec_Essig13_mean = spec_Essig13_mean * 1e3
-
-
 E_Auffinger_mean = E_Auffinger_mean / 1e3
+print(E_Auffinger_mean)
 E_Auffinger_bin_lower = E_Auffinger_bin_lower / 1e3
 E_Auffinger_bin_upper = E_Auffinger_bin_upper / 1e3
 spec_Auffinger_mean = spec_Auffinger_mean * 1e3
 
-# calculate errors and bin edges
-error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
-spec_Essig_13_2sigma = spec_Essig13_mean + 2*(error_Essig13)
-bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
-bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
+# find mean of the energies in log space
+E_Auffinger_mean = 10**((np.log10(E_Auffinger_bin_lower) + np.log10(E_Auffinger_bin_upper))/2)
+print(E_Auffinger_mean)
 
 
-g_to_solar_mass = 1 / 1.989e33    # convert g to solar masses
-pc_to_cm = 3.09e18    # convert pc to cm
-MeV_to_g = 1.782662e-27    # convert MeV/c^2 to g
+# convert from E^2 * flux to flux
+spec_Auffinger_mean = spec_Auffinger_mean / E_Auffinger_mean**2
 
-# Astrophysical parameters
 
-# Auffinger '22 (values from McMillan et al. '11)
-rho_0_Auffinger = 0.0125     # DM density at the Sun, in solar masses / pc^3
-r_s_Auffinger = 17 * 1e3    # scale radius, in pc
-r_0_Auffinger = 8.5 * 1e3    # galactocentric distance of Sun, in pc
-# CMP '21 (values from de Salas et al. '19)
-rho_0_CMP = 0.00990     # DM density at the Sun, in solar masses / pc^3
-r_s_CMP = 11 * 1e3   # scale radius, in pc
-r_0_CMP = 8.12 * 1e3    # galactocentric distance of Sun, in pc
+# Unit conversions
+g_to_solar_mass = 1 / 1.989e33    # g to solar masses
+pc_to_cm = 3.09e18    # pc to cm
 
-J_dimensionless_CMP21 = 6.82   # dimensionless J-factor from Essig '13 Table I
-
-# range of galactic latitude/longitude observed by COMPTEL
-b_max_CMP, l_max_CMP = np.radians(20), np.radians(60)
-delta_Omega_CMP = 4 * l_max_CMP * np.sin(b_max_CMP)
-
+# Calculate J-factor
 b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-delta_Omega_Auffinger = 4 * l_max_Auffinger * np.sin(b_max_Auffinger)
-
-# find J-factor, as defined in A22 and CMP21
-#J_CMP21 = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
-J_CMP21 = 4.866e25  * (MeV_to_g)    # from Table I of CMP21, converted to units of GeV pc^{-2}
-#J_A22 = 3.65 * rho_0_Auffinger * r_0_Auffinger / delta_Omega_Auffinger
 J_A22 = 2 * j_avg(b_max_Auffinger, l_max_Auffinger)
-J_CMP21_scaled = J_dimensionless_CMP21 * rho_0_CMP * r_0_CMP / delta_Omega_CMP
 
-# Calculate "flux quantities"
 f_PBH_A22 = []
-f_PBH_CMP21 = []
 
 m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-#m_pbh_values = 10**np.arange(15, 16.5, 0.1)
 
 for m_pbh in m_pbh_values:
         
@@ -195,33 +142,12 @@ for m_pbh in m_pbh_values:
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
     
     # Load photon spectra from BlackHawk outputs
-    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
+    energies, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
     
     # Find flux measured (plus an error, if appropriate), divided by the 
     # integral of the photon spectrum over the energy (energy range given by the
     # bin width), multiplied by the bin width
-    
-    CMP_flux_quantity = []
     Auffinger_flux_quantity = []
-    
-    CMP21 = True
-    A22 = False
-    # COMPTEL data used in Coogan, Morrison & Profumo (2021) (2010.04797)
-    for i in range(0, 9):
-        E_min = E_Essig13_bin_lower[i]    # convert from MeV to GeV
-        E_max = E_Essig13_bin_upper[i]    # convert from MeV to GeV
-
-        # Load photon primary spectrum
-        energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
-        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary, primary_spectrum)
-        integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
-        
-        CMP_flux_quantity.append(spec_Essig_13_2sigma[i] * (E_max - E_min) / integral_primary)
-        
-    # COMPTEL data used in Auffinger (2022) (2201.01265)
-    A22 = True
-    
-    
     
     for i in range(0, 3):
         
@@ -229,30 +155,27 @@ for m_pbh in m_pbh_values:
         E_max = E_Auffinger_bin_upper[i]    # convert from MeV to GeV       
         
         # Load photon primary spectrum
-        energies_primary_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
-        primary_spectrum_interp = np.interp(energies_primary_interp, energies_primary, primary_spectrum)
-        integral_primary = np.trapz(primary_spectrum_interp, energies_primary_interp)
-        
-        Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
+        energies_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+        spectrum_interp = np.interp(energies_interp, energies, spectrum)
+        integral = np.trapz(spectrum_interp, energies_interp)
+                
+        Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral)
     
     f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass)  / J_A22)
-    f_PBH_CMP21.append(4 * np.pi * m_pbh * min(CMP_flux_quantity) / J_CMP21 )
-
+    
     print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
-    #print('M_{PBH}: 1e' + ' {:.1f} g'.format(np.log10(m_pbh)))
     print("Bin with minimum f_{PBH, i} [Auffinger] : ", np.argmin(Auffinger_flux_quantity))
-    print("Bin with minimum f_{PBH, i} [CMP '21'] : ", np.argmin(CMP_flux_quantity))
+    print("Integral : ", integral)
 
-# Load result extracted from Fig. 3 of CMP '21
+# Load result extracted from Fig. 3 of Auffinger '22
 file_path_extracted = './Extracted_files/'
-m_pbh_CMP21_extracted, f_PBH_CMP21_extracted = load_data("CMP21_Fig3.csv")
 m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
 
 plt.figure(figsize=(7,7))
-#plt.plot(m_pbh_CMP21_extracted, f_PBH_CMP21_extracted, label="CMP '21 (Extracted)")
 plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
-#plt.plot(m_pbh_values[m_pbh_values > 2e15], np.array(f_PBH_CMP21)[m_pbh_values > 2e15], 'x', label="CMP '21 (Reproduced)")
+
 plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22 (Reproduced)")
+plt.plot(m_pbh_values, np.array(f_PBH_A22), 'x', label="Auffinger '22 (Reproduced)")
 
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
@@ -302,53 +225,28 @@ for i in range(0, 3):
         integral.append(integral_primary) 
         ratio.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
         
-        if 6e15 <= m_pbh <= 2e16:
-            if i == 0:
-                # Plot photon spectra for different PBH masses to illustrate differences
-                plt.figure()
-                plt.plot(energies_primary, spectrum_primary, label='Primary')
-                plt.plot(energies_total, spectrum_total, linestyle='dashed', label='Total')
-                plt.xlim(1e-4, 0.03)
-                plt.ylim(1e15, 5e21)
-                plt.xlabel('Energy E [GeV]')
-                plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
-                plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
-                
-                #plt.yscale('log')
-                #plt.xscale('log')
-                plt.tight_layout()
-                plt.legend()
-                
-                plt.axvline(E_Auffinger_bin_lower[0], ymin=0, ymax=1, linestyle='dotted', color='grey')
-                plt.axvline(E_Auffinger_bin_lower[1], ymin=0, ymax=1, linestyle='dotted', color='grey')
-                plt.axvline(E_Auffinger_bin_lower[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
-                plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
-
+        if i == 0:
+            # Plot photon spectra for different PBH masses to illustrate differences
+            plt.figure()
+            plt.plot(energies_primary, spectrum_primary, label='Primary')
+            plt.plot(energies_total, spectrum_total, linestyle='dashed', label='Total')
+            plt.xlim(1e-4, 0.03)
+            plt.ylim(1e15, 5e21)
+            plt.xlabel('Energy E [GeV]')
+            plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
+            plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
             
-        if m_pbh == 4e16 or m_pbh == 4e15:
-            if i == 0:
-                # Plot photon spectra for different PBH masses to illustrate differences
-                plt.figure()
-                plt.plot(energies_primary, spectrum_primary, label='Primary')
-                plt.plot(energies_total, spectrum_total, linestyle='dashed', label='Total')
-                plt.xlim(1e-4, 0.03)
-                plt.ylim(1e18, 1e24)
+            #plt.yscale('log')
+            #plt.xscale('log')
+            plt.tight_layout()
+            plt.legend()
+            
+            plt.axvline(E_Auffinger_bin_lower[0], ymin=0, ymax=1, linestyle='dotted', color='grey')
+            plt.axvline(E_Auffinger_bin_lower[1], ymin=0, ymax=1, linestyle='dotted', color='grey')
+            plt.axvline(E_Auffinger_bin_lower[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
+            plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
 
-                plt.ylim(1e15, 5e21)
-                plt.xlabel('Energy E [GeV]')
-                plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
-                plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
-                
-                #plt.yscale('log')
-                #plt.xscale('log')
-                plt.tight_layout()
-                plt.legend()
-
-                plt.axvline(E_Auffinger_bin_lower[0], ymin=0, ymax=1, linestyle='dotted', color='grey')
-                plt.axvline(E_Auffinger_bin_lower[1], ymin=0, ymax=1, linestyle='dotted', color='grey')
-                plt.axvline(E_Auffinger_bin_lower[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
-                plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
-
+        
     
     print(flux[0])
     #ax_flux.plot(m_pbh_values, flux, 'x', label=str(i+1))
