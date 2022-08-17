@@ -113,15 +113,20 @@ E_Essig13_bin_upper, a = load_data('COMPTEL_Essig13_upper_x.csv')
 E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
 E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
 E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
+print(E_Auffinger_mean)
+print(spec_Auffinger_mean)
+"""
+E_Auffinger_mean, spec_Auffinger_mean = load_data('Bouchet_Fig7_COMPTEL_mean.csv')
+E_Auffinger_bin_lower, a = load_data('Bouchet_Fig7_COMPTEL_lower.csv')
+E_Auffinger_bin_upper, a  = load_data('Bouchet_Fig7_COMPTEL_upper.csv')
+print(E_Auffinger_mean)
+print(spec_Auffinger_mean)
+"""
+spec_Auffinger_mean = spec_Auffinger_mean / E_Auffinger_mean**2
 
-"""
-# Flux constraints from Strong et al. '94 Fig. 2
-E_Auffinger_mean, spec_Auffinger_mean = load_data('Strong94_COMPTEL_mean.csv')
-E_Auffinger_bin_lower, a = load_data('Strong94_COMPTEL_lower_x.csv')
-E_Auffinger_bin_upper, a  = load_data('Strong94_COMPTEL_upper_x.csv')
-"""
 bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
 bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
+
 
 # convert energy units from MeV to GeV:
 E_Essig13_mean = E_Essig13_mean / 1e3
@@ -143,8 +148,6 @@ spec_Essig_13_2sigma = spec_Essig13_mean + 2*(error_Essig13)
 bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
 bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
 
-bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
-bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
 
 g_to_solar_mass = 1 / 1.989e33    # convert g to solar masses
 pc_to_cm = 3.09e18    # convert pc to cm
@@ -191,11 +194,6 @@ for m_pbh in m_pbh_values:
     
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
     
-    """
-    exponent = np.log10(m_pbh)
-    print(exponent)
-    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "1e{:.1f}g/".format(exponent)
-    """
     # Load photon spectra from BlackHawk outputs
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
     
