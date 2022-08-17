@@ -111,7 +111,7 @@ E_Auffinger_mean = E_Auffinger_mean / 1e3
 print(E_Auffinger_mean)
 E_Auffinger_bin_lower = E_Auffinger_bin_lower / 1e3
 E_Auffinger_bin_upper = E_Auffinger_bin_upper / 1e3
-spec_Auffinger_mean = spec_Auffinger_mean * 1e3
+spec_Auffinger_mean = spec_Auffinger_mean / 1e3
 
 # find mean of the energies in log space
 E_Auffinger_mean = 10**((np.log10(E_Auffinger_bin_lower) + np.log10(E_Auffinger_bin_upper))/2)
@@ -173,9 +173,7 @@ m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
 
 plt.figure(figsize=(7,7))
 plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
-
 plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22 (Reproduced)")
-plt.plot(m_pbh_values, np.array(f_PBH_A22), 'x', label="Auffinger '22 (Reproduced)")
 
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
