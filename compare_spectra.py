@@ -41,7 +41,8 @@ def load_data(filename):
 # their constraints on the flux, see Fig. 1 of Essig+ '13
 # NOTE: loading E^2 * intensity
 E_Essig13_mean, spec_Essig13_mean = load_data('COMPTEL_Essig13_mean.csv')
-E_Essig13_1sigma, spec_Essig13_1sigma = load_data('COMPTEL_Essig13_upper.csv')
+E_Essig13_1sigma, spec_Essig13_upper = load_data('COMPTEL_Essig13_upper_y.csv')
+E_Essig13_lower_y, spec_Essig13_lower = load_data('COMPTEL_Essig13_lower_y.csv')
 
 # Bin widths from Essig '13
 E_Essig13_bin_lower, a = load_data('COMPTEL_Essig13_lower_x.csv')
@@ -104,8 +105,9 @@ error_spec_upper_Kappadath = np.array([0.0039, 0.00105, 0.00044, 0.00015, 4.24e-
 error_spec_lower_Kappadath = error_spec_upper_Kappadath
 
 # calculate errors and bin edges
-error_Essig13 = spec_Essig13_1sigma - spec_Essig13_mean
-spec_Essig_13_2sigma = spec_Essig13_1sigma + (error_Essig13)
+error_Essig13_upper = spec_Essig13_upper - spec_Essig13_mean
+error_Essig13_lower = spec_Essig13_mean - spec_Essig13_lower
+spec_Essig_13_2sigma = spec_Essig13_upper + error_Essig13_upper
 bins_upper_Essig13 = E_Essig13_bin_upper - E_Essig13_mean
 bins_lower_Essig13 = E_Essig13_mean - E_Essig13_bin_lower
 
@@ -148,10 +150,12 @@ plt.tight_layout()
 # in Kappadath '98 Fig. VII.4
 plt.figure(figsize=(9, 8))
 plt.ylim(1e-7, 1e-1)
-plt.xlim(0.3, 100)
+plt.xlim(0.3, 50)
 plt.tight_layout()
-plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13)/E_Essig13_mean**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
-plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_bin_lower**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13)/E_Essig13_bin_lower**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
+plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13_lower, error_Essig13_upper)/E_Essig13_mean**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig et al. '13")
+plt.errorbar(E_Essig13_mean, spec_Essig13_lower / E_Essig13_mean**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig et al. '13")
+
+#plt.errorbar(E_Essig13_mean, spec_Essig13_mean / E_Essig13_bin_lower**2, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13)/E_Essig13_bin_lower**2, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig '13")
 plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean, xerr=(E_bins_lower_Kappadath, E_bins_upper_Kappadath), yerr=(error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
 # Essig+ '13 does not match well with Kappadath '98 Fig. VII.4
 # Kappadath '98 matches well with Kappadath '98 Fig. VII.4
@@ -167,21 +171,27 @@ plt.tight_layout()
 # in Kappadath '98 Fig. VII.4
 plt.figure(figsize=(9, 8))
 plt.ylim(1e-4, 1e-1)
-plt.xlim(0.3, 100)
+plt.xlim(0.3, 50)
 plt.tight_layout()
-plt.errorbar(E_Essig13_mean, spec_Essig13_mean, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13), capsize=5, marker='x', elinewidth=2, linewidth=0, label="Essig '13")
-plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean * E_Kappadath_bin_lower**2, xerr=(E_bins_lower_Kappadath, E_bins_upper_Kappadath), yerr=E_Kappadath_bin_lower**2 * (error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
+plt.errorbar(E_Essig13_mean, spec_Essig13_mean, xerr=(bins_lower_Essig13, bins_upper_Essig13), yerr=(error_Essig13_lower, error_Essig13_upper), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Essig et al. '13")
+#plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean * E_Kappadath_bin_lower**2, xerr=(E_bins_lower_Kappadath, E_bins_upper_Kappadath), yerr=E_Kappadath_bin_lower**2 * (error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
 plt.errorbar(E_Kappadath_mean, spec_Kappadath_mean * E_Kappadath_mean**2, xerr=(E_bins_lower_Kappadath, E_bins_upper_Kappadath), yerr=E_Kappadath_mean**2 * (error_spec_upper_Kappadath, error_spec_lower_Kappadath), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Kappadath '98")
 # Essig+ '13 matches well with Fig. 1 of Essig+ '13
 # Kappadath '98 doesn't match well with Fig. 1 of Essig+ '13
 plt.legend(fontsize='small')
-plt.xlabel('E [MeV]')
-plt.ylabel(r'$E^2 \times $Flux ' + '$({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
+plt.xlabel('Energy $E$ [MeV]')
+plt.ylabel(r'$E^2\times $Flux ' + '$({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
 plt.xscale('log')
 plt.yscale('log')
 plt.tight_layout()
 
-print(spec_Essig13_mean / (spec_Kappadath_mean * E_Kappadath_mean**2))
+print(spec_Essig13_lower / E_Essig13_mean**2)
+
+
+print(spec_Essig13_mean / (spec_Kappadath_mean * E_Essig13_mean**2))
+print((spec_Essig13_mean + error_Essig13_upper) / ((spec_Kappadath_mean + error_spec_upper_Kappadath) * E_Essig13_mean**2))
+print(1 /((spec_Essig13_mean - error_Essig13_lower) / ((spec_Kappadath_mean - error_spec_lower_Kappadath) * E_Essig13_mean**2)))
+print(1 /((spec_Essig13_mean - error_Essig13_upper) / ((spec_Kappadath_mean - error_spec_lower_Kappadath) * E_Essig13_mean**2)))
 
 """
 # Plot energy^2 times spectra used to constrain PBH abundance, to illustrate
@@ -209,7 +219,7 @@ E_Essig13_mean = E_Essig13_mean / 1e3
 E_Essig13_1sigma = E_Essig13_1sigma / 1e3
 E_Essig13_bin_lower = E_Essig13_bin_lower / 1e3
 E_Essig13_bin_upper = E_Essig13_bin_upper / 1e3
-spec_Essig13_1sigma = spec_Essig13_1sigma * 1e3
+spec_Essig13_1sigma = spec_Essig13_upper * 1e3
 spec_Essig13_mean = spec_Essig13_mean * 1e3
     
 E_Auffinger_mean = E_Auffinger_mean / 1e3
