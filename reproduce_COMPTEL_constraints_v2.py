@@ -97,14 +97,6 @@ E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.c
 E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
 E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
 
-"""
-E_Auffinger_mean, spec_Auffinger_mean = load_data('Bouchet_Fig7_COMPTEL_mean.csv')
-E_Auffinger_bin_lower, a = load_data('Bouchet_Fig7_COMPTEL_lower.csv')
-E_Auffinger_bin_upper, a  = load_data('Bouchet_Fig7_COMPTEL_upper.csv')
-print(E_Auffinger_mean)
-print(spec_Auffinger_mean)
-"""
-
 
 # convert energy units from MeV to GeV:
 E_Auffinger_mean = E_Auffinger_mean / 1e3
@@ -160,12 +152,11 @@ for m_pbh in m_pbh_values:
         integral = np.trapz(spectrum_interp, energies_interp)
                 
         Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral)
-    
-    f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass)  / J_A22)
+    f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_A22[0])
     
     print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
     print("Bin with minimum f_{PBH, i} [Auffinger] : ", np.argmin(Auffinger_flux_quantity))
-    print("Integral : ", integral)
+    #print("Integral : ", integral)
 
 # Load result extracted from Fig. 3 of Auffinger '22
 file_path_extracted = './Extracted_files/'
@@ -181,6 +172,7 @@ plt.tight_layout()
 plt.legend(fontsize='small')
 plt.xscale('log')
 plt.yscale('log')
+plt.title('Excluding highest-energy bin')
 plt.xlim(1e14, 1e18)
 plt.ylim(1e-10, 1)
 
@@ -278,9 +270,9 @@ fig_integral2.tight_layout()
 
 ax_ratio.set_yscale('log')
 ax_ratio.set_xscale('log')
-ax_ratio.set_ylabel('Ratio')
+ax_ratio.set_ylabel('Flux ratio (observed/predicted)')
 ax_ratio.set_xlabel('$M_\mathrm{PBH}$ [g]')
-ax_ratio.legend()
+ax_ratio.legend(title='Bin', fontsize='small')
 fig_ratio.tight_layout()
 
 
