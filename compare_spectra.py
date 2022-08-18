@@ -487,6 +487,7 @@ error_spec_upper_Strong94 = spec_Strong94_y_upper - spec_Strong94_mean
 error_spec_lower_Strong94_free = spec_Strong94_y_upper_free - spec_Strong94_free_mean
 error_spec_upper_Strong94_free = spec_Strong94_y_upper_free - spec_Strong94_free_mean
 
+
 # Load Strong '99 E^2 * intensity
 E_Strong99_x, spec_Strong99_x = load_data('COMPTEL_Strong99_x.csv')
 E_Strong99_y_lower, spec_Strong99_y_lower = load_data('COMPTEL_Strong99_lower_y.csv')
@@ -505,27 +506,70 @@ error_spec_lower_Strong99 = spec_Strong99_mean - spec_Strong99_y_lower
 error_spec_upper_Strong99 = spec_Strong99_y_upper - spec_Strong99_mean
 
 
+E_Strong99_1, spec_Strong99_1 = load_data('COMPTEL_Strong99_1.csv')
+E_Strong99_2, spec_Strong99_2 = load_data('COMPTEL_Strong99_2.csv')
+E_Strong99_3, spec_Strong99_3 = load_data('COMPTEL_Strong99_3.csv')
+
 # Load Bouchet+ '11 E^2 * intensity
 E_Bouchet_mean, spec_Bouchet_mean = load_data('Bouchet_Fig7_COMPTEL_mean.csv')
 E_Bouchet_bin_lower, a = load_data('Bouchet_Fig7_COMPTEL_lower.csv')
 E_Bouchet_bin_upper, a  = load_data('Bouchet_Fig7_COMPTEL_upper.csv')
+a, spec_Bouchet_lower = load_data('Bouchet_Fig7_COMPTEL_lower_y.csv')
+a, spec_Bouchet_upper = load_data('Bouchet_Fig7_COMPTEL_upper_y.csv')
+
 
 error_E_Bouchet_lower = E_Bouchet_mean - E_Bouchet_bin_lower
 error_E_Bouchet_upper = E_Bouchet_bin_upper - E_Bouchet_mean
+error_spec_Bouchet_lower = spec_Bouchet_mean - spec_Bouchet_lower
+error_spec_Bouchet_upper = spec_Bouchet_upper - spec_Bouchet_mean
+
+
+import matplotlib.patches as patches
+
+plt.figure(figsize=(9, 8))
+#plt.ylim(1e-3, 3e-2)
+plt.tight_layout()
+plt.errorbar(E_Bouchet_mean, spec_Bouchet_mean, xerr=(error_E_Bouchet_lower, error_E_Bouchet_upper), yerr=(error_spec_Bouchet_lower, error_spec_Bouchet_upper), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Bouchet et al. '11")
+#plt.errorbar(E_Strong99_mean, spec_Strong99_mean, xerr=(error_E_lower_Strong99, error_E_upper_Strong99), yerr=(error_spec_lower_Strong99, error_spec_upper_Strong99), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '99")
+
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_1, spec_Strong99_1)), fill=False))
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_2, spec_Strong99_2)), fill=False))
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_3, spec_Strong99_3)), fill=False))
+
+
+#plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94, error_spec_upper_Strong94), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94")
+#plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_free_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94_free, error_spec_upper_Strong94_free), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94 ($X_\gamma$ free)")
+
+#plt.legend(fontsize='small')
+plt.xlabel('E [MeV]')
+plt.ylabel(r'Intensity $\times E^2$' + '$ ~ ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
+#plt.xlim(1e-2, 1e5)
+#plt.ylim(1e-3, 1e-1)
+plt.xscale('log')
+plt.yscale('log')
+plt.tight_layout()
 
 
 
 plt.figure(figsize=(9, 8))
 #plt.ylim(1e-3, 3e-2)
 plt.tight_layout()
-plt.errorbar(E_Bouchet_mean, spec_Bouchet_mean, xerr=(error_E_Bouchet_lower, error_E_Bouchet_upper), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Bouchet et al. '11")
-plt.errorbar(E_Strong99_mean, spec_Strong99_mean, xerr=(error_E_lower_Strong99, error_E_upper_Strong99), yerr=(error_spec_lower_Strong99, error_spec_upper_Strong99), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '99")
-plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94, error_spec_upper_Strong94), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94")
-plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_free_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94_free, error_spec_upper_Strong94_free), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94 ($X_\gamma$ free)")
+plt.errorbar(E_Bouchet_mean, np.array(spec_Bouchet_mean)*0.542, xerr=(error_E_Bouchet_lower, error_E_Bouchet_upper), yerr=np.array((error_spec_Bouchet_lower, error_spec_Bouchet_upper))*0.542, capsize=5, marker='x', elinewidth=1, linewidth=0, label="Bouchet et al. '11")
+#plt.errorbar(E_Strong99_mean, spec_Strong99_mean, xerr=(error_E_lower_Strong99, error_E_upper_Strong99), yerr=(error_spec_lower_Strong99, error_spec_upper_Strong99), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '99")
 
-plt.legend(fontsize='small')
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_1, 0.183*np.array(spec_Strong99_1))), fill=False))
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_2, 0.183*np.array(spec_Strong99_2))), fill=False))
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_3, 0.183*np.array(spec_Strong99_3))), fill=False))
+
+
+#plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94, error_spec_upper_Strong94), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94")
+#plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_free_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94_free, error_spec_upper_Strong94_free), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94 ($X_\gamma$ free)")
+
+#plt.legend(fontsize='small')
 plt.xlabel('E [MeV]')
-plt.ylabel('$E^2 $' + r'$\times {\\rm Intensity} ~ ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
+plt.ylabel(r'Flux $\times E^2$' + '$ ~ ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3}$)')
+#plt.xlim(1e-2, 1e5)
+#plt.ylim(1e-3, 1e-1)
 plt.xscale('log')
-plt.yscale('log')
+#plt.yscale('log')
 plt.tight_layout()
