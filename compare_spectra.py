@@ -462,30 +462,46 @@ plt.tight_layout()
 plt.xscale('log')
 plt.xlim(9e14, 1.1e17)
 
-#%% Compare Strong '94, Strong+ '99 and Bouchet+ '11
+#%% Compare Strong+ '94, Strong+ '99 and Bouchet+ '11
 
 file_path_extracted = './Extracted_files/COMPTEL_Esquare_spectrum/'
 
 
-# Load Strong '94 intensity
-E_Strong94_x, spec_Strong94_x = load_data('Strong94_COMPTEL_mean.csv')
+# Load Strong+ '94 E^2 * emissivity
+E_Strong94_x, emissivity_Strong94_x = load_data('Strong94_COMPTEL_mean.csv')
 E_Strong94_lower, a = load_data('Strong94_COMPTEL_lower_x.csv')
 E_Strong94_upper, a = load_data('Strong94_COMPTEL_upper_x.csv')
-a, spec_Strong94_y_lower_free = load_data('Strong94_COMPTEL_Xgamma_free_lower_y.csv')
-a, spec_Strong94_y_upper_free = load_data('Strong94_COMPTEL_Xgamma_free_upper_y.csv')
-a, spec_Strong94_y_lower = load_data('Strong94_COMPTEL_Xgamma_lower_y.csv')
-a, spec_Strong94_y_upper = load_data('Strong94_COMPTEL_Xgamma_upper_y.csv')
+a, emissivity_Strong94_lower_free = load_data('Strong94_COMPTEL_Xgamma_free_lower_y.csv')
+a, emissivity_Strong94_upper_free = load_data('Strong94_COMPTEL_Xgamma_free_upper_y.csv')
+a, emissivity_Strong94_lower = load_data('Strong94_COMPTEL_Xgamma_lower_y.csv')
+a, emissivity_Strong94_upper = load_data('Strong94_COMPTEL_Xgamma_upper_y.csv')
+
+# convert Strong+ '94 emissivity to intensity
+h = 2 * np.pi * 6.582119569e-22   # Planck's constant, in MeV s
+c = 3.00e8 * 1e2    # Speed of light in vacuum, in cm s^{-1}
+
+# calculate wavelength of photon with energy E (in MeV)
+def wavelength(E):
+    return h * c / E
 
 E_Strong94_mean = 0.5 * np.array(E_Strong94_lower + E_Strong94_upper)
-spec_Strong94_free_mean = 0.5 * np.array(spec_Strong94_y_lower_free + spec_Strong94_y_upper_free)
-spec_Strong94_mean = 0.5 * np.array(spec_Strong94_y_lower + spec_Strong94_y_upper)
+emissivity_Strong94_free_mean = 0.5 * np.array(emissivity_Strong94_lower_free + emissivity_Strong94_upper_free)
+emissivity_Strong94_mean = 0.5 * np.array(emissivity_Strong94_lower + emissivity_Strong94_upper)
 
 error_E_lower_Strong94 = E_Strong94_mean - E_Strong94_lower
 error_E_upper_Strong94 = E_Strong94_upper - E_Strong94_mean
-error_spec_lower_Strong94 = spec_Strong94_mean - spec_Strong94_y_lower
-error_spec_upper_Strong94 = spec_Strong94_y_upper - spec_Strong94_mean
-error_spec_lower_Strong94_free = spec_Strong94_y_upper_free - spec_Strong94_free_mean
-error_spec_upper_Strong94_free = spec_Strong94_y_upper_free - spec_Strong94_free_mean
+
+intensity_Strong94_mean = emissivity_Strong94_mean / wavelength(E_Strong94_mean)**2
+intensity_Strong94_lower = emissivity_Strong94_lower / wavelength(E_Strong94_mean)**2
+intensity_Strong94_upper = emissivity_Strong94_upper / wavelength(E_Strong94_mean)**2
+intensity_Strong94_free_mean = emissivity_Strong94_free_mean /  wavelength(E_Strong94_mean)**2
+intensity_Strong94_lower_free = emissivity_Strong94_lower_free / wavelength(E_Strong94_mean)**2
+intensity_Strong94_upper_free = emissivity_Strong94_upper_free / wavelength(E_Strong94_mean)**2
+
+error_intensity_lower_Strong94 = intensity_Strong94_mean - intensity_Strong94_lower
+error_intensity_upper_Strong94 = intensity_Strong94_upper - intensity_Strong94_mean
+error_intensity_lower_Strong94_free = intensity_Strong94_upper_free - intensity_Strong94_free_mean
+error_intensity_upper_Strong94_free = intensity_Strong94_upper_free - intensity_Strong94_free_mean
 
 
 # Load Strong '99 E^2 * intensity
@@ -530,11 +546,12 @@ plt.figure(figsize=(9, 8))
 #plt.ylim(1e-3, 3e-2)
 plt.tight_layout()
 plt.errorbar(E_Bouchet_mean, spec_Bouchet_mean, xerr=(error_E_Bouchet_lower, error_E_Bouchet_upper), yerr=(error_spec_Bouchet_lower, error_spec_Bouchet_upper), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Bouchet et al. '11")
-#plt.errorbar(E_Strong99_mean, spec_Strong99_mean, xerr=(error_E_lower_Strong99, error_E_upper_Strong99), yerr=(error_spec_lower_Strong99, error_spec_upper_Strong99), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '99")
+plt.errorbar(E_Strong94_mean, intensity_Strong94_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_intensity_lower_Strong94, error_intensity_upper_Strong94), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '99")
 
 plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_1, spec_Strong99_1)), fill=False))
 plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_2, spec_Strong99_2)), fill=False))
 plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_3, spec_Strong99_3)), fill=False))
+
 
 
 #plt.errorbar(E_Strong94_mean*1e3, spec_Strong94_mean, xerr=(error_E_lower_Strong94, error_E_upper_Strong94), yerr=(error_spec_lower_Strong94, error_spec_upper_Strong94), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Strong '94")
@@ -542,7 +559,7 @@ plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_3, spec_Strong99_3)),
 
 #plt.legend(fontsize='small')
 plt.xlabel('E [MeV]')
-plt.ylabel(r'Intensity $\times E^2$' + '$ ~ ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
+plt.ylabel(r'Intensity $\times E^2$' + '$ ~ ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
 #plt.xlim(1e-2, 1e5)
 #plt.ylim(1e-3, 1e-1)
 plt.xscale('log')
@@ -567,7 +584,7 @@ plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_3, 0.183*np.array(spe
 
 #plt.legend(fontsize='small')
 plt.xlabel('E [MeV]')
-plt.ylabel(r'Flux $\times E^2$' + '$ ~ ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3}$)')
+plt.ylabel(r'Flux $\times E^2$' + '$ ~ ({\\rm MeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2}$)')
 #plt.xlim(1e-2, 1e5)
 #plt.ylim(1e-3, 1e-1)
 plt.xscale('log')
