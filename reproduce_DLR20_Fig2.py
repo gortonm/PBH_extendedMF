@@ -155,6 +155,20 @@ for m_pbh in m_pbh_values:
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
     
+    if 1e16 < m_pbh < 1e17:
+        plt.figure()
+        plt.plot(np.array(energies_primary), np.array(primary_spectrum), label='Primary')
+        plt.plot(np.array(energies_secondary), np.array(secondary_spectrum), 'x', linewidth=3, label='Total')
+        plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
+        plt.xlabel('Energy [GeV]')
+        plt.ylabel(r'$\frac{\mathrm{d}N_{e^+}}{\mathrm{d}E_{e^+}\mathrm{d}t}~(\mathrm{GeV}^{-1}\mathrm{cm}^{-2}\mathrm{s}^{-1}\mathrm{sr}^{-1})$')
+        plt.yscale('log')
+        plt.xscale('log')
+        plt.xlim(0.9*E_min, 1.1* E_max)
+        plt.legend()
+        plt.tight_layout()
+
+    """
     # Cut off primary spectra below 511 keV (already cut-off above 3 MeV)
     primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
     energies_primary_cutoff = energies_primary[energies_primary > E_min]
@@ -169,6 +183,11 @@ for m_pbh in m_pbh_values:
     integral_primary = np.trapz(primary_spectrum_cutoff, energies_primary_cutoff)    
     integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
     integral = integral_secondary
+    """
+    energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+    spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, secondary_spectrum)
+    integral = np.trapz(spectrum_total_interp, energies_total_interp)
+
     
     # Isothermal density profile
     f_pbh_Iso = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_Iso / (annihilation_fraction * integral)
@@ -186,7 +205,7 @@ plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='NFW: \n $R = {:.1f}$ kpc, \
 
 plt.xlim(1e15, 10**(19))
 plt.ylim(10**(-4), 1)
-plt.plot()
+plt.plot() 
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
 plt.xscale('log')
@@ -198,3 +217,4 @@ plt.tight_layout()
 # compare output with interpolated extracted values
 loaded_data_interp = np.interp(m_pbh_values, m_pbh_DLR20, f_pbh_DLR20)
 print(loaded_data_interp / f_pbh_NFW_values)
+print(f_pbh_NFW_values / loaded_data_interp)
