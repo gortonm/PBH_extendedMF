@@ -59,6 +59,7 @@ annihilation_rate = 1e50 * (s_to_yr)
 prefactor_Iso = annihilation_rate / (4 * np.pi * rho_0 * (r_s_Iso**2 + r_odot**2) * (R - r_s_Iso * np.arctan(R/r_s_Iso)))
 # prefactor for NFW density profile
 prefactor_NFW = annihilation_rate / (4 * np.pi * rho_0 * r_odot * (r_s_NFW + r_odot)**2 * (np.log(1 + (R/r_s_NFW)) - R / (R + r_s_NFW)) )
+#prefactor_NFW = annihilation_rate / (4 * np.pi * rho_0 * r_s_NFW * (r_s_NFW + r_odot)**2 * (np.log(1 + (R/r_s_NFW)) - R / (R + r_s_NFW)) )
 
 
 
