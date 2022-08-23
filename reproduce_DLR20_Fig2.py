@@ -128,7 +128,6 @@ if R == 3.5:
     annihilation_fraction = 0.8
     
 m_pbh_DLR20, f_pbh_DLR20 = load_data('DLR20_Fig2_a__0.csv')
-    
 
 f_pbh_Iso_values = []
 f_pbh_NFW_values = []
@@ -139,6 +138,30 @@ m_pbh_1 = np.linspace(1, 10, 10) * 10**15
 m_pbh_2 = np.linspace(1, 15, 15) * 10**16
 m_pbh_values = np.concatenate((m_pbh_1, m_pbh_2))
 
+
+#%% Load data from Fig. 3 of DLR '20, to show the uncertainty due to the DM
+# profile and radius R
+
+m_pbh_Iso_1500pc, f_pbh_Iso_1500pc = load_data('Iso_1.5.csv')
+m_pbh_NFW_1500pc, f_pbh_NFW_1500pc = load_data('NFW_1.5.csv')
+m_pbh_Iso_3500pc, f_pbh_Iso_3500pc = load_data('Iso_3.5.csv')
+m_pbh_NFW_3500pc, f_pbh_NFW_3500pc = load_data('NFW_3.5.csv')
+
+# Interpolate to 
+f_pbh_Iso_1500pc = np.interp(m_pbh_values, m_pbh_Iso_1500pc, f_pbh_Iso_1500pc)
+f_pbh_NFW_1500pc = np.interp(m_pbh_values, m_pbh_NFW_1500pc, f_pbh_NFW_1500pc)
+f_pbh_Iso_3500pc = np.interp(m_pbh_values, m_pbh_Iso_3500pc, f_pbh_Iso_3500pc)
+f_pbh_NFW_3500pc = np.interp(m_pbh_values, m_pbh_NFW_3500pc, f_pbh_NFW_3500pc)
+
+# Find fractional uncertainty relative to NFW with 3.5 kpc 
+uncertainty_Iso_1500pc = np.mean(f_pbh_Iso_1500pc / f_pbh_NFW_3500pc)
+uncertainty_NFW_1500pc = np.mean(f_pbh_NFW_1500pc / f_pbh_NFW_3500pc)
+uncertainty_Iso_3500pc = np.mean(f_pbh_Iso_3500pc / f_pbh_NFW_3500pc)
+
+
+
+#%%
+    
 for m_pbh in m_pbh_values:
         
     exponent = np.floor(np.log10(m_pbh))
@@ -162,7 +185,7 @@ for m_pbh in m_pbh_values:
         plt.plot(np.array(energies_secondary), np.array(secondary_spectrum), 'x', linewidth=3, label='Total')
         plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
         plt.xlabel('Energy [GeV]')
-        plt.ylabel(r'$\frac{\mathrm{d}N_{e^+}}{\mathrm{d}E_{e^+}\mathrm{d}t}~(\mathrm{GeV}^{-1}\mathrm{cm}^{-2}\mathrm{s}^{-1}\mathrm{sr}^{-1})$')
+        plt.ylabel(r'$\frac{\mathrm{d}N_{e^+}}{\mathrm{d}E_{e^+}\mathrm{d}t}~(\mathrm{GeV}^{-1}\cdot\mathrm{cm}^{-2}\cdot\mathrm{s}^{-1}\cdot\mathrm{sr}^{-1})$')
         plt.yscale('log')
         plt.xscale('log')
         plt.xlim(0.9*E_min, 1.1* E_max)
@@ -201,8 +224,10 @@ for m_pbh in m_pbh_values:
    
 plt.figure(figsize=(6,6))
 plt.plot(m_pbh_DLR20, f_pbh_DLR20)
-#plt.plot(m_pbh_values, f_pbh_Iso_values, 'x', label='Iso: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
+plt.plot(m_pbh_values, f_pbh_Iso_values, 'x', label='Iso: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
 plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='NFW: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_NFW))
+plt.plot(m_pbh_values, np.array(f_pbh_NFW_values) * uncertainty_Iso_3500pc / 0.8, 'x', label='Iso (estimated): \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
+
 
 plt.xlim(1e15, 10**(19))
 plt.ylim(10**(-4), 1)
