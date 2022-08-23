@@ -152,6 +152,8 @@ for m_pbh in m_pbh_values:
         integral = np.trapz(spectrum_interp, energies_interp)
                 
         Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral)
+        
+    print('f_PBH values : ', 4 * np.pi * m_pbh * np.array(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_A22[0])
     f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_A22[0])
     
     print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
@@ -179,7 +181,7 @@ plt.ylim(1e-10, 1)
 #%% Investigate which bins are causing the constraint, and why
 
 
-m_pbh_values = np.array([0.4, 0.6, 0.8, 1, 1.2, 1.5, 4]) * 10**16
+#m_pbh_values = np.array([0.4, 0.6, 0.8, 1, 1.2, 1.5, 4]) * 10**16
 
 #fig_flux, ax_flux = plt.subplots()
 fig_integral, ax_integral = plt.subplots()
@@ -215,6 +217,7 @@ for i in range(0, 3):
         integral.append(integral_primary) 
         ratio.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
         
+        """
         if i == 0:
             # Plot photon spectra for different PBH masses to illustrate differences
             plt.figure()
@@ -235,7 +238,7 @@ for i in range(0, 3):
             plt.axvline(E_Auffinger_bin_lower[1], ymin=0, ymax=1, linestyle='dotted', color='grey')
             plt.axvline(E_Auffinger_bin_lower[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
             plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
-
+        """
         
     
     print(flux[0])
