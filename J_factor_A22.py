@@ -47,5 +47,6 @@ def j_avg(b_max, l_max):
     
     return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_odot)) / delta_omega
 
-b_max, l_max = np.radians(20), np.radians(30)
-print(2 * j_avg(b_max, l_max))
+if "__main__" == __name__:
+    b_max, l_max = np.radians(20), np.radians(30)
+    print(2 * j_avg(b_max, l_max))

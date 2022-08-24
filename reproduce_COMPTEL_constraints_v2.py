@@ -34,7 +34,8 @@ mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 
-file_path_extracted = './Extracted_files/COMPTEL_Esquare_spectrum/'
+file_path_extracted = './Extracted_files/A22_COMPTEL/'
+
 def load_data(filename):
     return np.genfromtxt(file_path_extracted+filename, delimiter=',', unpack=True)
 
@@ -92,27 +93,14 @@ def string_scientific(val):
     return r'${:.0f} \times 10^{:d}$'.format(coefficient, int(exponent))
 
 
-# Flux constraints from Auffinger '22 Fig. 2
-E_Auffinger_mean, spec_Auffinger_mean = load_data('Auffinger_Fig2_COMPTEL_mean.csv')
-E_Auffinger_bin_lower, a = load_data('Auffinger_Fig2_COMPTEL_lower_x.csv')
-E_Auffinger_bin_upper, a  = load_data('Auffinger_Fig2_COMPTEL_upper_x.csv')
-
-
-# convert energy units from MeV to GeV:
-E_Auffinger_mean = E_Auffinger_mean / 1e3
-print(E_Auffinger_mean)
-E_Auffinger_bin_lower = E_Auffinger_bin_lower / 1e3
-E_Auffinger_bin_upper = E_Auffinger_bin_upper / 1e3
-spec_Auffinger_mean = spec_Auffinger_mean / 1e3
+# COMPTEL measured flux from Auffinger '22 Fig. 2 (top left panel)
+E_Auffinger_mean, spec_Auffinger_mean = load_data('means.csv')
+E_Auffinger_bin_lower, a = load_data('lower_bin.csv')
+E_Auffinger_bin_upper, a = load_data('upper_bin.csv')
 
 # find mean of the energies in log space
 E_Auffinger_mean = 10**((np.log10(E_Auffinger_bin_lower) + np.log10(E_Auffinger_bin_upper))/2)
 print(E_Auffinger_mean)
-
-
-# convert from E^2 * flux to flux
-spec_Auffinger_mean = spec_Auffinger_mean / E_Auffinger_mean**2
-
 
 # Unit conversions
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
@@ -140,6 +128,7 @@ for m_pbh in m_pbh_values:
     # integral of the photon spectrum over the energy (energy range given by the
     # bin width), multiplied by the bin width
     Auffinger_flux_quantity = []
+    integrals = []
     
     for i in range(0, 3):
         
@@ -152,8 +141,11 @@ for m_pbh in m_pbh_values:
         integral = np.trapz(spectrum_interp, energies_interp)
                 
         Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral)
+        integrals.append(integral)
         
     print('f_PBH values : ', 4 * np.pi * m_pbh * np.array(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_A22[0])
+    print('f_PBH_2 / f_PBH_3 : ', Auffinger_flux_quantity[1] / Auffinger_flux_quantity[2] )
+    print('I_2 / I_3 : ', integrals[1] / integrals[2])
     f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_A22[0])
     
     print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
@@ -217,28 +209,29 @@ for i in range(0, 3):
         integral.append(integral_primary) 
         ratio.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral_primary)
         
-        """
-        if i == 0:
-            # Plot photon spectra for different PBH masses to illustrate differences
-            plt.figure()
-            plt.plot(energies_primary, spectrum_primary, label='Primary')
-            plt.plot(energies_total, spectrum_total, linestyle='dashed', label='Total')
-            plt.xlim(1e-4, 0.03)
-            plt.ylim(1e15, 5e21)
-            plt.xlabel('Energy E [GeV]')
-            plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
-            plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
-            
-            #plt.yscale('log')
-            #plt.xscale('log')
-            plt.tight_layout()
-            plt.legend()
-            
-            plt.axvline(E_Auffinger_bin_lower[0], ymin=0, ymax=1, linestyle='dotted', color='grey')
-            plt.axvline(E_Auffinger_bin_lower[1], ymin=0, ymax=1, linestyle='dotted', color='grey')
-            plt.axvline(E_Auffinger_bin_lower[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
-            plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
-        """
+        
+        if 1e15 < m_pbh <= 4e15:
+            if i == 0:
+                # Plot photon spectra for different PBH masses to illustrate differences
+                plt.figure()
+                plt.plot(energies_primary, spectrum_primary, label='Primary')
+                plt.plot(energies_total, spectrum_total, linestyle='dashed', label='Total')
+                plt.xlim(1e-4, 0.03)
+                plt.ylim(1e15, 5e21)
+                plt.xlabel('Energy E [GeV]')
+                plt.ylabel('$\mathrm{d}^2 n_\gamma / (\mathrm{d}t\mathrm{d}E)$ [cm$^{-3}$ s$^{-1}$ GeV$^{-1}$]')
+                plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
+                
+                #plt.yscale('log')
+                #plt.xscale('log')
+                plt.tight_layout()
+                plt.legend()
+                
+                plt.axvline(E_Auffinger_bin_lower[0], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_lower[1], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_lower[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
+                plt.axvline(E_Auffinger_bin_upper[2], ymin=0, ymax=1, linestyle='dotted', color='grey')
+        
         
     
     print(flux[0])
