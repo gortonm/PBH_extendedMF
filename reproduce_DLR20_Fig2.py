@@ -161,7 +161,7 @@ uncertainty_Iso_3500pc = np.mean(f_pbh_Iso_3500pc / f_pbh_NFW_3500pc)
 
 
 #%%
-    
+
 for m_pbh in m_pbh_values:
         
     exponent = np.floor(np.log10(m_pbh))
@@ -178,7 +178,7 @@ for m_pbh in m_pbh_values:
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
-    
+    """
     if 1e16 < m_pbh < 1e17:
         plt.figure()
         plt.plot(np.array(energies_primary), np.array(primary_spectrum), label='Primary')
@@ -191,7 +191,7 @@ for m_pbh in m_pbh_values:
         plt.xlim(0.9*E_min, 1.1* E_max)
         plt.legend()
         plt.tight_layout()
-
+    """
     """
     # Cut off primary spectra below 511 keV (already cut-off above 3 MeV)
     primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
@@ -215,12 +215,13 @@ for m_pbh in m_pbh_values:
     
     # Isothermal density profile
     f_pbh_Iso = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_Iso / (annihilation_fraction * integral)
-    f_pbh_Iso_values.append(f_pbh_Iso)
+    f_pbh_Iso_values.append(2 * f_pbh_Iso)
     
     # NFW density profile
     f_pbh_NFW = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_NFW / (annihilation_fraction * integral)
-    f_pbh_NFW_values.append(f_pbh_NFW)
+    f_pbh_NFW_values.append(2 * f_pbh_NFW)
 
+#%%
    
 plt.figure(figsize=(6,6))
 plt.plot(m_pbh_DLR20, f_pbh_DLR20)
@@ -244,3 +245,5 @@ plt.tight_layout()
 loaded_data_interp = np.interp(m_pbh_values, m_pbh_DLR20, f_pbh_DLR20)
 print(loaded_data_interp / f_pbh_NFW_values)
 print(f_pbh_NFW_values / loaded_data_interp)
+
+print(np.log(loaded_data_interp) - np.log(f_pbh_NFW_values))
