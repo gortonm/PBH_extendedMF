@@ -59,7 +59,6 @@ annihilation_rate = 1e50 * (s_to_yr)
 prefactor_Iso = annihilation_rate / (4 * np.pi * rho_0 * (r_s_Iso**2 + r_odot**2) * (R - r_s_Iso * np.arctan(R/r_s_Iso)))
 # prefactor for NFW density profile
 prefactor_NFW = annihilation_rate / (4 * np.pi * rho_0 * r_odot * (r_s_NFW + r_odot)**2 * (np.log(1 + (R/r_s_NFW)) - R / (R + r_s_NFW)) )
-#prefactor_NFW = annihilation_rate / (4 * np.pi * rho_0 * r_s_NFW * (r_s_NFW + r_odot)**2 * (np.log(1 + (R/r_s_NFW)) - R / (R + r_s_NFW)) )
 
 
 
@@ -209,25 +208,26 @@ for m_pbh in m_pbh_values:
     integral = integral_secondary
     """
     energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
-    spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, secondary_spectrum)
+    spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, 0.5*np.array(secondary_spectrum))   # include factor of two to only include positron spectrum
     integral = np.trapz(spectrum_total_interp, energies_total_interp)
 
     
     # Isothermal density profile
     f_pbh_Iso = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_Iso / (annihilation_fraction * integral)
-    f_pbh_Iso_values.append(2 * f_pbh_Iso)
+    f_pbh_Iso_values.append(f_pbh_Iso)
     
     # NFW density profile
     f_pbh_NFW = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_NFW / (annihilation_fraction * integral)
-    f_pbh_NFW_values.append(2 * f_pbh_NFW)
+    f_pbh_NFW_values.append(f_pbh_NFW)
 
 #%%
    
 plt.figure(figsize=(6,6))
 plt.plot(m_pbh_DLR20, f_pbh_DLR20)
-plt.plot(m_pbh_values, f_pbh_Iso_values, 'x', label='Iso: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
-plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='NFW: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_NFW))
-plt.plot(m_pbh_values, np.array(f_pbh_NFW_values) * uncertainty_Iso_3500pc / 0.8, 'x', label='Iso (estimated): \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
+#plt.plot(m_pbh_values, f_pbh_Iso_values, 'x', label='Iso: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
+#plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='NFW: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_NFW))
+plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced (NFW)')
+#plt.plot(m_pbh_values, np.array(f_pbh_NFW_values) * uncertainty_Iso_3500pc / 0.8, 'x', label='Iso (estimated): \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
 
 
 plt.xlim(1e15, 10**(19))
