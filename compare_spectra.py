@@ -584,7 +584,7 @@ for i in range(0, 3):
     width_Strong97 = E_Strong97_upper[i] - E_Strong97_lower[i]
     height_Strong97 = intensity_Strong97_upper[i] - intensity_Strong97_lower[i]
     if i == 2:
-        patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False, label="Strong et al. '97")
+        patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False, label="Strong et al. '96")
     else:       
         patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False)
     plt.gca().add_patch(patch)
