@@ -535,7 +535,7 @@ for i in range(0, 3):
     height_Strong97 = emissivity_Strong97_upper[i] - emissivity_Strong97_lower[i]
     
     if i == 2:
-        patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False, label="Strong et al. '99")
+        patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False, label="Strong et al. '97")
     else:
         patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False)
 
