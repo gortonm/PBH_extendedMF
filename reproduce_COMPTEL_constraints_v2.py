@@ -97,7 +97,68 @@ def string_scientific(val):
 E_Auffinger_mean, spec_Auffinger_mean = load_data('means.csv')
 E_Auffinger_bin_lower, a = load_data('lower_bin.csv')
 E_Auffinger_bin_upper, a = load_data('upper_bin.csv')
-''
+
+flux_minus = [5.40770e-01, 7.80073e-02, 7.83239e-03]
+flux_plus = [5.21580e-01, 7.35839e-02, 7.78441e-03]
+
+# Refine fluxes to reflect energy resolution, following Isatis code
+nb_ener = 3
+nb_refined_en = 10
+c = 0
+forma = 6
+
+array_of_arrays = [E_Auffinger_mean, E_Auffinger_bin_lower, E_Auffinger_bin_upper, spec_Auffinger_mean, flux_minus, flux_plus]
+
+
+#flux = np.zeros((len(E_Auffinger_mean)-1) + len(array_of_arrays)-1)
+flux = []
+
+for i in range(0, len(E_Auffinger_mean)):
+    for j in range(0, len(array_of_arrays)):
+        flux.append(array_of_arrays[j][i])
+
+"""
+for i in range(0, len(array_of_arrays)):
+    for j in range(0, len(E_Auffinger_mean)):
+        flux.append(array_of_arrays[i][j])
+"""      
+
+#flux = spec_Auffinger_mean
+energies = E_Auffinger_mean
+energies_step = (np.log10(10*energies[-1]) - np.log10(0.1*energies[0])) / (nb_refined_en - 1)
+energies_refined = []
+refined_flux = []
+
+for i in range(0, nb_refined_en):
+    energies_refined.append(10**(np.log10(energies[0] / 10) + energies_step * i))
+
+for i in range(0, nb_refined_en):
+    while c < nb_ener and energies[c] < energies_refined[i]:
+        c +=1
+        
+    if c > 0 and c < nb_ener and flux[c-1] != 0:
+        x = np.log10(flux[c-1]) + i * ((np.log10(flux[c]) - np.log10(flux[c-1])) / (np.log10(energies[c]) - np.log10(energies[c-1]))) * (np.log10(energies_refined[i]) - np.log10(energies[c-1]))
+        refined_flux.append(10**x)
+        
+    else:
+        refined_flux.append(0)
+        
+    
+bins_upper_Auffinger = E_Auffinger_bin_upper - E_Auffinger_mean
+bins_lower_Auffinger = E_Auffinger_mean - E_Auffinger_bin_lower
+
+plt.figure()
+plt.errorbar(E_Auffinger_mean, spec_Auffinger_mean / E_Auffinger_mean**2, xerr=(bins_lower_Auffinger, bins_upper_Auffinger), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Auffinger '22 (mean flux)")
+plt.plot(energies_refined, refined_flux, 'x')       
+plt.xscale('log')
+plt.yscale('log')
+        
+
+E_Auffinger_bin_lower = energies_refined[:-1]
+E_Auffinger_bin_upper = energies_refined[1:]
+spec_Auffinger_mean = refined_flux
+
+
 # Unit conversions
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
 pc_to_cm = 3.09e18    # pc to cm
@@ -127,7 +188,7 @@ for m_pbh in m_pbh_values:
     Auffinger_flux_quantity = []
     integrals = []
     
-    for i in range(0, 3):
+    for i in range(0, len(spec_Auffinger_mean)-1):
         
         E_min = E_Auffinger_bin_lower[i]    # convert from MeV to GeV
         E_max = E_Auffinger_bin_upper[i]    # convert from MeV to GeV       
@@ -164,8 +225,8 @@ plt.legend(fontsize='small')
 plt.xscale('log')
 plt.yscale('log')
 plt.title('Excluding highest-energy bin')
-plt.xlim(1e14, 1e18)
-plt.ylim(1e-10, 1)
+#plt.xlim(1e14, 1e18)
+#plt.ylim(1e-10, 1)
 
 
 #%% Investigate which bins are causing the constraint, and why
@@ -193,8 +254,7 @@ for i in range(0, nb_refined_en):
         c +=1
         
         if c > 0 and c < nb_ener and flux[c-1] != 0:
-            print('ayyyyy')
-            x = np.log10(flux[c-1]) + i * ((np.log10(flux[c]) - np.log10(flux[c-1])) / (np.log10(energies[c]) - np.log10(energies[c-1]))) * (np.log10(energies_refined[i]) - np.log10(energies[c-1]))
+            x = np.log10(flux[c-1]) + ((np.log10(flux[c]) - np.log10(flux[c-1])) / (np.log10(energies[c]) - np.log10(energies[c-1]))) * (np.log10(energies_refined[i]) - np.log10(energies[c-1]))
             refined_flux.append(10**x)
             
         else:
