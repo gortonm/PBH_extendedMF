@@ -127,6 +127,8 @@ if R == 3.5:
     annihilation_fraction = 0.8
     
 m_pbh_DLR20, f_pbh_DLR20 = load_data('DLR20_Fig2_a__0.csv')
+m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes = load_data('DLR20_Fig2_a__0_newaxes.csv')
+m_pbh_DLR20_newaxes_2, f_pbh_DLR20_newaxes_2 = load_data('DLR20_Fig2_a__0_newaxes_2.csv')
 
 f_pbh_Iso_values = []
 f_pbh_NFW_values = []
@@ -209,6 +211,7 @@ for m_pbh in m_pbh_values:
     """
     energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
     spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, 0.5*np.array(secondary_spectrum))   # include factor of two to only include positron spectrum
+    #spectrum_total_interp = np.interp(energies_total_interp, energies_primary, 0.5*np.array(primary_spectrum))   # include factor of two to only include positron spectrum
     integral = np.trapz(spectrum_total_interp, energies_total_interp)
 
     
@@ -224,6 +227,7 @@ for m_pbh in m_pbh_values:
    
 plt.figure(figsize=(6,6))
 plt.plot(m_pbh_DLR20, f_pbh_DLR20)
+plt.plot(m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes)
 #plt.plot(m_pbh_values, f_pbh_Iso_values, 'x', label='Iso: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
 #plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='NFW: \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_NFW))
 plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced (NFW)')
@@ -241,9 +245,47 @@ plt.legend(fontsize='small')
 plt.tight_layout()
 
 
-# compare output with interpolated extracted values
-loaded_data_interp = np.interp(m_pbh_values, m_pbh_DLR20, f_pbh_DLR20)
-print(loaded_data_interp / f_pbh_NFW_values)
-print(f_pbh_NFW_values / loaded_data_interp)
+print(m_pbh_values)
 
-print(np.log(loaded_data_interp) - np.log(f_pbh_NFW_values))
+plt.figure(figsize=(7,7))
+
+plt.plot(m_pbh_DLR20, f_pbh_DLR20)
+plt.plot(m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes)
+plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced (NFW)')
+
+plt.xlim(1e15, 10**(19))
+plt.ylim(10**(-4), 1)
+plt.plot() 
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$f_\mathrm{PBH}$')
+plt.xscale('log')
+plt.yscale('log')
+plt.legend(fontsize='small')
+plt.tight_layout()
+
+
+#%% Plot fractional difference
+
+plt.figure()
+
+# compare output with interpolated extracted values
+loaded_data_interp = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_DLR20), np.log10(f_pbh_DLR20))
+frac_diff_original_axes = (loaded_data_interp / f_pbh_NFW_values) - 1
+plt.plot(m_pbh_values, frac_diff_original_axes,'x', linewidth=2, label='Original axes')
+
+# compare output with interpolated extracted values (axes defined with wider range)
+loaded_data_interp = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_DLR20_newaxes), np.log10(f_pbh_DLR20_newaxes))
+frac_diff_original_new = (loaded_data_interp / f_pbh_NFW_values) - 1
+plt.plot(m_pbh_values, loaded_data_interp, 'x', linewidth=2, label='Wide axes')
+
+# compare output with interpolated extracted values (axes defined closer to high-mass results)
+loaded_data_interp = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_DLR20_newaxes_2), np.log10(f_pbh_DLR20_newaxes_2))
+frac_diff_original_new = (loaded_data_interp / f_pbh_NFW_values) - 1
+plt.plot(m_pbh_values, loaded_data_interp, 'x', linewidth=2, label='Narrow axes')
+
+plt.xscale('log')
+#plt.yscale('log')
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$')
+plt.tight_layout()
+plt.legend()
