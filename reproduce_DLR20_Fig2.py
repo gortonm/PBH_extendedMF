@@ -140,7 +140,7 @@ m_pbh_2 = np.linspace(1, 15, 15) * 10**16
 m_pbh_values = np.concatenate((m_pbh_1, m_pbh_2))
 
 
-#%% Load data from Fig. 3 of DLR '20, to show the uncertainty due to the DM
+# Load data from Fig. 3 of DLR '20, to show the uncertainty due to the DM
 # profile and radius R
 
 m_pbh_Iso_1500pc, f_pbh_Iso_1500pc = load_data('Iso_1.5.csv')
@@ -161,8 +161,6 @@ uncertainty_Iso_3500pc = np.mean(f_pbh_Iso_3500pc / f_pbh_NFW_3500pc)
 
 
 
-#%%
-
 for m_pbh in m_pbh_values:
         
     exponent = np.floor(np.log10(m_pbh))
@@ -179,8 +177,8 @@ for m_pbh in m_pbh_values:
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
-    """
-    if 1e16 < m_pbh < 1e17:
+    
+    if 8e15 < m_pbh < 5e16:
         plt.figure()
         plt.plot(np.array(energies_primary), np.array(primary_spectrum), label='Primary')
         plt.plot(np.array(energies_secondary), np.array(secondary_spectrum), 'x', linewidth=3, label='Total')
@@ -192,7 +190,7 @@ for m_pbh in m_pbh_values:
         plt.xlim(0.9*E_min, 1.1* E_max)
         plt.legend()
         plt.tight_layout()
-    """
+    
     """
     # Cut off primary spectra below 511 keV (already cut-off above 3 MeV)
     primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
@@ -209,7 +207,7 @@ for m_pbh in m_pbh_values:
     integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
     integral = integral_secondary
     """
-    energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+    energies_total_interp = 10**np.linspace(np.log10(1.1*E_min), np.log10(E_max), 100000)
     spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, 0.5*np.array(secondary_spectrum))   # include factor of two to only include positron spectrum
     #spectrum_total_interp = np.interp(energies_total_interp, energies_primary, 0.5*np.array(primary_spectrum))   # include factor of two to only include positron spectrum
     integral = np.trapz(spectrum_total_interp, energies_total_interp)
@@ -284,7 +282,57 @@ frac_diff_original_new = (loaded_data_interp / f_pbh_NFW_values) - 1
 plt.plot(m_pbh_values, loaded_data_interp, 'x', linewidth=2, label='Narrow axes')
 
 plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$')
+plt.tight_layout()
+plt.legend()
+
+#%% Try using a polynomial fit in log space
+
+plt.figure()
+f_PBH_polyfit = []
+
+
+for deg in range(3, 10):
+    poly_coefficients = np.polyfit(x=np.log10(m_pbh_DLR20_newaxes), y=np.log10(f_pbh_DLR20_newaxes), deg=deg)
+    f_PBH_polyfit = 10**(np.polyval(poly_coefficients, np.log10(m_pbh_DLR20_newaxes)))
+    plt.plot(m_pbh_DLR20_newaxes, (f_PBH_polyfit/f_pbh_DLR20_newaxes) - 1, label='{:.0f}'.format(deg))
+    #print(poly_coefficients)
+    
+plt.xlim(1e15, 10**(19))
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$ (polynomial fit)')
+plt.xscale('log')
 #plt.yscale('log')
+plt.legend(fontsize='small', title='Degree:')
+plt.tight_layout()
+
+
+# Try comparing polynomial fit in log space, of degree 9
+plt.figure()
+deg = 4
+
+# compare output with interpolated extracted values
+poly_coefficients = np.polyfit(x=np.log10(m_pbh_DLR20), y=np.log10(f_pbh_DLR20), deg=deg)
+loaded_data_interp = 10**np.polyval(poly_coefficients, np.log10(m_pbh_values))
+frac_diff_original_axes = (loaded_data_interp / f_pbh_NFW_values) - 1
+plt.plot(m_pbh_values, frac_diff_original_axes,'x', linewidth=2, label='Original axes')
+
+# compare output with interpolated extracted values (axes defined with wider range)
+poly_coefficients = np.polyfit(x=np.log10(m_pbh_DLR20_newaxes), y=np.log10(f_pbh_DLR20_newaxes), deg=deg)
+loaded_data_interp = 10**np.polyval(poly_coefficients, np.log10(m_pbh_values))
+frac_diff_original_new = (loaded_data_interp / f_pbh_NFW_values) - 1
+plt.plot(m_pbh_values, loaded_data_interp, 'x', linewidth=2, label='Wide axes')
+
+# compare output with interpolated extracted values (axes defined closer to high-mass results)
+poly_coefficients = np.polyfit(x=np.log10(m_pbh_DLR20_newaxes_2), y=np.log10(f_pbh_DLR20_newaxes_2), deg=deg)
+loaded_data_interp = 10**np.polyval(poly_coefficients, np.log10(m_pbh_values))
+frac_diff_original_new = (loaded_data_interp / f_pbh_NFW_values) - 1
+plt.plot(m_pbh_values, loaded_data_interp, 'x', linewidth=2, label='Narrow axes')
+
+plt.xscale('log')
+plt.yscale('log')
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$')
 plt.tight_layout()
