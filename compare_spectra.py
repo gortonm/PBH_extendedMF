@@ -578,15 +578,18 @@ plt.figure(figsize=(9, 8))
 plt.ylim(1e-3, 3e-2)
 plt.tight_layout()
 plt.errorbar(E_Bouchet_mean, spec_Bouchet_mean, xerr=(error_E_Bouchet_lower, error_E_Bouchet_upper), yerr=(error_spec_Bouchet_lower, error_spec_Bouchet_upper), capsize=5, marker='x', elinewidth=1, linewidth=0, label="Bouchet et al. '11")
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_1, np.array(spec_Strong99_1))), fill=False))
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_2, np.array(spec_Strong99_2))), fill=False))
+plt.gca().add_patch(patches.Polygon(xy=list(zip(E_Strong99_3, np.array(spec_Strong99_3))), fill=False, label="Strong et al. '99"))
 
 for i in range(0, 3):
     anchor_Strong97 = (E_Strong97_lower[i], intensity_Strong97_lower[i])
     width_Strong97 = E_Strong97_upper[i] - E_Strong97_lower[i]
     height_Strong97 = intensity_Strong97_upper[i] - intensity_Strong97_lower[i]
     if i == 2:
-        patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False, label="Strong et al. '96")
+        patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False, color='tab:orange', label="Strong et al. '96")
     else:       
-        patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False)
+        patch = patches.Rectangle(xy=anchor_Strong97, width=width_Strong97, height=height_Strong97, fill=False, color='tab:orange')
     plt.gca().add_patch(patch)
 
 #plt.legend(fontsize='small')
@@ -596,6 +599,7 @@ plt.xlim(1e-2, 1e5)
 plt.ylim(1e-3, 1e-1)
 plt.xscale('log')
 plt.yscale('log')
+plt.legend()
 plt.tight_layout()
 
 
