@@ -178,7 +178,7 @@ for m_pbh in m_pbh_values:
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
     
-    if 8e15 < m_pbh < 5e16:
+    if m_pbh < 1e23:
         plt.figure()
         plt.plot(np.array(energies_primary), np.array(primary_spectrum), label='Primary')
         plt.plot(np.array(energies_secondary), np.array(secondary_spectrum), 'x', linewidth=3, label='Total')
@@ -207,7 +207,7 @@ for m_pbh in m_pbh_values:
     integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
     integral = integral_secondary
     """
-    energies_total_interp = 10**np.linspace(np.log10(1.1*E_min), np.log10(E_max), 100000)
+    energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
     spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, 0.5*np.array(secondary_spectrum))   # include factor of two to only include positron spectrum
     #spectrum_total_interp = np.interp(energies_total_interp, energies_primary, 0.5*np.array(primary_spectrum))   # include factor of two to only include positron spectrum
     integral = np.trapz(spectrum_total_interp, energies_total_interp)
@@ -263,6 +263,7 @@ plt.tight_layout()
 
 
 #%% Plot fractional difference
+# Interpolated extracted values, exact calculated values
 
 plt.figure()
 
@@ -284,9 +285,39 @@ plt.plot(m_pbh_values, loaded_data_interp, 'x', linewidth=2, label='Narrow axes'
 plt.xscale('log')
 plt.yscale('log')
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
-plt.ylabel('$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$')
+plt.ylabel('$f_\mathrm{PBH, calculated} / f_\mathrm{PBH, extracted} - 1$')
 plt.tight_layout()
 plt.legend()
+
+
+#%% Plot fractional difference
+# Interpolated calculated values, exact extracted values
+
+plt.figure()
+
+# compare output with interpolated extracted values
+loaded_data_interp = 10**np.interp(np.log10(m_pbh_DLR20), np.log10(m_pbh_values), np.log10(f_pbh_NFW_values))
+frac_diff_original_axes = (loaded_data_interp / f_pbh_DLR20) - 1
+plt.plot(m_pbh_DLR20, frac_diff_original_axes,'x', linewidth=2, label='Original axes')
+
+# compare output with interpolated extracted values (axes defined with wider range)
+loaded_data_interp = 10**np.interp(np.log10(m_pbh_DLR20_newaxes), np.log10(m_pbh_values), np.log10(f_pbh_NFW_values))
+frac_diff_original_axes = (loaded_data_interp / f_pbh_DLR20_newaxes) - 1
+plt.plot(m_pbh_DLR20_newaxes, loaded_data_interp, 'x', linewidth=2, label='Wide axes')
+
+# compare output with interpolated extracted values (axes defined closer to high-mass results)
+loaded_data_interp = 10**np.interp(np.log10(m_pbh_DLR20_newaxes_2), np.log10(m_pbh_values), np.log10(f_pbh_NFW_values))
+frac_diff_original_axes = (loaded_data_interp / f_pbh_DLR20_newaxes_2) - 1
+plt.plot(m_pbh_DLR20_newaxes_2, loaded_data_interp, 'x', linewidth=2, label='Narrow axes')
+
+plt.xscale('log')
+#plt.yscale('log')
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated} - 1$')
+plt.tight_layout()
+plt.legend()
+
+
 
 #%% Try using a polynomial fit in log space
 
