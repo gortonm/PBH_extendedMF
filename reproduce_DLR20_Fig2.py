@@ -206,12 +206,17 @@ for m_pbh in m_pbh_values:
     integral_primary = np.trapz(primary_spectrum_cutoff, energies_primary_cutoff)    
     integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
     integral = integral_secondary
-    """
+    
     energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
     spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, 0.5*np.array(secondary_spectrum))   # include factor of two to only include positron spectrum
     #spectrum_total_interp = np.interp(energies_total_interp, energies_primary, 0.5*np.array(primary_spectrum))   # include factor of two to only include positron spectrum
-    integral = np.trapz(spectrum_total_interp, energies_total_interp)
+    #integral = np.trapz(spectrum_total_interp, energies_total_interp)
+    """
 
+    # Cut off primary spectra below 511 keV (already cut-off above 3 MeV)
+    primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
+    energies_primary_cutoff = energies_primary[energies_primary > E_min]
+    integral = np.trapz(0.5*np.array(primary_spectrum_cutoff), energies_primary_cutoff)    
     
     # Isothermal density profile
     f_pbh_Iso = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_Iso / (annihilation_fraction * integral)
@@ -275,7 +280,7 @@ plt.plot(m_pbh_values, frac_diff_original_axes,'x', linewidth=2, label='Original
 # compare output with interpolated extracted values (axes defined with wider range)
 loaded_data_interp = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_DLR20_newaxes), np.log10(f_pbh_DLR20_newaxes))
 frac_diff_original_new = (loaded_data_interp / f_pbh_NFW_values) - 1
-plt.plot(m_pbh_values, loaded_data_interp, 'x', linewidth=2, label='Wide axes')
+plt.plot(m_pbh_values, loaded_data_interp, 'x', linewidth=2, markersize=8, label='Wide axes')
 
 # compare output with interpolated extracted values (axes defined closer to high-mass results)
 loaded_data_interp = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_DLR20_newaxes_2), np.log10(f_pbh_DLR20_newaxes_2))
@@ -303,7 +308,7 @@ plt.plot(m_pbh_DLR20, frac_diff_original_axes,'x', linewidth=2, label='Original 
 # compare output with interpolated extracted values (axes defined with wider range)
 loaded_data_interp = 10**np.interp(np.log10(m_pbh_DLR20_newaxes), np.log10(m_pbh_values), np.log10(f_pbh_NFW_values))
 frac_diff_original_axes = (loaded_data_interp / f_pbh_DLR20_newaxes) - 1
-plt.plot(m_pbh_DLR20_newaxes, loaded_data_interp, 'x', linewidth=2, label='Wide axes')
+plt.plot(m_pbh_DLR20_newaxes, loaded_data_interp, 'x', linewidth=2, markersize=20, label='Wide axes')
 
 # compare output with interpolated extracted values (axes defined closer to high-mass results)
 loaded_data_interp = 10**np.interp(np.log10(m_pbh_DLR20_newaxes_2), np.log10(m_pbh_values), np.log10(f_pbh_NFW_values))
@@ -313,7 +318,7 @@ plt.plot(m_pbh_DLR20_newaxes_2, loaded_data_interp, 'x', linewidth=2, label='Nar
 plt.xscale('log')
 #plt.yscale('log')
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
-plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated} - 1$')
+plt.ylabel('$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$')
 plt.tight_layout()
 plt.legend()
 
@@ -366,5 +371,47 @@ plt.xscale('log')
 plt.yscale('log')
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$')
+plt.tight_layout()
+plt.legend()
+
+#%% compare to exact values extracted from data
+m_pbh_extracted = np.array([m_pbh_DLR20[-1], m_pbh_DLR20[-5], m_pbh_DLR20[-9], m_pbh_DLR20[-13]])
+f_pbh_extracted = np.array([f_pbh_DLR20[-1], f_pbh_DLR20[-5], f_pbh_DLR20[-9], f_pbh_DLR20[-13]])
+
+f_pbh_NFW_values = []
+
+for m_pbh in m_pbh_extracted:
+        
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
+    
+    file_path_data = "../BlackHawk_v2.1/results/DLR20_Fig2_" + "{:.14f}e{:.0f}g/".format(coefficient, exponent)
+    
+    # Load electron primary spectrum
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+    
+    # Load electron secondary spectrum
+    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        
+    energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
+    spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, 0.5*np.array(secondary_spectrum))   # include factor of two to only include positron spectrum
+    integral = np.trapz(spectrum_total_interp, energies_total_interp)
+
+    # NFW density profile
+    f_pbh_NFW = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_NFW / (annihilation_fraction * integral)
+    f_pbh_NFW_values.append(f_pbh_NFW)
+
+# Plot fractional difference
+
+plt.figure()
+
+# compare output with interpolated extracted values
+frac_diff_original_axes = (f_pbh_extracted / f_pbh_NFW_values) - 1
+plt.plot(m_pbh_extracted, frac_diff_original_axes,'x', linewidth=2, label='Original axes')
+
+plt.xscale('log')
+#plt.yscale('log')
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$')
 plt.tight_layout()
 plt.legend()
