@@ -93,19 +93,41 @@ print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
 
 ener_spec, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
 
-# COMPTEL data for flux values
+# COMPTEL data
 flux_minus = np.array([5.40770e-01, 7.80073e-02, 7.83239e-03])
 flux_plus = np.array([5.21580e-01, 7.35839e-02, 7.78441e-03])
 flux = np.array([2.38601e+00, 3.44189e-01, 3.40997e-02])
 
-energies = np.array([1.23204e-03, 4.47746e-03, 1.26645e-02])
+energies_minus = np.array([7.21020e-04, 2.50612e-03, 7.20580e-03])
+energies_plus = np.array([1.23204e-03, 4.47746e-03, 1.26645e-02])
+energies = np.array([1.73836e-03, 5.51171e-03, 1.73730e-02])
 
+# Number of interpolation points
 n_refined = 500
 
 flux_galactic = galactic(spectrum)
 ener_refined = refined_energies(energies, n_refined)
 flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
-print(flux_refined)
+
+
+def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus, ener_COMPTEL_plus):
+    flux_binned = []
+    nb_refined = len(galactic_refined)
+    nb_COMPTEL = len(ener_COMPTEL)
+    
+    for i in range(nb_COMPTEL):
+        val_binned = 0
+        for c in range(nb_refined):
+            while ener_COMPTEL[i] - ener_COMPTEL_minus[i] < ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
+                val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c+2])
+        flux_binned.append(val_binned)
+        
+    return np.array(val_binned)
+
+# Calculate constraint on f_PBH
+f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+print(f_PBH)
+
 
 plt.figure()
 plt.plot(ener_spec, flux_galactic, 'x', label = 'Original')
