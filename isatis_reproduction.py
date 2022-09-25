@@ -38,6 +38,11 @@ file_path_extracted = './Extracted_files/A22_COMPTEL/'
 
 #%%
 
+# Unit conversions
+g_to_solar_mass = 1 / 1.989e33    # g to solar masses
+pc_to_cm = 3.09e18    # pc to cm
+
+
 def refined_energies(energies, n_refined):
     E_min = min(energies)
     E_max = max(energies)
@@ -57,7 +62,7 @@ def refined_flux(flux, ener_spec, n_refined):
     
     c = 0
     for i in range(n_refined):
-        while c < nb_spec-1 and ener_spec[c] < ener_refined[i]:   # modified: has c < nb_ener - 1 instead of c < nb_ener
+        while c < nb_spec and ener_spec[c] < ener_refined[i]:
             c += 1
         if c > 0 and c < nb_spec and flux[c-1] !=0:
             y = np.log10(flux[c-1]) + ((np.log10(flux[c]) - np.log10(flux[c-1])) / (np.log10(ener_spec[c]) - np.log10(ener_spec[c-1]))) * (np.log10(ener_refined[i]) - np.log10(ener_spec[c-1]))
@@ -74,15 +79,16 @@ def galactic(spectrum):
     # Calculate J-factor
     b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
     j_factor = 2 * j_avg(b_max_Auffinger, l_max_Auffinger)
+    print('J = ', j_factor)
     
     galactic = []
     for i in range(n_spec):
         val = j_factor[0] * spectrum[i] / (4*np.pi*m_pbh)
         galactic.append(val)
         
-    return galactic
+    return np.array(galactic) * g_to_solar_mass**(-1) * (pc_to_cm)**(-2)
 
-m_pbh = 1e15
+m_pbh = 1e16
 
 # Load photon spectra from BlackHawk outputs
 exponent = np.floor(np.log10(m_pbh))
@@ -109,6 +115,9 @@ flux_galactic = galactic(spectrum)
 ener_refined = refined_energies(energies, n_refined)
 flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
 
+# use np.interp() to find 'refined' (linearly interpolated) flux:
+#flux_refined = 10**np.interp(np.log10(ener_refined), np.log10(ener_spec), np.log10(flux_galactic))
+
 
 def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus, ener_COMPTEL_plus):
     flux_binned = []
@@ -124,6 +133,9 @@ def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus
                 while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
                     val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c]) / 2
                     c += 1
+        print(c)
+        print(ener_refined[c])
+        print(ener_COMPTEL[i] + ener_COMPTEL_plus[i])
         flux_binned.append(val_binned)
     print(val_binned)
     return np.array(flux_binned)
@@ -134,7 +146,7 @@ def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus
 f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
 print(f_PBH)
 
-
+#%%
 plt.figure()
 plt.plot(ener_spec, flux_galactic, 'x', label = 'Original')
 plt.plot(ener_refined, flux_refined, 'x', label='Refined')
