@@ -86,9 +86,9 @@ def galactic(spectrum):
         val = j_factor[0] * spectrum[i] / (4*np.pi*m_pbh)
         galactic.append(val)
         
-    return np.array(galactic) * g_to_solar_mass**(-1) * (pc_to_cm)**(-2)
+    return np.array(galactic)
 
-m_pbh = 1e16
+m_pbh = 1e15
 
 # Load photon spectra from BlackHawk outputs
 exponent = np.floor(np.log10(m_pbh))
@@ -115,10 +115,6 @@ flux_galactic = galactic(spectrum)
 ener_refined = refined_energies(energies, n_refined)
 flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
 
-# use np.interp() to find 'refined' (linearly interpolated) flux:
-#flux_refined = 10**np.interp(np.log10(ener_refined), np.log10(ener_spec), np.log10(flux_galactic))
-
-
 def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus, ener_COMPTEL_plus):
     flux_binned = []
     nb_refined = len(galactic_refined)
@@ -129,10 +125,10 @@ def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus
         c = 0
         while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] - ener_COMPTEL_minus[i]:
             c += 1
-            if c > 0 and c+1 < nb_refined:
-                while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
-                    val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c]) / 2
-                    c += 1
+        if c > 0 and c+1 < nb_refined:
+            while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
+                val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c]) / 2
+                c += 1
         print(c)
         print(ener_refined[c])
         print(ener_COMPTEL[i] + ener_COMPTEL_plus[i])
@@ -143,8 +139,10 @@ def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus
 
 
 # Calculate constraint on f_PBH
-f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+f_PBH = g_to_solar_mass * (pc_to_cm)**(2) * min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
 print(f_PBH)
+
+# aiming for ~2.37e-5 for M_PBH = 1e15g
 
 #%%
 plt.figure()
