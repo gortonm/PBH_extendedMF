@@ -117,12 +117,18 @@ def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus
     
     for i in range(nb_COMPTEL):
         val_binned = 0
-        for c in range(nb_refined):
-            while ener_COMPTEL[i] - ener_COMPTEL_minus[i] < ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
-                val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c+2])
+        c = 0
+        while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] - ener_COMPTEL_minus[i]:
+            c += 1
+            if c > 0 and c+1 < nb_refined:
+                while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
+                    val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c]) / 2
+                    c += 1
         flux_binned.append(val_binned)
-        
-    return np.array(val_binned)
+    print(val_binned)
+    return np.array(flux_binned)
+
+
 
 # Calculate constraint on f_PBH
 f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
