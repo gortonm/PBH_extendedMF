@@ -117,6 +117,7 @@ for m_pbh in m_pbh_values:
     coefficient = m_pbh / 10**exponent
     
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    print("{:.1f}e{:.0f}g".format(coefficient, exponent))    # check that the correct PBH mass is being loaded
     
     # Load photon spectra from BlackHawk outputs
     energies, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
