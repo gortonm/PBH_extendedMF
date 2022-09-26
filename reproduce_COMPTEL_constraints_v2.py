@@ -103,7 +103,7 @@ print(E_Auffinger_mean)
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
 pc_to_cm = 3.09e18    # pc to cm
 
-# Calculate J-factor
+# Calculate J-factor (units: solar mass * pc^{-2} * sr^{-1})
 b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
 J_A22 = 2 * j_avg(b_max_Auffinger, l_max_Auffinger)
 
@@ -121,7 +121,6 @@ for m_pbh in m_pbh_values:
     # Load photon spectra from BlackHawk outputs
     energies, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
     
-
     # Calculate flux from a theoretical PBH population, and compare to that
     # observed by COMPTEL.
     flux_theoretical = []
@@ -134,7 +133,6 @@ for m_pbh in m_pbh_values:
         E_min = E_Auffinger_bin_lower[i]
         E_max = E_Auffinger_bin_upper[i]     
         
-        # Load photon primary spectrum
         energies_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100)
         spectrum_interp = 10**np.interp(np.log10(energies_interp), np.log10(energies), np.log10(spectrum))
         integral = np.trapz(spectrum_interp, energies_interp)
@@ -150,7 +148,8 @@ for m_pbh in m_pbh_values:
     print('I_2 / I_3 : ', integrals[1] / integrals[2])
     f_PBH_A22.append(min(flux_ratio))
     
-    print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
+    print('M_{PBH} [g] : ' + ' {0:.1e}'.format(m_pbh))
+    print('M_{PBH} loaded [g] : ' + ' {:.1f}e+{:.0f}'.format(coefficient, exponent))    # check that the correct PBH mass is being loaded
     print("Bin with minimum f_{PBH, i} [Auffinger] : ", np.argmin(Auffinger_flux_quantity))
     #print("Integral : ", integral)
 
