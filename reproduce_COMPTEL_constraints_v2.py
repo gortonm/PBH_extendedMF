@@ -121,29 +121,34 @@ for m_pbh in m_pbh_values:
     # Load photon spectra from BlackHawk outputs
     energies, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
     
-    # Find flux measured (plus an error, if appropriate), divided by the 
-    # integral of the photon spectrum over the energy (energy range given by the
-    # bin width), multiplied by the bin width
-    Auffinger_flux_quantity = []
+
+    # Calculate flux from a theoretical PBH population, and compare to that
+    # observed by COMPTEL.
+    flux_theoretical = []
+    flux_measured = []
     integrals = []
+    flux_ratio = []
     
     for i in range(0, 3):
         
-        E_min = E_Auffinger_bin_lower[i]    # convert from MeV to GeV
-        E_max = E_Auffinger_bin_upper[i]    # convert from MeV to GeV       
+        E_min = E_Auffinger_bin_lower[i]
+        E_max = E_Auffinger_bin_upper[i]     
         
         # Load photon primary spectrum
         energies_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100)
         spectrum_interp = 10**np.interp(np.log10(energies_interp), np.log10(energies), np.log10(spectrum))
         integral = np.trapz(spectrum_interp, energies_interp)
+        
+        flux_measured.append(spec_Auffinger_mean[i] * (E_max - E_min))
+        flux_theoretical.append(integral * J_A22[0] / (4 * np.pi * m_pbh))
                 
-        Auffinger_flux_quantity.append(spec_Auffinger_mean[i] * (E_max - E_min) / integral)
+        flux_ratio.append(pc_to_cm**2 * g_to_solar_mass * flux_measured[i] / flux_theoretical[i])
         integrals.append(integral)
         
-    print('f_PBH values : ', 4 * np.pi * m_pbh * np.array(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_A22[0])
-    print('f_PBH_2 / f_PBH_3 : ', Auffinger_flux_quantity[1] / Auffinger_flux_quantity[2] )
+    print('f_PBH values : ', flux_ratio)
+    print('f_PBH_2 / f_PBH_3 : ', flux_theoretical[1] / flux_theoretical[2] )
     print('I_2 / I_3 : ', integrals[1] / integrals[2])
-    f_PBH_A22.append(4 * np.pi * m_pbh * min(Auffinger_flux_quantity) * (pc_to_cm)**2 * (g_to_solar_mass) / J_A22[0])
+    f_PBH_A22.append(min(flux_ratio))
     
     print('M_{PBH} [g] : ' + ' {0:1.0e}'.format(m_pbh))
     print("Bin with minimum f_{PBH, i} [Auffinger] : ", np.argmin(Auffinger_flux_quantity))
