@@ -9,7 +9,7 @@ Created on Sun Sep 25 13:54:33 2022
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from reproduce_COMPTEL_constraints_v2 import load_data, read_col, read_blackhawk_spectra, string_scientific
+from reproduce_COMPTEL_constraints_v2 import load_data, read_blackhawk_spectra
 from J_factor_A22 import j_avg
 
 # Script to understand the meaning of the 'refined flux' values used in Isatis
@@ -88,16 +88,8 @@ def galactic(spectrum):
         
     return np.array(galactic)
 
-m_pbh = 1e15
-
-# Load photon spectra from BlackHawk outputs
-exponent = np.floor(np.log10(m_pbh))
-coefficient = m_pbh / 10**exponent
-
-file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
-
-ener_spec, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
+f_PBH_isatis = []
+m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
 
 # COMPTEL data
 flux_minus = np.array([5.40770e-01, 7.80073e-02, 7.83239e-03])
@@ -111,38 +103,62 @@ energies = np.array([1.73836e-03, 5.51171e-03, 1.73730e-02])
 # Number of interpolation points
 n_refined = 500
 
-flux_galactic = galactic(spectrum)
-ener_refined = refined_energies(energies, n_refined)
-flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
 
-def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus, ener_COMPTEL_plus):
-    flux_binned = []
-    nb_refined = len(galactic_refined)
-    nb_COMPTEL = len(ener_COMPTEL)
+for m_pbh in m_pbh_values:
+    # Load photon spectra from BlackHawk outputs
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
     
-    for i in range(nb_COMPTEL):
-        val_binned = 0
-        c = 0
-        while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] - ener_COMPTEL_minus[i]:
-            c += 1
-        if c > 0 and c+1 < nb_refined:
-            while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
-                val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c]) / 2
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
+    
+    ener_spec, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
+        
+    flux_galactic = galactic(spectrum)
+    ener_refined = refined_energies(energies, n_refined)
+    flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
+    
+    def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus, ener_COMPTEL_plus):
+        flux_binned = []
+        nb_refined = len(galactic_refined)
+        nb_COMPTEL = len(ener_COMPTEL)
+        
+        for i in range(nb_COMPTEL):
+            val_binned = 0
+            c = 0
+            while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] - ener_COMPTEL_minus[i]:
                 c += 1
-        print(c)
-        print(ener_refined[c])
-        print(ener_COMPTEL[i] + ener_COMPTEL_plus[i])
-        flux_binned.append(val_binned)
-    print(val_binned)
-    return np.array(flux_binned)
+            if c > 0 and c+1 < nb_refined:
+                while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
+                    val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c]) / 2
+                    c += 1
+            print(c)
+            print(ener_refined[c])
+            print(ener_COMPTEL[i] + ener_COMPTEL_plus[i])
+            flux_binned.append(val_binned)
+        print(val_binned)
+        return np.array(flux_binned)
+    
+    # Calculate constraint on f_PBH
+    f_PBH = g_to_solar_mass * (pc_to_cm)**(2) * min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+    f_PBH_isatis.append(f_PBH)
 
+# Load result extracted from Fig. 3 of Auffinger '22
+file_path_extracted = './Extracted_files/'
+m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
 
+plt.figure(figsize=(7,7))
+plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
+plt.plot(m_pbh_values, f_PBH_isatis, 'x', label="Auffinger '22 (Reproduced)")
 
-# Calculate constraint on f_PBH
-f_PBH = g_to_solar_mass * (pc_to_cm)**(2) * min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
-print(f_PBH)
-
-# aiming for ~2.37e-5 for M_PBH = 1e15g
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$f_\mathrm{PBH}$')
+plt.tight_layout()
+plt.legend(fontsize='small')
+plt.xscale('log')
+plt.yscale('log')
+plt.xlim(1e14, 1e18)
+plt.ylim(1e-10, 1)
 
 #%%
 plt.figure()
