@@ -95,10 +95,6 @@ E_Auffinger_mean, spec_Auffinger_mean = load_data('means.csv')
 E_Auffinger_bin_lower, a = load_data('lower_bin.csv')
 E_Auffinger_bin_upper, a = load_data('upper_bin.csv')
 
-# find mean of the energies in log space
-E_Auffinger_mean = 10**((np.log10(E_Auffinger_bin_lower) + np.log10(E_Auffinger_bin_upper))/2)
-print(E_Auffinger_mean)
-
 # Unit conversions
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
 pc_to_cm = 3.09e18    # pc to cm
