@@ -32,8 +32,7 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
-
-file_path_extracted = './Extracted_files/A22_COMPTEL/'
+file_path_extracted = './Extracted_files/'
 
 def load_data(filename):
     return np.genfromtxt(file_path_extracted+filename, delimiter=',', unpack=True)
@@ -90,6 +89,8 @@ def string_scientific(val):
     return r'${:.0f} \times 10^{:d}$'.format(coefficient, int(exponent))
 
 if "__main__" == __name__:
+    
+    file_path_extracted = './Extracted_files/A22_COMPTEL/'
 
     # COMPTEL measured flux from Auffinger '22 Fig. 2 (top left panel)
     E_Auffinger_mean, spec_Auffinger_mean = load_data('means.csv')

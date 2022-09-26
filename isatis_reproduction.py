@@ -34,7 +34,7 @@ mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 
-file_path_extracted = './Extracted_files/A22_COMPTEL/'
+file_path_extracted = './Extracted_files/'
 
 #%%
 
