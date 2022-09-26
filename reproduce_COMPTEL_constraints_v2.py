@@ -95,6 +95,15 @@ E_Auffinger_mean, spec_Auffinger_mean = load_data('means.csv')
 E_Auffinger_bin_lower, a = load_data('lower_bin.csv')
 E_Auffinger_bin_upper, a = load_data('upper_bin.csv')
 
+# Use data values given in Isatis for COMPTEL measured values
+spec_Auffinger_mean = np.array([2.38601e+00, 3.44189e-01, 3.40997e-02])
+energies_minus = np.array([7.21020e-04, 2.50612e-03, 7.20580e-03])
+energies_plus = np.array([1.23204e-03, 4.47746e-03, 1.26645e-02])
+
+E_Auffinger_mean = np.array([1.73836e-03, 5.51171e-03, 1.73730e-02])
+E_Auffinger_bin_lower = E_Auffinger_mean - energies_minus
+E_Auffinger_bin_upper = E_Auffinger_mean + energies_plus
+
 # Unit conversions
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
 pc_to_cm = 3.09e18    # pc to cm
