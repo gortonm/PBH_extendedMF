@@ -151,7 +151,7 @@ for m_pbh in m_pbh_values:
     
     print('M_{PBH} [g] : ' + ' {0:.1e}'.format(m_pbh))
     print('M_{PBH} loaded [g] : ' + ' {:.1f}e+{:.0f}'.format(coefficient, exponent))    # check that the correct PBH mass is being loaded
-    print("Bin with minimum f_{PBH, i} [Auffinger] : ", np.argmin(Auffinger_flux_quantity))
+    print("Bin with minimum f_{PBH, i} [Auffinger] : ", np.argmin(flux_ratio))
     #print("Integral : ", integral)
 
 # Load result extracted from Fig. 3 of Auffinger '22
