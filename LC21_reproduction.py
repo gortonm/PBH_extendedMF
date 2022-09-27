@@ -143,7 +143,8 @@ if NGC5044:
     L_0 = 6.3e38 # maximum observed luminosity, in erg s^{-1}
 
 
-# DM density profile
+
+# DM density (NFW), in solar masses kpc^{-3}
 def rho_NFW(r):
     return rho_s * (r_s / r) * (1 + (r/r_s))**(-2)
 
@@ -169,9 +170,11 @@ def b_T(E, r):
     return b_1 + b_2 + b_3 + b_C(E, r)
 
 def Q(E, r):
-    # Load electron secondary spectrum
-    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-    
+    """
+    plt.plot(energies_secondary, secondary_spectrum)
+    plt.xscale('log')
+    plt.yscale('log')
+    """
     return np.interp(E, energies_secondary, secondary_spectrum) * rho_NFW(r) / m_pbh
 
 def dn_dE(E, r):
@@ -188,7 +191,7 @@ def luminosity_integrand(E, r):
     return dn_dE(E, r) * b_C(E, r)
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
-    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max)
+    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max, epsabs = 1e-3, epsrel=1e-3)
 
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
     r_values = np.linspace(0, R, n_steps)
@@ -216,14 +219,19 @@ print(luminosity_observed_analytic() * kpc_to_cm**3/ L_0)
 
 
 #%%
-m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+#m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+#m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+m_pbh_values = np.array([1e15])
 f_pbh_values = []
 for m_pbh in m_pbh_values:
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
     
-    f_pbh_values.append(erg_to_GeV * (g_to_solar_mass)**(-1) * kpc_to_cm**3 * luminosity_observed() / luminosity_predicted())
+    # Load electron secondary spectrum
+    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+    
+    f_pbh_values.append(erg_to_GeV * (g_to_solar_mass)**(-1) * kpc_to_cm**3 * luminosity_observed_analytic() / luminosity_predicted())
     
 plt.plot(m_pbh_values, f_pbh_values)
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
