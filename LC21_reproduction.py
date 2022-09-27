@@ -45,6 +45,10 @@ A2199 = False
 A85 = False
 NGC5044 = False
 
+# Booleans relating to choice of parameter values
+Chan15 = False
+upper_error = True
+
 # unit conversions
 erg_to_GeV = 624.15    # erg to GeV
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
@@ -52,6 +56,7 @@ kpc_to_cm = 3.09e21    # kpc to cm
 keV_to_K = 11604525    # keV to Kelvin
 
 #%%
+
 if A262:
     T_c = 1 # maximum core temperature, in keV
     rho_s = 14.1 * 1e14 # scale density, in solar masses * Mpc^{-3}
@@ -62,8 +67,17 @@ if A262:
     r_c = 30
     n_0 = 0.94 * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
 
+    if Chan15:
+        # values that differ in Chan 2015
+        beta = 0.443
+        r_c = 41
+        n_0 = 0.81 * 1e-2
+        
+    if upper_error:
+        n_0 = (0.94 + 0.15) * 1e-2
+
     B_0 = 2.9 # maximum central magnetic field, in microgauss
-    L_0 = 5.6e38 # luminosity, in erg s^{-1}
+    L_0 = 5.6e38 # maximum observed luminosity, in erg s^{-1}
     
 if A2199:
     T_c = 2 # maximum core temperature, in keV
@@ -75,8 +89,16 @@ if A2199:
     r_c = 102
     n_0 = 0.97 * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
 
+    if Chan15:
+        # values that differ in Chan 2015
+        r_c = 139
+        n_0 = 0.83 * 1e-2
+        
+    if upper_error:
+        n_0 = (0.97 + 0.03) * 1e-2
+
     B_0 = 4.9 # maximum central magnetic field, in microgauss
-    L_0 = 2.3e39 # luminosity, in erg s^{-1}
+    L_0 = 2.3e39 # maximum observed luminosity, in erg s^{-1}
     
 if A85:
     T_c = 3 # maximum core temperature, in keV
@@ -87,9 +109,17 @@ if A85:
     beta = 0.532
     r_c = 60
     n_0 = 3.00 * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
-
+    
+    if Chan15:
+        # values that differ in Chan 2015
+        r_c = 82
+        n_0 = 2.57 * 1e-2
+        
+    if upper_error:
+        n_0 = (3.00 + 0.12) * 1e-2
+    
     B_0 = 11.6 # maximum central magnetic field, in microgauss
-    L_0 = 2.7e40 # luminosity, in erg s^{-1}
+    L_0 = 2.7e40 # maximum observed luminosity, in erg s^{-1}
  
 if NGC5044:
     T_c = 0.8 # maximum core temperature, in keV
@@ -101,8 +131,16 @@ if NGC5044:
     r_c = 8
     n_0 = 4.02 * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
 
+    if Chan15:
+        # values that differ in Chan 2015
+        r_c = 11
+        n_0 = 3.45 * 1e-2
+        
+    if upper_error:
+        n_0 = (4.02 + 0.03) * 1e-2
+
     B_0 = 5.0 # maximum central magnetic field, in microgauss
-    L_0 = 6.3e38 # luminosity, in erg s^{-1}
+    L_0 = 6.3e38 # maximum observed luminosity, in erg s^{-1}
 
 
 # DM density profile
@@ -152,22 +190,30 @@ def luminosity_integrand(E, r):
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
     return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max)
 
-def luminosity_osberved(): # observed luminosity, in erg s^{-1}
+def luminosity_observed(): # observed luminosity, in erg s^{-1}
     r_values = np.linspace(0, R, n_steps)
     integrand_values = []
     
     for i in range(n_steps):
         integrand_values.append(number_density(r_values[i])**2 * r_values[i]**2)
     
-    return 4 * np.pi * Lambda_0 * np.sqrt(T_c) * np.trapz(integrand_values, r_values)
+    return 4 * np.pi * Lambda_0 * np.sqrt(T_c * keV_to_K) * np.trapz(integrand_values, r_values)
+
+from scipy.special import hyp2f1
+def luminosity_observed_analytic(): # observed luminosity, in erg s^{-1} (analytic solution, in terms of hypergeometric function)
+    return (4/3) * np.pi * n_0**2 * Lambda_0 * np.sqrt(T_c * keV_to_K) * (R/r_c)**3 * hyp2f1(3/2, 3*beta, 5/2, -(R/r_c)**2) * r_c**3
 
 print('Magnetic field (microgauss):')
 print(magnetic_field(r=0))
 print(B_0)
 
-print('Observed luminosity [ erg s^{-1} ]')
-print(luminosity_osberved() * np.sqrt(keV_to_K) * kpc_to_cm**3)
+print('Observed luminosity [erg s^{-1}]')
+print(luminosity_observed() * kpc_to_cm**3)
+print(luminosity_observed_analytic() * kpc_to_cm**3)
 print(L_0)
+print('Ratio of calculated to given luminosities')
+print(luminosity_observed_analytic() * kpc_to_cm**3/ L_0)
+
 
 #%%
 m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
@@ -177,7 +223,7 @@ for m_pbh in m_pbh_values:
     coefficient = m_pbh / 10**exponent
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
     
-    f_pbh_values.append(erg_to_GeV * (g_to_solar_mass)**(-1) * keV_to_K**0.5 * kpc_to_cm**3 * luminosity_osberved() / luminosity_predicted())
+    f_pbh_values.append(erg_to_GeV * (g_to_solar_mass)**(-1) * kpc_to_cm**3 * luminosity_observed() / luminosity_predicted())
     
 plt.plot(m_pbh_values, f_pbh_values)
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
