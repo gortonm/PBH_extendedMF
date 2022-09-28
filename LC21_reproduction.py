@@ -181,18 +181,18 @@ def Q(E, r):
 def dn_dE(E, r):
     E_prime = 10**np.linspace(np.log10(E), np.log10(E_max), n_steps)
     
-    Q_values = []
+    spectrum_interp = []
     for i in range(n_steps):
-        Q_values.append(Q(E_prime[i], r))
+        spectrum_interp.append(np.interp(E_prime[i], energies_secondary, secondary_spectrum))
     
-    return np.trapz(Q_values, E_prime) / b_T(E, r)
+    return np.trapz(spectrum_interp, E_prime) * rho_NFW(r) / (m_pbh * b_T(E, r))
 
 
 def luminosity_integrand(E, r):
     return dn_dE(E, r) * b_C(E, r)
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
-    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max)[0] * g_to_solar_mass * (erg_to_GeV)**(-1)
+    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max, epsrel=1e-3)[0] * g_to_solar_mass * (erg_to_GeV)**(-1)
 
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
     r_values = np.linspace(0, R, n_steps)
@@ -244,11 +244,9 @@ if __name__ == '__main__':
     profiler.enable()
     main()
     profiler.disable()
-    stats = pstats.Stats(profiler).sort_stats('cumtime')
-    # Remove directory names to reduce clutter
-    stats.strip_dirs()
+    stats = pstats.Stats(profiler)
     # Print to file
-    stats.dump_stats('./cProfiler/LC21_reproduction.txt')
+    stats.sort_stats('cumtime').dump_stats('./cProfiler/LC21_reproduction.txt')
     
     main()
     plt.plot(m_pbh_values, f_pbh_values)
