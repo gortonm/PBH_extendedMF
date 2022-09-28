@@ -191,7 +191,7 @@ def luminosity_integrand(E, r):
     return dn_dE(E, r) * b_C(E, r)
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
-    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max, epsabs = 1e-3, epsrel=1e-3)
+    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max, epsabs = 1e-3, epsrel=1e-3)[0] * g_to_solar_mass * (erg_to_GeV)**(-1)
 
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
     r_values = np.linspace(0, R, n_steps)
@@ -200,22 +200,22 @@ def luminosity_observed(): # observed luminosity, in erg s^{-1}
     for i in range(n_steps):
         integrand_values.append(number_density(r_values[i])**2 * r_values[i]**2)
     
-    return 4 * np.pi * Lambda_0 * np.sqrt(T_c * keV_to_K) * np.trapz(integrand_values, r_values)
+    return 4 * np.pi * Lambda_0 * np.sqrt(T_c * keV_to_K) * np.trapz(integrand_values, r_values) * kpc_to_cm**3
 
 from scipy.special import hyp2f1
 def luminosity_observed_analytic(): # observed luminosity, in erg s^{-1} (analytic solution, in terms of hypergeometric function)
-    return (4/3) * np.pi * n_0**2 * Lambda_0 * np.sqrt(T_c * keV_to_K) * (R/r_c)**3 * hyp2f1(3/2, 3*beta, 5/2, -(R/r_c)**2) * r_c**3
+    return (4/3) * np.pi * n_0**2 * Lambda_0 * np.sqrt(T_c * keV_to_K) * (R/r_c)**3 * hyp2f1(3/2, 3*beta, 5/2, -(R/r_c)**2) * r_c**3 * kpc_to_cm**3
 
 print('Magnetic field (microgauss):')
 print(magnetic_field(r=0))
 print(B_0)
 
 print('Observed luminosity [erg s^{-1}]')
-print(luminosity_observed() * kpc_to_cm**3)
-print(luminosity_observed_analytic() * kpc_to_cm**3)
+print(luminosity_observed())
+print(luminosity_observed_analytic())
 print(L_0)
 print('Ratio of calculated to given luminosities')
-print(luminosity_observed_analytic() * kpc_to_cm**3/ L_0)
+print(luminosity_observed_analytic() / L_0)
 
 
 #%%
@@ -231,7 +231,7 @@ for m_pbh in m_pbh_values:
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
-    f_pbh_values.append(erg_to_GeV * (g_to_solar_mass)**(-1) * kpc_to_cm**3 * luminosity_observed_analytic() / luminosity_predicted())
+    f_pbh_values.append(luminosity_observed_analytic() / luminosity_predicted())
     
 plt.plot(m_pbh_values, f_pbh_values)
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
