@@ -11,6 +11,7 @@ from reproduce_COMPTEL_constraints_v2 import read_blackhawk_spectra
 from scipy.integrate import dblquad
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import cProfile, pstats
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24,'font.family':'serif'})
@@ -47,7 +48,7 @@ NGC5044 = False
 
 # Booleans relating to choice of parameter values
 Chan15 = False
-upper_error = True
+upper_error = False
 
 # unit conversions
 erg_to_GeV = 624.15    # erg to GeV
@@ -191,7 +192,7 @@ def luminosity_integrand(E, r):
     return dn_dE(E, r) * b_C(E, r)
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
-    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max, epsabs = 1e-3, epsrel=1e-3)[0] * g_to_solar_mass * (erg_to_GeV)**(-1)
+    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max)[0] * g_to_solar_mass * (erg_to_GeV)**(-1)
 
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
     r_values = np.linspace(0, R, n_steps)
@@ -223,19 +224,37 @@ print(luminosity_observed_analytic() / L_0)
 #m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
 m_pbh_values = np.array([1e15])
 f_pbh_values = []
-for m_pbh in m_pbh_values:
-    exponent = np.floor(np.log10(m_pbh))
-    coefficient = m_pbh / 10**exponent
-    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+
+def main():
+    global m_pbh
+    for m_pbh_val in m_pbh_values:
+        m_pbh = m_pbh_val
+        exponent = np.floor(np.log10(m_pbh))
+        coefficient = m_pbh / 10**exponent
+        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+
+        # Load electron secondary spectrum
+        global energies_secondary
+        global secondary_spectrum
+        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        f_pbh_values.append(luminosity_observed_analytic() / luminosity_predicted())
     
-    # Load electron secondary spectrum
-    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+if __name__ == '__main__':
+    profiler = cProfile.Profile()
+    profiler.enable()
+    main()
+    profiler.disable()
+    stats = pstats.Stats(profiler).sort_stats('cumtime')
+    # Remove directory names to reduce clutter
+    stats.strip_dirs()
+    # Print to file
+    stats.dump_stats('./cProfiler/LC21_reproduction.txt')
     
-    f_pbh_values.append(luminosity_observed_analytic() / luminosity_predicted())
-    
-plt.plot(m_pbh_values, f_pbh_values)
-plt.xlabel('$M_\mathrm{PBH}$ [g]')
-plt.ylabel('$f_\mathrm{PBH}$')
-plt.tight_layout()
-plt.yscale('log')
-plt.xscale('log')
+    main()
+    plt.plot(m_pbh_values, f_pbh_values)
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.tight_layout()
+    plt.yscale('log')
+    plt.xscale('log')
+
