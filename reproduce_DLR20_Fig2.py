@@ -107,7 +107,6 @@ def read_blackhawk_spectra(fname, col=1):
         
     return np.array(energies), np.array(spectrum)
 
-
 # returns a number as a string in standard form
 def string_scientific(val):
     exponent = np.floor(np.log10(val))
@@ -133,6 +132,8 @@ m_pbh_DLR20_newaxes_2, f_pbh_DLR20_newaxes_2 = load_data('DLR20_Fig2_a__0_newaxe
 f_pbh_Iso_values = []
 f_pbh_NFW_values = []
 m_pbh_values = []
+
+f_pbh_max_spin_NFW_values = []
 
 # PBH mass (in grams)
 m_pbh_1 = np.linspace(1, 10, 10) * 10**15
@@ -165,58 +166,36 @@ for m_pbh in m_pbh_values:
         
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
-    
+
+    # For zero spin (a* = 0)
     if m_pbh > 1e17:
         file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
     else:
         file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
-    
-    # Load electron primary spectrum
+            
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
-    
-    # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
     
-    if m_pbh < 1e23:
-        plt.figure()
-        plt.plot(np.array(energies_primary), np.array(primary_spectrum), label='Primary')
-        plt.plot(np.array(energies_secondary), np.array(secondary_spectrum), 'x', linewidth=3, label='Total')
-        plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
-        plt.xlabel('Energy [GeV]')
-        plt.ylabel(r'$\frac{\mathrm{d}N_{e^+}}{\mathrm{d}E_{e^+}\mathrm{d}t}~(\mathrm{GeV}^{-1}\cdot\mathrm{cm}^{-2}\cdot\mathrm{s}^{-1}\cdot\mathrm{sr}^{-1})$')
-        plt.yscale('log')
-        plt.xscale('log')
-        plt.xlim(0.9*E_min, 1.1* E_max)
-        plt.legend()
-        plt.tight_layout()
+    # For max spin (a* = 0.9999)
+    if m_pbh > 1e17:
+        file_path_data = "../BlackHawk_v2.1/results/DLR20_" + "{:.1f}e{:.0f}g_maxspin/".format(coefficient, exponent)
+    else:
+        file_path_data = "../BlackHawk_v2.1/results/DLR20_" + "{:.0f}e{:.0f}g_maxspin/".format(coefficient, exponent)
+        
+    energies_secondary_max_spin, secondary_spectrum_max_spin = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
-    """
-    # Cut off primary spectra below 511 keV (already cut-off above 3 MeV)
-    primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
-    energies_primary_cutoff = energies_primary[energies_primary > E_min]
 
+    # Zero spin
     
-    # Cut off secondary spectra below 511 keV, and above 3 MeV
-    secondary_spectrum_cutoff_1 = secondary_spectrum[energies_secondary < E_max]
-    energies_secondary_cutoff_1 = energies_secondary[energies_secondary < E_max]
-    secondary_spectrum_cutoff = secondary_spectrum_cutoff_1[energies_secondary_cutoff_1 > E_min]
-    energies_secondary_cutoff = energies_secondary_cutoff_1[energies_secondary_cutoff_1 > E_min]
-    
-    integral_primary = np.trapz(primary_spectrum_cutoff, energies_primary_cutoff)    
-    integral_secondary = np.trapz(secondary_spectrum_cutoff, energies_secondary_cutoff)
-    integral = integral_secondary
-    
-    energies_total_interp = 10**np.linspace(np.log10(E_min), np.log10(E_max), 100000)
-    spectrum_total_interp = np.interp(energies_total_interp, energies_secondary, 0.5*np.array(secondary_spectrum))   # include factor of two to only include positron spectrum
-    #spectrum_total_interp = np.interp(energies_total_interp, energies_primary, 0.5*np.array(primary_spectrum))   # include factor of two to only include positron spectrum
-    #integral = np.trapz(spectrum_total_interp, energies_total_interp)
-    """
-
     # Cut off primary spectra below 511 keV (already cut-off above 3 MeV)
-    primary_spectrum_cutoff = primary_spectrum[energies_primary > E_min]
-    energies_primary_cutoff = energies_primary[energies_primary > E_min]
-    integral = np.trapz(0.5*np.array(primary_spectrum_cutoff), energies_primary_cutoff)    
+    secondary_spectrum_cutoff_1 = secondary_spectrum[energies_secondary > E_min]
+    energies_secondary_cutoff_1 = energies_secondary[energies_secondary > E_min]
+
+    secondary_spectrum_cutoff = secondary_spectrum_cutoff_1[energies_secondary_cutoff_1 < E_max]
+    energies_secondary_cutoff = energies_secondary_cutoff_1[energies_secondary_cutoff_1 < E_max]
+    
+    integral = np.trapz(0.5*np.array(secondary_spectrum_cutoff), energies_secondary_cutoff)    
     
     # Isothermal density profile
     f_pbh_Iso = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_Iso / (annihilation_fraction * integral)
@@ -225,7 +204,36 @@ for m_pbh in m_pbh_values:
     # NFW density profile
     f_pbh_NFW = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_NFW / (annihilation_fraction * integral)
     f_pbh_NFW_values.append(f_pbh_NFW)
+    
+    
+    # Max spin (a* = 0.9999)
+    secondary_spectrum_maxspin_cutoff_1 = secondary_spectrum_max_spin[energies_secondary_max_spin > E_min]
+    energies_secondary_maxspin_cutoff_1 = energies_secondary_max_spin[energies_secondary_max_spin > E_min]
 
+    secondary_spectrum_maxspin_cutoff = secondary_spectrum_maxspin_cutoff_1[energies_secondary_cutoff_1 < E_max]
+    energies_secondary_maxspin_cutoff = energies_secondary_maxspin_cutoff_1[energies_secondary_cutoff_1 < E_max]
+
+    integral = np.trapz(0.5*np.array(secondary_spectrum_maxspin_cutoff), energies_secondary_maxspin_cutoff)    
+    f_pbh_NFW_maxspin = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_NFW / (annihilation_fraction * integral)
+    f_pbh_max_spin_NFW_values.append(f_pbh_NFW_maxspin)
+
+m_pbh_3 = np.linspace(2, 7, 1) * 10**17
+m_pbh_values_maxspin = np.concatenate((m_pbh_1, m_pbh_2, m_pbh_3))
+
+for m_pbh in m_pbh_3:
+    file_path_data = "../BlackHawk_v2.1/results/DLR20_" + "{:.0f}e{:.0f}g_maxspin/".format(coefficient, exponent)
+    energies_secondary_max_spin, secondary_spectrum_max_spin = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+
+    secondary_spectrum_maxspin_cutoff_1 = secondary_spectrum_max_spin[energies_secondary_max_spin > E_min]
+    energies_secondary_maxspin_cutoff_1 = energies_secondary_max_spin[energies_secondary_max_spin > E_min]
+
+    secondary_spectrum_maxspin_cutoff = secondary_spectrum_maxspin_cutoff_1[energies_secondary_cutoff_1 < E_max]
+    energies_secondary_maxspin_cutoff = energies_secondary_maxspin_cutoff_1[energies_secondary_cutoff_1 < E_max]
+
+    integral = np.trapz(0.5*np.array(secondary_spectrum_maxspin_cutoff), energies_secondary_maxspin_cutoff)    
+    f_pbh_NFW_maxspin = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_NFW / (annihilation_fraction * integral)
+    f_pbh_max_spin_NFW_values.append(f_pbh_NFW_maxspin)
+   
 #%%
    
 plt.figure(figsize=(6,6))
@@ -255,6 +263,7 @@ plt.figure(figsize=(7,7))
 plt.plot(m_pbh_DLR20, f_pbh_DLR20)
 plt.plot(m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes)
 plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced (NFW)')
+plt.plot(m_pbh_values_maxspin, f_pbh_max_spin_NFW_values, 'x', label='Reproduced (NFW, $a_* = 0.9999$)')
 
 plt.xlim(1e15, 10**(19))
 plt.ylim(10**(-4), 1)
@@ -386,6 +395,7 @@ for m_pbh in m_pbh_extracted:
     coefficient = m_pbh / 10**exponent
     
     file_path_data = "../BlackHawk_v2.1/results/DLR20_Fig2_" + "{:.14f}e{:.0f}g/".format(coefficient, exponent)
+    #file_path_data = "../blackhawk_v1.0/results/DLR20_Fig2_" + "{:.14f}e{:.0f}g_v1/".format(coefficient, exponent)
     
     # Load electron primary spectrum
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
@@ -407,11 +417,11 @@ plt.figure()
 
 # compare output with interpolated extracted values
 frac_diff_original_axes = (f_pbh_extracted / f_pbh_NFW_values) - 1
-plt.plot(m_pbh_extracted, frac_diff_original_axes,'x', linewidth=2, label='Original axes')
+plt.plot(m_pbh_extracted, frac_diff_original_axes,'x', linewidth=2, markersize='20', label='Original axes')
 
 plt.xscale('log')
 #plt.yscale('log')
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$')
 plt.tight_layout()
-plt.legend()
+#plt.legend()
