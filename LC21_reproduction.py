@@ -38,7 +38,8 @@ epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 # in erg cm^{-3} s^{-1} K^{-1/2}
 
 n_steps = 1000 # number of integration steps
-E_max = 5 # maximum energy calculated from BlackHawk, in GeV
+E_min = m_e # minimum electron/positron energy calculated from BlackHawk, in GeV
+E_max = 5 # maximum electron/positron energy calculated from BlackHawk, in GeV
 
 # Parameters relating to clusters
 A262 = True
@@ -170,22 +171,13 @@ def b_T(E, r):
     b_3 = 1.51 * number_density(r) * (0.36 + np.log(gamma(E) / number_density(r)))
     return b_1 + b_2 + b_3 + b_C(E, r)
 
-def Q(E, r):
-    """
-    plt.plot(energies_secondary, secondary_spectrum)
-    plt.xscale('log')
-    plt.yscale('log')
-    """
-    return np.interp(E, energies_secondary, secondary_spectrum) * rho_NFW(r) / m_pbh
-
 def dn_dE(E, r):
     E_prime = 10**np.linspace(np.log10(E), np.log10(E_max), n_steps)
     
-    spectrum_interp = []
-    for i in range(n_steps):
-        spectrum_interp.append(np.interp(E_prime[i], energies_secondary, secondary_spectrum))
+    E_prime = energies_ref[energies_ref < E]
+    spectrum_integrand = spectrum_ref[energies_ref < E]
     
-    return np.trapz(spectrum_interp, E_prime) * rho_NFW(r) / (m_pbh * b_T(E, r))
+    return np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) / (m_pbh * b_T(E, r))
 
 
 def luminosity_integrand(E, r):
@@ -237,6 +229,13 @@ def main():
         global energies_secondary
         global secondary_spectrum
         energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        
+        # Evaluate photon spectrum at a set of pre-defined energies
+        global energies_ref
+        global spectrum_ref
+        energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+        spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
+        
         f_pbh_values.append(luminosity_observed_analytic() / luminosity_predicted())
     
 if __name__ == '__main__':

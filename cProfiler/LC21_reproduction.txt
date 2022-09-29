@@ -1,0 +1,125 @@
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000   66.813   66.813 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:220(main)
+        1    0.000    0.000   66.811   66.811 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:186(luminosity_predicted)
+        1    0.000    0.000   66.811   66.811 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:530(dblquad)
+        1    0.000    0.000   66.811   66.811 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:694(nquad)
+   2080/1    0.016    0.000   66.811   66.811 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:861(integrate)
+   2080/1    0.005    0.000   66.811   66.811 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:49(quad)
+   2080/1    0.003    0.000   66.807   66.807 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:445(_quad)
+   2080/1    0.474    0.000   66.807   66.807 {built-in method scipy.integrate._quadpack._qagse}
+   567567    0.488    0.000   66.303    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:183(luminosity_integrand)
+   567567   18.136    0.000   64.467    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:174(dn_dE)
+3405408/1135136    4.435    0.000   39.171    0.000 {built-in method numpy.core._multiarray_umath.implement_array_function}
+   567568    0.389    0.000   25.408    0.000 <__array_function__ internals>:2(linspace)
+   567568    8.754    0.000   23.732    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/function_base.py:23(linspace)
+   567567    0.412    0.000   14.760    0.000 <__array_function__ internals>:2(trapz)
+   567567    4.660    0.000   13.679    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/lib/function_base.py:4081(trapz)
+   567568    0.331    0.000    6.373    0.000 <__array_function__ internals>:2(any)
+   567567    2.129    0.000    5.673    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:168(b_T)
+   567568    0.617    0.000    5.175    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/fromnumeric.py:2256(any)
+   567567    0.306    0.000    4.750    0.000 <__array_function__ internals>:2(diff)
+   567568    1.313    0.000    4.558    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/fromnumeric.py:70(_wrapreduction)
+  1135135    4.350    0.000    4.350    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+   567567    3.339    0.000    3.975    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/lib/function_base.py:1153(diff)
+   567567    0.370    0.000    3.206    0.000 {method 'sum' of 'numpy.ndarray' objects}
+   567567    0.196    0.000    2.836    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/_methods.py:45(_sum)
+  1135134    2.020    0.000    2.789    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:165(b_C)
+   567568    0.841    0.000    2.751    0.000 {method 'any' of 'numpy.generic' objects}
+  2837837    0.713    0.000    2.263    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/_asarray.py:110(asanyarray)
+   567568    0.199    0.000    1.909    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/_methods.py:53(_any)
+   567568    0.679    0.000    1.793    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/numerictypes.py:359(issubdtype)
+   567567    1.379    0.000    1.658    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:162(magnetic_field)
+  2837840    1.550    0.000    1.550    0.000 {built-in method numpy.array}
+   567568    1.478    0.000    1.478    0.000 {built-in method numpy.arange}
+   567568    0.325    0.000    1.409    0.000 <__array_function__ internals>:2(result_type)
+  3972969    1.285    0.000    1.285    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:158(number_density)
+   567568    0.323    0.000    1.064    0.000 <__array_function__ internals>:2(ndim)
+  1135136    0.725    0.000    1.056    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/numerictypes.py:285(issubclass_)
+  1135135    0.891    0.000    0.891    0.000 {method 'reshape' of 'numpy.ndarray' objects}
+   567568    0.590    0.000    0.590    0.000 {method 'astype' of 'numpy.ndarray' objects}
+   567567    0.491    0.000    0.491    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:150(rho_NFW)
+  1702705    0.390    0.000    0.390    0.000 {built-in method builtins.issubclass}
+   567568    0.195    0.000    0.309    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/numeric.py:1865(isscalar)
+   567568    0.265    0.000    0.265    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/fromnumeric.py:71(<dictcomp>)
+  1702701    0.208    0.000    0.208    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:154(gamma)
+   567567    0.180    0.000    0.180    0.000 {built-in method numpy.core._multiarray_umath.normalize_axis_index}
+   567568    0.178    0.000    0.178    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/fromnumeric.py:3106(ndim)
+   567568    0.135    0.000    0.135    0.000 {built-in method builtins.getattr}
+   567573    0.119    0.000    0.119    0.000 {built-in method builtins.len}
+   569568    0.117    0.000    0.117    0.000 {method 'append' of 'list' objects}
+   569650    0.115    0.000    0.115    0.000 {built-in method builtins.isinstance}
+   567567    0.103    0.000    0.103    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/lib/function_base.py:4077(_trapz_dispatcher)
+   567568    0.094    0.000    0.094    0.000 {method 'items' of 'dict' objects}
+   567568    0.092    0.000    0.092    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/function_base.py:18(_linspace_dispatcher)
+   567568    0.089    0.000    0.089    0.000 {built-in method _operator.index}
+   567567    0.082    0.000    0.082    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/lib/function_base.py:1149(_diff_dispatcher)
+   567568    0.081    0.000    0.081    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/fromnumeric.py:3102(_ndim_dispatcher)
+   567568    0.080    0.000    0.080    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/fromnumeric.py:2251(_any_dispatcher)
+   567568    0.065    0.000    0.065    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/multiarray.py:644(result_type)
+        1    0.000    0.000    0.003    0.003 {built-in method _warnings.warn}
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/warnings.py:96(_showwarnmsg)
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/warnings.py:20(_showwarnmsg_impl)
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/warnings.py:117(_formatwarnmsg)
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/warnings.py:35(_formatwarnmsg_impl)
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/linecache.py:15(getline)
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/linecache.py:37(getlines)
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/linecache.py:82(updatecache)
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/tokenize.py:388(open)
+        1    0.000    0.000    0.003    0.003 /home/ppxmg2/anaconda3/lib/python3.8/tokenize.py:295(detect_encoding)
+        2    0.000    0.000    0.003    0.001 /home/ppxmg2/anaconda3/lib/python3.8/tokenize.py:319(read_or_stop)
+        2    0.003    0.001    0.003    0.001 {method 'readline' of '_io.BufferedReader' objects}
+     4160    0.002    0.000    0.002    0.000 {built-in method builtins.max}
+     2079    0.001    0.000    0.002    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:597(temp_ranges)
+        1    0.000    0.000    0.002    0.002 /home/ppxmg2/Asteroid_mass_gap/reproduce_COMPTEL_constraints_v2.py:64(read_blackhawk_spectra)
+        2    0.001    0.000    0.001    0.001 /home/ppxmg2/Asteroid_mass_gap/reproduce_COMPTEL_constraints_v2.py:40(read_col)
+     2080    0.001    0.000    0.001    0.000 {built-in method builtins.min}
+     2080    0.001    0.000    0.001    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:845(__call__)
+     2080    0.001    0.000    0.001    0.000 {method 'pop' of 'dict' objects}
+     4160    0.000    0.000    0.000    0.000 {built-in method builtins.callable}
+        3    0.000    0.000    0.000    0.000 {built-in method io.open}
+        1    0.000    0.000    0.000    0.000 {method 'readlines' of '_io._IOBase' objects}
+     1002    0.000    0.000    0.000    0.000 {method 'split' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/ipykernel/iostream.py:500(write)
+       15    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/codecs.py:319(decode)
+        2    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/ipykernel/iostream.py:206(schedule)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(interp)
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/lib/function_base.py:1290(interp)
+       15    0.000    0.000    0.000    0.000 {built-in method _codecs.utf_8_decode}
+        2    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/zmq/sugar/socket.py:543(send)
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/Asteroid_mass_gap/LC21_reproduction.py:199(luminosity_observed_analytic)
+        1    0.000    0.000    0.000    0.000 {built-in method numpy.core._multiarray_umath.interp}
+        2    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/_bootlocale.py:33(getpreferredencoding)
+        1    0.000    0.000    0.000    0.000 {built-in method posix.stat}
+        3    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/codecs.py:309(__init__)
+        2    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/threading.py:1071(is_alive)
+        2    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/tokenize.py:325(find_cookie)
+        1    0.000    0.000    0.000    0.000 {method 'format' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/ipykernel/iostream.py:437(_schedule_flush)
+        1    0.000    0.000    0.000    0.000 <__array_function__ internals>:2(iscomplexobj)
+        2    0.000    0.000    0.000    0.000 {built-in method _locale.nl_langinfo}
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:815(<listcomp>)
+        3    0.000    0.000    0.000    0.000 {method 'match' of 're.Pattern' objects}
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:851(__init__)
+        2    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/threading.py:1017(_wait_for_tstate_lock)
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/warnings.py:403(__init__)
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/ipykernel/iostream.py:418(_is_master_process)
+        3    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/codecs.py:260(__init__)
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/lib/type_check.py:279(iscomplexobj)
+        2    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/ipykernel/iostream.py:96(_event_pipe)
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/core/_asarray.py:23(asarray)
+        2    0.000    0.000    0.000    0.000 {method 'acquire' of '_thread.lock' objects}
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:829(__init__)
+        1    0.000    0.000    0.000    0.000 {method 'startswith' of 'bytes' objects}
+        2    0.000    0.000    0.000    0.000 {method 'decode' of 'bytes' objects}
+        1    0.000    0.000    0.000    0.000 {method 'seek' of '_io.BufferedReader' objects}
+        2    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/threading.py:513(is_set)
+        1    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {method 'strip' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 {built-in method posix.getpid}
+        1    0.000    0.000    0.000    0.000 {method 'endswith' of 'str' objects}
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:842(__init__)
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/lib/type_check.py:206(_is_type_dispatcher)
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/numpy/lib/function_base.py:1286(_interp_dispatcher)
+        2    0.000    0.000    0.000    0.000 {method 'append' of 'collections.deque' objects}
+        1    0.000    0.000    0.000    0.000 /home/ppxmg2/anaconda3/lib/python3.8/site-packages/scipy/integrate/quadpack.py:832(__call__)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
