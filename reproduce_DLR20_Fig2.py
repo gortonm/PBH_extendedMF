@@ -128,6 +128,7 @@ if R == 3.5:
 m_pbh_DLR20, f_pbh_DLR20 = load_data('DLR20_Fig2_a__0.csv')
 m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes = load_data('DLR20_Fig2_a__0_newaxes.csv')
 m_pbh_DLR20_newaxes_2, f_pbh_DLR20_newaxes_2 = load_data('DLR20_Fig2_a__0_newaxes_2.csv')
+m_pbh_DLR20_maxspin, f_pbh_DLR20_maxspin = load_data('DLR20_Fig2_a__0.9999.csv')
 
 f_pbh_Iso_values = []
 f_pbh_NFW_values = []
@@ -182,10 +183,11 @@ for m_pbh in m_pbh_values:
         file_path_data = "../BlackHawk_v2.1/results/DLR20_" + "{:.1f}e{:.0f}g_maxspin/".format(coefficient, exponent)
     else:
         file_path_data = "../BlackHawk_v2.1/results/DLR20_" + "{:.0f}e{:.0f}g_maxspin/".format(coefficient, exponent)
-        
+
+    energies_primary_max_spin, primary_spectrum_max_spin = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
     energies_secondary_max_spin, secondary_spectrum_max_spin = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     
-
+    
     # Zero spin
     
     # Cut off primary spectra below 511 keV (already cut-off above 3 MeV)
@@ -216,6 +218,21 @@ for m_pbh in m_pbh_values:
     integral = np.trapz(0.5*np.array(secondary_spectrum_maxspin_cutoff), energies_secondary_maxspin_cutoff)    
     f_pbh_NFW_maxspin = cm_to_kpc**3 * g_to_GeV * m_pbh * prefactor_NFW / (annihilation_fraction * integral)
     f_pbh_max_spin_NFW_values.append(f_pbh_NFW_maxspin)
+    
+    
+    # Plot some spectra for a*=0 and a*=0.9999
+    if coefficient % 2 == 0:
+        plt.figure()
+        plt.plot(np.array(energies_secondary_cutoff), secondary_spectrum_cutoff, 'x', label='$a_* = 0$')
+        plt.plot(np.array(energies_secondary_maxspin_cutoff), secondary_spectrum_maxspin_cutoff, 'x', label='$a_* = 0.9999$')
+        plt.title('$M_\mathrm{PBH}$ = ' + "{:.0f}e{:.0f}".format(coefficient, exponent) + 'g')
+        plt.xlabel('$E$ [GeV]')
+        plt.ylabel('$\mathrm{d}^2 N_e^{\pm} / (\mathrm{d}t\mathrm{d}E)$ [s$^{-1}$ GeV$^{-1}$]')
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.legend()
+        plt.tight_layout()
+
 
 m_pbh_3 = np.linspace(2, 7, 1) * 10**17
 m_pbh_values_maxspin = np.concatenate((m_pbh_1, m_pbh_2, m_pbh_3))
@@ -244,7 +261,6 @@ plt.plot(m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes)
 plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced (NFW)')
 #plt.plot(m_pbh_values, np.array(f_pbh_NFW_values) * uncertainty_Iso_3500pc / 0.8, 'x', label='Iso (estimated): \n $R = {:.1f}$ kpc, \n $r_s = {:.1f}$ kpc'.format(R, r_s_Iso))
 
-
 plt.xlim(1e15, 10**(19))
 plt.ylim(10**(-4), 1)
 plt.plot() 
@@ -255,14 +271,13 @@ plt.yscale('log')
 plt.legend(fontsize='small')
 plt.tight_layout()
 
-
 print(m_pbh_values)
 
 plt.figure(figsize=(7,7))
 
-plt.plot(m_pbh_DLR20, f_pbh_DLR20)
-plt.plot(m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes)
-plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced (NFW)')
+plt.plot(m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes, color = 'b', linestyle='dotted')
+plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced (NFW, $a_* = 0$)')
+plt.plot(m_pbh_DLR20_maxspin, f_pbh_DLR20_maxspin, color = 'b')
 plt.plot(m_pbh_values_maxspin, f_pbh_max_spin_NFW_values, 'x', label='Reproduced (NFW, $a_* = 0.9999$)')
 
 plt.xlim(1e15, 10**(19))
