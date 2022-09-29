@@ -61,7 +61,7 @@ keV_to_K = 11604525    # keV to Kelvin
 
 if A262:
     T_c = 1 # maximum core temperature, in keV
-    rho_s = 14.1 * 1e14 # scale density, in solar masses * Mpc^{-3}
+    rho_s = 14.1 * 1e14 * 1e-9 # scale density, in solar masses * kpc^{-3}
     r_s = 172 # scale radius, in kpc
     R = 2 # max radius to integrate out to
     z = 0.0161 # redshift
@@ -83,7 +83,7 @@ if A262:
     
 if A2199:
     T_c = 2 # maximum core temperature, in keV
-    rho_s = 9.56 * 1e14 # scale density, in solar masses * Mpc^{-3}
+    rho_s = 9.56 * 1e14 * 1e-9 # scale density, in solar masses * Mpc^{-3}
     r_s = 334 # scale radius, in kpc
     R = 3 # max radius to integrate out to, in kpc
     z = 0.0302 # redshift
@@ -104,7 +104,7 @@ if A2199:
     
 if A85:
     T_c = 3 # maximum core temperature, in keV
-    rho_s = 8.34 * 1e14 # scale density, in solar masses * Mpc^{-3}
+    rho_s = 8.34 * 1e14 * 1e-9 # scale density, in solar masses * Mpc^{-3}
     r_s = 444 # scale radius, in kpc
     R = 3 # max radius to integrate out to, in kpc
     z = 0.0556 # redshift
@@ -179,7 +179,7 @@ def luminosity_integrand(E, r):
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
     print(dblquad(luminosity_integrand, 0, R, m_e, E_max))
-    return 4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * (erg_to_GeV)**(-1)
+    return 4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * erg_to_GeV
 
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
     r_values = np.linspace(0, R, n_steps)
@@ -231,7 +231,7 @@ def main():
         energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
         spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
         
-        f_pbh_values.append(luminosity_observed_analytic() / luminosity_predicted())
+        f_pbh_values.append(luminosity_observed_analytic() / luminosity_predicted()[0])
 
 print(f_pbh_values)
 
