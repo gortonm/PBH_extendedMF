@@ -125,7 +125,7 @@ if A85:
  
 if NGC5044:
     T_c = 0.8 # maximum core temperature, in keV
-    rho_s = 14.7 * 1e14 # scale density, in solar masses * Mpc^{-3}
+    rho_s = 14.7 * 1e14 * 1e-9 # scale density, in solar masses * kpc^{-3}
     r_s = 127 # scale radius, in kpc
     R = 1 # max radius to integrate out to, in kpc
     z = 0.009 # redshift
@@ -171,16 +171,15 @@ def b_T(E, r):
     b_3 = 1.51 * number_density(r) * (0.36 + np.log(gamma(E) / number_density(r)))
     return b_1 + b_2 + b_3 + b_C(E, r)
 
-def luminosity_integrand(E, r):
-    E_prime = 10**np.linspace(np.log10(E), np.log10(E_max), n_steps)
-    
-    E_prime = energies_ref[energies_ref < E]
-    spectrum_integrand = spectrum_ref[energies_ref < E]
+def luminosity_integrand(E, r):  
+    E_prime = energies_ref[energies_ref > E]
+    spectrum_integrand = spectrum_ref[energies_ref > E]
 
     return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
-    return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max, epsrel=1e-3)[0] * g_to_solar_mass * (erg_to_GeV)**(-1)
+    print(dblquad(luminosity_integrand, 0, R, m_e, E_max))
+    return 4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * (erg_to_GeV)**(-1)
 
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
     r_values = np.linspace(0, R, n_steps)
@@ -209,8 +208,8 @@ print(luminosity_observed_analytic() / L_0)
 
 #%%
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-#m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
-m_pbh_values = np.array([1e15])
+m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+#m_pbh_values = np.array([1e15])
 f_pbh_values = []
 
 def main():
@@ -233,7 +232,9 @@ def main():
         spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
         
         f_pbh_values.append(luminosity_observed_analytic() / luminosity_predicted())
-    
+
+print(f_pbh_values)
+
 if __name__ == '__main__':
     profiler = cProfile.Profile()
     profiler.enable()
@@ -244,7 +245,7 @@ if __name__ == '__main__':
     stats.sort_stats('cumtime').dump_stats('./cProfiler/LC21_reproduction.txt')
     
     main()
-    plt.plot(m_pbh_values, f_pbh_values)
+    plt.plot(m_pbh_values, f_pbh_values[0])
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.tight_layout()
