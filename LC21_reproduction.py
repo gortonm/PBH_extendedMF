@@ -171,17 +171,13 @@ def b_T(E, r):
     b_3 = 1.51 * number_density(r) * (0.36 + np.log(gamma(E) / number_density(r)))
     return b_1 + b_2 + b_3 + b_C(E, r)
 
-def dn_dE(E, r):
+def luminosity_integrand(E, r):
     E_prime = 10**np.linspace(np.log10(E), np.log10(E_max), n_steps)
     
     E_prime = energies_ref[energies_ref < E]
     spectrum_integrand = spectrum_ref[energies_ref < E]
-    
-    return np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) / (m_pbh * b_T(E, r))
 
-
-def luminosity_integrand(E, r):
-    return dn_dE(E, r) * b_C(E, r)
+    return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
     return 4 * np.pi * dblquad(luminosity_integrand, 0, R, m_e, E_max, epsrel=1e-3)[0] * g_to_solar_mass * (erg_to_GeV)**(-1)
