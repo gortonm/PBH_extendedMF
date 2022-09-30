@@ -38,7 +38,7 @@ m_e = 5.11e-4 # electron/positron mass, in GeV / c^2
 epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 # in erg cm^{-3} s^{-1} K^{-1/2}
 
-n_steps = 10000 # number of integration steps
+n_steps = 1000 # number of integration steps
 E_min = m_e # minimum electron/positron energy calculated from BlackHawk, in GeV
 E_max = 5 # maximum electron/positron energy calculated from BlackHawk, in GeV
 
@@ -210,8 +210,8 @@ print(luminosity_observed_analytic() / L_0)
 
 
 #%%
-#m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+#m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
 #m_pbh_values = np.array([1e15])
 f_pbh_values = []
 
@@ -248,8 +248,8 @@ if __name__ == '__main__':
     # Print to file
     stats.sort_stats('cumtime').dump_stats('./cProfiler/LC21_reproduction.txt')
     
-    #f_pbh_values = []
-    #main()
+    f_pbh_values = []
+    main()
     plt.plot(m_pbh_values, f_pbh_values)
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
@@ -271,14 +271,41 @@ lum_int_over_r = []
 for E in energies:
     lum_int_over_r.append(np.trapz(luminosity_integrand(E, radii), radii))
 
-plt.figure()
+plt.figure(figsize=(9, 5))
 plt.plot(radii, lum_int_over_E)
 plt.xlabel('$r$ [kpc]')
-plt.ylabel('Luminosity integrand (integrated over $E$)')
+plt.ylabel('Luminosity integrand \n (integrated over $E$)')
 plt.tight_layout()
 
-plt.figure()
+plt.figure(figsize=(9, 5))
 plt.plot(energies, lum_int_over_r)
 plt.xlabel('$E$ [GeV]')
-plt.ylabel('Luminosity integrand (integrated over $r$)')
+plt.ylabel('Luminosity integrand \n (integrated over $r$)')
+plt.tight_layout()
+
+[energies_mg, radii_mg] = np.meshgrid(energies, radii)
+
+luminosity_grid = np.zeros(shape=(n_steps, n_steps))
+for i in range(len(energies)):
+    for j in range(len(radii)):
+        luminosity_grid[i][j] = luminosity_integrand(energies[i], radii[j])
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+# make 3D plot of integrand
+surf = ax.plot_surface(energies_mg, radii_mg, luminosity_grid)
+ax.set_xlabel('$E$ [GeV]', fontsize=14)
+ax.set_ylabel('$r$ [kpc]', fontsize=14)
+ax.set_zlabel('Luminosity integrand / $4\pi$ [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=14)
+plt.title('Luminosity integrand', fontsize=14)
+
+# make heat map
+heatmap = plt.figure()
+ax1 = heatmap.gca()
+plt.pcolormesh(energies_mg, radii_mg, luminosity_grid / 1e10, cmap='jet')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('$r$ [kpc]')
+plt.title(r'Luminosity integrand /($4\pi \times 10^{10}$) ' + '\n [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=16)
+plt.colorbar()
 plt.tight_layout()
