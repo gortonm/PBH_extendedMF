@@ -13,6 +13,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import cProfile, pstats
 
+
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24,'font.family':'serif'})
 mpl.rcParams['xtick.major.size'] = 7
@@ -37,7 +38,7 @@ m_e = 5.11e-4 # electron/positron mass, in GeV / c^2
 epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 # in erg cm^{-3} s^{-1} K^{-1/2}
 
-n_steps = 1000 # number of integration steps
+n_steps = 10000 # number of integration steps
 E_min = m_e # minimum electron/positron energy calculated from BlackHawk, in GeV
 E_max = 5 # maximum electron/positron energy calculated from BlackHawk, in GeV
 
@@ -169,16 +170,18 @@ def b_T(E, r):
     b_1 = 0.0254 * E**2 * magnetic_field(r)**2
     b_2 = 0.25 * E**2 * (1+z)**4
     b_3 = 1.51 * number_density(r) * (0.36 + np.log(gamma(E) / number_density(r)))
-    return b_1 + b_2 + b_3 + b_C(E, r)
+    return (b_1 + b_2 + b_3) + b_C(E, r)
 
 def luminosity_integrand(E, r):  
     E_prime = energies_ref[energies_ref > E]
     spectrum_integrand = spectrum_ref[energies_ref > E]
-
+    
+    # 30/9: difference between Riemann sum and np.trapz() is small, on order of 1 part in 10^3
+    #return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
     return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
-    print(dblquad(luminosity_integrand, 0, R, m_e, E_max))
+    print(4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * erg_to_GeV)
     return 4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * erg_to_GeV
 
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
@@ -218,8 +221,8 @@ def main():
         m_pbh = m_pbh_val
         exponent = np.floor(np.log10(m_pbh))
         coefficient = m_pbh / 10**exponent
-        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-
+        file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+        
         # Load electron secondary spectrum
         global energies_secondary
         global secondary_spectrum
@@ -231,7 +234,8 @@ def main():
         energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
         spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
         
-        f_pbh_values.append(luminosity_observed_analytic() / luminosity_predicted()[0])
+        f_pbh_values.append(L_0 / luminosity_predicted()[0])
+
 
 print(f_pbh_values)
 
@@ -244,11 +248,37 @@ if __name__ == '__main__':
     # Print to file
     stats.sort_stats('cumtime').dump_stats('./cProfiler/LC21_reproduction.txt')
     
-    main()
-    plt.plot(m_pbh_values, f_pbh_values[0])
+    #f_pbh_values = []
+    #main()
+    plt.plot(m_pbh_values, f_pbh_values)
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.tight_layout()
     plt.yscale('log')
     plt.xscale('log')
 
+#%% Investigate integrand for luminosity
+
+# integrate over E, from E_min to E_max 
+energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+radii = 10**np.linspace(np.log10(1), np.log10(R), n_steps)
+
+lum_int_over_E = []
+for r in radii:
+    lum_int_over_E.append(np.trapz(luminosity_integrand(energies, r), energies))
+    
+lum_int_over_r = []
+for E in energies:
+    lum_int_over_r.append(np.trapz(luminosity_integrand(E, radii), radii))
+
+plt.figure()
+plt.plot(radii, lum_int_over_E)
+plt.xlabel('$r$ [kpc]')
+plt.ylabel('Luminosity integrand (integrated over $E$)')
+plt.tight_layout()
+
+plt.figure()
+plt.plot(energies, lum_int_over_r)
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('Luminosity integrand (integrated over $r$)')
+plt.tight_layout()
