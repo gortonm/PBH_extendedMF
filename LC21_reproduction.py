@@ -175,7 +175,7 @@ def b_T(E, r):
 def luminosity_integrand(E, r):  
     E_prime = energies_ref[energies_ref > E]
     spectrum_integrand = spectrum_ref[energies_ref > E]
-    
+    #print(r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r))
     # 30/9: difference between Riemann sum and np.trapz() is small, on order of 1 part in 10^3
     #return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
     return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
@@ -188,6 +188,7 @@ def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
 def luminosity_integrand_2(r, E):  
     E_prime = energies_ref[energies_ref > E]
     spectrum_integrand = spectrum_ref[energies_ref > E]
+    #print('luminosity integrand', r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r)))    # typically quite large
     
     # 30/9: difference between Riemann sum and np.trapz() is small, on order of 1 part in 10^3
     #return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
@@ -203,7 +204,7 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
         integrand_over_r.append(np.trapz(luminosity_integrand_2(r_values, E), r_values))
     integral = np.trapz(integrand_over_r, E_values)
         
-    print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
+    #print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
     
     """
     integrand_over_E = []
@@ -312,7 +313,10 @@ plt.tight_layout()
 
 # integrate over E, from E_min to E_max 
 energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-radii = 10**np.linspace(np.log10(1e-3), np.log10(R), n_steps)
+radii = 10**np.linspace(np.log10(1e-6), np.log10(R), n_steps)
+
+energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
 
 lum_int_over_E = []
 for r in radii:
