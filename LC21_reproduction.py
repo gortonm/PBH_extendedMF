@@ -177,8 +177,8 @@ def luminosity_integrand(E, r):
     spectrum_integrand = spectrum_ref[energies_ref > E]
     #print(r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r))
     # 30/9: difference between Riemann sum and np.trapz() is small, on order of 1 part in 10^3
-    #return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
-    return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
+    return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
+    #return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
 def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
     print(4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * erg_to_GeV)
@@ -201,9 +201,10 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
     
     integrand_over_r = []
     for E in E_values:
-        integrand_over_r.append(np.trapz(luminosity_integrand_2(r_values, E), r_values))
-    integral = np.trapz(integrand_over_r, E_values)
-        
+        #integrand_over_r.append(np.trapz(luminosity_integrand_2(r_values, E), r_values))
+        integrand_over_r.append(np.sum(luminosity_integrand_2(r_values, E)[:-1] * np.diff(r_values)))
+    #integral = np.trapz(integrand_over_r, E_values)
+    integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
     #print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
     
     """
@@ -362,7 +363,7 @@ plt.title('Luminosity integrand', fontsize=14)
 # make heat map
 heatmap = plt.figure()
 ax1 = heatmap.gca()
-plt.pcolormesh(energies_mg, radii_mg, (luminosity_grid / 1e10), cmap='jet')
+plt.pcolormesh(energies_mg, radii_mg, (luminosity_grid), cmap='jet')
 plt.xlabel('$E$ [GeV]')
 plt.ylabel('$r$ [kpc]')
 plt.title(r'Luminosity integrand /($4\pi \times 10^{10}$) ' + '\n [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=16)
