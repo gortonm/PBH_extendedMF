@@ -40,7 +40,7 @@ Lambda_0 = 1.4e-27 # in erg cm^{-3} s^{-1} K^{-1/2}
 
 n_steps = 1000 # number of integration steps
 E_min = m_e # minimum electron/positron energy calculated from BlackHawk, in GeV
-E_max = 5 # maximum electron/positron energy calculated from BlackHawk, in GeV
+E_max = 1 # maximum electron/positron energy calculated from BlackHawk, in GeV
 
 # Parameters relating to clusters
 A262 = True
@@ -184,6 +184,37 @@ def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
     print(4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * erg_to_GeV)
     return 4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * erg_to_GeV
 
+
+def luminosity_integrand_2(r, E):  
+    E_prime = energies_ref[energies_ref > E]
+    spectrum_integrand = spectrum_ref[energies_ref > E]
+    
+    # 30/9: difference between Riemann sum and np.trapz() is small, on order of 1 part in 10^3
+    #return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
+    return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
+
+
+def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
+    E_values = 10**np.linspace(np.log10(m_e), np.log10(E_max), n_steps)
+    r_values = 10**np.linspace(np.log10(1e-7), np.log10(R), n_steps)
+    
+    integrand_over_r = []
+    for E in E_values:
+        integrand_over_r.append(np.trapz(luminosity_integrand_2(r_values, E), r_values))
+    integral = np.trapz(integrand_over_r, E_values)
+        
+    print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
+    
+    """
+    integrand_over_E = []
+    for r in r_values:
+        integrand_over_E.append(np.trapz(luminosity_integrand_2(r, E_values)))
+    integral = np.trapz(integrand_over_E, r_values)
+    print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
+    """
+    return 4 * np.pi * integral * g_to_solar_mass * erg_to_GeV
+
+
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
     r_values = np.linspace(0, R, n_steps)
     integrand_values = []
@@ -221,20 +252,22 @@ def main():
         m_pbh = m_pbh_val
         exponent = np.floor(np.log10(m_pbh))
         coefficient = m_pbh / 10**exponent
-        file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+        #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
         
         # Load electron secondary spectrum
         global energies_secondary
         global secondary_spectrum
-        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-        
+        #energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+       
         # Evaluate photon spectrum at a set of pre-defined energies
         global energies_ref
         global spectrum_ref
         energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
         spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
         
-        f_pbh_values.append(L_0 / luminosity_predicted()[0])
+        f_pbh_values.append(L_0 / luminosity_predicted_2())
 
 
 print(f_pbh_values)
@@ -256,12 +289,30 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.yscale('log')
     plt.xscale('log')
+    
+#%% Plot spectrum
+m_pbh = 1e15
+exponent = np.floor(np.log10(m_pbh))
+coefficient = m_pbh / 10**exponent
+file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+#file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+
+plt.figure()
+plt.plot(energies_primary, primary_spectrum, 'x')
+plt.plot(energies_secondary, secondary_spectrum, 'x')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('$\mathrm{d}^2 N_e^{\pm} / (\mathrm{d}t\mathrm{d}E)$ [s$^{-1}$ GeV$^{-1}$]')
+plt.xscale('log')
+plt.yscale('log')
+plt.tight_layout()
 
 #%% Investigate integrand for luminosity
 
 # integrate over E, from E_min to E_max 
 energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-radii = 10**np.linspace(np.log10(1), np.log10(R), n_steps)
+radii = 10**np.linspace(np.log10(1e-3), np.log10(R), n_steps)
 
 lum_int_over_E = []
 for r in radii:
@@ -270,7 +321,11 @@ for r in radii:
 lum_int_over_r = []
 for E in energies:
     lum_int_over_r.append(np.trapz(luminosity_integrand(E, radii), radii))
-
+    
+lum_int = np.trapz(lum_int_over_r, energies)
+print(lum_int)
+print(luminosity_predicted())
+                   
 plt.figure(figsize=(9, 5))
 plt.plot(radii, lum_int_over_E)
 plt.xlabel('$r$ [kpc]')
@@ -294,7 +349,7 @@ fig = plt.figure()
 ax = fig.gca(projection='3d')
 
 # make 3D plot of integrand
-surf = ax.plot_surface(energies_mg, radii_mg, luminosity_grid)
+surf = ax.plot_surface(energies_mg, radii_mg, np.log10(1+luminosity_grid))
 ax.set_xlabel('$E$ [GeV]', fontsize=14)
 ax.set_ylabel('$r$ [kpc]', fontsize=14)
 ax.set_zlabel('Luminosity integrand / $4\pi$ [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=14)
@@ -303,7 +358,7 @@ plt.title('Luminosity integrand', fontsize=14)
 # make heat map
 heatmap = plt.figure()
 ax1 = heatmap.gca()
-plt.pcolormesh(energies_mg, radii_mg, luminosity_grid / 1e10, cmap='jet')
+plt.pcolormesh(energies_mg, radii_mg, (luminosity_grid / 1e10), cmap='jet')
 plt.xlabel('$E$ [GeV]')
 plt.ylabel('$r$ [kpc]')
 plt.title(r'Luminosity integrand /($4\pi \times 10^{10}$) ' + '\n [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=16)
