@@ -169,10 +169,7 @@ for m_pbh in m_pbh_values:
     coefficient = m_pbh / 10**exponent
 
     # For zero spin (a* = 0)
-    if m_pbh > 1e17:
-        file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-    else:
-        file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
             
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
