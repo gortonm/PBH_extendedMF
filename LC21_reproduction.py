@@ -7,7 +7,7 @@ Created on Tue Sep 27 11:42:40 2022
 """
 
 import numpy as np
-from reproduce_COMPTEL_constraints_v2 import read_blackhawk_spectra
+from reproduce_COMPTEL_constraints_v2 import read_blackhawk_spectra, load_data
 from scipy.integrate import dblquad
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -69,6 +69,8 @@ if A262:
     beta = 0.433
     r_c = 30
     n_0 = 0.94 * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+    
+    extension='A262'
 
     if Chan15:
         # values that differ in Chan 2015
@@ -92,6 +94,8 @@ if A2199:
     r_c = 102
     n_0 = 0.97 * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
 
+    extension = 'A2199'
+
     if Chan15:
         # values that differ in Chan 2015
         r_c = 139
@@ -113,6 +117,8 @@ if A85:
     r_c = 60
     n_0 = 3.00 * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
     
+    extension = 'A85'
+    
     if Chan15:
         # values that differ in Chan 2015
         r_c = 82
@@ -133,6 +139,8 @@ if NGC5044:
     beta = 0.524
     r_c = 8
     n_0 = 4.02 * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+
+    extension = 'NGC5044'
 
     if Chan15:
         # values that differ in Chan 2015
@@ -189,10 +197,9 @@ def luminosity_integrand_2(r, E):
     E_prime = energies_ref[energies_ref > E]
     spectrum_integrand = spectrum_ref[energies_ref > E]
     #print('luminosity integrand', r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r)))    # typically quite large
-    
     # 30/9: difference between Riemann sum and np.trapz() is small, on order of 1 part in 10^3
-    #return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
-    return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
+    return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
+    #return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
 
 def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
@@ -203,6 +210,7 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
     for E in E_values:
         #integrand_over_r.append(np.trapz(luminosity_integrand_2(r_values, E), r_values))
         integrand_over_r.append(np.sum(luminosity_integrand_2(r_values, E)[:-1] * np.diff(r_values)))
+        
     #integral = np.trapz(integrand_over_r, E_values)
     integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
     #print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
@@ -275,6 +283,10 @@ def main():
 print(f_pbh_values)
 
 if __name__ == '__main__':
+    
+    file_path_extracted = './Extracted_files/'
+    m_pbh_LC21_extracted, f_PBH_LC21_extracted = load_data("LC21_" + extension + "_NFW.csv")
+
     profiler = cProfile.Profile()
     profiler.enable()
     main()
@@ -291,6 +303,17 @@ if __name__ == '__main__':
     plt.tight_layout()
     plt.yscale('log')
     plt.xscale('log')
+    
+    extracted_interpolated = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
+    ratio = extracted_interpolated / f_pbh_values
+    frac_diff = (extracted_interpolated - f_pbh_values) / f_pbh_values
+    plt.figure()
+    plt.plot(m_pbh_values, ratio, 'x')
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$')
+    plt.title(extension)
+    plt.tight_layout()
+
     
 #%% Plot spectrum
 m_pbh = 1e15
@@ -311,11 +334,26 @@ plt.yscale('log')
 plt.tight_layout()
 
 #%% Investigate integrand for luminosity
+"""
+# plot integrand at fixed radius
+energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
 
+
+r = 1e-6
+integrand_fixed_r = 4*np.pi*np.array(luminosity_integrand(energies, r))
+print(integrand_fixed_r)
+plt.plot(energies, 4*np.pi*np.array(luminosity_integrand(energies, r)))
+plt.ylabel('Luminosity integrand [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]')
+plt.xlabel('$E$ [GeV]')
+plt.xscale('log')
+plt.tight_layout()
+"""
 # integrate over E, from E_min to E_max 
 energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 radii = 10**np.linspace(np.log10(1e-6), np.log10(R), n_steps)
-
+    
 energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
 
@@ -328,6 +366,8 @@ for E in energies:
     lum_int_over_r.append(np.trapz(luminosity_integrand(E, radii), radii))
     
 lum_int = np.trapz(lum_int_over_r, energies)
+
+
 print(lum_int)
 print(luminosity_predicted())
                    
@@ -354,18 +394,18 @@ fig = plt.figure()
 ax = fig.gca(projection='3d')
 
 # make 3D plot of integrand
-surf = ax.plot_surface(energies_mg, radii_mg, np.log10(1+luminosity_grid))
+surf = ax.plot_surface(energies_mg, radii_mg, 4*np.pi*luminosity_grid)
 ax.set_xlabel('$E$ [GeV]', fontsize=14)
 ax.set_ylabel('$r$ [kpc]', fontsize=14)
-ax.set_zlabel('Luminosity integrand / $4\pi$ [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=14)
+ax.set_zlabel('Luminosity integrand [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=14)
 plt.title('Luminosity integrand', fontsize=14)
 
 # make heat map
 heatmap = plt.figure()
 ax1 = heatmap.gca()
-plt.pcolormesh(energies_mg, radii_mg, (luminosity_grid), cmap='jet')
+plt.pcolormesh(energies_mg, radii_mg, np.log10(1+4*np.pi*(luminosity_grid)), cmap='jet')
 plt.xlabel('$E$ [GeV]')
 plt.ylabel('$r$ [kpc]')
-plt.title(r'Luminosity integrand /($4\pi \times 10^{10}$) ' + '\n [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=16)
+plt.title(r'$\log_{10}$(Luminosity integrand' + ' [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$])', fontsize=16)
 plt.colorbar()
 plt.tight_layout()
