@@ -129,6 +129,9 @@ if "__main__" == __name__:
         # Load photon spectra from BlackHawk outputs
         energies, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
         
+        if m_pbh == 1e15:
+            print(spectrum)
+        
         # Calculate flux from a theoretical PBH population, and compare to that
         # observed by COMPTEL.
         flux_theoretical = []
@@ -165,9 +168,35 @@ if "__main__" == __name__:
     file_path_extracted = './Extracted_files/'
     m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
     
+    
+    # Load result from Isatis
+    Isatis_path = './../BlackHawk_v2.1/scripts/Isatis/'
+    results_name = "test_COMPTEL" 
+
+    constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path,results_name),dtype = "str")
+    constraints_names_bis = constraints_file[0,1:]
+    constraints = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
+    for i in range(len(constraints)):
+        for j in range(len(constraints[0])):
+            constraints[i,j] = float(constraints_file[i+1,j+1])
+    
+    
+    constraint_COMPTEL = []
+    for i in range(len(constraints)):
+        constraint_COMPTEL.append(constraints[i][1])
+    
+    Mmin = 1e14
+    Mmax = 1e18
+    masses_Isatis = np.logspace(np.log10(Mmin),np.log10(Mmax),len(constraint_COMPTEL))
+
+    
+    
+    
     plt.figure(figsize=(7,7))
     plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
     plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22 (Reproduced)")
+    plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis")
+
     
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
