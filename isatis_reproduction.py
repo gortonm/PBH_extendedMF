@@ -141,9 +141,9 @@ for m_pbh in m_pbh_values:
         return np.array(flux_binned)
     
     # Print calculated and mean flux:
-    bin_of_interest = 1
-    print('Binned flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest, binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)[bin_of_interest-1]))
-    print('Measured flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest,  g_to_solar_mass * (pc_to_cm)**(2) * (flux * (energies_plus + energies_minus))[bin_of_interest-1]))
+    bin_of_interest = 3
+    print('Binned flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest, (g_to_solar_mass * (pc_to_cm)**(2))**(-1) * binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)[bin_of_interest-1]))
+    print('Measured flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest, (flux * (energies_plus + energies_minus))[bin_of_interest-1]))
     
     # Calculate constraint on f_PBH
     f_PBH = g_to_solar_mass * (pc_to_cm)**(2) * min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
