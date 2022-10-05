@@ -170,7 +170,7 @@ if "__main__" == __name__:
     
     
     # Load result from Isatis
-    Isatis_path = './../BlackHawk_v2.1/scripts/Isatis/'
+    Isatis_path = './../Downloads/version_finale/scripts/Isatis/'
     results_name = "test_COMPTEL" 
 
     constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path,results_name),dtype = "str")
