@@ -89,7 +89,8 @@ def galactic(spectrum):
     return np.array(galactic)
 
 f_PBH_isatis = []
-m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+#m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+m_pbh_values = 10**np.linspace(14, 17, 4)
 
 # COMPTEL data
 flux_minus = np.array([5.40770e-01, 7.80073e-02, 7.83239e-03])
@@ -132,12 +133,17 @@ for m_pbh in m_pbh_values:
                 while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
                     val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c]) / 2
                     c += 1
-            print(c)
-            print(ener_refined[c])
-            print(ener_COMPTEL[i] + ener_COMPTEL_plus[i])
+            #print(c)
+            #print(ener_refined[c])
+            #print(ener_COMPTEL[i] + ener_COMPTEL_plus[i])
             flux_binned.append(val_binned)
-        print(val_binned)
+        #print(val_binned)
         return np.array(flux_binned)
+    
+    # Print calculated and mean flux:
+    bin_of_interest = 1
+    print('Binned flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest, binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)[bin_of_interest-1]))
+    print('Measured flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest,  g_to_solar_mass * (pc_to_cm)**(2) * (flux * (energies_plus + energies_minus))[bin_of_interest-1]))
     
     # Calculate constraint on f_PBH
     f_PBH = g_to_solar_mass * (pc_to_cm)**(2) * min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
@@ -149,7 +155,7 @@ m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
 
 plt.figure(figsize=(7,7))
 plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
-plt.plot(m_pbh_values, f_PBH_isatis, 'x', label="Auffinger '22 (Reproduced)")
+plt.plot(m_pbh_values, f_PBH_isatis, 'x', color='r', label="Auffinger '22 (Reproduced)")
 
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
