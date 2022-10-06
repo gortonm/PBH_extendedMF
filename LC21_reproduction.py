@@ -180,19 +180,6 @@ def b_T(E, r):
     b_3 = 1.51 * number_density(r) * (0.36 + np.log(gamma(E) / number_density(r)))
     return (b_1 + b_2 + b_3) + b_C(E, r)
 
-def luminosity_integrand(E, r):  
-    E_prime = energies_ref[energies_ref > E]
-    spectrum_integrand = spectrum_ref[energies_ref > E]
-    #print(r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r))
-    # 30/9: difference between Riemann sum and np.trapz() is small, on order of 1 part in 10^3
-    return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
-    #return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
-
-def luminosity_predicted(): # predicted luminosity, in erg s^{-1}
-    print(4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * erg_to_GeV)
-    return 4 * np.pi * np.array(dblquad(luminosity_integrand, 0, R, m_e, E_max)) * g_to_solar_mass * erg_to_GeV
-
-
 def luminosity_integrand_2(r, E):  
     E_prime = energies_ref[energies_ref > E]
     spectrum_integrand = spectrum_ref[energies_ref > E]
@@ -204,7 +191,7 @@ def luminosity_integrand_2(r, E):
 
 def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
     E_values = 10**np.linspace(np.log10(m_e), np.log10(E_max), n_steps)
-    r_values = 10**np.linspace(np.log10(1e-7), np.log10(R), n_steps)
+    r_values = 10**np.linspace(np.log10(1e-10), np.log10(R), n_steps)
     
     integrand_over_r = []
     for E in E_values:
@@ -213,7 +200,7 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
         
     #integral = np.trapz(integrand_over_r, E_values)
     integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
-    #print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
+    print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
     
     """
     integrand_over_E = []
@@ -313,6 +300,8 @@ if __name__ == '__main__':
     plt.plot(m_pbh_values, ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$')
+    plt.xscale('log')
+    plt.yscale('log')
     plt.title(extension)
     plt.tight_layout()
 
@@ -356,21 +345,20 @@ plt.tight_layout()
 """
 # integrate over E, from E_min to E_max 
 energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-radii = 10**np.linspace(np.log10(1e-6), np.log10(R), n_steps)
+radii = 10**np.linspace(np.log10(1e-10), np.log10(R), n_steps)
     
 energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
 
 lum_int_over_E = []
 for r in radii:
-    lum_int_over_E.append(np.trapz(luminosity_integrand_2(energies, r), energies))
+    lum_int_over_E.append(np.trapz(luminosity_integrand_2(r, energies), energies))
     
 lum_int_over_r = []
 for E in energies:
     lum_int_over_r.append(np.trapz(luminosity_integrand_2(E, radii), radii))
     
-lum_int = np.trapz(lum_int_over_r, energies)
-
+lum_int = 4 * np.pi * np.trapz(lum_int_over_r, energies)
 
 print(lum_int * g_to_solar_mass * erg_to_GeV)
 print(luminosity_predicted_2())
