@@ -356,7 +356,7 @@ for r in radii:
     
 lum_int_over_r = []
 for E in energies:
-    lum_int_over_r.append(np.trapz(luminosity_integrand_2(E, radii), radii))
+    lum_int_over_r.append(np.trapz(luminosity_integrand_2(radii, E), radii))
     
 lum_int = 4 * np.pi * np.trapz(lum_int_over_r, energies)
 
