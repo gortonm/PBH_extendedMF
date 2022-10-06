@@ -363,23 +363,25 @@ spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
 
 lum_int_over_E = []
 for r in radii:
-    lum_int_over_E.append(np.trapz(luminosity_integrand(energies, r), energies))
+    lum_int_over_E.append(np.trapz(luminosity_integrand_2(energies, r), energies))
     
 lum_int_over_r = []
 for E in energies:
-    lum_int_over_r.append(np.trapz(luminosity_integrand(E, radii), radii))
+    lum_int_over_r.append(np.trapz(luminosity_integrand_2(E, radii), radii))
     
 lum_int = np.trapz(lum_int_over_r, energies)
 
 
-print(lum_int)
-print(luminosity_predicted())
+print(lum_int * g_to_solar_mass * erg_to_GeV)
+print(luminosity_predicted_2())
                    
 plt.figure(figsize=(9, 5))
 plt.plot(radii, lum_int_over_E)
 plt.xlabel('$r$ [kpc]')
 plt.ylabel('Luminosity integrand \n (integrated over $E$)')
 plt.tight_layout()
+plt.xscale('log')
+plt.yscale('log')
 
 plt.figure(figsize=(9, 5))
 plt.plot(energies, lum_int_over_r)
@@ -392,7 +394,7 @@ plt.tight_layout()
 luminosity_grid = np.zeros(shape=(n_steps, n_steps))
 for i in range(len(energies)):
     for j in range(len(radii)):
-        luminosity_grid[i][j] = luminosity_integrand(energies[i], radii[j])
+        luminosity_grid[i][j] = luminosity_integrand_2(energies[i], radii[j])
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
