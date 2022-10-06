@@ -40,7 +40,7 @@ Lambda_0 = 1.4e-27 # in erg cm^{-3} s^{-1} K^{-1/2}
 
 n_steps = 1000 # number of integration steps
 E_min = m_e # minimum electron/positron energy calculated from BlackHawk, in GeV
-E_max = 1 # maximum electron/positron energy calculated from BlackHawk, in GeV
+E_max = 5 # maximum electron/positron energy calculated from BlackHawk, in GeV
 
 # Parameters relating to clusters
 A262 = True
@@ -251,19 +251,21 @@ print(luminosity_observed_analytic() / L_0)
 
 
 #%%
-m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+#m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
 #m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
 #m_pbh_values = np.array([1e15])
+m_pbh_values = 10**np.linspace(14.5, 17, 25)
 f_pbh_values = []
 
 def main():
     global m_pbh
-    for m_pbh_val in m_pbh_values:
+    for i, m_pbh_val in enumerate(m_pbh_values):
         m_pbh = m_pbh_val
-        exponent = np.floor(np.log10(m_pbh))
-        coefficient = m_pbh / 10**exponent
-        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+        #exponent = np.floor(np.log10(m_pbh))
+        #coefficient = m_pbh / 10**exponent
+        #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
         #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+        file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
         
         # Load electron secondary spectrum
         global energies_secondary
@@ -316,23 +318,25 @@ if __name__ == '__main__':
 
     
 #%% Plot spectrum
-m_pbh = 1e15
-exponent = np.floor(np.log10(m_pbh))
-coefficient = m_pbh / 10**exponent
-file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-#file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
-energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
-energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+for i, m_pbh_val in enumerate(m_pbh_values):
+    exponent = np.floor(np.log10(m_pbh_val))
+    coefficient = m_pbh_val / 10**exponent
 
-plt.figure()
-plt.plot(energies_primary, primary_spectrum, 'x')
-plt.plot(energies_secondary, secondary_spectrum, 'x')
-plt.xlabel('$E$ [GeV]')
-plt.ylabel('$\mathrm{d}^2 N_e^{\pm} / (\mathrm{d}t\mathrm{d}E)$ [s$^{-1}$ GeV$^{-1}$]')
-plt.xscale('log')
-plt.yscale('log')
-plt.tight_layout()
-
+    if i % 5 == 0:
+        file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
+        energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        
+        plt.figure()
+        plt.plot(energies_primary, primary_spectrum, 'x')
+        plt.plot(energies_secondary, secondary_spectrum, 'x')
+        plt.xlabel('$E$ [GeV]')
+        plt.ylabel('$\mathrm{d}^2 N_e^{\pm} / (\mathrm{d}t\mathrm{d}E)$ [s$^{-1}$ GeV$^{-1}$]')
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.title('$M_\mathrm{PBH}$ ' + '= {:.0f}e{:.0f}g'.format(coefficient, exponent))
+        plt.tight_layout()
+    
 #%% Investigate integrand for luminosity
 """
 # plot integrand at fixed radius
