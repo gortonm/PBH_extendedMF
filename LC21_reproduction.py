@@ -269,8 +269,6 @@ def main():
         f_pbh_values.append(L_0 / luminosity_predicted_2())
 
 
-print(f_pbh_values)
-
 if __name__ == '__main__':
     
     file_path_extracted = './Extracted_files/'
@@ -286,22 +284,35 @@ if __name__ == '__main__':
     
     f_pbh_values = []
     main()
+    plt.figure()
     plt.plot(m_pbh_values, f_pbh_values)
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
+    plt.title(extension)
     plt.tight_layout()
     plt.yscale('log')
     plt.xscale('log')
     
     extracted_interpolated = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
-    ratio = extracted_interpolated / f_pbh_values
-    frac_diff = (extracted_interpolated - f_pbh_values) / f_pbh_values
+    ratio = (extracted_interpolated / (np.array(f_pbh_values)))**(-1)
+    frac_diff = abs((extracted_interpolated - (f_pbh_values)) / ( f_pbh_values))
     plt.figure()
     plt.plot(m_pbh_values, ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$')
     plt.xscale('log')
     plt.yscale('log')
+    plt.title(extension)
+    plt.tight_layout()
+
+    plt.figure()
+    ratio_2 = (3e61 * np.array(extracted_interpolated) / (np.array(f_pbh_values)))**(-1)
+    plt.plot(m_pbh_values, ratio_2, 'x')
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.ylabel(r'$\frac{f_\mathrm{PBH, calculated}}{3\times 10^{61} f_\mathrm{PBH, extracted}}$')
+    plt.hlines(y=1, xmin=min(m_pbh_values), xmax=max(m_pbh_values), color='k', alpha=0.3)
+    plt.xscale('log')
+    #plt.yscale('log')
     plt.title(extension)
     plt.tight_layout()
 
@@ -368,14 +379,14 @@ plt.plot(radii, lum_int_over_E)
 plt.xlabel('$r$ [kpc]')
 plt.ylabel('Luminosity integrand \n (integrated over $E$)')
 plt.tight_layout()
-plt.xscale('log')
-plt.yscale('log')
 
 plt.figure(figsize=(9, 5))
 plt.plot(energies, lum_int_over_r)
 plt.xlabel('$E$ [GeV]')
 plt.ylabel('Luminosity integrand \n (integrated over $r$)')
 plt.tight_layout()
+plt.xscale('log')
+plt.yscale('log')
 
 [energies_mg, radii_mg] = np.meshgrid(energies, radii)
 
