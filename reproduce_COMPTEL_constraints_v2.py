@@ -194,9 +194,9 @@ if "__main__" == __name__:
     
     plt.figure(figsize=(7,7))
     plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
+    plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis (modified loop condition)")
     plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22 (Reproduced)")
-    plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis")
-
+    #plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis")
     
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
@@ -207,7 +207,7 @@ if "__main__" == __name__:
     #plt.title('Excluding highest-energy bin')
     plt.xlim(1e14, 1e18)
     plt.ylim(1e-10, 1)
-    
+    plt.tight_layout()
     #%% Investigate which bins are causing the constraint, and why
     
     
