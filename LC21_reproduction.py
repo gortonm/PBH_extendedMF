@@ -185,6 +185,15 @@ def luminosity_integrand_2(r, E):
     spectrum_integrand = spectrum_ref[energies_ref > E]
     #print('luminosity integrand', r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r)))    # typically quite large
     # 30/9: difference between Riemann sum and np.trapz() is small, on order of 1 part in 10^3
+    
+    # bisection to find where values = 0
+    #print('E [GeV] = ', E)
+    #print('spectrum_integrand = ', spectrum_integrand)
+    #print('E_prime = ', E_prime)
+    #print('np.sum(spectrum_integrand[:-1] * np.diff(E_prime))', np.sum(spectrum_integrand[:-1] * np.diff(E_prime)))
+    #print('r**2 * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))', r**2 * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r)))
+    
+    
     return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
     #return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
@@ -196,7 +205,13 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
     integrand_over_r = []
     for E in E_values:
         #integrand_over_r.append(np.trapz(luminosity_integrand_2(r_values, E), r_values))
-        integrand_over_r.append(np.sum(luminosity_integrand_2(r_values, E)[:-1] * np.diff(r_values)))
+        
+        luminosity_integrand_values = []
+        
+        for r in r_values:
+            luminosity_integrand_terms.append(luminosity_integrand_2(r, E))
+        
+        integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
         
     #integral = np.trapz(integrand_over_r, E_values)
     integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
@@ -223,7 +238,7 @@ def luminosity_observed(): # observed luminosity, in erg s^{-1}
 
 from scipy.special import hyp2f1
 def luminosity_observed_analytic(): # observed luminosity, in erg s^{-1} (analytic solution, in terms of hypergeometric function)
-    return (4/3) * np.pi * n_0**2 * Lambda_0 * np.sqrt(T_c * keV_to_K) * (R/r_c)**3 * hyp2f1(3/2, 3*beta, 5/2, -(R/r_c)**2) * r_c**3 * kpc_to_cm**3
+    return (4/3) * np.pi * n_0**2 * Lambda_0 * np.sqrt(T_c * keV_to_K) * R**3 * hyp2f1(3/2, 3*beta, 5/2, -(R/r_c)**2) * kpc_to_cm**3
 
 print('Magnetic field (microgauss):')
 print(magnetic_field(r=0))
@@ -334,6 +349,7 @@ for i, m_pbh_val in enumerate(m_pbh_values):
         plt.ylabel('$\mathrm{d}^2 N_e^{\pm} / (\mathrm{d}t\mathrm{d}E)$ [s$^{-1}$ GeV$^{-1}$]')
         plt.xscale('log')
         plt.yscale('log')
+        plt.xlim(m_e, 5)
         plt.title('$M_\mathrm{PBH}$ ' + '= {:.0f}e{:.0f}g'.format(coefficient, exponent))
         plt.tight_layout()
     
@@ -357,17 +373,26 @@ plt.tight_layout()
 # integrate over E, from E_min to E_max 
 energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 radii = 10**np.linspace(np.log10(1e-10), np.log10(R), n_steps)
-    
+
 energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
 
 lum_int_over_E = []
 for r in radii:
-    lum_int_over_E.append(np.trapz(luminosity_integrand_2(r, energies), energies))
+    #lum_int_over_E.append(np.trapz(luminosity_integrand_2(r, energies), energies))
+    
+    luminosity_integrand_terms = []
+    for E in energies:
+        luminosity_integrand_terms.append(luminosity_integrand_2(r, E))
+        
+    #print(luminosity_integrand_2(r, energies))
+    lum_int_over_E.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(energies)))
+    
     
 lum_int_over_r = []
 for E in energies:
-    lum_int_over_r.append(np.trapz(luminosity_integrand_2(radii, E), radii))
+    #lum_int_over_r.append(np.trapz(luminosity_integrand_2(radii, E), radii))
+    lum_int_over_r.append(np.sum(luminosity_integrand_2(radii, E)[:-1] * np.diff(radii)))
     
 lum_int = 4 * np.pi * np.trapz(lum_int_over_r, energies)
 
