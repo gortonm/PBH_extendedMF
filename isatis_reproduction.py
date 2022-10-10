@@ -114,6 +114,111 @@ def J_D(l_min, l_max, b_min, b_max):
             Delta += abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
     return result / Delta
 
+
+def J_D_v2(l_min, l_max, b_min, b_max):
+    nb_angles = 100
+    nb_radii = 100
+    r_max = 200 * 1000 * pc_to_cm  # maximum radius of Galactic halo in cm
+    
+    b, l = [], []
+    for i in range(0, nb_angles):
+        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
+        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
+        
+    result = 0
+    for i in range(0, nb_angles-1): # integral over l
+        for j in range(0, nb_angles-1): # integral over b
+            s_max = r_odot * np.cos(l[i]) * np.cos(b[j]) + np.sqrt(r_max**2 - r_odot**2 * (1-(np.cos(l[i])*np.cos(b[j]))**2))
+            s = []
+            for k in range(0, nb_radii):
+                s.append(0. + k * (s_max - 0.) / (nb_radii - 1))
+                
+            
+            for k in range(0, nb_radii-1): # integral over s(r(l, b))
+                metric = abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
+                result += metric * rho_NFW(s[k], b[j], l[i])
+                
+    Delta = 0
+    for i in range(0, nb_angles-1):
+        for j in range(0, nb_angles-1):
+            Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
+    return result / Delta
+
+print(J_D_v2(-l_max_Auffinger, l_max_Auffinger, -b_max_Auffinger, b_max_Auffinger))
+
+
+def J_D_v2a(l_min, l_max, b_min, b_max):
+    nb_angles = 1000
+    nb_radii = 1000
+    r_max = 200 * 1000 * pc_to_cm  # maximum radius of Galactic halo in cm
+    
+    b, l = [], []
+    for i in range(0, nb_angles):
+        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
+        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
+        
+    result = 0
+    for i in range(0, nb_angles-1): # integral over l
+        for j in range(0, nb_angles-1): # integral over b
+            s_max = r_odot * np.cos(l[i]) * np.cos(b[j]) + np.sqrt(r_max**2 - r_odot**2 * (1-(np.cos(l[i])*np.cos(b[j]))**2))
+            s = []
+            for k in range(0, nb_radii):
+                s.append(0. + k * (s_max - 0.) / (nb_radii - 1))
+                
+            
+            for k in range(0, nb_radii-1): # integral over s(r(l, b))
+                metric = abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
+                result += metric * rho_NFW(s[k], b[j], l[i])
+                
+    Delta = 0
+    for i in range(0, nb_angles-1):
+        for j in range(0, nb_angles-1):
+            Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
+    return result / Delta
+
+print(J_D_v2a(-l_max_Auffinger, l_max_Auffinger, -b_max_Auffinger, b_max_Auffinger))
+
+
+
+def J_D_v2b(l_min, l_max, b_min, b_max):
+    
+    r_s = 17 * 1000    # scale radius, in pc
+    r_odot = 8.5 * 1000   # galactocentric solar radius, in pc
+    rho_0 = 0.0125 * g_to_solar_mass**(-1) * pc_to_cm**(-3)  # normaliseation for NFW profile, in g cm^{-3}
+    r_max = 200 * 1000    # maximum halo radius, in pc
+
+    nb_angles = 100
+    nb_radii = 100
+    r_max = 200 * 1000 * pc_to_cm  # maximum radius of Galactic halo in cm
+    
+    b, l = [], []
+    for i in range(0, nb_angles):
+        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
+        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
+        
+    result = 0
+    for i in range(0, nb_angles-1): # integral over l
+        for j in range(0, nb_angles-1): # integral over b
+            s_max = r_odot * np.cos(l[i]) * np.cos(b[j]) + np.sqrt(r_max**2 - r_odot**2 * (1-(np.cos(l[i])*np.cos(b[j]))**2))
+            s = []
+            for k in range(0, nb_radii):
+                s.append(0. + k * (s_max - 0.) / (nb_radii - 1))
+                
+            
+            for k in range(0, nb_radii-1): # integral over s(r(l, b))
+                metric = abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
+                result += metric * rho_NFW(s[k], b[j], l[i])
+                
+    Delta = 0
+    for i in range(0, nb_angles-1):
+        for j in range(0, nb_angles-1):
+            Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
+    return result / Delta
+
+print(J_D_v2b(-l_max_Auffinger, l_max_Auffinger, -b_max_Auffinger, b_max_Auffinger))
+
+
+
 def galactic(spectrum):
     n_spec = len(spectrum)
     
