@@ -40,7 +40,7 @@ file_path_extracted = './Extracted_files/'
 
 # Unit conversions
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
-pc_to_cm = 3.09e18    # pc to cm
+pc_to_cm = 3.0857e18    # conversion factor from pc to cm
 
 
 def refined_energies(energies, n_refined):
@@ -78,7 +78,7 @@ def galactic(spectrum):
     
     # Calculate J-factor
     b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-    j_factor = 2 * j_avg(b_max_Auffinger, l_max_Auffinger)
+    j_factor = j_avg(b_max_Auffinger, l_max_Auffinger)
     print('J = ', j_factor)
     
     galactic = []
@@ -90,7 +90,7 @@ def galactic(spectrum):
 
 f_PBH_isatis = []
 #m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-m_pbh_values = 10**np.linspace(14, 17, 4)
+m_pbh_values = 10**np.linspace(14, 18, 25)
 
 # COMPTEL data
 flux_minus = np.array([5.40770e-01, 7.80073e-02, 7.83239e-03])
@@ -105,12 +105,14 @@ energies = np.array([1.73836e-03, 5.51171e-03, 1.73730e-02])
 n_refined = 500
 
 
-for m_pbh in m_pbh_values:
+for i, m_pbh in enumerate(m_pbh_values):
     # Load photon spectra from BlackHawk outputs
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
     
-    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    file_path_data = "./../Downloads/version_finale/results/runs_COMPTEL_0510_{:.0f}/".format(i+1)
+
     print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
     
     ener_spec, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
@@ -153,9 +155,49 @@ for m_pbh in m_pbh_values:
 file_path_extracted = './Extracted_files/'
 m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
 
-plt.figure(figsize=(7,7))
-plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
-plt.plot(m_pbh_values, f_PBH_isatis, 'x', color='r', label="Auffinger '22 (Reproduced)")
+# Load result from Isatis
+
+Isatis_path = './../Downloads/version_finale/scripts/Isatis/'
+results_name = "test_COMPTEL" 
+
+constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path,results_name),dtype = "str")
+constraints_names_bis = constraints_file[0,1:]
+constraints = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
+for i in range(len(constraints)):
+    for j in range(len(constraints[0])):
+        constraints[i,j] = float(constraints_file[i+1,j+1])
+
+constraint_COMPTEL = []
+for i in range(len(constraints)):
+    constraint_COMPTEL.append(constraints[i][1])
+
+ 
+results_name_mod = "test_COMPTEL_modified" 
+
+constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path,results_name_mod),dtype = "str")
+constraints_names_bis = constraints_file[0,1:]
+constraints = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
+for i in range(len(constraints)):
+    for j in range(len(constraints[0])):
+        constraints[i,j] = float(constraints_file[i+1,j+1])
+
+constraint_COMPTEL_modified = []
+for i in range(len(constraints)):
+    constraint_COMPTEL_modified.append(constraints[i][1])
+
+    
+Mmin = 1e14
+Mmax = 1e18
+masses_Isatis = np.logspace(np.log10(Mmin),np.log10(Mmax),len(constraint_COMPTEL))
+
+
+
+
+plt.figure(figsize=(8,8))
+plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Extracted from Auffinger '22 ")
+plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis (unmodified)")
+plt.plot(masses_Isatis, constraint_COMPTEL_modified, 'x', label="Isatis (modified loop condition)", markersize='9', color='tab:red', alpha=0.7)
+plt.plot(m_pbh_values, f_PBH_isatis, 'x', label="Reproduction (BlackHawk spectra)", color='g')
 
 plt.xlabel('$M_\mathrm{PBH}$ [g]')
 plt.ylabel('$f_\mathrm{PBH}$')
@@ -163,8 +205,10 @@ plt.tight_layout()
 plt.legend(fontsize='small')
 plt.xscale('log')
 plt.yscale('log')
+#plt.title('Excluding highest-energy bin')
 plt.xlim(1e14, 1e18)
 plt.ylim(1e-10, 1)
+plt.tight_layout()
 
 #%%
 plt.figure()

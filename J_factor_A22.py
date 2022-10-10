@@ -25,9 +25,10 @@ n_steps = 1000
 r_s = 17 * 1000    # scale radius, in pc
 r_odot = 8.5 * 1000   # galactocentric solar radius, in pc
 rho_DM_odot = 0.0125   # DM density at the solar radius, in M_\odot pc^{-3}
-rho_0 = rho_DM_odot * (1 + (r_odot/r_s))**2 * (r_odot/r_s)   # normaliseation for NFW profile, in M_\odot pc^{-3}
-
+#rho_0 = rho_DM_odot * (1 + (r_odot/r_s))**2 * (r_odot/r_s)   # normaliseation for NFW profile, in M_\odot pc^{-3}
+rho_0 = rho_DM_odot
 #pc_to_cm = 3.0857e18    # conversion factor from pc to cm
+r_max = 200 * 1000    # maximum halo radius, in pc
 
 from scipy.integrate import tplquad
 
@@ -41,11 +42,15 @@ def rho_NFW(los, b, l):
 def j_integrand(los, b, l):
     return rho_NFW(los, b, l) * np.cos(b)
 
+def s_max(l, b):
+    return (r_odot * np.cos(b) * np.cos(l)) + np.sqrt(r_max**2 - r_odot**2 * (1- (np.cos(b)*np.cos(l))**2))
+
 def j_avg(b_max, l_max):
     delta_omega = 4*np.sin(b_max)*l_max
     print(delta_omega)
-    
-    return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, 0.99999*r_odot)) / delta_omega
+    print('rho_0 [g / cm^3] = ', rho_0*6.741543557234943e-23)
+        
+    return 4 * np.array(tplquad(j_integrand, 0, l_max, 0, b_max, 0, s_max)) / delta_omega
 
 if "__main__" == __name__:
     b_max, l_max = np.radians(20), np.radians(30)

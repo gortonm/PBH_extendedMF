@@ -108,23 +108,28 @@ if "__main__" == __name__:
     
     # Unit conversions
     g_to_solar_mass = 1 / 1.989e33    # g to solar masses
-    pc_to_cm = 3.09e18    # pc to cm
+    pc_to_cm = 3.085678e18    # pc to cm
     
     # Calculate J-factor (units: solar mass * pc^{-2} * sr^{-1})
     b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-    J_A22 = 2 * j_avg(b_max_Auffinger, l_max_Auffinger)
+    J_A22 = j_avg(b_max_Auffinger, l_max_Auffinger)
+    #print('rho_0 [g cm^{-3}]', rho_0 * (g_to_solar_mass)**(-1) * (pc_to_cm)**(-3))
+    print('J [g cm^{-2}]', J_A22 * (g_to_solar_mass)**(-1) * (pc_to_cm)**(-2))
     
     f_PBH_A22 = []
     
-    m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+    #m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
+    m_pbh_values = 10**(np.linspace(14, 18, 25))
     
-    for m_pbh in m_pbh_values:
+    for i, m_pbh in enumerate(m_pbh_values):
             
         exponent = np.floor(np.log10(m_pbh))
         coefficient = m_pbh / 10**exponent
         
-        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-        print("{:.1f}e{:.0f}g".format(coefficient, exponent))    # check that the correct PBH mass is being loaded
+        #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+        #print("{:.1f}e{:.0f}g".format(coefficient, exponent))    # check that the correct PBH mass is being loaded
+ 
+        file_path_data = "./../Downloads/version_finale/results/runs_COMPTEL_0510_{:.0f}/".format(i+1)
         
         # Load photon spectra from BlackHawk outputs
         energies, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
@@ -179,12 +184,26 @@ if "__main__" == __name__:
     for i in range(len(constraints)):
         for j in range(len(constraints[0])):
             constraints[i,j] = float(constraints_file[i+1,j+1])
-    
-    
+
     constraint_COMPTEL = []
     for i in range(len(constraints)):
         constraint_COMPTEL.append(constraints[i][1])
-    
+
+ 
+    results_name_mod = "test_COMPTEL_modified" 
+
+    constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path,results_name_mod),dtype = "str")
+    constraints_names_bis = constraints_file[0,1:]
+    constraints = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
+    for i in range(len(constraints)):
+        for j in range(len(constraints[0])):
+            constraints[i,j] = float(constraints_file[i+1,j+1])
+
+    constraint_COMPTEL_modified = []
+    for i in range(len(constraints)):
+        constraint_COMPTEL_modified.append(constraints[i][1])
+
+        
     Mmin = 1e14
     Mmax = 1e18
     masses_Isatis = np.logspace(np.log10(Mmin),np.log10(Mmax),len(constraint_COMPTEL))
@@ -193,10 +212,10 @@ if "__main__" == __name__:
     
     
     plt.figure(figsize=(7,7))
-    plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Auffinger '22 (Extracted)")
-    plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis (modified loop condition)")
-    plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Auffinger '22 (Reproduced)")
-    #plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis")
+    plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Extracted from Auffinger '22 ")
+    plt.plot(masses_Isatis, constraint_COMPTEL_modified, 'x', label="Isatis (modified loop condition)")
+    plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis (unmodified)")
+    plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Reproduction (BlackHawk spectra)")
     
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
