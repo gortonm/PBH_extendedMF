@@ -227,6 +227,24 @@ if "__main__" == __name__:
     plt.xlim(1e14, 1e18)
     plt.ylim(1e-10, 1)
     plt.tight_layout()
+    
+    
+    # Plot only unmodified Isatis result and my reproduction (for email to Jeremy Auffinger)
+    plt.figure(figsize=(7,7))
+    plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis")
+    plt.plot(m_pbh_values, f_PBH_A22, 'x', label="Reproduction")
+    
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.tight_layout()
+    plt.legend(fontsize='small')
+    plt.xscale('log')
+    plt.yscale('log')
+    #plt.title('Excluding highest-energy bin')
+    plt.xlim(1e14, 1e18)
+    plt.ylim(1e-10, 1)
+    plt.tight_layout()
+
     #%% Investigate which bins are causing the constraint, and why
     
     
