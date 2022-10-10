@@ -206,7 +206,7 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
     for E in E_values:
         #integrand_over_r.append(np.trapz(luminosity_integrand_2(r_values, E), r_values))
         
-        luminosity_integrand_values = []
+        luminosity_integrand_terms = []
         
         for r in r_values:
             luminosity_integrand_terms.append(luminosity_integrand_2(r, E))
@@ -272,8 +272,8 @@ def main():
         # Load electron secondary spectrum
         global energies_secondary
         global secondary_spectrum
-        #energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        #energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
        
         # Evaluate photon spectrum at a set of pre-defined energies
         global energies_ref
