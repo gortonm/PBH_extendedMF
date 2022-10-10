@@ -42,6 +42,19 @@ file_path_extracted = './Extracted_files/'
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
 pc_to_cm = 3.0857e18    # conversion factor from pc to cm
 
+r_s = 17 * 1000 * pc_to_cm    # scale radius, in cm
+r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
+
+rho_0 = 8.5e-25	# characteristic halo density in g/cm^3
+
+def find_r(los, b, l):
+    return np.sqrt(r_odot**2 + los**2 - 2*r_odot*los*np.cos(b)*np.cos(l))
+
+
+def rho_NFW(los, b, l):
+    r = find_r(los, b, l)
+    return rho_0 * (r_s / r) * (1 + (r/r_s))**(-2)
+
 
 def refined_energies(energies, n_refined):
     E_min = min(energies)
@@ -72,6 +85,34 @@ def refined_flux(flux, ener_spec, n_refined):
             
     return flux_refined
 
+def J_D(l_min, l_max, b_min, b_max):
+    nb_angles = 100
+    nb_radii = 100
+    r_max = 200 * 1000 * pc_to_cm  # maximum radius of Galactic halo in cm
+    
+    b, l = [], []
+    for i in range(0, nb_angles):
+        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
+        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
+        
+    result = 0
+    for i in range(0, nb_angles-1): # integral over l
+        for j in range(0, nb_angles-1): # integral over b
+            s_max = r_odot * np.cos(l[i]) * np.cos(b[j]) + np.sqrt(r_max**2 - r_odot**2 * (1-(np.cos(l[i])*np.cos(b[j]))**2))
+            s = []
+            for k in range(0, nb_radii):
+                s.append(0. + k * (s_max - 0.) / (nb_radii - 1))
+                
+            
+            for k in range(0, nb_radii-1): # integral over s(r(l, b))
+                metric = abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
+                result += metric * rho_NFW(s[k], b[j], l[i])
+                
+    Delta = 0
+    for i in range(0, nb_angles-1):
+        for j in range(0, nb_angles-1):
+            Delta += abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
+    return result / Delta
 
 def galactic(spectrum):
     n_spec = len(spectrum)
@@ -79,7 +120,7 @@ def galactic(spectrum):
     # Calculate J-factor
     b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
     j_factor = j_avg(b_max_Auffinger, l_max_Auffinger)
-    print('J = ', j_factor)
+    print('J [g cm^{-2} sr^{-1} = ', j_factor * (g_to_solar_mass)**(-1) * pc_to_cm**(-2) )
     
     galactic = []
     for i in range(n_spec):
