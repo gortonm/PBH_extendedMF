@@ -293,7 +293,7 @@ for i, m_pbh in enumerate(m_pbh_values):
     print('Measured flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest, (flux * (energies_plus + energies_minus))[bin_of_interest-1]))
     
     # Calculate constraint on f_PBH
-    f_PBH =  min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+    f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
     f_PBH_isatis.append(f_PBH)
 
 # Load result extracted from Fig. 3 of Auffinger '22
@@ -335,6 +335,21 @@ Mmin = 1e14
 Mmax = 1e18
 masses_Isatis = np.logspace(np.log10(Mmin),np.log10(Mmax),len(constraint_COMPTEL))
 
+plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis (unmodified)")
+plt.plot(masses_Isatis, constraint_COMPTEL_modified, 'x', label="Isatis (modified loop condition)", markersize='9', color='tab:red', alpha=0.7)
+plt.plot(m_pbh_values, f_PBH_isatis, 'x', label="Reproduction (BlackHawk spectra)", color='g')
+
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$f_\mathrm{PBH}$')
+plt.tight_layout()
+plt.legend(fontsize='small')
+plt.xscale('log')
+plt.yscale('log')
+#plt.title('Excluding highest-energy bin')
+plt.xlim(1e14, 1e18)
+plt.ylim(1e-10, 1)
+plt.tight_layout()
+
 
 
 
@@ -354,6 +369,24 @@ plt.yscale('log')
 plt.xlim(1e14, 1e18)
 plt.ylim(1e-10, 1)
 plt.tight_layout()
+
+
+# Plot only unmodified Isatis result and my reproduction (for email to Jeremy Auffinger)
+plt.figure(figsize=(7,7))
+plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis")
+plt.plot(m_pbh_values, np.array(f_PBH_isatis), 'x', label="Reproduction")
+
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.ylabel('$f_\mathrm{PBH}$')
+plt.tight_layout()
+plt.legend(fontsize='small')
+plt.xscale('log')
+plt.yscale('log')
+#plt.title('Excluding highest-energy bin')
+plt.xlim(1e14, 1e18)
+plt.ylim(1e-10, 1)
+plt.tight_layout()
+
 
 #%%
 plt.figure()
