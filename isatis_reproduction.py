@@ -47,6 +47,8 @@ r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
 
 rho_0 = 8.5e-25	# characteristic halo density in g/cm^3
 
+b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
+
 def find_r(los, b, l):
     return np.sqrt(r_odot**2 + los**2 - 2*r_odot*los*np.cos(b)*np.cos(l))
 
@@ -144,7 +146,6 @@ def J_D_v2(l_min, l_max, b_min, b_max):
             Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
     return result / Delta
 
-print(J_D_v2(-l_max_Auffinger, l_max_Auffinger, -b_max_Auffinger, b_max_Auffinger))
 
 
 def J_D_v2a(l_min, l_max, b_min, b_max):
@@ -176,7 +177,6 @@ def J_D_v2a(l_min, l_max, b_min, b_max):
             Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
     return result / Delta
 
-print(J_D_v2a(-l_max_Auffinger, l_max_Auffinger, -b_max_Auffinger, b_max_Auffinger))
 
 
 
@@ -215,21 +215,20 @@ def J_D_v2b(l_min, l_max, b_min, b_max):
             Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
     return result / Delta
 
-print(J_D_v2b(-l_max_Auffinger, l_max_Auffinger, -b_max_Auffinger, b_max_Auffinger))
 
-
+#%%
 
 def galactic(spectrum):
     n_spec = len(spectrum)
     
     # Calculate J-factor
     b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-    j_factor = j_avg(b_max_Auffinger, l_max_Auffinger)
-    print('J [g cm^{-2} sr^{-1} = ', j_factor * (g_to_solar_mass)**(-1) * pc_to_cm**(-2) )
+    j_factor = J_D(-l_max_Auffinger, l_max_Auffinger, -b_max_Auffinger, b_max_Auffinger)
+    print('J [g cm^{-2} sr^{-1} = ', j_factor)
     
     galactic = []
     for i in range(n_spec):
-        val = j_factor[0] * spectrum[i] / (4*np.pi*m_pbh)
+        val = j_factor * spectrum[i] / (4*np.pi*m_pbh)
         galactic.append(val)
         
     return np.array(galactic)
@@ -294,7 +293,7 @@ for i, m_pbh in enumerate(m_pbh_values):
     print('Measured flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest, (flux * (energies_plus + energies_minus))[bin_of_interest-1]))
     
     # Calculate constraint on f_PBH
-    f_PBH = g_to_solar_mass * (pc_to_cm)**(2) * min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+    f_PBH =  min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
     f_PBH_isatis.append(f_PBH)
 
 # Load result extracted from Fig. 3 of Auffinger '22
