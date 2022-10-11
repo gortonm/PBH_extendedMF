@@ -144,8 +144,13 @@ def luminosity_predicted_2(): # predicted luminosity
         print('Riemann sum (correct units)', np.sum(luminosity_integrand_terms_val[:-1] * np.diff(r_values)) * luminosity_integrand_terms_unit )
         """
         integrand_over_r.append(np.sum(luminosity_integrand_terms_val[:-1] * np.diff(r_values)) * luminosity_integrand_terms_unit)    # units: solMass / (g s)
-        
-    integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))    # units: solMass * GeV / (g s)
+    
+        integrand_over_r_terms_val = []
+        for a in integrand_over_r:
+            integrand_over_r_terms_val.append(a.value)
+        integrand_over_r_terms_unit = integrand_over_r[0].unit
+
+    integral = np.sum(integrand_over_r_terms_val[:-1] * np.diff(E_values)) * integrand_over_r_terms_unit   # units: solMass * GeV / (g s)
     #print('integral = ', (4 * np.pi * integral))
     
     return 4 * np.pi * integral
