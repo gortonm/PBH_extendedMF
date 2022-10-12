@@ -37,9 +37,9 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 m_e = 5.11e-4 # electron/positron mass, in GeV / c^2
 epsilon = 0.5 # paper says this varies between 0.5-1
-Lambda_0 = 1.4e-27 * u.erg * u.cm**(3) * u.s**(-1) * u.K**(-0.5) # in erg cm^{-3} s^{-1} K^{-1/2}
+Lambda_0 = 1.4e-27 * u.erg * u.cm**(3) * u.s**(-1) * u.K**(-0.5) # in erg cm^3 s^{-1} K^{-1/2}
 
-n_steps = 10 # number of integration steps
+n_steps = 10000 # number of integration steps
 
 # Parameters relating to clusters
 A262 = True
@@ -55,17 +55,18 @@ upper_error = False
 unit_GeV = 1e9 * u.eV
 unit_keV = 1e3 * u.eV
 unit_kpc = 1e3 * u.pc
+unit_Mpc = 1e6 * u.pc
 unit_microG = 1e-6 * u.G
 
-E_min = m_e * unit_GeV  # minimum electron/positron energy calculated from BlackHawk, in GeV
-E_max = 5 * unit_GeV # maximum electron/positron energy calculated from BlackHawk, in GeV
+E_min = m_e * unit_GeV  # minimum electron/positron energy calculated from BlackHawk
+E_max = 5 * unit_GeV # maximum electron/positron energy calculated from BlackHawk
 
 
 #%%
 
 if A262:
     T_c = 1 * unit_keV / cds.k # maximum core temperature, in keV
-    rho_s = 14.1 * u.solMass / unit_kpc**3 # scale density, in solar masses * kpc^{-3}
+    rho_s = 14.1 * 1e14 * u.solMass / unit_Mpc**3 # scale density, in solar masses * Mpc^{-3}
     r_s = 172 * unit_kpc # scale radius, in kpc
     R = 2 * unit_kpc # max radius to integrate out to
     z = 0.0161 # redshift
@@ -74,15 +75,6 @@ if A262:
     n_0 = 0.94 * 1e-2 * (u.cm)**(-3) # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
     
     extension='A262'
-
-    if Chan15:
-        # values that differ in Chan 2015
-        beta = 0.443
-        r_c = 41
-        n_0 = 0.81 * 1e-2
-        
-    if upper_error:
-        n_0 = (0.94 + 0.15) * 1e-2
 
     B_0 = 2.9 * unit_microG # maximum central magnetic field, in microgauss
     L_0 = 5.6e38 * u.erg * (u.s)**(-1) # maximum observed luminosity, in erg s^{-1}
@@ -105,12 +97,12 @@ def magnetic_field(r):
     return 11 * epsilon**(-1/2) * np.sqrt((number_density(r) / u.cm**(-3)) / 0.1) * (T_c / (2 * unit_keV / cds.k))**(3/4) * unit_microG
 
 def b_C(E, r):
-    return 6.13 * (number_density(r)/u.cm**(-3)) * (1 + np.log(gamma(E)/(number_density(r)/u.cm**(-3)))/75)
+    return 6.13 * (number_density(r)/u.cm**(-3)) * (1 + np.log(gamma(E) / (number_density(r) / u.cm**(-3)))/75)
 
 def b_T(E, r):
-    b_1 = 0.0254 * (E/(unit_GeV))**2 * (magnetic_field(r)/(unit_microG))**2
-    b_2 = 0.25 * (E/(unit_GeV))**2 * (1+z)**4
-    b_3 = 1.51 * (number_density(r)/u.cm**(-3))  * (0.36 + np.log(gamma(E) / (number_density(r)/u.cm**(-3)))) 
+    b_1 = 0.0254 * (E / unit_GeV)**2 * (magnetic_field(r) / unit_microG)**2
+    b_2 = 0.25 * (E / unit_GeV)**2 * (1+z)**4
+    b_3 = 1.51 * (number_density(r) / u.cm**(-3))  * (0.36 + np.log(gamma(E) / (number_density(r) / u.cm**(-3)))) 
     return (b_1 + b_2 + b_3) + b_C(E, r)
 
 def luminosity_integrand_2(r, E):  
@@ -121,8 +113,8 @@ def luminosity_integrand_2(r, E):
 
 
 def luminosity_predicted_2(): # predicted luminosity
-    E_values = 10**np.linspace(np.log10(E_min / (unit_GeV)), np.log10(E_max / (unit_GeV)), n_steps) * unit_GeV
-    r_values = 10**np.linspace(np.log10(1e-7), np.log10(R/u.pc), n_steps) * u.pc
+    E_values = 10**np.linspace(np.log10(E_min / unit_GeV), np.log10(E_max / unit_GeV), n_steps) * unit_GeV
+    r_values = 10**np.linspace(np.log10(1e-10), np.log10(R / u.kpc), n_steps) * u.kpc
       
     integrand_over_r = []
     for E in E_values:
@@ -165,7 +157,7 @@ print(B_0)
 
 luminosity_calculated = luminosity_observed().to(u.erg / u.s)
 print('Observed luminosity (calculated) = {:.2e} '.format(luminosity_calculated))
-print("Observed luminosity (from LC '21) ] = {:.2e}".format(L_0))
+print("Observed luminosity (from LC '21) = {:.2e}".format(L_0))
 print('Ratio (calculated to LC21) = {:.5f}'.format(luminosity_calculated / L_0))
 
 
@@ -199,9 +191,7 @@ def main():
         spectrum_ref = np.interp(energies_ref / (unit_GeV), energies_secondary, secondary_spectrum) * (unit_GeV * u.s)**(-1)
         
         luminosity_predicted = luminosity_predicted_2().to(u.erg / u.s)
-        print('luminosity_predicted.unit = ', luminosity_predicted.unit)
-        print('L_0.unit = ', L_0.unit)
-        f_pbh_values.append(L_0 / luminosity_predicted_2())
+        f_pbh_values.append(L_0 / luminosity_predicted)
 
 
 if __name__ == '__main__':
@@ -251,111 +241,4 @@ if __name__ == '__main__':
     plt.title(extension)
     plt.tight_layout()
 
-    
-#%% Plot spectrum
-for i, m_pbh_val in enumerate(m_pbh_values):
-    exponent = np.floor(np.log10(m_pbh_val))
-    coefficient = m_pbh_val / 10**exponent
-
-    if i % 4 == 0:
-        file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
-        energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
-        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-        
-        plt.figure()
-        plt.plot(energies_primary, primary_spectrum, 'x')
-        plt.plot(energies_secondary, secondary_spectrum, 'x')
-        plt.xlabel('$E$ [GeV]')
-        plt.ylabel('$\mathrm{d}^2 N_e^{\pm} / (\mathrm{d}t\mathrm{d}E)$ [s$^{-1}$ GeV$^{-1}$]')
-        plt.xscale('log')
-        plt.yscale('log')
-        plt.xlim(m_e, 5)
-        plt.title('$M_\mathrm{PBH}$ ' + '= {:.0f}e{:.0f}g'.format(coefficient, exponent))
-        plt.tight_layout()
-    
-#%% Investigate integrand for luminosity
-"""
-# plot integrand at fixed radius
-energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
-
-
-r = 1e-6
-integrand_fixed_r = 4*np.pi*np.array(luminosity_integrand(energies, r))
-print(integrand_fixed_r)
-plt.plot(energies, 4*np.pi*np.array(luminosity_integrand(energies, r)))
-plt.ylabel('Luminosity integrand [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]')
-plt.xlabel('$E$ [GeV]')
-plt.xscale('log')
-plt.tight_layout()
-"""
-# integrate over E, from E_min to E_max 
-energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-radii = 10**np.linspace(np.log10(1e-10), np.log10(R), n_steps)
-
-energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
-
-lum_int_over_E = []
-for r in radii:
-    #lum_int_over_E.append(np.trapz(luminosity_integrand_2(r, energies), energies))
-    
-    luminosity_integrand_terms = []
-    for E in energies:
-        luminosity_integrand_terms.append(luminosity_integrand_2(r, E))
-        
-    #print(luminosity_integrand_2(r, energies))
-    lum_int_over_E.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(energies)))
-    
-    
-lum_int_over_r = []
-for E in energies:
-    #lum_int_over_r.append(np.trapz(luminosity_integrand_2(radii, E), radii))
-    lum_int_over_r.append(np.sum(luminosity_integrand_2(radii, E)[:-1] * np.diff(radii)))
-    
-lum_int = 4 * np.pi * np.trapz(lum_int_over_r, energies)
-
-print(lum_int * g_to_solar_mass * erg_to_GeV)
-print(luminosity_predicted_2())
-                   
-plt.figure(figsize=(9, 5))
-plt.plot(radii, lum_int_over_E)
-plt.xlabel('$r$ [kpc]')
-plt.ylabel('Luminosity integrand \n (integrated over $E$)')
-plt.tight_layout()
-
-plt.figure(figsize=(9, 5))
-plt.plot(energies, lum_int_over_r)
-plt.xlabel('$E$ [GeV]')
-plt.ylabel('Luminosity integrand \n (integrated over $r$)')
-plt.tight_layout()
-plt.xscale('log')
-plt.yscale('log')
-
-[energies_mg, radii_mg] = np.meshgrid(energies, radii)
-
-luminosity_grid = np.zeros(shape=(n_steps, n_steps))
-for i in range(len(energies)):
-    for j in range(len(radii)):
-        luminosity_grid[i][j] = luminosity_integrand_2(energies[i], radii[j])
-
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-
-# make 3D plot of integrand
-surf = ax.plot_surface(energies_mg, radii_mg, 4*np.pi*luminosity_grid)
-ax.set_xlabel('$E$ [GeV]', fontsize=14)
-ax.set_ylabel('$r$ [kpc]', fontsize=14)
-ax.set_zlabel('Luminosity integrand [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=14)
-plt.title('Luminosity integrand', fontsize=14)
-
-# make heat map
-heatmap = plt.figure()
-ax1 = heatmap.gca()
-plt.pcolormesh(energies_mg, radii_mg, np.log10(1+4*np.pi*(luminosity_grid)), cmap='jet')
-plt.xlabel('$E$ [GeV]')
-plt.ylabel('$r$ [kpc]')
-plt.title(r'$\log_{10}$(1 + Luminosity integrand' + ' [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$])', fontsize=16)
-plt.colorbar()
-plt.tight_layout()
+    print(f_pbh_values[0])
