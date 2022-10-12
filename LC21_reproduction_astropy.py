@@ -150,39 +150,35 @@ def luminosity_predicted_2(): # predicted luminosity
             integrand_over_r_terms_val.append(a.value)
         integrand_over_r_terms_unit = integrand_over_r[0].unit
 
-    integral = np.sum(integrand_over_r_terms_val[:-1] * np.diff(E_values)) * integrand_over_r_terms_unit   # units: solMass * GeV / (g s)
-    #print('integral = ', (4 * np.pi * integral))
-    
+    integral = np.sum(integrand_over_r_terms_val[:-1] * np.diff(E_values)) * integrand_over_r_terms_unit   # units: solMass * GeV / (g s) 
     return 4 * np.pi * integral
 
-def luminosity_observed(): # observed luminosity, in erg s^{-1}
+def luminosity_observed(): # observed luminosity
     r_values = np.linspace(0 * u.pc, R, n_steps)
-    integrand_values = []
+    integrand_terms_val = []
     
     for i in range(n_steps):
-        integrand_values.append(number_density(r_values[i])**2 * r_values[i]**2)
-    
-    integrand_values_dimensionless = integrand_values / (u.cm**6 / u.pc**2)
-    #print(integrand_values_dimensionless)
-    r_values_dimensionless = r_values / u.pc
-    
+        integrand_terms_val.append((number_density(r_values[i])**2 * r_values[i]**2).value)
+        
+    integrand_unit = (number_density(r_values[0])**2 * r_values[0]**2).unit   
 
-    return 4 * np.pi * Lambda_0 * np.sqrt(T_c) * np.sum(integrand_values_dimensionless[:-1] * np.diff(r_values_dimensionless)) * (u.cm**6 / u.pc**2) * u.pc
+    return 4 * np.pi * Lambda_0 * np.sqrt(T_c) * np.sum(integrand_terms_val[:-1] * np.diff(r_values)) * integrand_unit
 
 print('Magnetic field (microgauss):')
 print(magnetic_field(r=0*u.pc))
 print(B_0)
 
-print('Observed luminosity [erg s^{-1}]')
-print(luminosity_observed().to(u.erg / u.s))
-print(L_0)
+luminosity_calculated = luminosity_observed().to(u.erg / u.s)
+print('Observed luminosity (calculated) = {:.2e} '.format(luminosity_calculated))
+print("Observed luminosity (from LC '21) ] = {:.2e}".format(L_0))
+print('Ratio (calculated to LC21) = {:.5f}'.format(luminosity_calculated / L_0))
 
 
 #%%
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
 #m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
-#m_pbh_values = np.array([1e15])
-m_pbh_values = 10**np.linspace(14.5, 17, 25)
+m_pbh_values = np.array([1e15])
+#m_pbh_values = 10**np.linspace(14.5, 17, 25)
 f_pbh_values = []
 
 def main():
