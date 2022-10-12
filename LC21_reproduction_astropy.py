@@ -8,7 +8,6 @@ Created on Tue Sep 27 11:42:40 2022
 
 import numpy as np
 from reproduce_COMPTEL_constraints_v2 import read_blackhawk_spectra, load_data
-from scipy.integrate import dblquad
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import cProfile, pstats
@@ -35,7 +34,7 @@ mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 
-m_e = 5.11e-4 # electron/positron mass, in GeV / c^2
+m_e = 5.11e-4 * u.GeV / cds.c**2 # electron/positron mass, in GeV / c^2
 epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 * u.erg * u.cm**(3) * u.s**(-1) * u.K**(-0.5) # in erg cm^3 s^{-1} K^{-1/2}
 
@@ -58,7 +57,7 @@ unit_kpc = 1e3 * u.pc
 unit_Mpc = 1e6 * u.pc
 unit_microG = 1e-6 * u.G
 
-E_min = m_e * unit_GeV  # minimum electron/positron energy calculated from BlackHawk
+E_min = m_e * cds.c**2  # minimum electron/positron energy calculated from BlackHawk
 E_max = 5 * unit_GeV # maximum electron/positron energy calculated from BlackHawk
 
 
@@ -86,7 +85,7 @@ def rho_NFW(r):
 
 # Lorentz factor
 def gamma(E):
-    return E / (m_e * unit_GeV)
+    return E / (m_e * cds.c**2)
 
 # Number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
 def number_density(r):
