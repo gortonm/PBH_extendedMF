@@ -39,9 +39,7 @@ m_e = 5.11e-4 # electron/positron mass, in GeV / c^2
 epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 * u.erg * u.cm**(3) * u.s**(-1) * u.K**(-0.5) # in erg cm^{-3} s^{-1} K^{-1/2}
 
-n_steps = 1000 # number of integration steps
-E_min = m_e * 1e9 * u.eV  # minimum electron/positron energy calculated from BlackHawk, in GeV
-E_max = 5 * 1e9 * u.eV # maximum electron/positron energy calculated from BlackHawk, in GeV
+n_steps = 10 # number of integration steps
 
 # Parameters relating to clusters
 A262 = True
@@ -53,16 +51,26 @@ NGC5044 = False
 Chan15 = False
 upper_error = False
 
+# Define new units
+unit_GeV = 1e9 * u.eV
+unit_keV = 1e3 * u.eV
+unit_kpc = 1e3 * u.pc
+unit_microG = 1e-6 * u.G
+
+E_min = m_e * unit_GeV  # minimum electron/positron energy calculated from BlackHawk, in GeV
+E_max = 5 * unit_GeV # maximum electron/positron energy calculated from BlackHawk, in GeV
+
+
 #%%
 
 if A262:
-    T_c = 1 * 1e3 * u.eV / cds.k # maximum core temperature, in keV
-    rho_s = 14.1 * u.solMass / (1e3 * u.pc)**3 # scale density, in solar masses * kpc^{-3}
-    r_s = 172 * 1e3 * u.pc # scale radius, in kpc
-    R = 2 * 1e3 * u.pc # max radius to integrate out to
+    T_c = 1 * unit_keV / cds.k # maximum core temperature, in keV
+    rho_s = 14.1 * u.solMass / unit_kpc**3 # scale density, in solar masses * kpc^{-3}
+    r_s = 172 * unit_kpc # scale radius, in kpc
+    R = 2 * unit_kpc # max radius to integrate out to
     z = 0.0161 # redshift
     beta = 0.433
-    r_c = 30 * 1e3 * u.pc
+    r_c = 30 * unit_kpc
     n_0 = 0.94 * 1e-2 * (u.cm)**(-3) # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
     
     extension='A262'
@@ -76,7 +84,7 @@ if A262:
     if upper_error:
         n_0 = (0.94 + 0.15) * 1e-2
 
-    B_0 = 2.9 * 1e-6 * u.G # maximum central magnetic field, in microgauss
+    B_0 = 2.9 * unit_microG # maximum central magnetic field, in microgauss
     L_0 = 5.6e38 * u.erg * (u.s)**(-1) # maximum observed luminosity, in erg s^{-1}
 
 
@@ -86,8 +94,7 @@ def rho_NFW(r):
 
 # Lorentz factor
 def gamma(E):
-    #print( E / (m_e * 1e9 * u.eV))
-    return E / (m_e * 1e9 * u.eV)
+    return E / (m_e * unit_GeV)
 
 # Number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
 def number_density(r):
@@ -95,30 +102,26 @@ def number_density(r):
 
 # Cluster magnetic field, in microgauss
 def magnetic_field(r):
-    return 11 * epsilon**(-1/2) * np.sqrt((number_density(r) / u.cm**(-3)) / 0.1) * (T_c / (2 * 1e3 * u.eV / cds.k))**(3/4) * 1e-6 * u.G
+    return 11 * epsilon**(-1/2) * np.sqrt((number_density(r) / u.cm**(-3)) / 0.1) * (T_c / (2 * unit_keV / cds.k))**(3/4) * unit_microG
 
 def b_C(E, r):
     return 6.13 * (number_density(r)/u.cm**(-3)) * (1 + np.log(gamma(E)/(number_density(r)/u.cm**(-3)))/75)
 
 def b_T(E, r):
-    b_1 = 0.0254 * (E/(1e9 * u.eV))**2 * (magnetic_field(r)/(1e-6 * u.G))**2
-    b_2 = 0.25 * (E/(1e9 * u.eV))**2 * (1+z)**4
+    b_1 = 0.0254 * (E/(unit_GeV))**2 * (magnetic_field(r)/(unit_microG))**2
+    b_2 = 0.25 * (E/(unit_GeV))**2 * (1+z)**4
     b_3 = 1.51 * (number_density(r)/u.cm**(-3))  * (0.36 + np.log(gamma(E) / (number_density(r)/u.cm**(-3)))) 
     return (b_1 + b_2 + b_3) + b_C(E, r)
 
 def luminosity_integrand_2(r, E):  
     E_prime = energies_ref[energies_ref > E]
     spectrum_integrand = spectrum_ref[energies_ref > E]
-    #print('E_prime = ', E_prime[0])
-   
-    #print('spectrum = ', spectrum_integrand[0])
-    #print('integral of spectrum = ', np.sum(spectrum_integrand[:-1] * np.diff(E_prime)))
     
     return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
 
 def luminosity_predicted_2(): # predicted luminosity
-    E_values = 10**np.linspace(np.log10(E_min / (1e9 * u.eV)), np.log10(E_max / (1e9 * u.eV)), n_steps) * 1e9 * u.eV
+    E_values = 10**np.linspace(np.log10(E_min / (unit_GeV)), np.log10(E_max / (unit_GeV)), n_steps) * unit_GeV
     r_values = 10**np.linspace(np.log10(1e-7), np.log10(R/u.pc), n_steps) * u.pc
       
     integrand_over_r = []
@@ -128,28 +131,20 @@ def luminosity_predicted_2(): # predicted luminosity
         
         for r in r_values:
             luminosity_integrand_terms.append(luminosity_integrand_2(r, E))
-        
-        #print(luminosity_integrand_terms[0])    # units: solMass / (g pc s)
-        #print(r_values[0])   # units: pc
-        
+                
         luminosity_integrand_terms_val = []
         for l in luminosity_integrand_terms:
             luminosity_integrand_terms_val.append(l.value)
         luminosity_integrand_terms_unit = luminosity_integrand_terms[0].unit
-        """
-        print('sum of terms = ', np.sum(luminosity_integrand_terms_val[:-1]))
-        print('Riemann sum', np.sum(luminosity_integrand_terms_val[:-1] * np.diff(r_values)))
-        print('Riemann sum (correct units)', np.sum(luminosity_integrand_terms_val[:-1] * np.diff(r_values)) * luminosity_integrand_terms_unit )
-        """
-        integrand_over_r.append(np.sum(luminosity_integrand_terms_val[:-1] * np.diff(r_values)) * luminosity_integrand_terms_unit)    # units: solMass / (g s)
+
+        integrand_over_r.append(np.sum(luminosity_integrand_terms_val[:-1] * np.diff(r_values)) * luminosity_integrand_terms_unit)
     
         integrand_over_r_terms_val = []
         for a in integrand_over_r:
             integrand_over_r_terms_val.append(a.value)
         integrand_over_r_terms_unit = integrand_over_r[0].unit
     
-    integral = np.sum(integrand_over_r_terms_val[:-1] * np.diff(E_values)) * integrand_over_r_terms_unit   # units: solMass * GeV / (g s) 
-    print('integral unit: ', integral.unit)
+    integral = np.sum(integrand_over_r_terms_val[:-1] * np.diff(E_values)) * integrand_over_r_terms_unit
     
     return 4 * np.pi * integral
 
@@ -200,8 +195,8 @@ def main():
         # Evaluate photon spectrum at a set of pre-defined energies
         global energies_ref
         global spectrum_ref
-        energies_ref = 10**np.linspace(np.log10(E_min / (1e9 * u.eV)), np.log10(E_max / (1e9 * u.eV)), n_steps) * 1e9 * u.eV
-        spectrum_ref = np.interp(energies_ref / (1e9 * u.eV), energies_secondary, secondary_spectrum) * (1e9 * u.eV * u.s)**(-1)
+        energies_ref = 10**np.linspace(np.log10(E_min / (unit_GeV)), np.log10(E_max / (unit_GeV)), n_steps) * unit_GeV
+        spectrum_ref = np.interp(energies_ref / (unit_GeV), energies_secondary, secondary_spectrum) * (unit_GeV * u.s)**(-1)
         
         luminosity_predicted = luminosity_predicted_2().to(u.erg / u.s)
         print('luminosity_predicted.unit = ', luminosity_predicted.unit)
