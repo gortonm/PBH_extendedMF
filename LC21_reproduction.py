@@ -38,7 +38,7 @@ m_e = 5.11e-4 # electron/positron mass, in GeV / c^2
 epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 # in erg cm^{-3} s^{-1} K^{-1/2}
 
-n_steps = 1000 # number of integration steps
+n_steps = 10 # number of integration steps
 E_min = m_e # minimum electron/positron energy calculated from BlackHawk, in GeV
 E_max = 5 # maximum electron/positron energy calculated from BlackHawk, in GeV
 
@@ -255,8 +255,8 @@ print(luminosity_observed_analytic() / L_0)
 #%%
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
 #m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
-#m_pbh_values = np.array([1e15])
-m_pbh_values = 10**np.linspace(14.5, 17, 25)
+m_pbh_values = np.array([1e15])
+#m_pbh_values = 10**np.linspace(14.5, 17, 25)
 f_pbh_values = []
 
 def main():
@@ -324,7 +324,7 @@ if __name__ == '__main__':
     ratio_2 = (3e61 * np.array(extracted_interpolated) / (np.array(f_pbh_values)))**(-1)
     plt.plot(m_pbh_values, ratio_2, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
-    plt.ylabel(r'$\frac{f_\mathrm{PBH, calculated}}{3\times 10^{61} f_\mathrm{PBH, extracted}}$')
+    plt.ylabel(r'$\frac{f_\mathrm{PBH, reproduced}}{3\times 10^{61} f_\mathrm{PBH, extracted}}$')
     plt.hlines(y=1, xmin=min(m_pbh_values), xmax=max(m_pbh_values), color='k', alpha=0.3)
     plt.xscale('log')
     #plt.yscale('log')
@@ -337,7 +337,7 @@ for i, m_pbh_val in enumerate(m_pbh_values):
     exponent = np.floor(np.log10(m_pbh_val))
     coefficient = m_pbh_val / 10**exponent
 
-    if i % 5 == 0:
+    if i % 4 == 0:
         file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
         energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
         energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
@@ -375,7 +375,7 @@ energies = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 radii = 10**np.linspace(np.log10(1e-10), np.log10(R), n_steps)
 
 energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
+spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
 
 lum_int_over_E = []
 for r in radii:
