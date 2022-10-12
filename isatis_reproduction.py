@@ -372,7 +372,7 @@ plt.tight_layout()
 
 
 # Plot only unmodified Isatis result and my reproduction (for email to Jeremy Auffinger)
-plt.figure(figsize=(7,7))
+plt.figure(figsize=(8,7))
 plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis")
 plt.plot(m_pbh_values, np.array(f_PBH_isatis), 'x', label="Reproduction")
 
@@ -385,6 +385,7 @@ plt.yscale('log')
 #plt.title('Excluding highest-energy bin')
 plt.xlim(1e14, 1e18)
 plt.ylim(1e-10, 1)
+plt.xticks()
 plt.tight_layout()
 
 
