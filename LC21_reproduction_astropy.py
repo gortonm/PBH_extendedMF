@@ -120,9 +120,7 @@ def luminosity_integrand_2(r, E):
 def luminosity_predicted_2(): # predicted luminosity
     E_values = 10**np.linspace(np.log10(E_min / (1e9 * u.eV)), np.log10(E_max / (1e9 * u.eV)), n_steps) * 1e9 * u.eV
     r_values = 10**np.linspace(np.log10(1e-7), np.log10(R/u.pc), n_steps) * u.pc
-    
-    #print('E_values[0] : ', E_values[0])
-    
+      
     integrand_over_r = []
     for E in E_values:
         
@@ -149,8 +147,10 @@ def luminosity_predicted_2(): # predicted luminosity
         for a in integrand_over_r:
             integrand_over_r_terms_val.append(a.value)
         integrand_over_r_terms_unit = integrand_over_r[0].unit
-
+    
     integral = np.sum(integrand_over_r_terms_val[:-1] * np.diff(E_values)) * integrand_over_r_terms_unit   # units: solMass * GeV / (g s) 
+    print('integral unit: ', integral.unit)
+    
     return 4 * np.pi * integral
 
 def luminosity_observed(): # observed luminosity
@@ -203,7 +203,10 @@ def main():
         energies_ref = 10**np.linspace(np.log10(E_min / (1e9 * u.eV)), np.log10(E_max / (1e9 * u.eV)), n_steps) * 1e9 * u.eV
         spectrum_ref = np.interp(energies_ref / (1e9 * u.eV), energies_secondary, secondary_spectrum) * (1e9 * u.eV * u.s)**(-1)
         
-        f_pbh_values.append(L_0 / np.array(luminosity_predicted_2()))
+        luminosity_predicted = luminosity_predicted_2().to(u.erg / u.s)
+        print('luminosity_predicted.unit = ', luminosity_predicted.unit)
+        print('L_0.unit = ', L_0.unit)
+        f_pbh_values.append(L_0 / luminosity_predicted_2())
 
 
 if __name__ == '__main__':
