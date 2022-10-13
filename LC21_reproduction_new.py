@@ -65,7 +65,7 @@ epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 # in erg cm^3 s^{-1} K^{-1/2}
 
 E_min = m_e * c**2  # minimum electron/positron energy calculated from BlackHawk, in GeV
-E_max = 5  # maximum electron/positron energy calculated from BlackHawk, in GeV
+E_max = 5  # maximum electron/positron energy calculated from BlackHawk, in Gnp.diffeV
 
 
 #%%
@@ -129,12 +129,14 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
         
         luminosity_integrand_terms = []
         
-        for r in r_values:
-            luminosity_integrand_terms.append(luminosity_integrand_2(r, E))
+        luminosity_integrand_terms = [luminosity_integrand_2(r, E) for r in r_values]
                 
-        integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
+        #integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
+        integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
+
     print('integrand_over_r[-1] = ', integrand_over_r[-1])
-    integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
+    #integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
+    integral = np.trapz(integrand_over_r, E_values)
 
     print('4 * np.pi * integral * GeV_to_erg = ', 4 * np.pi * integral * GeV_to_erg)
     
