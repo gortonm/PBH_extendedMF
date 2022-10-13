@@ -37,7 +37,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 # Reproduce Lee & Chan (2021) Fig. 1, expressing intermediate quantities
 # in units of [GeV, cm, s, K, microGauss]
 
-n_steps = 10000 # number of integration steps
+n_steps = 10 # number of integration steps
 
 # Parameters relating to clusters
 A262 = True
@@ -102,7 +102,7 @@ def number_density(r):
 
 # Cluster magnetic field, in microgauss
 def magnetic_field(r):
-    return 11 * epsilon**(-1/2) * np.sqrt((number_density(r)) / 0.1) * (k_B * T_c_keV / (2))**(3/4)
+    return 11 * epsilon**(-1/2) * np.sqrt((number_density(r)) / 0.1) * (T_c_keV / (2))**(3/4)
 
 def b_C(E, r):
     return 6.13 * (number_density(r)) * (1 + np.log(gamma(E) / (number_density(r)))/75)
@@ -122,7 +122,7 @@ def luminosity_integrand_2(r, E):
 
 def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
     E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-    r_values = 10**np.linspace(np.log10(1e-10), np.log10(R), n_steps)
+    r_values = 10**np.linspace(np.log10(1e-10 * kpc_to_cm), np.log10(R), n_steps)
       
     integrand_over_r = []
     for E in E_values:
