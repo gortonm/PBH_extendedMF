@@ -37,7 +37,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 # Reproduce Lee & Chan (2021) Fig. 1, expressing intermediate quantities
 # in units of [GeV, cm, s, K, microGauss]
 
-n_steps = 10 # number of integration steps
+n_steps = 10000 # number of integration steps
 
 # Parameters relating to clusters
 A262 = True
@@ -133,8 +133,10 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
             luminosity_integrand_terms.append(luminosity_integrand_2(r, E))
                 
         integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
-    
+    print('integrand_over_r[-1] = ', integrand_over_r[-1])
     integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
+
+    print('4 * np.pi * integral * GeV_to_erg = ', 4 * np.pi * integral * GeV_to_erg)
     
     return 4 * np.pi * integral * GeV_to_erg
 
@@ -142,10 +144,11 @@ def luminosity_observed(): # observed luminosity
     r_values = np.linspace(0, R, n_steps)
     integrand_terms = []
     
+
     for i in range(n_steps):
         integrand_terms.append((number_density(r_values[i])**2 * r_values[i]**2))
         
-
+    print(np.sum(integrand_terms[:-1] * np.diff(r_values)))
     return 4 * np.pi * Lambda_0 * np.sqrt(T_c_K) * np.sum(integrand_terms[:-1] * np.diff(r_values))
 
 print('Magnetic field (microgauss):')
@@ -161,8 +164,8 @@ print('Ratio (calculated to LC21) = {:.5f}'.format(luminosity_calculated / L_0))
 
 #%%
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-#m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
-m_pbh_values = np.array([1e15])
+m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+#m_pbh_values = np.array([1e15])
 #m_pbh_values = 10**np.linspace(14.5, 17, 25)
 f_pbh_values = []
 
@@ -197,7 +200,7 @@ if __name__ == '__main__':
     
     file_path_extracted = './Extracted_files/'
     m_pbh_LC21_extracted, f_PBH_LC21_extracted = load_data("LC21_" + extension + "_NFW.csv")
-
+    """
     profiler = cProfile.Profile()
     profiler.enable()
     main()
@@ -205,9 +208,10 @@ if __name__ == '__main__':
     stats = pstats.Stats(profiler)
     # Print to file
     stats.sort_stats('cumtime').dump_stats('./cProfiler/LC21_reproduction.txt')
-    
+    """
     f_pbh_values = []
     main()
+    
     plt.figure()
     plt.plot(m_pbh_values, f_pbh_values)
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -218,8 +222,9 @@ if __name__ == '__main__':
     plt.xscale('log')
     
     extracted_interpolated = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
-    ratio = (extracted_interpolated / (np.array(f_pbh_values)))**(-1)
-    frac_diff = abs((extracted_interpolated - (f_pbh_values)) / ( f_pbh_values))
+    ratio = extracted_interpolated / np.array(f_pbh_values)
+    frac_diff = abs((extracted_interpolated - f_pbh_values) / f_pbh_values)
+    
     plt.figure()
     plt.plot(m_pbh_values, ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -228,5 +233,15 @@ if __name__ == '__main__':
     plt.yscale('log')
     plt.title(extension)
     plt.tight_layout()
+    
+    plt.figure()
+    plt.plot(m_pbh_values, frac_diff, 'x')
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.ylabel('$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.title(extension)
+    plt.tight_layout()
 
-    print(f_pbh_values[0])
+    print('ratio =', ratio)
+    print('fractional difference =', frac_diff)
