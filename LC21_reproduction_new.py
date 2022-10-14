@@ -129,12 +129,12 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
                 
         luminosity_integrand_terms = [luminosity_integrand_2(r, E) for r in r_values]
                 
-        #integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
-        integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
+        integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
+        #integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
 
     print('integrand_over_r[-1] = ', integrand_over_r[-1])
-    #integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
-    integral = np.trapz(integrand_over_r, E_values)
+    integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
+    #integral = np.trapz(integrand_over_r, E_values)
 
     print('4 * np.pi * integral * GeV_to_erg = ', 4 * np.pi * integral * GeV_to_erg)
     
@@ -190,7 +190,8 @@ def main():
         global energies_ref
         global spectrum_ref
         energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-        spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
+        #spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
+        spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
                 
         luminosity_predicted = luminosity_predicted_2()
         f_pbh_values.append(L_0 / luminosity_predicted)
@@ -269,7 +270,7 @@ for i, m_pbh_val in enumerate(m_pbh_values):
     global energies_ref
     global spectrum_ref
     energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-    spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
+    spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
     
     plt.figure()
     plt.title('$M_\mathrm{PBH} '+'= ${:.2e} g'.format(m_pbh_val))
