@@ -37,7 +37,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 # Reproduce Lee & Chan (2021) Fig. 1, expressing intermediate quantities
 # in units of [GeV, cm, s, K, microGauss]
 
-n_steps = 10000 # number of integration steps
+n_steps = 1000 # number of integration steps
 
 # Parameters relating to clusters
 A262 = True
@@ -126,9 +126,7 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
       
     integrand_over_r = []
     for E in E_values:
-        
-        luminosity_integrand_terms = []
-        
+                
         luminosity_integrand_terms = [luminosity_integrand_2(r, E) for r in r_values]
                 
         #integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
@@ -147,8 +145,7 @@ def luminosity_observed(): # observed luminosity
     integrand_terms = []
     
 
-    for i in range(n_steps):
-        integrand_terms.append((number_density(r_values[i])**2 * r_values[i]**2))
+    integrand_terms.append((number_density(r_values)**2 * r_values**2))
         
     print(np.sum(integrand_terms[:-1] * np.diff(r_values)))
     return 4 * np.pi * Lambda_0 * np.sqrt(T_c_K) * np.sum(integrand_terms[:-1] * np.diff(r_values))
@@ -166,7 +163,8 @@ print('Ratio (calculated to LC21) = {:.5f}'.format(luminosity_calculated / L_0))
 
 #%%
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+#m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
 #m_pbh_values = np.array([1e15])
 #m_pbh_values = 10**np.linspace(14.5, 17, 25)
 f_pbh_values = []
@@ -192,8 +190,8 @@ def main():
         global energies_ref
         global spectrum_ref
         energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-        spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
-        
+        spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
+                
         luminosity_predicted = luminosity_predicted_2()
         f_pbh_values.append(L_0 / luminosity_predicted)
 
@@ -244,6 +242,39 @@ if __name__ == '__main__':
     plt.yscale('log')
     plt.title(extension)
     plt.tight_layout()
-
+    
+    
+    print('f_PBH =', f_pbh_values)
     print('ratio =', ratio)
     print('fractional difference =', frac_diff)
+    
+    
+#%% Plot spectra
+m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
+
+for i, m_pbh_val in enumerate(m_pbh_values):
+    #exponent = np.floor(np.log10(m_pbh))
+    #coefficient = m_pbh / 10**exponent
+    #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
+    
+    # Load electron secondary spectrum
+    global energies_secondary
+    global secondary_spectrum
+    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+    #energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+   
+    # Evaluate photon spectrum at a set of pre-defined energies
+    global energies_ref
+    global spectrum_ref
+    energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+    spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
+    
+    plt.figure()
+    plt.title('$M_\mathrm{PBH} '+'= ${:.2e} g'.format(m_pbh_val))
+    plt.plot(energies_secondary, secondary_spectrum, 'x', label='true spectrum')
+    plt.plot(energies_ref, spectrum_ref, 'x', label='interpolated')
+    plt.legend()
+    plt.xscale('log')
+    plt.yscale('log')
