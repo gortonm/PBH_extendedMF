@@ -142,13 +142,10 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
 
 def luminosity_observed(): # observed luminosity
     r_values = np.linspace(0, R, n_steps)
-    integrand_terms = []
-    
-
-    integrand_terms.append((number_density(r_values)**2 * r_values**2))
-        
-    print(np.sum(integrand_terms[:-1] * np.diff(r_values)))
-    return 4 * np.pi * Lambda_0 * np.sqrt(T_c_K) * np.sum(integrand_terms[:-1] * np.diff(r_values))
+   
+    integrand_terms = [number_density(r)**2 * r**2 for r in r_values]
+    print(integrand_terms)
+    return 4 * np.pi * Lambda_0 * np.sqrt(T_c_K) * np.trapz(integrand_terms, r_values)
 
 print('Magnetic field (microgauss):')
 print(magnetic_field(r=0))
@@ -163,8 +160,8 @@ print('Ratio (calculated to LC21) = {:.5f}'.format(luminosity_calculated / L_0))
 
 #%%
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-#m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
-m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
+m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+#m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
 #m_pbh_values = np.array([1e15])
 #m_pbh_values = 10**np.linspace(14.5, 17, 25)
 f_pbh_values = []
