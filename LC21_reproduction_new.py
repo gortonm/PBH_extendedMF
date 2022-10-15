@@ -113,21 +113,38 @@ def b_T(E, r):
     b_3 = 1.51 * (number_density(r))  * (0.36 + np.log(gamma(E) / (number_density(r)))) 
     return (b_1 + b_2 + b_3) + b_C(E, r)
 
-def luminosity_integrand_2(r, E):  
+def luminosity_integrand_2(r, E, m_pbh, spectrum_ref):  
     E_prime = energies_ref[energies_ref > E]
     spectrum_integrand = spectrum_ref[energies_ref > E]
     
     return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
 
-def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
+def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
     E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
     r_values = 10**np.linspace(np.log10(1e-10 * kpc_to_cm), np.log10(R), n_steps)
+    
+    
+    if numbered_mass_range == True:
+        file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
+           
+    else:
+        exponent = np.floor(np.log10(m_pbh))
+        coefficient = m_pbh / 10**exponent
+        file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+
+    # Load electron secondary spectrum
+    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+
+   
+    # Evaluate photon spectrum at a set of pre-defined energies
+    spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
+    
       
     integrand_over_r = []
     for E in E_values:
                 
-        luminosity_integrand_terms = [luminosity_integrand_2(r, E) for r in r_values]
+        luminosity_integrand_terms = [luminosity_integrand_2(r, E, m_pbh, spectrum_ref) for r in r_values]
                 
         integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
         #integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
@@ -159,38 +176,30 @@ print('Ratio (calculated to LC21) = {:.5f}'.format(luminosity_calculated / L_0))
 
 
 #%%
+
+
+numbered_mass_range = True
+
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
 m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+m_pbh_values = np.array([3, 6, 8]) * 10**16
 #m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
 #m_pbh_values = np.array([1e15])
-#m_pbh_values = 10**np.linspace(14.5, 17, 25)
+
+if numbered_mass_range == True:
+    m_pbh_values = 10**np.linspace(14.5, 17, 25)
+    
 f_pbh_values = []
 
-def main():
-    global m_pbh
-    for i, m_pbh_val in enumerate(m_pbh_values):
-        print('M_PBH = {:.2e} g'.format(m_pbh_val))
-        m_pbh = m_pbh_val
-        #exponent = np.floor(np.log10(m_pbh))
-        #coefficient = m_pbh / 10**exponent
-        #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-        #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
-        file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
-        
-        # Load electron secondary spectrum
-        global energies_secondary
-        global secondary_spectrum
-        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-        #energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
-       
-        # Evaluate photon spectrum at a set of pre-defined energies
-        global energies_ref
-        global spectrum_ref
-        energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-        #spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
-        spectrum_ref = np.interp(energies_ref, energies_secondary, secondary_spectrum)
-                
-        luminosity_predicted = luminosity_predicted_2()
+energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+
+
+def main():    
+    for i, m_pbh in enumerate(m_pbh_values):
+        print('M_PBH = {:.2e} g'.format(m_pbh))
+ 
+        # Evaluate photon spectrum at a set of pre-defined energies                
+        luminosity_predicted = luminosity_predicted_2(i, m_pbh)
         f_pbh_values.append(L_0 / luminosity_predicted)
 
 
@@ -250,7 +259,7 @@ if __name__ == '__main__':
 #%% Plot spectra
 m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
 
-for i, m_pbh_val in enumerate(m_pbh_values):
+for i, m_pbh in enumerate(m_pbh_values):
     #exponent = np.floor(np.log10(m_pbh))
     #coefficient = m_pbh / 10**exponent
     #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
@@ -270,7 +279,7 @@ for i, m_pbh_val in enumerate(m_pbh_values):
     spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
     
     plt.figure()
-    plt.title('$M_\mathrm{PBH} '+'= ${:.2e} g'.format(m_pbh_val))
+    plt.title('$M_\mathrm{PBH} '+'= ${:.2e} g'.format(m_pbh))
     plt.plot(energies_secondary, secondary_spectrum, 'x', label='true spectrum')
     plt.plot(energies_ref, spectrum_ref, 'x', label='interpolated')
     plt.legend()
