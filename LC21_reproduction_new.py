@@ -113,10 +113,7 @@ def b_T(E, r):
     b_3 = 1.51 * (number_density(r))  * (0.36 + np.log(gamma(E) / (number_density(r)))) 
     return (b_1 + b_2 + b_3) + b_C(E, r)
 
-def luminosity_integrand_2(r, E, m_pbh, spectrum_ref):  
-    E_prime = energies_ref[energies_ref > E]
-    spectrum_integrand = spectrum_ref[energies_ref > E]
-    
+def luminosity_integrand_2(r, E, m_pbh, spectrum_ref, E_prime, spectrum_integrand):      
     return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
     #return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
@@ -144,8 +141,14 @@ def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
       
     integrand_over_r = []
     for E in energies_ref:
+        
+        E_prime = energies_ref[energies_ref > E]
+        spectrum_integrand = spectrum_ref[energies_ref > E]
                 
-        luminosity_integrand_terms = [luminosity_integrand_2(r, E, m_pbh, spectrum_ref) for r in r_values]
+        #print('E =', E)
+        #print('min(E_prime) =', min(E_prime))
+        
+        luminosity_integrand_terms = [luminosity_integrand_2(r, E, m_pbh, spectrum_ref, E_prime, spectrum_integrand) for r in r_values]
                 
         #integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
         integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
