@@ -136,17 +136,20 @@ def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
 
    
     # Evaluate photon spectrum at a set of pre-defined energies
-    spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
+    #spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
     
       
     integrand_over_r = []
     for E in energies_ref:
         
-        E_prime = energies_ref[energies_ref > E]
-        spectrum_integrand = spectrum_ref[energies_ref > E]
+        #E_prime = energies_ref[energies_ref > E]
+        #spectrum_integrand = spectrum_ref[energies_ref > E]
                 
         #print('E =', E)
         #print('min(E_prime) =', min(E_prime))
+        
+        E_prime = 10**np.linspace(np.log10(E), np.log10(E_max), n_steps)
+        spectrum_integrand = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
         
         luminosity_integrand_terms = [luminosity_integrand_2(r, E, m_pbh, spectrum_ref, E_prime, spectrum_integrand) for r in r_values]
                 
