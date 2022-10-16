@@ -146,14 +146,14 @@ def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
                 
         luminosity_integrand_terms = [luminosity_integrand_2(r, E, m_pbh, spectrum_ref) for r in r_values]
                 
-        integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
-        #integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
+        #integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
+        integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
 
-    print('integrand_over_r[-1] = ', integrand_over_r[-1])
-    integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
-    #integral = np.trapz(integrand_over_r, E_values)
+    #print('integrand_over_r[-1] = ', integrand_over_r[-1])
+    #integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
+    integral = np.trapz(integrand_over_r, E_values)
 
-    print('4 * np.pi * integral * GeV_to_erg = ', 4 * np.pi * integral * GeV_to_erg)
+    #print('4 * np.pi * integral * GeV_to_erg = ', 4 * np.pi * integral * GeV_to_erg)
     
     return 4 * np.pi * integral * GeV_to_erg
 
@@ -161,8 +161,13 @@ def luminosity_observed(): # observed luminosity
     r_values = np.linspace(0, R, n_steps)
    
     integrand_terms = [number_density(r)**2 * r**2 for r in r_values]
-    print(integrand_terms)
+    #print(integrand_terms)
     return 4 * np.pi * Lambda_0 * np.sqrt(T_c_K) * np.trapz(integrand_terms, r_values)
+
+
+from scipy.special import hyp2f1
+def luminosity_observed_analytic(): # observed luminosity, in erg s^{-1} (analytic solution, in terms of hypergeometric function)
+    return (4/3) * np.pi * n_0**2 * Lambda_0 * np.sqrt(T_c_K) * R**3 * hyp2f1(3/2, 3*beta, 5/2, -(R/r_c)**2)
 
 print('Magnetic field (microgauss):')
 print(magnetic_field(r=0))
