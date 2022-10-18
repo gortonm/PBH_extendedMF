@@ -281,7 +281,7 @@ if __name__ == '__main__':
         
     extracted_interpolated = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
     ratio = extracted_interpolated / np.array(f_pbh_values)
-    frac_diff = abs((extracted_interpolated - f_pbh_values) / f_pbh_values)
+    frac_diff = ratio - 1
     
     plt.figure()
     plt.plot(m_pbh_values, f_pbh_values)
