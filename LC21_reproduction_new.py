@@ -78,15 +78,64 @@ if A262:
     r_s = 172 * kpc_to_cm # scale radius, in cm
     R = 2 * kpc_to_cm # max radius to integrate out to, in cm
     z = 0.0161 # redshift
+    #beta = 0.433 - 0.017
     beta = 0.433
     r_c = 30 * kpc_to_cm
     n_0 = 0.94 * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+    #n_0 = (0.94+0.15) * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
     
     extension='A262'
 
     B_0 = 2.9 # maximum central magnetic field, in microgauss
     L_0 = 5.6e38 # maximum observed luminosity, in erg s^{-1}
 
+if A2199:
+    T_c_keV = 2 # maximum core temperature, in keV
+    T_c_K = T_c_keV / k_B # maximum core temperature, in K
+    rho_s = 9.56 * 1e14 * solMass_to_g / Mpc_to_cm**3 # scale density, in g / cm^3
+    r_s = 334 * kpc_to_cm # scale radius, in cm
+    R = 3 * kpc_to_cm # max radius to integrate out to, in cm
+    z = 0.0302 # redshift
+    beta = 0.665-0.021
+    r_c = 102 * kpc_to_cm
+    n_0 = (0.97+0.03) * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+
+    extension = 'A2199'
+
+    B_0 = 4.9 # maximum central magnetic field, in microgauss
+    L_0 = 2.3e39 # maximum observed luminosity, in erg s^{-1}
+    
+if A85:
+    T_c_keV = 3 # maximum core temperature, in keV
+    T_c_K = T_c_keV / k_B # maximum core temperature, in K
+    rho_s = 8.34 * 1e14 * solMass_to_g / Mpc_to_cm**3 # scale density, in g / cm^3
+    r_s = 444 * kpc_to_cm # scale radius, in cm
+    R = 3 * kpc_to_cm # max radius to integrate out to, in cm
+    z = 0.0556 # redshift
+    beta = 0.532 - 0.004
+    r_c = 60 * kpc_to_cm
+    n_0 = (3.00+0.15) * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+    
+    extension = 'A85'
+        
+    B_0 = 11.6 # maximum central magnetic field, in microgauss
+    L_0 = 2.7e40 # maximum observed luminosity, in erg s^{-1}
+ 
+if NGC5044:
+    T_c_keV = 0.8 # maximum core temperature, in keV
+    T_c_K = T_c_keV / k_B # maximum core temperature, in K
+    rho_s = 14.7 * 1e14 * solMass_to_g / Mpc_to_cm**3 # scale density, in g / cm^3
+    r_s = 127 * kpc_to_cm # scale radius, in cm
+    R = 1 * kpc_to_cm # max radius to integrate out to, in cm
+    z = 0.009 # redshift
+    beta = 0.524-0.003
+    r_c = 8 * kpc_to_cm
+    n_0 = (4.02+0.03) * 1e-2 # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+
+    extension = 'NGC5044'
+
+    B_0 = 5.0 # maximum central magnetic field, in microgauss
+    L_0 = 6.3e38 # maximum observed luminosity, in erg s^{-1}
 
 # DM density (NFW), in g cm^{-3}
 def rho_NFW(r):
@@ -113,7 +162,7 @@ def b_T(E, r):
     b_3 = 1.51 * (number_density(r))  * (0.36 + np.log(gamma(E) / (number_density(r)))) 
     return (b_1 + b_2 + b_3) + b_C(E, r)
 
-def luminosity_integrand_2(r, E, m_pbh, spectrum_ref, E_prime, spectrum_integrand):      
+def luminosity_integrand_2(r, E, m_pbh, E_prime, spectrum_integrand):      
     return r**2 * np.trapz(spectrum_integrand, E_prime) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
     #return r**2 * np.sum(spectrum_integrand[:-1] * np.diff(E_prime)) * rho_NFW(r) * b_C(E, r) / (m_pbh * b_T(E, r))
 
@@ -133,7 +182,6 @@ def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
 
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-
    
     # Evaluate photon spectrum at a set of pre-defined energies
     #spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
@@ -149,10 +197,10 @@ def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
         #print('min(E_prime) =', min(E_prime))
         
         E_prime = 10**np.linspace(np.log10(E), np.log10(E_max), n_steps)
-        spectrum_integrand = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
+        spectrum_integrand = 10**np.interp(np.log10(E_prime), np.log10(energies_secondary), np.log10(secondary_spectrum))
         
-        luminosity_integrand_terms = [luminosity_integrand_2(r, E, m_pbh, spectrum_ref, E_prime, spectrum_integrand) for r in r_values]
-                
+        luminosity_integrand_terms = [luminosity_integrand_2(r, E, m_pbh, E_prime, spectrum_integrand) for r in r_values]
+        
         #integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
         integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
 
@@ -230,26 +278,32 @@ if __name__ == '__main__':
     """
     f_pbh_values = []
     main()
+        
+    extracted_interpolated = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
+    ratio = extracted_interpolated / np.array(f_pbh_values)
+    frac_diff = abs((extracted_interpolated - f_pbh_values) / f_pbh_values)
     
     plt.figure()
     plt.plot(m_pbh_values, f_pbh_values)
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted (Fig. 1)')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.title(extension)
     plt.tight_layout()
+    plt.legend()
+    plt.ylim(1e-8, 1)
+    plt.xlim(4e14, 1e17)
     plt.yscale('log')
     plt.xscale('log')
-    
-    extracted_interpolated = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
-    ratio = extracted_interpolated / np.array(f_pbh_values)
-    frac_diff = abs((extracted_interpolated - f_pbh_values) / f_pbh_values)
+
     
     plt.figure()
     plt.plot(m_pbh_values, ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$')
     plt.xscale('log')
-    plt.yscale('log')
+    #plt.yscale('log')
+    plt.xlim(4e14, 6e16)   # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
     
@@ -258,7 +312,8 @@ if __name__ == '__main__':
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$')
     plt.xscale('log')
-    plt.yscale('log')
+    #plt.yscale('log')
+    plt.xlim(4e14, 6e16)   # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
     
