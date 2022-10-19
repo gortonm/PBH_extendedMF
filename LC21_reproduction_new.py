@@ -78,11 +78,11 @@ if A262:
     r_s = 172 * kpc_to_cm # scale radius, in cm
     R = 2 * kpc_to_cm # max radius to integrate out to, in cm
     z = 0.0161 # redshift
-    #beta = 0.433 - 0.017
+    beta = 0.433 - 0.017
     beta = 0.433
     r_c = 30 * kpc_to_cm
     n_0 = 0.94 * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
-    #n_0 = (0.94+0.15) * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+    n_0 = (0.94+0.15) * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
     
     extension='A262'
 
@@ -168,9 +168,7 @@ def luminosity_integrand_2(r, E, m_pbh, E_prime, spectrum_integrand):
 
 
 def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
-    #E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
     r_values = 10**np.linspace(np.log10(1e-10 * kpc_to_cm), np.log10(R), n_steps)
-    
     
     if numbered_mass_range == True:
         file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
@@ -181,34 +179,27 @@ def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
         file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
 
     # Load electron secondary spectrum
-    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-   
-    # Evaluate photon spectrum at a set of pre-defined energies
-    #spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
-    
-      
+    energies_ep_secondary, secondary_ep_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+    energies_photons_secondary, secondary_photon_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
+
+    energies_secondary = energies_ep_secondary
+    secondary_spectrum = secondary_ep_spectrum
+    """
+    if i == 10:
+        print(file_path_data)
+        print(secondary_spectrum)    
+     """
     integrand_over_r = []
     for E in energies_ref:
-        
-        #E_prime = energies_ref[energies_ref > E]
-        #spectrum_integrand = spectrum_ref[energies_ref > E]
-                
-        #print('E =', E)
-        #print('min(E_prime) =', min(E_prime))
         
         E_prime = 10**np.linspace(np.log10(E), np.log10(E_max), n_steps)
         spectrum_integrand = 10**np.interp(np.log10(E_prime), np.log10(energies_secondary), np.log10(secondary_spectrum))
         
         luminosity_integrand_terms = [luminosity_integrand_2(r, E, m_pbh, E_prime, spectrum_integrand) for r in r_values]
-        
-        #integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
         integrand_over_r.append(np.trapz(luminosity_integrand_terms, r_values))
 
-    #print('integrand_over_r[-1] = ', integrand_over_r[-1])
-    #integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
     integral = np.trapz(integrand_over_r, energies_ref)
 
-    #print('4 * np.pi * integral * GeV_to_erg = ', 4 * np.pi * integral * GeV_to_erg)
     
     return 4 * np.pi * integral * GeV_to_erg
 
@@ -216,7 +207,6 @@ def luminosity_observed(): # observed luminosity
     r_values = np.linspace(0, R, n_steps)
    
     integrand_terms = [number_density(r)**2 * r**2 for r in r_values]
-    #print(integrand_terms)
     return 4 * np.pi * Lambda_0 * np.sqrt(T_c_K) * np.trapz(integrand_terms, r_values)
 
 
@@ -247,7 +237,7 @@ m_pbh_values = np.array([3, 6, 8]) * 10**16
 #m_pbh_values = np.array([1e15])
 
 if numbered_mass_range == True:
-    m_pbh_values = 10**np.linspace(14.5, 17, 25)
+    m_pbh_values = 10**np.linspace(np.log10(5e14), 17, 25)
     
 f_pbh_values = []
 
