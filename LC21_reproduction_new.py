@@ -37,7 +37,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 # Reproduce Lee & Chan (2021) Fig. 1, expressing intermediate quantities
 # in units of [GeV, cm, s, K, microGauss]
 
-n_steps = 1000 # number of integration steps
+n_steps = 5000 # number of integration steps
 
 # Parameters relating to clusters
 A262 = True
@@ -184,11 +184,11 @@ def luminosity_predicted_2(i, m_pbh): # predicted luminosity, in erg s^{-1}
 
     energies_secondary = energies_ep_secondary
     secondary_spectrum = secondary_ep_spectrum
-    """
-    if i == 10:
+    
+    if i == 15:
         print(file_path_data)
         print(secondary_spectrum)    
-     """
+     
     integrand_over_r = []
     for E in energies_ref:
         
@@ -232,7 +232,7 @@ numbered_mass_range = True
 
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
 m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
-m_pbh_values = np.array([3, 6, 8]) * 10**16
+#m_pbh_values = np.array([3, 6, 8]) * 10**16
 #m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
 #m_pbh_values = np.array([1e15])
 
@@ -274,7 +274,7 @@ if __name__ == '__main__':
     frac_diff = ratio - 1
     
     plt.figure()
-    plt.plot(m_pbh_values, f_pbh_values)
+    plt.plot(m_pbh_values[:21], f_pbh_values)
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted (Fig. 1)')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
@@ -288,7 +288,7 @@ if __name__ == '__main__':
 
     
     plt.figure()
-    plt.plot(m_pbh_values, ratio, 'x')
+    plt.plot(m_pbh_values[:21], ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$')
     plt.xscale('log')
@@ -298,7 +298,7 @@ if __name__ == '__main__':
     plt.tight_layout()
     
     plt.figure()
-    plt.plot(m_pbh_values, frac_diff, 'x')
+    plt.plot(m_pbh_values[:21], frac_diff, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$')
     plt.xscale('log')
