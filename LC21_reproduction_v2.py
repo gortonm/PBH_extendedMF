@@ -33,7 +33,7 @@ m_e = 5.11e-4 / c**2
 E_min = m_e * c**2
 E_max = 5
 
-r_min = 0
+r_min = 1
 n_steps = 1000
 
 # quantities from Table I of Lee & Chan (2021) for A262
@@ -118,7 +118,7 @@ def L(m_pbh, ep_energies, ep_spec):
         return np.trapz(integrand, E_values)
     
     if scipy:
-        return 4 * np.pi * dblquad(L_integrand, r_min, R, E_min, E_max, args=[m_pbh, ep_energies, ep_spec])
+        return 4 * np.pi * np.array(dblquad(L_integrand, r_min, R, E_min, E_max, args=[m_pbh, ep_energies, ep_spec]))[0]
     
     
     
@@ -136,15 +136,17 @@ energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 def main():    
     for i, m_pbh in enumerate(m_pbh_values):
         
-        file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i+1)
+        if i % 5 == 0:
         
-        ep_energies, ep_spec = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-        
-        print('M_PBH = {:.2e} g'.format(m_pbh))
- 
-        # Evaluate photon spectrum at a set of pre-defined energies                
-        luminosity_predicted = L(m_pbh, ep_energies, ep_spec)
-        f_pbh_values.append(L_0 / luminosity_predicted)
+            file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i+1)
+            
+            ep_energies, ep_spec = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+            
+            print('M_PBH = {:.2e} g'.format(m_pbh))
+     
+            # Evaluate photon spectrum at a set of pre-defined energies                
+            luminosity_predicted = L(m_pbh, ep_energies, ep_spec)
+            f_pbh_values.append(L_0 / luminosity_predicted)
 
 
 if __name__ == '__main__':
@@ -154,13 +156,20 @@ if __name__ == '__main__':
 
     f_pbh_values = []
     main()
-        
+    
+    
     extracted_interpolated = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
-    ratio = extracted_interpolated / np.array(f_pbh_values)
+    extracted_interpolated_fewer = []
+    m_pbh_fewer = []
+    for i in range(0, len(extracted_interpolated)):
+        if i % 5 == 0:
+            extracted_interpolated_fewer.append(extracted_interpolated[i])
+            m_pbh_fewer.append(m_pbh_values[i])
+    ratio = extracted_interpolated_fewer / np.array(f_pbh_values)
     frac_diff = ratio - 1
     
     plt.figure()
-    plt.plot(m_pbh_values[:21], f_pbh_values)
+    plt.plot(m_pbh_fewer, f_pbh_values)
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted (Fig. 1)')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
@@ -174,7 +183,7 @@ if __name__ == '__main__':
 
     
     plt.figure()
-    plt.plot(m_pbh_values[:21], ratio, 'x')
+    plt.plot(m_pbh_fewer, ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$')
     plt.xscale('log')
@@ -184,7 +193,7 @@ if __name__ == '__main__':
     plt.tight_layout()
     
     plt.figure()
-    plt.plot(m_pbh_values[:21], frac_diff, 'x')
+    plt.plot(m_pbh_fewer, frac_diff, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$')
     plt.xscale('log')
