@@ -219,3 +219,64 @@ if __name__ == "__main__":
     print("f_PBH =", f_pbh_values)
     print("ratio =", ratio)
     print("fractional difference =", frac_diff)
+
+
+#%% Test case for small r_c, r_s
+R = min((r_c/100, r_s/100))
+
+def b_Coul_approx(E):
+    return b_Coul(E, r=0)
+
+def b_T_approx(E):
+    return b_T(E, r=0)
+
+
+def b_Coul_approx(E):
+    return 1e-16 * (6.13 * n_0 * (1 + (1 / 75) * np.log(gamma(E) / n_0)))
+
+
+def b_T_approx(E):
+    b_IC = 1e-16 * (0.25 * E ** 2 * (1+z)**4)
+    b_syn = 1e-16 * (0.0254 * E ** 2 * B_0 ** 2)
+    b_brem = 1e-16 * (1.51 * n_0 * (np.log(gamma(E) / n_0) + 0.36))
+    return b_IC + b_syn + b_brem + b_Coul_approx(E)
+
+
+def approx_L(m_pbh, ep_energies, ep_spec):
+    
+    integrand_values = []
+    for E in E_values:
+    
+        E_prime_values = 10 ** np.linspace(np.log10(E), np.log10(E_max), n_steps)
+        spec_values = [spec(E_prime, ep_energies, ep_spec) for E_prime in E_prime_values]
+        integrand_values.append(np.trapz(spec_values, E_prime_values) * b_Coul_approx(E) / b_T_approx(E))
+        
+    integral = np.trapz(integrand_values, E_values)
+    
+    return 2 * np.pi * rho_s * r_s * (R**2 - r_min**2) * integral / m_pbh
+
+m_pbh, i = 5e14, 0
+
+file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+
+ep_energies, ep_spec = read_blackhawk_spectra(
+    file_path_data + "instantaneous_secondary_spectra.txt", col=2
+)
+
+
+print('Approximate L (r << r_s, r_c) [GeV/s] =', approx_L(m_pbh, ep_energies, ep_spec))
+print('Full L [GeV/s] =', L(m_pbh, ep_energies, ep_spec))
+
+
+
+m_pbh, i = 1e17, 24
+
+file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+
+ep_energies, ep_spec = read_blackhawk_spectra(
+    file_path_data + "instantaneous_secondary_spectra.txt", col=2
+)
+
+
+print('Approximate L (r << r_s, r_c) [GeV/s] =', approx_L(m_pbh, ep_energies, ep_spec))
+print('Full L [GeV/s] =', L(m_pbh, ep_energies, ep_spec))
