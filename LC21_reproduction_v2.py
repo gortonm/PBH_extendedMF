@@ -54,8 +54,8 @@ extension = "A262"
 epsilon = 0.5  # choose 0.5 to maximise magnetic field
 
 const_B = True
-scipy = True
-trapz = False
+scipy = False
+trapz = True
 numbered_mass_range = True
 
 r_values = 10 ** np.linspace(np.log10(r_min), np.log10(R), n_steps)
@@ -89,7 +89,7 @@ def b_Coul(E, r):
 
 
 def b_T(E, r):
-    b_IC = 1e-16 * (0.25 * E ** 2)
+    b_IC = 1e-16 * (0.25 * E ** 2 * (1+z)**4)
     b_syn = 1e-16 * (0.0254 * E ** 2 * B(r) ** 2)
     b_brem = 1e-16 * (1.51 * n(r) * (np.log(gamma(E) / n(r))) + 0.36)
     return b_IC + b_syn + b_brem + b_Coul(E, r)
@@ -111,8 +111,7 @@ def dndE(E, r, m_pbh, ep_energies, ep_spec):
         return np.trapz(Q_values, E_prime_values) / b_T(E, r)
 
     if scipy:
-        print((m_pbh, ep_energies, ep_spec))
-        return quad(Q, E, E_max, args=(m_pbh, ep_energies, ep_spec))[0] / b_T(E, r)
+        return quad(Q, E, E_max, args=(r, m_pbh, ep_energies, ep_spec))[0] / b_T(E, r)
 
 def L_integrand(E, r, m_pbh, ep_energies, ep_spec):
     return dndE(E, r, m_pbh, ep_energies, ep_spec) * r ** 2 * b_Coul(E, r)
