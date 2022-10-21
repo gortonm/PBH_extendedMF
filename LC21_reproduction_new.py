@@ -285,7 +285,7 @@ if __name__ == '__main__':
     plt.figure(figsize=(7, 6))
     plt.plot(m_pbh_plotting, 0.5*f_pbh_values, label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted')
-    plt.plot(m_pbh_plotting, 0.5 * np.array(f_pbh_linear), label='Extracted')
+    plt.plot(m_pbh_plotting, 0.5 * np.array(f_pbh_linear), label='Linear approx')
 
     plt.plot()
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
