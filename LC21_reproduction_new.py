@@ -280,12 +280,13 @@ if __name__ == '__main__':
     #%%
     
     # linear dependence of f_PBH approximation
-    f_pbh_linear = f_PBH_LC21_extracted[0] * (m_pbh_plotting / m_pbh_LC21_extracted[0])
+    index = 3
+    f_pbh_PL = f_PBH_LC21_extracted[0] * (m_pbh_LC21_extracted / m_pbh_LC21_extracted[0])**index
     
     plt.figure(figsize=(7, 6))
-    plt.plot(m_pbh_plotting, 0.5*f_pbh_values, label='Reproduction')
+    #plt.plot(m_pbh_plotting, 0.5*np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted')
-    plt.plot(m_pbh_plotting, 0.5 * np.array(f_pbh_linear), label='Linear approx')
+    plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law approx $(n={:.0f})$'.format(index))
 
     plt.plot()
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -299,7 +300,7 @@ if __name__ == '__main__':
     plt.xscale('log')
     #plt.yticks(major_ticks)
     #plt.yticks(minor_ticks)
-    
+    """
     plt.figure()
     plt.plot(m_pbh_plotting, ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -324,7 +325,7 @@ if __name__ == '__main__':
     print('f_PBH =', f_pbh_values)
     print('ratio =', ratio)
     print('fractional difference =', frac_diff)
-    
+    """
     
 #%% Plot spectra
 #m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
