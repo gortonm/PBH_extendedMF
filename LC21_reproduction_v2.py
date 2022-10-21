@@ -90,8 +90,12 @@ def b_Coul(E, r):
 
 def b_T(E, r):
     b_IC = 1e-16 * (0.25 * E ** 2 * (1+z)**4)
+    print('b_IC =', b_IC)
     b_syn = 1e-16 * (0.0254 * E ** 2 * B(r) ** 2)
-    b_brem = 1e-16 * (1.51 * n(r) * (np.log(gamma(E) / n(r))) + 0.36)
+    print('b_syn =', b_syn)
+    b_brem = 1e-16 * (1.51 * n(r) * (np.log(gamma(E) / n(r)) + 0.36))
+    print('b_brem =', b_brem)
+    print('b_Coul =', b_Coul(E, r))
     return b_IC + b_syn + b_brem + b_Coul(E, r)
 
 
@@ -238,7 +242,15 @@ def b_Coul_approx(E):
 def b_T_approx(E):
     b_IC = 1e-16 * (0.25 * E ** 2 * (1+z)**4)
     b_syn = 1e-16 * (0.0254 * E ** 2 * B_0 ** 2)
-    b_brem = 1e-16 * (1.51 * n_0 * (np.log(gamma(E) / n_0) + 0.36))
+    b_brem = 1e-16 * (1.51 * n_0 * ( np.log(gamma(E) / n_0) + 0.36))
+    
+    
+    print('b_IC =', b_IC)
+    print('b_syn =', b_syn)
+    print('b_brem =', b_brem)
+    print('b_Coul =', b_Coul_approx(E))
+
+    
     return b_IC + b_syn + b_brem + b_Coul_approx(E)
 
 
