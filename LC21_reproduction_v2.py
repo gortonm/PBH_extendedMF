@@ -144,7 +144,7 @@ energies_ref = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 def main():
     for i, m_pbh in enumerate(m_pbh_values):
 
-        if i % 5 == 0:
+        if i % 1 == 0:
 
             file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
 
@@ -295,3 +295,51 @@ ep_energies, ep_spec = read_blackhawk_spectra(
 
 print('Approximate L (r << r_s, r_c) [GeV/s] =', approx_L(m_pbh, ep_energies, ep_spec))
 print('Full L [GeV/s] =', L(m_pbh, ep_energies, ep_spec))
+
+
+#%% Limit where spectrum is a delta function around the max energy
+
+def heaviside(x):
+    result = []
+    for i in range(len(x)):
+        if x[i] > 0:
+            result.append(1)
+        else:
+            result.append(0)
+    return np.array(result)
+
+def L_integrand(E, r, E_peak, normalisation):
+    return r**2 * heaviside(E_peak-E) * b_Coul(E, r) / b_T(E, r)
+
+def L(m_pbh, E_peak, normalisation):
+
+    if trapz:
+        integrand = [np.trapz(L_integrand(E_values, r, E_peak, normalisation), E_values) for r in r_values]
+        return 4 * np.pi * rho_s * r_s * normalisation * np.trapz(integrand, r_values) / m_pbh
+
+    if scipy:
+        return 4 * np.pi * rho_s * r_s * normalisation * np.array(dblquad(L_integrand, r_min, R, E_min, E_max, args=(m_pbh, ep_energies, ep_spec) )[0]) / m_pbh
+    
+
+for i, m_pbh in enumerate(m_pbh_values):
+
+    file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+
+    ep_energies_load, ep_spec_load = read_blackhawk_spectra(
+        file_path_data + "instantaneous_secondary_spectra.txt", col=2
+    )
+    
+    ep_energies = ep_energies_load[ep_spec_load > 0]
+    ep_spec = ep_spec_load[ep_spec_load > 0]
+    
+    print(max(ep_spec))
+    print(ep_spec[np.argmax(ep_spec)])
+    E_peak = ep_energies[np.argmax(ep_spec)]
+    normalisation = np.trapz(ep_spec, ep_energies)
+
+    print("M_PBH = {:.2e} g".format(m_pbh))
+
+    # Evaluate photon spectrum at a set of pre-defined energies
+    luminosity_predicted = L(m_pbh, E_peak, normalisation)
+    f_pbh_values.append(L_0 / luminosity_predicted)
+
