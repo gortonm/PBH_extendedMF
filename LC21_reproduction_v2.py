@@ -90,12 +90,12 @@ def b_Coul(E, r):
 
 def b_T(E, r):
     b_IC = 1e-16 * (0.25 * E ** 2 * (1+z)**4)
-    print('b_IC =', b_IC)
+    #print('b_IC =', b_IC)
     b_syn = 1e-16 * (0.0254 * E ** 2 * B(r) ** 2)
-    print('b_syn =', b_syn)
+    #print('b_syn =', b_syn)
     b_brem = 1e-16 * (1.51 * n(r) * (np.log(gamma(E) / n(r)) + 0.36))
-    print('b_brem =', b_brem)
-    print('b_Coul =', b_Coul(E, r))
+    #print('b_brem =', b_brem)
+    #print('b_Coul =', b_Coul(E, r))
     return b_IC + b_syn + b_brem + b_Coul(E, r)
 
 
@@ -148,9 +148,12 @@ def main():
 
             file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
 
-            ep_energies, ep_spec = read_blackhawk_spectra(
+            ep_energies_load, ep_spec_load = read_blackhawk_spectra(
                 file_path_data + "instantaneous_secondary_spectra.txt", col=2
             )
+            
+            ep_energies = ep_energies_load[ep_spec_load > 0]
+            ep_spec = ep_spec_load[ep_spec_load > 0]
 
             print("M_PBH = {:.2e} g".format(m_pbh))
 
@@ -245,10 +248,10 @@ def b_T_approx(E):
     b_brem = 1e-16 * (1.51 * n_0 * ( np.log(gamma(E) / n_0) + 0.36))
     
     
-    print('b_IC =', b_IC)
-    print('b_syn =', b_syn)
-    print('b_brem =', b_brem)
-    print('b_Coul =', b_Coul_approx(E))
+    # print('b_IC =', b_IC)
+    # print('b_syn =', b_syn)
+    # print('b_brem =', b_brem)
+    # print('b_Coul =', b_Coul_approx(E))
 
     
     return b_IC + b_syn + b_brem + b_Coul_approx(E)
