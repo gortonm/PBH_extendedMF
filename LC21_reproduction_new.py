@@ -37,7 +37,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 # Reproduce Lee & Chan (2021) Fig. 1, expressing intermediate quantities
 # in units of [GeV, cm, s, K, microGauss]
 
-n_steps = 5000 # number of integration steps
+n_steps = 1000 # number of integration steps
 
 # Parameters relating to clusters
 A262 = True
@@ -56,7 +56,7 @@ Mpc_to_cm = 3.0857e24
 kpc_to_cm = 3.0857e21
 GeV_to_erg = 0.00160218
 
-c = 2.99792458e11  # speed of light, in cm / s
+c = 2.99792458e11  # speed of light, in cm / s   # Wrong! should be e10 (21/8)
 k_B = 8.617333262e-8  # Botlzmann constant, in keV/ K
 
 
@@ -78,11 +78,11 @@ if A262:
     r_s = 172 * kpc_to_cm # scale radius, in cm
     R = 2 * kpc_to_cm # max radius to integrate out to, in cm
     z = 0.0161 # redshift
-    beta = 0.433 - 0.017
+    #beta = 0.433 - 0.017
     beta = 0.433
     r_c = 30 * kpc_to_cm
     n_0 = 0.94 * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
-    n_0 = (0.94+0.15) * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+    #n_0 = (0.94+0.15) * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
     
     extension='A262'
 
@@ -240,17 +240,21 @@ if numbered_mass_range == True:
     m_pbh_values = 10**np.linspace(np.log10(5e14), 17, 25)
     
 f_pbh_values = []
+m_pbh_plotting = []
 
 energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 
 
-def main():    
+def main():
+
     for i, m_pbh in enumerate(m_pbh_values):
-        print('M_PBH = {:.2e} g'.format(m_pbh))
- 
-        # Evaluate photon spectrum at a set of pre-defined energies                
-        luminosity_predicted = luminosity_predicted_2(i, m_pbh)
-        f_pbh_values.append(L_0 / luminosity_predicted)
+        #print('M_PBH = {:.2e} g'.format(m_pbh))
+        if i % 1 == 0:
+            # Evaluate photon spectrum at a set of pre-defined energies                
+            luminosity_predicted = luminosity_predicted_2(i, m_pbh)
+            f_pbh_values.append(L_0 / luminosity_predicted)
+            
+            m_pbh_plotting.append(m_pbh)
 
 
 if __name__ == '__main__':
@@ -269,13 +273,21 @@ if __name__ == '__main__':
     f_pbh_values = []
     main()
         
-    extracted_interpolated = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
+    extracted_interpolated = 10**np.interp(np.log10(m_pbh_plotting), np.log10(m_pbh_LC21_extracted), np.log10(f_PBH_LC21_extracted))
     ratio = extracted_interpolated / np.array(f_pbh_values)
     frac_diff = ratio - 1
     
-    plt.figure()
-    plt.plot(m_pbh_values[:21], f_pbh_values)
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted (Fig. 1)')
+    #%%
+    
+    # linear dependence of f_PBH approximation
+    f_pbh_linear = f_PBH_LC21_extracted[0] * (m_pbh_plotting / m_pbh_LC21_extracted[0])
+    
+    plt.figure(figsize=(7, 6))
+    plt.plot(m_pbh_plotting, 0.5*f_pbh_values, label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted')
+    plt.plot(m_pbh_plotting, 0.5 * np.array(f_pbh_linear), label='Extracted')
+
+    plt.plot()
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.title(extension)
@@ -285,10 +297,11 @@ if __name__ == '__main__':
     plt.xlim(4e14, 1e17)
     plt.yscale('log')
     plt.xscale('log')
-
+    #plt.yticks(major_ticks)
+    #plt.yticks(minor_ticks)
     
     plt.figure()
-    plt.plot(m_pbh_values[:21], ratio, 'x')
+    plt.plot(m_pbh_plotting, ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$')
     plt.xscale('log')
@@ -298,7 +311,7 @@ if __name__ == '__main__':
     plt.tight_layout()
     
     plt.figure()
-    plt.plot(m_pbh_values[:21], frac_diff, 'x')
+    plt.plot(m_pbh_plotting, frac_diff, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$')
     plt.xscale('log')
@@ -315,9 +328,10 @@ if __name__ == '__main__':
     
 #%% Plot spectra
 #m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
-m_pbh_values = np.array([0.1, 0.5, 1, 5, 7, 10]) * 10**16
+#m_pbh_values = np.array([0.1, 0.5, 1, 5, 7, 10]) * 10**16
 
 plt.figure()
+m_pbh_plotting = []
 
 for i, m_pbh in enumerate(m_pbh_values):
     #exponent = np.floor(np.log10(m_pbh))
@@ -353,7 +367,7 @@ r_values = 10**np.linspace(1, np.log10(R), 100)
 plt.figure()
 for i, m_pbh in enumerate(m_pbh_values):
     
-    if i % 5 == 0:
+    if i % 1 == 0:
     # Load electron secondary spectrum
         
         energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
