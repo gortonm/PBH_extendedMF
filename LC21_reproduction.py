@@ -38,7 +38,7 @@ m_e = 5.11e-4 # electron/positron mass, in GeV / c^2
 epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 # in erg cm^{-3} s^{-1} K^{-1/2}
 
-n_steps = 10 # number of integration steps
+n_steps = 10000 # number of integration steps
 E_min = m_e # minimum electron/positron energy calculated from BlackHawk, in GeV
 E_max = 5 # maximum electron/positron energy calculated from BlackHawk, in GeV
 
@@ -214,8 +214,10 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
         integrand_over_r.append(np.sum(luminosity_integrand_terms[:-1] * np.diff(r_values)))
         
     #integral = np.trapz(integrand_over_r, E_values)
+    #print('integrand_values[-1] = ', integrand_over_r[-1])
     integral = np.sum(integrand_over_r[:-1] * np.diff(E_values))
-    print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
+    #print('4 * np.pi * integral * g_to_solar_mass * erg_to_GeV', 4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
+    #print('4 * np.pi * integral * (g_to_solar_mass * erg_to_GeV)**(-1) = ', 4 * np.pi * integral * (g_to_solar_mass * erg_to_GeV)**(-1))
     
     """
     integrand_over_E = []
@@ -224,7 +226,7 @@ def luminosity_predicted_2(): # predicted luminosity, in erg s^{-1}
     integral = np.trapz(integrand_over_E, r_values)
     print(4 * np.pi * integral * g_to_solar_mass * erg_to_GeV)
     """
-    return 4 * np.pi * integral * g_to_solar_mass * erg_to_GeV
+    return 4 * np.pi * integral * (g_to_solar_mass * erg_to_GeV)**(-1)
 
 
 def luminosity_observed(): # observed luminosity, in erg s^{-1}
@@ -234,6 +236,7 @@ def luminosity_observed(): # observed luminosity, in erg s^{-1}
     for i in range(n_steps):
         integrand_values.append(number_density(r_values[i])**2 * r_values[i]**2)
     
+    #print(np.trapz(integrand_values, r_values) * kpc_to_cm**3)
     return 4 * np.pi * Lambda_0 * np.sqrt(T_c * keV_to_K) * np.trapz(integrand_values, r_values) * kpc_to_cm**3
 
 from scipy.special import hyp2f1
@@ -254,14 +257,15 @@ print(luminosity_observed_analytic() / L_0)
 
 #%%
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-#m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
-m_pbh_values = np.array([1e15])
+m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+#m_pbh_values = np.array([1e15])
 #m_pbh_values = 10**np.linspace(14.5, 17, 25)
 f_pbh_values = []
 
 def main():
     global m_pbh
     for i, m_pbh_val in enumerate(m_pbh_values):
+    
         m_pbh = m_pbh_val
         #exponent = np.floor(np.log10(m_pbh))
         #coefficient = m_pbh / 10**exponent
