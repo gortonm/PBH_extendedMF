@@ -56,7 +56,7 @@ Mpc_to_cm = 3.0857e24
 kpc_to_cm = 3.0857e21
 GeV_to_erg = 0.00160218
 
-c = 2.99792458e11  # speed of light, in cm / s   # Wrong! should be e10 (21/8)
+c = 2.99792458e10  # speed of light, in cm / s
 k_B = 8.617333262e-8  # Botlzmann constant, in keV/ K
 
 
@@ -65,7 +65,7 @@ epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 # in erg cm^3 s^{-1} K^{-1/2}
 
 E_min = m_e * c**2  # minimum electron/positron energy calculated from BlackHawk, in GeV
-E_max = 5  # maximum electron/positron energy calculated from BlackHawk, in Gnp.diffeV
+E_max = 5  # maximum electron/positron energy calculated from BlackHawk, in GeV
 
 
 #%%
@@ -78,11 +78,11 @@ if A262:
     r_s = 172 * kpc_to_cm # scale radius, in cm
     R = 2 * kpc_to_cm # max radius to integrate out to, in cm
     z = 0.0161 # redshift
-    #beta = 0.433 - 0.017
-    beta = 0.433
-    r_c = 30 * kpc_to_cm
-    n_0 = 0.94 * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
-    #n_0 = (0.94+0.15) * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+    beta = 0.433 - 0.017
+    #beta = 0.433
+    r_c = (30-7) * kpc_to_cm
+    #n_0 = 0.94 * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
+    n_0 = (0.94+0.15) * 1e-2  # central number density of hot gas particles (thermal electrons/positrons), in cm^{-3}
     
     extension='A262'
 
@@ -260,7 +260,7 @@ def main():
 if __name__ == '__main__':
     
     file_path_extracted = './Extracted_files/'
-    m_pbh_LC21_extracted, f_PBH_LC21_extracted = load_data("LC21_" + extension + "_NFW.csv")
+    m_pbh_LC21_extracted, f_PBH_LC21_extracted = load_data("LC21_" + extension + "_NFW_v2.csv")
     """
     profiler = cProfile.Profile()
     profiler.enable()
@@ -285,8 +285,8 @@ if __name__ == '__main__':
     
     plt.figure(figsize=(7, 6))
     #plt.plot(m_pbh_plotting, 0.5*np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted')
-    plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law approx $(n={:.0f})$'.format(index))
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted', color='tab:orange')
+    plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law $(n={:.0f})$'.format(index), color='tab:green')
 
     plt.plot()
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -300,7 +300,7 @@ if __name__ == '__main__':
     plt.xscale('log')
     #plt.yticks(major_ticks)
     #plt.yticks(minor_ticks)
-    """
+    
     plt.figure()
     plt.plot(m_pbh_plotting, ratio, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -310,7 +310,7 @@ if __name__ == '__main__':
     plt.xlim(4e14, 6e16)   # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
-    
+    """
     plt.figure()
     plt.plot(m_pbh_plotting, frac_diff, 'x')
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -329,7 +329,7 @@ if __name__ == '__main__':
     
 #%% Plot spectra
 #m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
-#m_pbh_values = np.array([0.1, 0.5, 1, 5, 7, 10]) * 10**16
+m_pbh_values = np.array([0.1, 0.5, 1, 5, 7, 10]) * 10**16
 
 plt.figure()
 m_pbh_plotting = []
@@ -343,21 +343,47 @@ for i, m_pbh in enumerate(m_pbh_values):
     
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-    #energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
    
     # Evaluate photon spectrum at a set of pre-defined energies
     energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
     spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
     
-    plt.plot(energies_secondary, secondary_spectrum, 'x', label='$M_\mathrm{PBH} '+'= ${:.2e} g'.format(m_pbh))
+    plt.plot(energies_secondary, secondary_spectrum, label='$M_\mathrm{PBH} '+'= ${:.2e} g'.format(m_pbh))
+    plt.plot(energies_primary, primary_spectrum, linestyle='dotted', label='$M_\mathrm{PBH} '+'= ${:.2e} g (primary)'.format(m_pbh))
     
 plt.legend()
 plt.xscale('log')
 plt.yscale('log')
 
 
+
+for i, m_pbh in enumerate(m_pbh_values):
+    #exponent = np.floor(np.log10(m_pbh))
+    #coefficient = m_pbh / 10**exponent
+    #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
+    
+    # Load electron secondary spectrum
+    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+   
+    # Evaluate photon spectrum at a set of pre-defined energies
+    energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+    spectrum_sec_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
+    spectrum_prim_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_primary), np.log10(primary_spectrum))
+    
+    
+    plt.plot(energies_secondary, secondary_spectrum, label='$M_\mathrm{PBH} '+'= ${:.2e} g'.format(m_pbh))
+    plt.plot(energies_primary, primary_spectrum, linestyle='dotted', label='$M_\mathrm{PBH} '+'= ${:.2e} g (primary)'.format(m_pbh))
+
+
+
 #%%
 E = 0.1
+
+numbered_mass_range == False
 
 if numbered_mass_range == True:
     m_pbh_values = 10**np.linspace(14.5, 17, 25)
