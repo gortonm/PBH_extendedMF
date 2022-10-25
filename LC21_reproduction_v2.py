@@ -132,7 +132,8 @@ def L(m_pbh, ep_energies, ep_spec):
 
 
 if numbered_mass_range == True:
-    m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
+    #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
+    m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
     file_path_data_base = "../Downloads/version_finale/results/"
 
 
@@ -146,7 +147,8 @@ def main():
 
         if i % 1 == 0:
 
-            file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+            #file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+            file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
 
             ep_energies_load, ep_spec_load = read_blackhawk_spectra(
                 file_path_data + "instantaneous_secondary_spectra.txt", col=2
@@ -205,9 +207,7 @@ if __name__ == "__main__":
     plt.ylabel("$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$")
     plt.xscale("log")
     # plt.yscale('log')
-    plt.xlim(
-        4e14, 6e16
-    )  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
+    #plt.xlim(4e14, 6e16)  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
 
@@ -217,9 +217,7 @@ if __name__ == "__main__":
     plt.ylabel("$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$")
     plt.xscale("log")
     # plt.yscale('log')
-    plt.xlim(
-        4e14, 6e16
-    )  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
+    plt.xlim(4e14, 6e16)  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
 
