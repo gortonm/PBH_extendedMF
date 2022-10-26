@@ -405,28 +405,52 @@ plt.tight_layout()
 #%%
 # Calculate integral over energies, and how much it changes when not including primary emission
 
+m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
+
+plt.figure(figsize=(11, 8))
+
+colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green', 'tab:purple', 'k']
+max_y = 0
+j = 0
+
 for i, m_pbh in enumerate(m_pbh_values):
-    exponent = np.floor(np.log10(m_pbh))
-    coefficient = m_pbh / 10**exponent
-    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-    #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
     
-    # Load electron secondary spectrum
-    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
-   
-    # Find integral of energies over all spectra    
-    plt.plot(energies_secondary, secondary_spectrum, label='{:.0e}'.format(m_pbh), color=colors[i])
-    plt.plot(energies_primary, primary_spectrum, linestyle='dotted', color=colors[i])
-    plt.vlines(x=T_BH, ymin=min(secondary_spectrum), ymax=100*max(secondary_spectrum), color=colors[i], linestyle='dashed')
-    
-    max_y = max(max_y, max(secondary_spectrum))
+    if i < 24 and (i == 0 or (i+1) % 5 == 0) :
+        j += 1
+        
+        file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
+            
+        # Load electron secondary spectrum
+        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+        
+        integral_primary = []
+        integral_secondary = []
+        
+        for E in energies_primary:
+            E_prime = energies_primary[energies_primary > E]
+            primary_spectrum_integrand = primary_spectrum[energies_primary > E]
+
+            integral_primary.append(np.trapz(primary_spectrum_integrand, E_prime))
+            
+        integral_secondary = []
+        for E in energies_secondary:
+            E_prime = energies_secondary[energies_secondary > E]
+            secondary_spectrum_integrand = secondary_spectrum[energies_secondary > E]
+
+            integral_secondary.append(np.trapz(secondary_spectrum_integrand, E_prime))
+
+        
+        plt.plot(energies_secondary, integral_secondary, label='{:.1e}'.format(m_pbh), color=colors[j])
+        plt.plot(energies_primary, integral_primary, linestyle='dotted', color=colors[j])
+        
+        max_y = max(max_y, max(secondary_spectrum))
     
 plt.legend(title='$M_\mathrm{PBH}$ [g]')
 plt.xlabel('$E$ [GeV]')
-plt.ylabel('$\int_{E}^{\infty} \mathrm{d}E \mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1}$]')
+plt.ylabel('$\int_{E}^\infty \mathrm{d}E~\mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1}$]')
 plt.xscale('log')
 plt.yscale('log')
 plt.ylim(1e18, 2*max_y)
-plt.xlim(5e-5, 5)
+plt.xlim(E_min, 5)
 plt.tight_layout()
