@@ -328,33 +328,94 @@ if __name__ == '__main__':
     """
     
 #%% Plot spectra
-#m_pbh_values = np.array([0.1, 0.3, 0.7, 1.5, 3, 6, 8]) * 10**16
-m_pbh_values = np.array([0.1, 0.5, 1, 5, 7, 10]) * 10**16
+m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
 
 plt.figure(figsize=(11, 8))
-m_pbh_plotting = []
+
+colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green', 'tab:purple', 'k']
+max_y = 0
+j = 0
+
+for i, m_pbh in enumerate(m_pbh_values):
+    
+    if i < 24 and (i == 0 or (i+1) % 5 == 0) :
+        j += 1
+        
+        file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
+        
+        # Compute Hawking temperature of the BH (from Lee & Chan 2021 Eq. 2)
+        T_BH = 1.06 * (1e13 / m_pbh)
+    
+        # Load electron secondary spectrum
+        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+        
+        plt.plot(energies_secondary, secondary_spectrum, label='{:.1e}'.format(m_pbh), color=colors[j])
+        plt.plot(energies_primary, primary_spectrum, linestyle='dotted', color=colors[j])
+        plt.vlines(x=T_BH, ymin=min(secondary_spectrum), ymax=100*max(secondary_spectrum), color=colors[j], linestyle='dashed')
+        
+        max_y = max(max_y, max(secondary_spectrum))
+    
+plt.legend(title='$M_\mathrm{PBH}$ [g]')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('$\mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1}$ GeV$^{-1}$]')
+plt.xscale('log')
+plt.yscale('log')
+plt.ylim(1e18, 2*max_y)
+plt.xlim(1e-4, 5)
+plt.tight_layout()
+
+
+#%% Plot spectra
+m_pbh_values = np.array([0.1, 0.4, 1.0, 3, 10]) * 10**16
+
+plt.figure(figsize=(11, 8))
 
 colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green', 'tab:purple', 'k']
 max_y = 0
 
 for i, m_pbh in enumerate(m_pbh_values):
-    #exponent = np.floor(np.log10(m_pbh))
-    #coefficient = m_pbh / 10**exponent
-    #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-    #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
-    file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
     
-    # Compute Hawking temperature of the BH
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    
+    # Compute Hawking temperature of the BH (from Lee & Chan 2021 Eq. 2)
     T_BH = 1.06 * (1e13 / m_pbh)
 
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
-   
-    # Evaluate photon spectrum at a set of pre-defined energies
-    energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-    spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
     
+    plt.plot(energies_secondary, secondary_spectrum, label='{:.0e}'.format(m_pbh), color=colors[i])
+    plt.plot(energies_primary, primary_spectrum, linestyle='dotted', color=colors[i])
+    plt.vlines(x=T_BH, ymin=min(secondary_spectrum), ymax=100*max(secondary_spectrum), color=colors[i], linestyle='dashed')
+    max_y = max(max_y, max(secondary_spectrum))
+    
+plt.legend(title='$M_\mathrm{PBH}$ [g]')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('$\mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1}$ GeV$^{-1}$]')
+plt.xscale('log')
+plt.yscale('log')
+plt.ylim(1e18, 2*max_y)
+plt.xlim(1e-4, 5)
+plt.tight_layout()
+
+
+#%%
+# Calculate integral over energies, and how much it changes when not including primary emission
+
+for i, m_pbh in enumerate(m_pbh_values):
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
+    
+    # Load electron secondary spectrum
+    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+   
+    # Find integral of energies over all spectra    
     plt.plot(energies_secondary, secondary_spectrum, label='{:.0e}'.format(m_pbh), color=colors[i])
     plt.plot(energies_primary, primary_spectrum, linestyle='dotted', color=colors[i])
     plt.vlines(x=T_BH, ymin=min(secondary_spectrum), ymax=100*max(secondary_spectrum), color=colors[i], linestyle='dashed')
@@ -363,63 +424,9 @@ for i, m_pbh in enumerate(m_pbh_values):
     
 plt.legend(title='$M_\mathrm{PBH}$ [g]')
 plt.xlabel('$E$ [GeV]')
-plt.ylabel('$\mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1}$ MeV$^{-1}$]')
+plt.ylabel('$\int_{E}^{\infty} \mathrm{d}E \mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1}$]')
 plt.xscale('log')
 plt.yscale('log')
 plt.ylim(1e18, 2*max_y)
 plt.xlim(5e-5, 5)
 plt.tight_layout()
-
-for i, m_pbh in enumerate(m_pbh_values):
-    #exponent = np.floor(np.log10(m_pbh))
-    #coefficient = m_pbh / 10**exponent
-    #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-    #file_path_data = "../blackhawk_v2.0/results/Laha16_Fig1_" + "{:.0f}e{:.0f}g/".format(coefficient, exponent)
-    file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
-    
-    
-    # Load electron secondary spectrum
-    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-    energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
-   
-    # Evaluate photon spectrum at a set of pre-defined energies
-    energies_ref = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-    spectrum_sec_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
-    spectrum_prim_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_primary), np.log10(primary_spectrum))
-    
-    
-    plt.plot(energies_secondary, secondary_spectrum, label='$M_\mathrm{PBH} '+'= ${:.2e} g'.format(m_pbh), color=colors[i])
-    plt.plot(energies_primary, primary_spectrum, linestyle='dotted', label='$M_\mathrm{PBH} '+'= ${:.2e} g (primary)'.format(m_pbh), color=colors[i])
-
-#%%
-E = 0.1
-
-numbered_mass_range == False
-
-if numbered_mass_range == True:
-    m_pbh_values = 10**np.linspace(14.5, 17, 25)
-    file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
-
-r_values = 10**np.linspace(1, np.log10(R), 100)
-
-plt.figure()
-for i, m_pbh in enumerate(m_pbh_values):
-    
-    if i % 1 == 0:
-    # Load electron secondary spectrum
-        
-        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-
-        # Evaluate photon spectrum at a set of pre-defined energies
-        spectrum_ref = 10**np.interp(np.log10(energies_ref), np.log10(energies_secondary), np.log10(secondary_spectrum))
-                
-        integral_over_r = [luminosity_integrand_2(r, E, m_pbh, spectrum_ref) for r in r_values]
-        
-        plt.plot(r_values, integral_over_r,  'x', label='{:.2e}'.format(m_pbh))
-        
-plt.xlabel('$r$ [kpc]')
-plt.ylabel('Luminosity integrand, E={:.1f}GeV'.format(E))
-plt.tight_layout()
-plt.xscale('log')
-plt.yscale('log')
-plt.legend(title='$M_\mathrm{PBH} [g]$')
