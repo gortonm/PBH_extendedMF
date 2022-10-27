@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import quad, dblquad
 
 from reproduce_COMPTEL_constraints_v2 import read_blackhawk_spectra, load_data
-
+from tqdm import tqdm
 
 # Express all quantities in [g, cm, microgauss, s]
 
@@ -90,12 +90,8 @@ def b_Coul(E, r):
 
 def b_T(E, r):
     b_IC = 1e-16 * (0.25 * E ** 2 * (1+z)**4)
-    #print('b_IC =', b_IC)
     b_syn = 1e-16 * (0.0254 * E ** 2 * B(r) ** 2)
-    #print('b_syn =', b_syn)
     b_brem = 1e-16 * (1.51 * n(r) * (np.log(gamma(E) / n(r)) + 0.36))
-    #print('b_brem =', b_brem)
-    #print('b_Coul =', b_Coul(E, r))
     return b_IC + b_syn + b_brem + b_Coul(E, r)
 
 
@@ -143,7 +139,7 @@ energies_ref = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 
 
 def main():
-    for i, m_pbh in enumerate(m_pbh_values):
+    for i, m_pbh in tqdm(enumerate(m_pbh_values), total=len(m_pbh_values)):
 
         if i % 1 == 0:
 
@@ -173,6 +169,11 @@ if __name__ == "__main__":
 
     f_pbh_values = []
     main()
+    
+    
+    index = 40
+    f_pbh_PL = f_PBH_LC21_extracted[0] * np.exp(40 * m_pbh_LC21_extracted / m_pbh_LC21_extracted[0])
+
 
     extracted_interpolated = 10 ** np.interp(
         np.log10(m_pbh_values),
@@ -182,7 +183,7 @@ if __name__ == "__main__":
     extracted_interpolated_fewer = []
     m_pbh_fewer = []
     for i in range(0, len(extracted_interpolated)):
-        if i % 5 == 0:
+        if i % 1 == 0:
             extracted_interpolated_fewer.append(extracted_interpolated[i])
             m_pbh_fewer.append(m_pbh_values[i])
     ratio = extracted_interpolated_fewer / np.array(f_pbh_values)
@@ -196,8 +197,8 @@ if __name__ == "__main__":
     plt.title("extension")
     plt.tight_layout()
     plt.legend()
-    plt.ylim(1e-8, 1)
-    plt.xlim(4e14, 1e17)
+    #plt.ylim(1e-8, 1)
+    #plt.xlim(4e14, 1e17)
     plt.yscale("log")
     plt.xscale("log")
 
