@@ -190,11 +190,11 @@ if __name__ == "__main__":
     frac_diff = ratio - 1
 
     plt.figure()
-    plt.plot(m_pbh_fewer, f_pbh_values)
+    plt.plot(m_pbh_fewer, f_pbh_values, label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
     plt.xlabel("$M_\mathrm{PBH}$ [g]")
     plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title("extension")
+    plt.title(extension)
     plt.tight_layout()
     plt.legend()
     #plt.ylim(1e-8, 1)
