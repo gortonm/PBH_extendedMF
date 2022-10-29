@@ -205,7 +205,10 @@ if __name__ == "__main__":
             m_pbh_fewer.append(m_pbh_values[i])
     ratio = extracted_interpolated_fewer / np.array(f_pbh_values)
     frac_diff = ratio - 1
-
+    
+    
+    m_pbh_values = m_pbh_values[15:]
+    
     plt.figure()
     plt.plot(m_pbh_fewer, f_pbh_values, label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
@@ -214,8 +217,8 @@ if __name__ == "__main__":
     plt.title(extension)
     plt.tight_layout()
     plt.legend()
-    #plt.ylim(1e-8, 1)
-    #plt.xlim(4e14, 1e17)
+    plt.ylim(1e-8, 10)
+    plt.xlim(4e14, 1e18)
     plt.yscale("log")
     plt.xscale("log")
 
