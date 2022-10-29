@@ -385,7 +385,8 @@ plt.legend(title='$r$ [kpc]')
 plt.tight_layout()
 plt.ylim(0.005, 1)
 plt.xlim(E_min, E_max)
-#%%
+
+#%% Behaviour of b_C / b_T
 r_values = 10**np.linspace(np.log10(1e-10 * kpc_to_cm), np.log10(R), n_steps)
 E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
 [energies_mg, radii_mg] = np.meshgrid(E_values, r_values)
@@ -418,6 +419,7 @@ plt.yscale('log')
 plt.title('$b_C / b_T$', fontsize=16)
 plt.colorbar()
 plt.tight_layout()
+
 
 
 #%% Plot spectra
@@ -454,3 +456,100 @@ plt.yscale('log')
 plt.ylim(1e18, 2*max_y)
 plt.xlim(E_min, 5)
 plt.tight_layout()
+
+
+#%%
+# Calculate integral over energies, and how much it changes when not including primary emission
+
+m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
+
+plt.figure(figsize=(11, 8))
+
+colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green', 'tab:purple', 'k']
+max_y = 0
+j = 0
+
+for i, m_pbh in enumerate(m_pbh_values):
+    
+    if i < 24 and (i == 0 or (i+1) % 5 == 0) :
+        j += 1
+        
+        file_path_data = "../Downloads/version_finale/results/LC21_{:.0f}/".format(i+1)
+            
+        # Load electron secondary spectrum
+        energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
+        energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+        
+        integral_primary = []
+        integral_secondary = []
+        
+        for E in energies_primary:
+            E_prime = energies_primary[energies_primary > E]
+            primary_spectrum_integrand = primary_spectrum[energies_primary > E]
+
+            integral_primary.append(np.trapz(primary_spectrum_integrand, E_prime))
+            
+        integral_secondary = []
+        for E in energies_secondary:
+            E_prime = energies_secondary[energies_secondary > E]
+            secondary_spectrum_integrand = secondary_spectrum[energies_secondary > E]
+
+            integral_secondary.append(np.trapz(secondary_spectrum_integrand, E_prime))
+
+        
+        plt.plot(energies_secondary, integral_secondary, label='{:.1e}'.format(m_pbh), color=colors[j])
+        plt.plot(energies_primary, integral_primary, linestyle='dotted', color=colors[j])
+        
+        max_y = max(max_y, max(secondary_spectrum))
+    
+plt.legend(title='$M_\mathrm{PBH}$ [g]')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('$\int_{E}^\infty \mathrm{d}E~\mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1}$]')
+plt.xscale('log')
+plt.yscale('log')
+plt.ylim(1e18, 2*max_y)
+plt.xlim(E_min, 5)
+plt.tight_layout()
+
+
+
+
+#%% Plot spectrum (integrated over energies) * b_C / b_T
+
+m_pbh_values = np.array([0.1, 1.0, 3, 10, 15]) * 10**16
+plt.figure(figsize=(11, 8))
+
+r = 0 * kpc_to_cm
+
+colors = ['tab:blue', 'tab:orange', 'tab:red', 'tab:green', 'tab:purple', 'k']
+max_y = 0
+
+for i, m_pbh in enumerate(m_pbh_values) :
+    
+    exponent = np.floor(np.log10(m_pbh))
+    coefficient = m_pbh / 10**exponent
+    file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    
+    # Load electron secondary spectrum
+    energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)    
+    
+    print(min(energies_secondary))
+    integral_secondary = []
+    for E in energies_secondary:
+        E_prime = energies_secondary[energies_secondary > E]
+        secondary_spectrum_integrand = secondary_spectrum[energies_secondary > E]
+
+        integral_secondary.append(np.trapz(secondary_spectrum_integrand, E_prime))
+    
+    plt.plot(energies_secondary, integral_secondary * b_Coul(energies_secondary, r) / b_T(energies_secondary, r), label='{:.1e}'.format(m_pbh), color=colors[i])
+    max_y = max(max_y, max(secondary_spectrum * b_Coul(energies_secondary, r) / b_T(energies_secondary, r)))
+    
+plt.legend(title='$M_\mathrm{PBH}$ [g]')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel(r'$\frac{b_C}{b_T} \int_{E}^\infty \mathrm{d}E~\mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1}$]')
+plt.xscale('log')
+plt.yscale('log')
+plt.ylim(1e18, 2*max_y)
+plt.xlim(E_min, 5)
+plt.tight_layout()
+
