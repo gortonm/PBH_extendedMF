@@ -129,7 +129,8 @@ def L(m_pbh, ep_energies, ep_spec):
 
 if numbered_mass_range == True:
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
-    m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
+    #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
+    m_pbh_values = 10 ** np.linspace(16, 17, 10)
     file_path_data_base = "../Downloads/version_finale/results/"
 
 
@@ -144,8 +145,9 @@ def main():
         if i % 1 == 0:
 
             #file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
-            file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
-
+            #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
+            file_path_data = file_path_data_base + "LC21_upper_range_{:.0f}/".format(i + 1)
+            
             ep_energies_load, ep_spec_load = read_blackhawk_spectra(
                 file_path_data + "instantaneous_secondary_spectra.txt", col=2
             )
@@ -187,7 +189,9 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.legend()
     plt.ylim(1e-8, 1)
-    plt.xlim(4e14, 1e17)
+    #plt.xlim(4e14, 1e17)
+    plt.ylim(1e-8, 10)
+    plt.xlim(1e16, 1e17)
     plt.yscale('log')
     plt.xscale('log')
 
@@ -206,9 +210,7 @@ if __name__ == "__main__":
     ratio = extracted_interpolated_fewer / np.array(f_pbh_values)
     frac_diff = ratio - 1
     
-    
-    m_pbh_values = m_pbh_values[15:]
-    
+        
     plt.figure()
     plt.plot(m_pbh_fewer, f_pbh_values, label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
