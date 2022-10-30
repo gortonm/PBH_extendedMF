@@ -130,7 +130,7 @@ def L(m_pbh, ep_energies, ep_spec):
 if numbered_mass_range == True:
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
-    m_pbh_values = 10 ** np.linspace(16, 17, 10)
+    m_pbh_values = 10 ** np.linspace(16, 17, 20)
     file_path_data_base = "../Downloads/version_finale/results/"
 
 
@@ -162,6 +162,7 @@ def main():
             f_pbh_values.append(L_0 / luminosity_predicted)
 
 
+#%%
 if __name__ == "__main__":
 
     file_path_extracted = "./Extracted_files/"
@@ -189,9 +190,7 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.legend()
     plt.ylim(1e-8, 1)
-    #plt.xlim(4e14, 1e17)
-    plt.ylim(1e-8, 10)
-    plt.xlim(1e16, 1e17)
+    plt.xlim(4e14, 1e17)
     plt.yscale('log')
     plt.xscale('log')
 
@@ -212,7 +211,7 @@ if __name__ == "__main__":
     
         
     plt.figure()
-    plt.plot(m_pbh_fewer, f_pbh_values, label='Reproduction')
+    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
     plt.xlabel("$M_\mathrm{PBH}$ [g]")
     plt.ylabel("$f_\mathrm{PBH}$")
@@ -220,9 +219,9 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.legend()
     plt.ylim(1e-8, 10)
-    plt.xlim(4e14, 1e18)
-    plt.yscale("log")
-    plt.xscale("log")
+    plt.xlim(1e16, 1e17)
+    #plt.yscale("log")
+    #plt.xscale("log")
 
     plt.figure()
     plt.plot(m_pbh_fewer, ratio, "x")
@@ -365,10 +364,12 @@ for i, m_pbh in enumerate(m_pbh_values):
     f_pbh_values.append(L_0 / luminosity_predicted)
 
 
-#%% Look at behaviour of b_C / b_T at large E
+#%% Look at behaviour of b_C / b_T, varying E
 
 r_values = np.array([0.01, 0.1, 1]) * kpc_to_cm
 E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+
+plt.figure()
 for r in r_values:
     plt.plot(E_values, b_Coul(E_values, r)/b_T(E_values, r), label=r / kpc_to_cm)
 
@@ -390,6 +391,25 @@ plt.legend(title='$r$ [kpc]')
 plt.tight_layout()
 plt.ylim(0.005, 1)
 plt.xlim(E_min, E_max)
+
+
+#%% Look at behaviour of b_C / b_T, varying r
+r_values = 10 ** np.linspace(np.log10(r_min), np.log10(R), n_steps)
+E_values = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), 5)
+
+plt.figure(figsize=(8,6))
+for E in E_values:
+    plt.plot(r_values/kpc_to_cm, b_Coul(E, r_values)/b_T(E, r_values), label="{:.1e}".format(E))
+    print(b_Coul(E, r_values)/b_T(E, r_values))
+
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('$r$ [kpc]')
+plt.ylabel('$b_C / b_T$')
+plt.legend(title='$E$ [GeV]', fontsize='small')
+plt.tight_layout()
+plt.xlim(r_min/kpc_to_cm, R/kpc_to_cm)
+
 
 #%% Behaviour of b_C / b_T
 r_values = 10**np.linspace(np.log10(1e-10 * kpc_to_cm), np.log10(R), n_steps)
@@ -558,4 +578,5 @@ plt.yscale('log')
 plt.ylim(1e18, 2*max_y)
 plt.xlim(E_min, 5)
 plt.tight_layout()
+
 
