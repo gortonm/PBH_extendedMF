@@ -30,7 +30,7 @@ solMass_to_g = 1.989e33
 m_e = 5.11e-4 / c ** 2
 
 # energy range to integrate over (in GeV)
-E_min = 2 * m_e * c ** 2
+E_min = m_e * c ** 2
 E_max = 5
 
 r_min = 1
@@ -104,6 +104,7 @@ def Q(E, r, m_pbh, ep_energies, ep_spec):
 
 
 def dndE(E, r, m_pbh, ep_energies, ep_spec):
+    
     E_prime_values = 10 ** np.linspace(np.log10(E), np.log10(E_max), n_steps)
     Q_values = [Q(E_prime, r, m_pbh, ep_energies, ep_spec) for E_prime in E_prime_values]
     
@@ -128,9 +129,9 @@ def L(m_pbh, ep_energies, ep_spec):
 
 
 if numbered_mass_range == True:
-    #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
+    m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
-    m_pbh_values = 10 ** np.linspace(16, 17, 20)
+    #m_pbh_values = 10 ** np.linspace(16, 17, 20)
     file_path_data_base = "../Downloads/version_finale/results/"
 
 
@@ -152,8 +153,19 @@ def main():
                 file_path_data + "instantaneous_secondary_spectra.txt", col=2
             )
             
+            
             ep_energies = ep_energies_load[ep_spec_load > 0]
             ep_spec = ep_spec_load[ep_spec_load > 0]
+            
+            
+            """
+            ep_energies = ep_energies_load[ep_spec_load > 1]
+            ep_spec = ep_spec_load[ep_spec_load > 1]
+            
+            E_min = min(ep_energies)
+            E_max = max(ep_energies)
+            """
+            print("E_max = {:.2e} GeV".format(E_max))
 
             print("M_PBH = {:.2e} g".format(m_pbh))
 
