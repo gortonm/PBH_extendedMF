@@ -30,7 +30,7 @@ solMass_to_g = 1.989e33
 m_e = 5.11e-4 / c ** 2
 
 # energy range to integrate over (in GeV)
-E_min = m_e * c ** 2
+E_min = 2 * m_e * c ** 2
 E_max = 5
 
 r_min = 1
@@ -210,7 +210,7 @@ if __name__ == "__main__":
     frac_diff = ratio - 1
     
         
-    plt.figure()
+    plt.figure(figsize=(9, 6))
     plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
     plt.xlabel("$M_\mathrm{PBH}$ [g]")
@@ -222,6 +222,138 @@ if __name__ == "__main__":
     plt.xlim(1e16, 1e17)
     #plt.yscale("log")
     #plt.xscale("log")
+    
+    plt.figure(figsize=(9, 6))
+    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 2)
+    plt.xlim(1e16, 7e16)
+    plt.savefig('31-10_slight_extended_lower_height_linlin_factor2.pdf')
+    plt.savefig('31-10_slight_extended_lower_height_linlin_factor2.png')
+
+    plt.figure(figsize=(9, 6))
+    plt.plot(m_pbh_fewer, np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 2)
+    plt.xlim(1e16, 7e16)
+    plt.savefig('31-10_slight_extended_lower_height_linlin_nofactor2.pdf')
+    plt.savefig('31-10_slight_extended_lower_height_linlin_nofactor2.png')
+    
+    plt.figure(figsize=(9, 6))
+    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 10)
+    plt.xlim(1e16, 7e16)
+    plt.savefig('31-10_slight_extended_linlin_factor2.pdf')
+    plt.savefig('31-10_slight_extended_linlin_factor2.png')
+
+    plt.figure(figsize=(9, 6))
+    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 10)
+    plt.xlim(1e16, 7e16)
+    plt.savefig('31-10_slight_extended_linlin_nofactor2.pdf')
+    plt.savefig('31-10_slight_extended_linlin_nofactor2.png')
+
+    plt.figure(figsize=(9, 6))
+    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 2)
+    plt.xlim(1e16, 7e16)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.savefig('31-10_slight_extended_lower_height_loglog_factor2.pdf')
+    plt.savefig('31-10_slight_extended_lower_height_loglog_factor2.png')
+
+    plt.figure(figsize=(9, 6))
+    plt.plot(m_pbh_fewer, np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 2)
+    plt.xlim(1e16, 7e16)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.savefig('31-10_slight_extended_lower_height_loglog_nofactor2.pdf')
+    plt.savefig('31-10_slight_extended_lower_height_loglog_nofactor2.png')
+    
+    plt.figure(figsize=(9, 6))
+    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 10)
+    plt.xlim(1e16, 7e16)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.savefig('31-10_slight_extended_loglog_factor2.pdf')
+    plt.savefig('31-10_slight_extended_loglog_factor2.png')
+
+    plt.figure(figsize=(9, 6))
+    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 10)
+    plt.xlim(1e16, 7e16)
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.savefig('31-10_slight_extended_loglog_nofactor2.pdf')
+    plt.savefig('31-10_slight_extended_loglog_nofactor2.png')
+
+
+    plt.figure()
+    plt.plot(m_pbh_fewer, np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.xlabel("$M_\mathrm{PBH}$ [g]")
+    plt.ylabel("$f_\mathrm{PBH}$")
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend(fontsize='small')
+    plt.ylim(1e-4, 2)
+    plt.xlim(1e16, 1e17)
+
+
 
     plt.figure()
     plt.plot(m_pbh_fewer, ratio, "x")
@@ -448,7 +580,7 @@ plt.tight_layout()
 
 
 #%% Plot spectra
-m_pbh_values = np.array([0.1, 1.0, 3, 10, 15]) * 10**16
+m_pbh_values = np.array([0.05, 0.1, 0.5, 1]) * 10**16
 
 plt.figure(figsize=(11, 8))
 
@@ -461,6 +593,9 @@ for i, m_pbh in enumerate(m_pbh_values):
     coefficient = m_pbh / 10**exponent
     file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
     
+    if m_pbh == 5e14:
+        file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+    
     # Compute Hawking temperature of the BH (from Lee & Chan 2021 Eq. 2)
     T_BH = 1.06 * (1e13 / m_pbh)
 
@@ -470,7 +605,7 @@ for i, m_pbh in enumerate(m_pbh_values):
     
     plt.plot(energies_secondary, secondary_spectrum, label='{:.1e}'.format(m_pbh), color=colors[i])
     plt.plot(energies_primary, primary_spectrum, linestyle='dotted', color=colors[i])
-    #plt.vlines(x=T_BH, ymin=min(secondary_spectrum), ymax=100*max(secondary_spectrum), color=colors[i], linestyle='dashed')
+    plt.vlines(x=T_BH, ymin=min(secondary_spectrum), ymax=100*max(secondary_spectrum), color=colors[i], linestyle='dashed')
     max_y = max(max_y, max(secondary_spectrum))
     
 plt.legend(title='$M_\mathrm{PBH}$ [g]')
@@ -479,7 +614,7 @@ plt.ylabel('$\mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1
 plt.xscale('log')
 plt.yscale('log')
 plt.ylim(1e18, 2*max_y)
-plt.xlim(E_min, 5)
+plt.xlim(1e-4, 5)
 plt.tight_layout()
 
 
@@ -580,3 +715,34 @@ plt.xlim(E_min, 5)
 plt.tight_layout()
 
 
+#%% Plot integrand dependence in the case that \Gamma_e ~ (EM)^2 and b_C / b_T ~ const.
+
+from mpmath import polylog
+
+def f(x):
+    y = -np.exp(-x)
+    return -x**2 * polylog(2, y) - 2*x**3*polylog(3, y) - 2*x**2*polylog(4, y) - 2*x*polylog(3, y) - 2*polylog(4, y) - 2*polylog(4, y)
+
+
+plt.figure()
+f_vals = []
+x_vals = 10**np.linspace(-5, 1, 100)
+for x in x_vals:
+    f_vals.append(f(x) / f(x=1))
+plt.plot(x_vals, f_vals)
+plt.xlabel('$m_e/T_\mathrm{BH}$')
+plt.ylabel('$L / L(T_\mathrm{BH} = m_e)$')
+plt.tight_layout()
+plt.xscale('log')
+plt.yscale('log')
+plt.title('$\Gamma_e \propto (EM)^2$')
+
+
+plt.figure()
+plt.plot(1/x_vals, f_vals)
+plt.xlabel('$T_\mathrm{BH} / m_e$')
+plt.ylabel('$L / L(T_\mathrm{BH} = m_e)$')
+plt.tight_layout()
+plt.xscale('log')
+plt.yscale('log')
+plt.title('$\Gamma_e \propto (EM)^2$')
