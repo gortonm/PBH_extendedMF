@@ -34,7 +34,7 @@ E_min = m_e * c ** 2
 E_max = 5
 
 r_min = 1
-n_steps = 1000
+n_steps = 5000
 
 # quantities from Table I of Lee & Chan (2021) for A262
 T_c_keV = 1
@@ -58,8 +58,8 @@ scipy = False
 trapz = True
 numbered_mass_range = True
 
-r_values = 10 ** np.linspace(np.log10(r_min), np.log10(R), n_steps)
 E_values = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+r_values = 10 ** np.linspace(np.log10(r_min), np.log10(R), n_steps)
 
 # DM density for a NFW profile, in g cm^{-3}
 def rho_NFW(r):
@@ -103,9 +103,10 @@ def Q(E, r, m_pbh, ep_energies, ep_spec):
     return spec(E, ep_energies, ep_spec) * rho_NFW(r) / m_pbh
 
 
-def dndE(E, r, m_pbh, ep_energies, ep_spec):
-    
-    E_prime_values = 10 ** np.linspace(np.log10(E), np.log10(E_max), n_steps)
+def dndE(E, r, m_pbh, ep_energies, ep_spec, E_values):
+    #print("min(E_values) = {:.2e} GeV".format(min(E_values)))   
+    #print("max(E_values) = {:.2e} GeV".format(max(E_values)))
+    E_prime_values = 10 ** np.linspace(np.log10(E), np.log10(max(E_values)), n_steps)
     Q_values = [Q(E_prime, r, m_pbh, ep_energies, ep_spec) for E_prime in E_prime_values]
     
     if trapz:
@@ -114,14 +115,14 @@ def dndE(E, r, m_pbh, ep_energies, ep_spec):
     if scipy:
         return quad(Q, E, E_max, args=(r, m_pbh, ep_energies, ep_spec))[0] / b_T(E, r)
 
-def L_integrand(E, r, m_pbh, ep_energies, ep_spec):
-    return dndE(E, r, m_pbh, ep_energies, ep_spec) * r ** 2 * b_Coul(E, r)
+def L_integrand(E, r, m_pbh, ep_energies, ep_spec, E_values):
+    return dndE(E, r, m_pbh, ep_energies, ep_spec, E_values) * r ** 2 * b_Coul(E, r)
 
 
-def L(m_pbh, ep_energies, ep_spec):
+def L(m_pbh, ep_energies, ep_spec, E_values):
 
     if trapz:
-        integrand = [np.trapz(L_integrand(E_values, r, m_pbh, ep_energies, ep_spec), E_values) for r in r_values]
+        integrand = [np.trapz(L_integrand(E_values, r, m_pbh, ep_energies, ep_spec, E_values), E_values) for r in r_values]
         return 4 * np.pi * np.trapz(integrand, r_values)
 
     if scipy:
@@ -129,22 +130,21 @@ def L(m_pbh, ep_energies, ep_spec):
 
 
 if numbered_mass_range == True:
-    m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
+    #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
-    #m_pbh_values = 10 ** np.linspace(16, 17, 20)
+    m_pbh_values = 10 ** np.linspace(16, 17, 20)
     file_path_data_base = "../Downloads/version_finale/results/"
 
 
-f_pbh_values = []
-
-energies_ref = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-
 
 def main():
+
     for i, m_pbh in tqdm(enumerate(m_pbh_values), total=len(m_pbh_values)):
 
-        if i % 1 == 0:
+        if i % 2 == 0:
 
+            m_pbh_plotting.append(m_pbh)
+            
             #file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
             #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
             file_path_data = file_path_data_base + "LC21_upper_range_{:.0f}/".format(i + 1)
@@ -154,25 +154,21 @@ def main():
             )
             
             
-            ep_energies = ep_energies_load[ep_spec_load > 0]
-            ep_spec = ep_spec_load[ep_spec_load > 0]
-            
-            
-            """
-            ep_energies = ep_energies_load[ep_spec_load > 1]
-            ep_spec = ep_spec_load[ep_spec_load > 1]
+            ep_energies = ep_energies_load[ep_spec_load > 0.1]
+            ep_spec = ep_spec_load[ep_spec_load > 0.1]
             
             E_min = min(ep_energies)
             E_max = max(ep_energies)
-            """
+            
+            E_values = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+            
+            print("\n E_min = {:.2e} GeV".format(E_min))
             print("E_max = {:.2e} GeV".format(E_max))
-
             print("M_PBH = {:.2e} g".format(m_pbh))
 
             # Evaluate photon spectrum at a set of pre-defined energies
-            luminosity_predicted = L(m_pbh, ep_energies, ep_spec)
+            luminosity_predicted = L(m_pbh, ep_energies, ep_spec, E_values)
             f_pbh_values.append(L_0 / luminosity_predicted)
-
 
 #%%
 if __name__ == "__main__":
@@ -181,17 +177,20 @@ if __name__ == "__main__":
     m_pbh_LC21_extracted, f_PBH_LC21_extracted = load_data(
         "LC21_" + extension + "_NFW.csv"
     )
+    
+    # multiply extracted results by a factor of 2 to account for additional 
+    # factor included in the luminosity
+    f_PBH_LC21_extracted *= 2
 
     f_pbh_values = []
+    m_pbh_plotting = []
     main()
     
-    
-
     index = 3
     f_pbh_PL = f_PBH_LC21_extracted[0] * (m_pbh_LC21_extracted / m_pbh_LC21_extracted[0])**index
     
     plt.figure(figsize=(7, 6))
-    plt.plot(m_pbh_values, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_plotting, np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted', color='tab:orange')
     plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law $(n={:.0f})$'.format(index), color='tab:green')
 
@@ -223,7 +222,7 @@ if __name__ == "__main__":
     
         
     plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_fewer, np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
     plt.xlabel("$M_\mathrm{PBH}$ [g]")
     plt.ylabel("$f_\mathrm{PBH}$")
@@ -234,138 +233,6 @@ if __name__ == "__main__":
     plt.xlim(1e16, 1e17)
     #plt.yscale("log")
     #plt.xscale("log")
-    
-    plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 2)
-    plt.xlim(1e16, 7e16)
-    plt.savefig('31-10_slight_extended_lower_height_linlin_factor2.pdf')
-    plt.savefig('31-10_slight_extended_lower_height_linlin_factor2.png')
-
-    plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 2)
-    plt.xlim(1e16, 7e16)
-    plt.savefig('31-10_slight_extended_lower_height_linlin_nofactor2.pdf')
-    plt.savefig('31-10_slight_extended_lower_height_linlin_nofactor2.png')
-    
-    plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 10)
-    plt.xlim(1e16, 7e16)
-    plt.savefig('31-10_slight_extended_linlin_factor2.pdf')
-    plt.savefig('31-10_slight_extended_linlin_factor2.png')
-
-    plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 10)
-    plt.xlim(1e16, 7e16)
-    plt.savefig('31-10_slight_extended_linlin_nofactor2.pdf')
-    plt.savefig('31-10_slight_extended_linlin_nofactor2.png')
-
-    plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 2)
-    plt.xlim(1e16, 7e16)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.savefig('31-10_slight_extended_lower_height_loglog_factor2.pdf')
-    plt.savefig('31-10_slight_extended_lower_height_loglog_factor2.png')
-
-    plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 2)
-    plt.xlim(1e16, 7e16)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.savefig('31-10_slight_extended_lower_height_loglog_nofactor2.pdf')
-    plt.savefig('31-10_slight_extended_lower_height_loglog_nofactor2.png')
-    
-    plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 10)
-    plt.xlim(1e16, 7e16)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.savefig('31-10_slight_extended_loglog_factor2.pdf')
-    plt.savefig('31-10_slight_extended_loglog_factor2.png')
-
-    plt.figure(figsize=(9, 6))
-    plt.plot(m_pbh_fewer, 0.5*np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 10)
-    plt.xlim(1e16, 7e16)
-    plt.xscale('log')
-    plt.yscale('log')
-    plt.savefig('31-10_slight_extended_loglog_nofactor2.pdf')
-    plt.savefig('31-10_slight_extended_loglog_nofactor2.png')
-
-
-    plt.figure()
-    plt.plot(m_pbh_fewer, np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
-    plt.tight_layout()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-4, 2)
-    plt.xlim(1e16, 1e17)
-
-
 
     plt.figure()
     plt.plot(m_pbh_fewer, ratio, "x")
