@@ -214,9 +214,10 @@ if __name__ == "__main__":
     extracted_interpolated_fewer = []
     m_pbh_fewer = []
     for i in range(0, len(extracted_interpolated)):
-        if i % 1 == 0:
+        if i % 2 == 0:
             extracted_interpolated_fewer.append(extracted_interpolated[i])
             m_pbh_fewer.append(m_pbh_values[i])
+            
     ratio = extracted_interpolated_fewer / np.array(f_pbh_values)
     frac_diff = ratio - 1
     
@@ -230,17 +231,17 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.legend()
     plt.ylim(1e-8, 10)
-    plt.xlim(1e16, 1e17)
-    #plt.yscale("log")
-    #plt.xscale("log")
+    plt.xlim(min(m_pbh_plotting), max(m_pbh_LC21_extracted))
+    plt.yscale("log")
+    plt.xscale("log")
 
     plt.figure()
     plt.plot(m_pbh_fewer, ratio, "x")
     plt.xlabel("$M_\mathrm{PBH}$ [g]")
     plt.ylabel("$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$")
     plt.xscale("log")
-    # plt.yscale('log')
-    #plt.xlim(4e14, 6e16)  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
+    #plt.yscale('log')
+    plt.xlim(min(m_pbh_plotting), max(m_pbh_LC21_extracted))  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
 
@@ -250,7 +251,7 @@ if __name__ == "__main__":
     plt.ylabel("$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$")
     plt.xscale("log")
     # plt.yscale('log')
-    plt.xlim(4e14, 6e16)  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
+    plt.xlim(min(m_pbh_plotting), max(m_pbh_LC21_extracted))  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
 
