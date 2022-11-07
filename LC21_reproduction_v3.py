@@ -75,7 +75,7 @@ extension = "A262"
 
 epsilon = 0.5  # choose 0.5 to maximise magnetic field
 
-const_B = True
+const_B = False
 scipy = False
 trapz = True
 numbered_mass_range = True
@@ -147,9 +147,12 @@ def L(m_pbh, r_values, ep_spec, ep_energies):
 if numbered_mass_range == True:
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
-    m_pbh_values = 10 ** np.linspace(16, 17, 20)
-    file_path_data_base = "../Downloads/version_finale/results/"
-
+    
+    
+    
+    m_pbh_values = 10 ** np.linspace(16, 17, 20)[0:15]
+    #file_path_data_base = "../Downloads/version_finale/results/"
+    file_path_data_base = "../Downloads/blackhawk_v1.1/results"
 
 def main():
 
@@ -159,13 +162,15 @@ def main():
         
         #file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
         #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
-        file_path_data = file_path_data_base + "LC21_upper_range_{:.0f}/".format(i + 1)
+        #file_path_data = file_path_data_base + "/1000_steps/LC21_upper_range_{:.0f}/".format(i + 1)
+        file_path_data = file_path_data_base + "/LC21_upper_range_{:.0f}/".format(i + 1)
         
         ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
         #ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
         
         ep_energies = ep_energies_load[ep_spec_load > 0]
         ep_spec = ep_spec_load[ep_spec_load > 0]
+        
         print(len(ep_energies))
                     
         print("\n E_min = {:.2e} GeV".format(min(ep_energies)))
@@ -187,7 +192,7 @@ if __name__ == "__main__":
     
     # multiply extracted results by a factor of 2 to account for additional 
     # factor included in the luminosity
-    f_PBH_LC21_extracted *= 1
+    f_PBH_LC21_extracted *= 2
 
     f_pbh_values = []
     m_pbh_plotting = []
