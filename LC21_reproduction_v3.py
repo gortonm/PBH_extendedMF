@@ -264,3 +264,32 @@ if __name__ == "__main__":
     print("f_PBH =", f_pbh_values)
     print("ratio =", ratio)
     print("fractional difference =", frac_diff)
+
+
+#%% Look at behaviour of b_C / b_T, varying E
+
+r = 0
+E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+
+
+b_IC = 1e-16 * (0.25 * E_values ** 2 * (1+z)**4)
+b_syn = 1e-16 * (0.0254 * E_values ** 2 * B(r) ** 2)
+b_brem = 1e-16 * (1.51 * n(r) * (np.log(gamma(E_values) / n(r)) + 0.36))
+
+
+plt.figure(figsize=(6, 6))
+plt.plot(E_values, b_Coul(E_values, r), label='$b_\mathrm{Coul}$', linestyle='dotted')
+plt.plot(E_values, b_IC, label='$b_\mathrm{IC}$', linestyle='dotted')
+plt.plot(E_values, b_syn, label='$b_\mathrm{syn}$', linestyle='dotted')
+plt.plot(E_values, b_brem, label='$b_\mathrm{brem}$', linestyle='dotted')
+
+plt.plot(E_values, b_T(E_values, r), label='Total', linewidth=2)
+
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('Energy loss term $[10^{-16}~\mathrm{GeV}~\mathrm{s}^{-1}]$')
+plt.legend()
+plt.tight_layout()
+plt.xlim(E_min, E_max)
+plt.ylim(1e-18, 3e-15)
