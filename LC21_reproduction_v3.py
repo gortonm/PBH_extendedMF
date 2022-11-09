@@ -61,7 +61,7 @@ n_0 = 0.94e-2
 B_0 = 2.9
 L_0 = 5.6e38 * erg_to_GeV
 
-n_steps = 1000
+n_steps = 10000
 
 # energy range to integrate over (in GeV)
 E_min = m_e * c ** 2
@@ -145,14 +145,14 @@ def L(m_pbh, r_values, ep_spec, ep_energies):
 
 
 if numbered_mass_range == True:
-    #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
+    m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
     
     
     
-    m_pbh_values = 10 ** np.linspace(16, 17, 20)[0:15]
-    #file_path_data_base = "../Downloads/version_finale/results/"
-    file_path_data_base = "../Downloads/blackhawk_v1.1/results"
+    #m_pbh_values = 10 ** np.linspace(16, 17, 20)[0:15]
+    file_path_data_base = "../Downloads/version_finale/results/"
+    #file_path_data_base = "../Downloads/blackhawk_v1.1/results"
 
 def main():
 
@@ -160,10 +160,10 @@ def main():
 
         m_pbh_plotting.append(m_pbh)
         
-        #file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+        file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
         #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
-        #file_path_data = file_path_data_base + "/1000_steps/LC21_upper_range_{:.0f}/".format(i + 1)
-        file_path_data = file_path_data_base + "/LC21_upper_range_{:.0f}/".format(i + 1)
+        #file_path_data = file_path_data_base + "/100000_steps/LC21_upper_range_{:.0f}/".format(i + 1)
+        #file_path_data = file_path_data_base + "/LC21_upper_range_{:.0f}/".format(i + 1)
         
         ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
         #ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
@@ -192,7 +192,7 @@ if __name__ == "__main__":
     
     # multiply extracted results by a factor of 2 to account for additional 
     # factor included in the luminosity
-    f_PBH_LC21_extracted *= 2
+    f_PBH_LC21_extracted *= 1
 
     f_pbh_values = []
     m_pbh_plotting = []
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     
     plt.figure(figsize=(7, 6))
     plt.plot(m_pbh_plotting, np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted', color='tab:orange')
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Fig. 1 (Lee \& Chan (2021))', color='tab:orange')
     plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law $(n={:.0f})$'.format(index), color='tab:green')
 
     plt.plot()
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.title(extension)
     plt.tight_layout()
-    plt.legend()
+    plt.legend(fontsize='small')
     plt.ylim(1e-8, 1)
     plt.xlim(4e14, 1e17)
     plt.yscale('log')
@@ -228,16 +228,17 @@ if __name__ == "__main__":
     frac_diff = ratio - 1
     
         
-    plt.figure(figsize=(9, 6))
+    plt.figure(figsize=(7, 6))
     plt.plot(m_pbh_values, np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Extracted (Fig. 1)")
+    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Fig. 1 (Lee \& Chan (2021))")
     plt.xlabel("$M_\mathrm{PBH}$ [g]")
     plt.ylabel("$f_\mathrm{PBH}$")
-    plt.title(extension)
+    #plt.title(extension)
     plt.tight_layout()
-    plt.legend()
-    plt.ylim(1e-8, 10)
-    plt.xlim(min(m_pbh_plotting), max(m_pbh_LC21_extracted))
+    plt.legend(fontsize='small')
+    plt.ylim(1e-8, 1)
+    #plt.xlim(min(m_pbh_plotting), max(m_pbh_LC21_extracted))
+    plt.xlim(4e14, 1e17)
     plt.yscale("log")
     plt.xscale("log")
 
@@ -266,7 +267,7 @@ if __name__ == "__main__":
     print("fractional difference =", frac_diff)
 
 
-#%% Look at behaviour of b_C / b_T, varying E
+#%% Look at behaviour of energy loss terms, varying E
 
 r = 0
 E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
@@ -293,3 +294,28 @@ plt.legend()
 plt.tight_layout()
 plt.xlim(E_min, E_max)
 plt.ylim(1e-18, 3e-15)
+
+
+
+#%% Look at behaviour of b_C / b_T, varying E
+
+r = 0
+E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+
+plot_test = True
+label1 = ''
+
+if plot_test:
+    label1 = '$b_\mathrm{Coul}/b_\mathrm{T}$'
+
+plt.figure(figsize=(7, 4))
+plt.plot(E_values, b_Coul(E_values, r)/b_T(E_values, r), linewidth=2, label=label1)
+if plot_test:
+    plt.plot(E_values, b_Coul(E_min, r)/b_T(E_values, r), linewidth=2, label='$b_\mathrm{Coul}(E_\mathrm{max})/b_\mathrm{T}$')
+    plt.legend()
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('$b_\mathrm{Coul}/b_\mathrm{T}$')
+plt.tight_layout()
+plt.xlim(E_min, E_max)
