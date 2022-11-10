@@ -48,8 +48,8 @@ solMass_to_g = 1.989e33
 # electron/positron mass, in GeV / c^2
 m_e = 5.11e-4 / c ** 2
 
-A262 = False
-NGC5044 = True
+A262 = True
+NGC5044 = False
 
 if A262:
     # quantities from Table I of Lee & Chan (2021) for A262
@@ -100,6 +100,7 @@ trapz = True
 numbered_mass_range = True
 upper_mass_range = True
 
+#%%
 # number density, in cm^{-3}
 def n(r):
     return n_0 * (1 + r ** 2 / r_c ** 2) ** (-3 * beta / 2)
@@ -246,6 +247,7 @@ if __name__ == "__main__":
         plt.xlim(4e14, 1e17)
     plt.yscale('log')
     plt.xscale('log')
+    plt.tight_layout()
 
 
     extracted_interpolated = 10 ** np.interp(
@@ -257,20 +259,6 @@ if __name__ == "__main__":
     ratio = extracted_interpolated / np.array(f_pbh_values)
     frac_diff = ratio - 1
     
-        
-    plt.figure(figsize=(7, 6))
-    plt.plot(m_pbh_values, np.array(f_pbh_values), label='Reproduction')
-    plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label="Fig. 1 (Lee \& Chan (2021))")
-    plt.xlabel("$M_\mathrm{PBH}$ [g]")
-    plt.ylabel("$f_\mathrm{PBH}$")
-    #plt.title(extension)
-    plt.tight_layout()
-    plt.legend(fontsize='small')
-    plt.ylim(1e-8, 1)
-    #plt.xlim(min(m_pbh_plotting), max(m_pbh_LC21_extracted))
-    plt.xlim(4e14, 1e17)
-    plt.yscale("log")
-    plt.xscale("log")
 
     plt.figure()
     plt.plot(m_pbh_values, ratio, "x")
