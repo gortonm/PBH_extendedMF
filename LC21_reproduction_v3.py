@@ -48,20 +48,41 @@ solMass_to_g = 1.989e33
 # electron/positron mass, in GeV / c^2
 m_e = 5.11e-4 / c ** 2
 
-# quantities from Table I of Lee & Chan (2021) for A262
-T_c_keV = 1
-T_c_K = T_c_keV * keV_to_K
-rho_s = 14.1e14 * solMass_to_g / (Mpc_to_cm) ** 3
-r_s = 172 * kpc_to_cm
-R = 2 * kpc_to_cm
-z = 0.0161
-beta = 0.433
-r_c = 30 * kpc_to_cm
-n_0 = 0.94e-2
-B_0 = 2.9
-L_0 = 5.6e38 * erg_to_GeV
+A262 = False
+NGC5044 = True
 
-n_steps = 10000
+if A262:
+    # quantities from Table I of Lee & Chan (2021) for A262
+    T_c_keV = 1
+    T_c_K = T_c_keV * keV_to_K
+    rho_s = 14.1e14 * solMass_to_g / (Mpc_to_cm) ** 3
+    r_s = 172 * kpc_to_cm
+    R = 2 * kpc_to_cm
+    z = 0.0161
+    beta = 0.433
+    r_c = 30 * kpc_to_cm
+    n_0 = 0.94e-2
+    B_0 = 2.9
+    L_0 = 5.6e38 * erg_to_GeV
+    extension = "A262"
+
+elif NGC5044:
+    # quantities from Table I of Lee & Chan (2021) for NGC5044
+    T_c_keV = 0.8
+    T_c_K = T_c_keV * keV_to_K
+    rho_s = 14.7e14 * solMass_to_g / (Mpc_to_cm) ** 3
+    r_s = 127 * kpc_to_cm
+    R = 1 * kpc_to_cm
+    z = 0.0090
+    beta = 0.524
+    r_c = 8 * kpc_to_cm
+    n_0 = 4.02e-2
+    B_0 = 5.0
+    L_0 = 6.3e38 * erg_to_GeV
+    extension = "NGC5044"
+    
+
+n_steps = 1000
 
 # energy range to integrate over (in GeV)
 E_min = m_e * c ** 2
@@ -71,14 +92,13 @@ E_max = 5
 r_min = 1e-3
 r_values = 10 ** np.linspace(np.log10(r_min), np.log10(R), n_steps)
 
-extension = "A262"
-
 epsilon = 0.5  # choose 0.5 to maximise magnetic field
 
 const_B = False
 scipy = False
 trapz = True
 numbered_mass_range = True
+upper_mass_range = True
 
 # number density, in cm^{-3}
 def n(r):
@@ -147,12 +167,12 @@ def L(m_pbh, r_values, ep_spec, ep_energies):
 if numbered_mass_range == True:
     m_pbh_values = 10 ** np.linspace(np.log10(5e14), 17, 25)
     #m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
-    
-    
-    
-    #m_pbh_values = 10 ** np.linspace(16, 17, 20)[0:15]
     file_path_data_base = "../Downloads/version_finale/results/"
-    #file_path_data_base = "../Downloads/blackhawk_v1.1/results"
+   
+    
+    if upper_mass_range:
+        m_pbh_values = 10 ** np.linspace(16, 17, 20)[0:15]
+        file_path_data_base = "../Downloads/blackhawk_v1.1/results"
 
 def main():
 
@@ -160,20 +180,25 @@ def main():
 
         m_pbh_plotting.append(m_pbh)
         
-        file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
-        #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
-        #file_path_data = file_path_data_base + "/100000_steps/LC21_upper_range_{:.0f}/".format(i + 1)
-        #file_path_data = file_path_data_base + "/LC21_upper_range_{:.0f}/".format(i + 1)
+        if upper_mass_range:
+            file_path_data = file_path_data_base + "/LC21_upper_range_{:.0f}/".format(i + 1)
+        else:
+            file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+            #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
+            #file_path_data = file_path_data_base + "/100000_steps/LC21_upper_range_{:.0f}/".format(i + 1)
+
         
-        ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
-        #ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+        if upper_mass_range:
+            ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+        else:
+            ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
         
         ep_energies = ep_energies_load[ep_spec_load > 0]
         ep_spec = ep_spec_load[ep_spec_load > 0]
         
-        print(len(ep_energies))
+        print("\n Number of non-zero values: ", len(ep_energies))
                     
-        print("\n E_min = {:.2e} GeV".format(min(ep_energies)))
+        print("E_min = {:.2e} GeV".format(min(ep_energies)))
         print("E_max = {:.2e} GeV".format(max(ep_energies)))
         print("M_PBH = {:.2e} g".format(m_pbh))
 
@@ -204,7 +229,8 @@ if __name__ == "__main__":
     plt.figure(figsize=(7, 6))
     plt.plot(m_pbh_plotting, np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Fig. 1 (Lee \& Chan (2021))', color='tab:orange')
-    plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law $(n={:.0f})$'.format(index), color='tab:green')
+    #plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law $(n={:.0f})$'.format(index), color='tab:green')
+    plt.plot(m_pbh_plotting, 0.5*np.array(f_pbh_values), label=r'0.5 $\times$ Reproduction', color='tab:green')
 
     plt.plot()
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -213,7 +239,11 @@ if __name__ == "__main__":
     plt.tight_layout()
     plt.legend(fontsize='small')
     plt.ylim(1e-8, 1)
-    plt.xlim(4e14, 1e17)
+    if upper_mass_range:
+        plt.xlim(1e16, 1e17)
+        plt.ylim(1e-2, 1)
+    else:
+        plt.xlim(4e14, 1e17)
     plt.yscale('log')
     plt.xscale('log')
 
