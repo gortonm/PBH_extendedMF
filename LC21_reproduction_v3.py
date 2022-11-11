@@ -95,10 +95,10 @@ r_values = 10 ** np.linspace(np.log10(r_min), np.log10(R), n_steps)
 epsilon = 0.5  # choose 0.5 to maximise magnetic field
 
 const_B = False
-scipy = False
-trapz = True
-numbered_mass_range = True
-upper_mass_range = True
+numbered_mass_range = False
+upper_mass_range = False
+interp_test = True
+
 
 #%%
 # number density, in cm^{-3}
@@ -171,24 +171,29 @@ if numbered_mass_range == True:
     file_path_data_base = "../Downloads/version_finale/results/"
    
     
+elif upper_mass_range or interp_test:
+    file_path_data_base = "../Downloads/blackhawk_v1.1/results"
+    
     if upper_mass_range:
         m_pbh_values = 10 ** np.linspace(16, 17, 20)[0:15]
-        file_path_data_base = "../Downloads/blackhawk_v1.1/results"
 
 def main():
 
     for i, m_pbh in tqdm(enumerate(m_pbh_values), total=len(m_pbh_values)):
-
-        m_pbh_plotting.append(m_pbh)
         
         if upper_mass_range:
             file_path_data = file_path_data_base + "/LC21_upper_range_{:.0f}/".format(i + 1)
+            
+        elif interp_test:
+            file_path_data = file_path_data_base + "/LC21_interp_test_" + extension + "_{:.0f}/".format(len(m_pbh_values)-i)
+            print(file_path_data)
         else:
             file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
             #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
             #file_path_data = file_path_data_base + "/100000_steps/LC21_upper_range_{:.0f}/".format(i + 1)
 
         
+        #if upper_mass_range or interp_test:
         if upper_mass_range:
             ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
         else:
@@ -216,22 +221,22 @@ if __name__ == "__main__":
         "LC21_" + extension + "_NFW.csv"
     )
     
-    # multiply extracted results by a factor of 2 to account for additional 
-    # factor included in the luminosity
-    f_PBH_LC21_extracted *= 1
-
     f_pbh_values = []
-    m_pbh_plotting = []
+    
+    if interp_test:
+        m_pbh_values = m_pbh_LC21_extracted[-5:]
+        print(m_pbh_values)
+    
     main()
     
     index = 3
     f_pbh_PL = f_PBH_LC21_extracted[0] * (m_pbh_LC21_extracted / m_pbh_LC21_extracted[0])**index
     
     plt.figure(figsize=(7, 6))
-    plt.plot(m_pbh_plotting, np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_values, np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Fig. 1 (Lee \& Chan (2021))', color='tab:orange')
     #plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law $(n={:.0f})$'.format(index), color='tab:green')
-    plt.plot(m_pbh_plotting, 0.5*np.array(f_pbh_values), label=r'0.5 $\times$ Reproduction', color='tab:green')
+    plt.plot(m_pbh_values, 0.5*np.array(f_pbh_values), label=r'0.5 $\times$ Reproduction', color='tab:green')
 
     plt.plot()
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
@@ -248,25 +253,28 @@ if __name__ == "__main__":
     plt.yscale('log')
     plt.xscale('log')
     plt.tight_layout()
+    
+    if interp_test:
+        ratio = np.array(f_PBH_LC21_extracted[-5:]) / np.array(f_pbh_values)
 
-
-    extracted_interpolated = 10 ** np.interp(
-        np.log10(m_pbh_values),
-        np.log10(m_pbh_LC21_extracted),
-        np.log10(f_PBH_LC21_extracted),
-    )
-            
-    ratio = extracted_interpolated / np.array(f_pbh_values)
-    frac_diff = ratio - 1
+    else:
+        extracted_interpolated = 10 ** np.interp(
+            np.log10(m_pbh_values),
+            np.log10(m_pbh_LC21_extracted),
+            np.log10(f_PBH_LC21_extracted),
+        )
+                
+        ratio = extracted_interpolated / np.array(f_pbh_values)
+        frac_diff = ratio - 1
     
 
     plt.figure()
     plt.plot(m_pbh_values, ratio, "x")
     plt.xlabel("$M_\mathrm{PBH}$ [g]")
     plt.ylabel("$f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}$")
-    plt.xscale("log")
+    #plt.xscale("log")
     #plt.yscale('log')
-    plt.xlim(min(m_pbh_plotting), max(m_pbh_LC21_extracted))  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
+    plt.xlim(min(m_pbh_values), max(m_pbh_LC21_extracted))  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
 
@@ -274,14 +282,15 @@ if __name__ == "__main__":
     plt.plot(m_pbh_values, frac_diff, "x")
     plt.xlabel("$M_\mathrm{PBH}$ [g]")
     plt.ylabel("$(f_\mathrm{PBH, extracted} / f_\mathrm{PBH, calculated}) - 1$")
-    plt.xscale("log")
-    # plt.yscale('log')
-    plt.xlim(min(m_pbh_plotting), max(m_pbh_LC21_extracted))  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
+    #plt.xscale("log")
+    #plt.yscale('log')
+    plt.xlim(min(m_pbh_values), max(m_pbh_LC21_extracted))  # upper limit is where f_PBH = 1 in Fig. 1 of Lee & Chan (2021)
     plt.title(extension)
     plt.tight_layout()
 
     print("f_PBH =", f_pbh_values)
     print("ratio =", ratio)
+    print("2 * ratio =", 2*ratio)
     print("fractional difference =", frac_diff)
 
 
