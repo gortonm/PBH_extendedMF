@@ -62,12 +62,10 @@ r_s = 20 * kpc_to_cm
 # signal (in s^{-1})
 annihilation_rate = 1e50 / yr_to_s
 
+density_integral = rho_odot * r_odot * (r_s + r_odot)**2 * (np.log(1 + (R/r_s)) - R / (R + r_s))
+
 upper_mass_range = True
-
 #%%
-
-def compute_density_integral():
-    return rho_odot * r_odot * (r_s + r_odot)**2 * (np.log(1 + (R/r_s)) - R / (R + r_s))
 
 
 def f_PBH(m_pbh, positron_spec, positron_energies):
@@ -129,7 +127,6 @@ if __name__ == "__main__":
     m_pbh_NFW_3500pc, f_pbh_NFW_3500pc = load_data('DLR20_Fig2_a__0_newaxes_2.csv')
     
     f_pbh_values = []
-        
     main()
         
     plt.figure(figsize=(7, 6))
@@ -137,9 +134,25 @@ if __name__ == "__main__":
     plt.plot(m_pbh_NFW_3500pc, f_pbh_NFW_3500pc, label='Fig. 2 (DLR (2020))', color='tab:orange')
     plt.xscale('log')
     plt.yscale('log')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.xlim(1e15, 1e19)
+    plt.ylim(1e-4, 1)
+    plt.tight_layout()
     
     # Calculate ratio between my reproduced calculated results and those
     # extracted from Fig. 1 of DLR '20
     f_pbh_interp = np.interp(m_pbh_values, m_pbh_NFW_3500pc, f_pbh_NFW_3500pc)
     ratio = np.array(f_pbh_values / f_pbh_interp)
     print(ratio)
+     
+    plt.figure(figsize=(7, 6))
+    plt.plot(m_pbh_NFW_3500pc, f_pbh_NFW_3500pc, label='Fig. 2 (DLR (2020))', color='tab:orange')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.xlim(1e15, 1e19)
+    plt.ylim(1e-4, 1)
+    plt.tight_layout()
+    
