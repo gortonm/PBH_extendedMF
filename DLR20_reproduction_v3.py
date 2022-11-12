@@ -65,6 +65,7 @@ annihilation_rate = 1e50 / yr_to_s
 density_integral = rho_odot * r_odot * (r_s + r_odot)**2 * (np.log(1 + (R/r_s)) - R / (R + r_s))
 
 upper_mass_range = True
+coarse_mass_range = True
 #%%
 
 
@@ -86,8 +87,13 @@ def f_PBH(m_pbh, positron_spec, positron_energies):
 
 
 if upper_mass_range:
-    m_pbh_values = np.linspace(1, 15, 15) * 10**16
     file_path_data_base = "../Downloads/blackhawk_v1.2/results/1000_steps/DLR20_"
+    
+    if coarse_mass_range:
+        m_pbh_values = np.concatenate((np.linspace(1, 10, 10) * 10**16, [2e17]))
+        
+    else:
+        m_pbh_values = np.linspace(1, 15, 15) * 10**16
     
 else:
     m_pbh_1 = np.linspace(1, 10, 10) * 10**15
@@ -111,6 +117,7 @@ def main():
         
         if upper_mass_range:
             ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
+
         else:
             ep_energies_load, ep_spec_load = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
 
@@ -124,14 +131,14 @@ def main():
 if __name__ == "__main__":
 
     file_path_extracted = "./Extracted_files/"
-    m_pbh_NFW_3500pc, f_pbh_NFW_3500pc = load_data('DLR20_Fig2_a__0_newaxes_2.csv')
+    m_pbh_NFW_3500pc, f_pbh_NFW_3500pc = load_data('DLR20_Fig2_a__0.csv')
     
     f_pbh_values = []
     main()
         
     plt.figure(figsize=(7, 6))
-    plt.plot(m_pbh_values, f_pbh_values, 'x', label='Reproduction')
     plt.plot(m_pbh_NFW_3500pc, f_pbh_NFW_3500pc, label='Fig. 2 (DLR (2020))', color='tab:orange')
+    plt.plot(m_pbh_values, f_pbh_values, 'x', linestyle='dotted', label='Reproduction')
     plt.xscale('log')
     plt.yscale('log')
     plt.ylabel('$f_\mathrm{PBH}$')
