@@ -12,7 +12,7 @@ Created on Thu Oct 20 10:33:43 2022
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from loadBH import read_blackhawk_spectra, load_data
+from loadBH import read_blackhawk_spectra, load_data, read_col
 from tqdm import tqdm
 import os
 
@@ -64,7 +64,7 @@ rho_odot = 0.4 * GeV_to_g
 r_odot = 8.5 * kpc_to_cm
 r_s = 20 * kpc_to_cm
 
-sigma = 0.5
+sigma = 1.
 
 # inferred rate of positron annihilation, {from observations of the 511 keV
 # signal (in s^{-1}).
@@ -78,11 +78,11 @@ primary_only = True    # if True, use primary spectra only to calculate constrai
 # path to BlackHawk spectra
 file_path_data_base = os.path.expanduser("~") + "/Downloads/blackhawk_v1.2/results/1000_steps/DLR20_LN/"
 
-m_pbh_values = [1e15, 3e15, 5e15, 1e16, 3e16, 5e16, 1e17]
+mu_pbh_values = [1e15, 3e15, 5e15, 1e16, 3e16, 5e16, 1e17, 3e17]
 
 if sigma == 1:
-    m_pbh_2 = [3e17, 5e17, 1e18, 3e18]
-    m_pbh_values = np.concatenate((m_pbh_values, m_pbh_2))
+    mu_pbh_2 = [3e17, 5e17, 1e18, 3e18]
+    mu_pbh_values = np.concatenate((mu_pbh_values, mu_pbh_2))
 
 #%%
 
@@ -133,7 +133,7 @@ def main():
     None.
 
     """
-    for m_pbh in tqdm(m_pbh_values):
+    for m_pbh in tqdm(mu_pbh_values):
 
         print("\nM_PBH = {:.2e} g".format(m_pbh))
 
@@ -186,3 +186,55 @@ if __name__ == "__main__":
     ratio = np.array(f_pbh_values / f_pbh_interp)
     print(ratio)
 
+    # plot the fractional difference between the results
+    plt.figure(figsize=(7, 6))
+    plt.plot(m_pbh_values, ratio-1, 'x', linestyle='none', color='tab:blue')
+    plt.xscale('log')
+    #plt.yscale('log')
+    plt.ylabel('$f_\mathrm{PBH, calculated}/f_\mathrm{PBH, extracted}$ - 1')
+    plt.xlabel('$\mu_\mathrm{PBH}$ [g]')
+    plt.xlim(1e15, 5e18)
+    plt.title("Log-normal ($\sigma={:.1f}$)".format(sigma))
+    plt.tight_layout()
+
+
+#%%
+
+sigma = 1.
+m_pbh_full = np.logspace(9, 22, 1000)
+
+def LN_MF_density(m, m_c, sigma, A=1):
+    return A * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m**2)
+    
+def LN_MF_number_density(m, m_c, sigma, A=1):
+    return A * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
+
+
+def read_blackhawk_MF(fname):
+    m = read_col(fname, first_row=4, col=0, convert=float)
+    dndm = read_col(fname, first_row=4, col=1, convert=float)
+    return np.array(m), np.array(dndm)
+
+mu_pbh = 3e18
+print("\n mu_PBH = {:.2e} g".format(mu_pbh))
+print("\n exp(ln(mu_pbh) - sigma^2) = {:.2e} g".format(np.exp(np.log(mu_pbh) - sigma**2)))
+#print("\n exp(ln(mu_pbh) - 2sigma^2) = {:.2e} g".format(np.exp(np.log(mu_pbh) - 2*sigma**2)))
+
+exponent = np.floor(np.log10(mu_pbh))
+coefficient = mu_pbh / 10**exponent
+
+file_path_data = file_path_data_base + "sigma={:.1f}/mu={:.1f}e{:.0f}g/".format(sigma, coefficient, exponent)
+
+m_pbh, dndm = read_blackhawk_MF(file_path_data + "BH_spectrum.txt")
+print("{:.2e}".format(m_pbh[np.argmax(dndm)]))
+    
+plt.figure(figsize=(7, 6))
+plt.plot(m_pbh_full, LN_MF_density(m_pbh_full, mu_pbh, sigma), label='Mass density')
+plt.plot(m_pbh_full, LN_MF_number_density(m_pbh_full, mu_pbh, sigma), label='Number density')
+plt.plot(m_pbh, dndm, label='from BlackHawk')
+plt.xlabel('$M_\mathrm{PBH}$ [g]')
+plt.yscale('log')
+plt.xscale('log')
+plt.legend(fontsize='small')
+plt.title("$\mu = {:.1e}~$g$, ~\sigma={:.1f}$".format(mu_pbh, sigma))
+plt.tight_layout()
