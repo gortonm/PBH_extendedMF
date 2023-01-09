@@ -59,7 +59,7 @@ rho_odot = 0.4 * GeV_to_g
 r_odot = 8.5 * kpc_to_cm
 r_s = 20 * kpc_to_cm
 
-sigma = 1.0
+sigma = 0.5
 
 # inferred rate of positron annihilation, {from observations of the 511 keV
 # signal (in s^{-1}).
@@ -152,7 +152,7 @@ def LN_MF_density(m, m_c, sigma, A=1):
         Log-normal distribution function (for PBH masses).
 
     """
-    return A * np.exp(-np.log(m/m_c)**2 / (2*(sigma)**2)) / (np.sqrt(2*np.pi) * (sigma) * m**2)
+    return A * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m**2)
 
 
 def LN_MF_number_density(m, m_c, sigma, A=1):
@@ -175,7 +175,7 @@ def LN_MF_number_density(m, m_c, sigma, A=1):
         Log-normal distribution function (for PBH masses).
 
     """
-    return A * np.exp(-np.log(m/m_c)**2 / (2*(sigma)**2)) / (np.sqrt(2*np.pi) * (sigma) * m)
+    return A * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
 
 def f_max(m):
