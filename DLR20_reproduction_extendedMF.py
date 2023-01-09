@@ -69,11 +69,11 @@ annihilation_rate = 1e50 / yr_to_s
 density_integral = rho_odot * r_odot * (r_s + r_odot)**2 * (np.log(1 + (R / r_s)) - R / (R + r_s))
 
 # if True, use primary spectra only to calculate constraint.
-primary_only = False
+primary_only = True
 
 # if True, use results for f_PBH obtained using a monochromatic mass function 
 # extracted from Fig. 2 of 1912.01014.
-use_extracted_mono = True
+use_extracted_mono = False
 
 # if True, use secondary emission calculated using Hazma. Otherwise, use 
 # secondary emission calculated using PYTHIA.
@@ -214,7 +214,7 @@ def integrand(A, m, m_c):
         Integrand appearing in Eq. 12 of 1705.05567.
 
     """
-    return LN_MF_density(m, m_c, sigma, A) * m_c / f_max(m)
+    return LN_MF_number_density(m, m_c, sigma, A) / f_max(m)
 
 
 def main(primary_only=True):
