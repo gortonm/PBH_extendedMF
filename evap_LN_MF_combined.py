@@ -329,6 +329,8 @@ if "__main__" == __name__:
         f_pbh_evap_gamma_Carr10.append(combined_constraint_gamma_Carr10(m_c))
         f_pbh_evap_gamma_Carr21_halved.append(0.5*combined_constraint_gamma_Carr21(m_c))
 
+
+    print(f_pbh_evap_gamma_Carr21)
     #ax1.plot(m_c_evaporation, f_pbh_evap_Carr21, linestyle='dotted', linewidth=5, label=r"Using Eq. (32) only")
     ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21, linestyle='dotted', linewidth=5, color='tab:orange', label=r"Using Carr+ '21 Eq. (32) and Eq. (33)")
     ax1.plot(m_c_evaporation, f_pbh_evap_gamma_Carr21_halved, linestyle='dotted', linewidth=5, color='tab:green', label=r"Using Carr+ '21 Eq. (32) and Eq. (33) " + "\n " + " (prefactors multiplied by 0.5)")
