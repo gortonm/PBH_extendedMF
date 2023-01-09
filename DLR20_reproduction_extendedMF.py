@@ -59,7 +59,7 @@ rho_odot = 0.4 * GeV_to_g
 r_odot = 8.5 * kpc_to_cm
 r_s = 20 * kpc_to_cm
 
-sigma = 0.5
+sigma = 1
 
 # inferred rate of positron annihilation, {from observations of the 511 keV
 # signal (in s^{-1}).
@@ -83,7 +83,7 @@ Hazma = False
 compute_ratios = False
 
 # if True, when using the Carr et al. method, only include values of the
-# monochromatic constraint where f_PBH <= 1.
+# monochromatic constraint where f_max <= 1.
 exclude_unphysical_fPBH = False
 
 # path to BlackHawk spectra files
@@ -322,7 +322,7 @@ if __name__ == "__main__":
         primsec = ", total emission]"
 
     if sigma >= 0.5:
-        # plot including results calculated for a log-normal mass function 
+        # plot including results calculated for a log-normal mass function
         # using the method outlined in 1705.05567.
 
         mu_pbh_DLR20_Carr = 10**np.linspace(15, 19, 100)
@@ -343,7 +343,9 @@ if __name__ == "__main__":
 
         if exclude_unphysical_fPBH:
             m_DLR20_mono = m_DLR20_mono[f_max_DLR20_mono <= 1]
-            f_max_DLR20_mono = f_max_DLR20_mono[f_max_DLR20_mono >= 1]
+            f_max_DLR20_mono = f_max_DLR20_mono[f_max_DLR20_mono <= 1]
+            
+        print(f_max_DLR20_mono)
 
         # calculate constraints for extended MF from evaporation
         f_pbh_DLR20_Carr = []
@@ -351,6 +353,7 @@ if __name__ == "__main__":
         for m_c in mu_pbh_DLR20_Carr:
             f_pbh_DLR20_Carr.append(1/np.trapz(integrand(A=1, m=m_DLR20_mono, m_c=m_c), m_DLR20_mono))
 
+        print(f_pbh_DLR20_Carr)
         if compute_ratios:
             f_pbh_Carr_comparison_interp = []
             for m_c in mu_pbh_values:
