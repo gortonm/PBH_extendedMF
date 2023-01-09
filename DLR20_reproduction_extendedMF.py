@@ -69,11 +69,11 @@ annihilation_rate = 1e50 / yr_to_s
 density_integral = rho_odot * r_odot * (r_s + r_odot)**2 * (np.log(1 + (R / r_s)) - R / (R + r_s))
 
 # if True, use primary spectra only to calculate constraint.
-primary_only = True
+primary_only = False
 
 # if True, use results for f_PBH obtained using a monochromatic mass function 
 # extracted from Fig. 2 of 1912.01014.
-use_extracted_mono = False
+use_extracted_mono = True
 
 # if True, use secondary emission calculated using Hazma. Otherwise, use 
 # secondary emission calculated using PYTHIA.
@@ -189,7 +189,7 @@ def f_max(m):
     Returns
     -------
     Array-like
-        Maximum observationally allowed fraction of dark matter in PBHs for a 
+        Maximum observationally allowed fraction of dark matter in PBHs for a
         monochromatic mass distribution.
 
     """
@@ -259,9 +259,6 @@ def main(primary_only=True):
         f_pbh_values.append(f_PBH(m_pbh, positron_spec, ep_energies_load))
 
     return f_pbh_values
-
-#%%
-
 
 if __name__ == "__main__":
     if sigma < 0.5:
@@ -345,18 +342,19 @@ if __name__ == "__main__":
                 m_DLR20_mono, f_max_DLR20_mono = np.loadtxt('./Extracted_files/' + 'fPBH_DLR20_mono_PYTHIA_' + spec_version + '.txt', delimiter='\t', unpack=True)
 
         if exclude_unphysical_fPBH:
-            m_DLR20_mono = m_DLR20_mono[f_max_DLR20_mono<=1]
-            f_max_DLR20_mono = f_max_DLR20_mono[f_max_DLR20_mono>=1]
+            m_DLR20_mono = m_DLR20_mono[f_max_DLR20_mono <= 1]
+            f_max_DLR20_mono = f_max_DLR20_mono[f_max_DLR20_mono >= 1]
 
         # calculate constraints for extended MF from evaporation
         f_pbh_DLR20_Carr = []
-        f_pbh_Carr_comparison_interp = []
 
         for m_c in mu_pbh_DLR20_Carr:
             f_pbh_DLR20_Carr.append(1/np.trapz(integrand(A=1, m=m_DLR20_mono, m_c=m_c), m_DLR20_mono))
 
-        for m_c in mu_pbh_values:
-            f_pbh_Carr_comparison_interp.append(1/np.trapz(integrand(A=1, m=m_DLR20_mono, m_c=m_c), m_DLR20_mono))
+        if compute_ratios:
+            f_pbh_Carr_comparison_interp = []
+            for m_c in mu_pbh_values:
+                f_pbh_Carr_comparison_interp.append(1/np.trapz(integrand(A=1, m=m_DLR20_mono, m_c=m_c), m_DLR20_mono))
 
         plt.figure(figsize=(7, 7))
         #plt.plot(mu_pbh_DLR20_LN, f_pbh_DLR20_LN, label='Extracted \n (DLR (2020))', color='tab:orange')
