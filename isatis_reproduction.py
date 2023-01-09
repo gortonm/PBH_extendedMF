@@ -12,10 +12,11 @@ import matplotlib.pyplot as plt
 from reproduce_COMPTEL_constraints_v2 import load_data, read_blackhawk_spectra
 from J_factor_A22 import j_avg
 
-# Script to understand the meaning of the 'refined flux' values used in Isatis
+# Calculate constraints from Galactic Centre gamma rays, following the method
+# used in the Isatis code by Jérémy Auffinger.
 
 # Specify the plot style
-mpl.rcParams.update({'font.size': 24,'font.family':'serif'})
+mpl.rcParams.update({'font.size': 24,'font.family': 'serif'})
 mpl.rcParams['xtick.major.size'] = 7
 mpl.rcParams['xtick.major.width'] = 1
 mpl.rcParams['xtick.minor.size'] = 3
@@ -45,71 +46,161 @@ pc_to_cm = 3.0857e18    # conversion factor from pc to cm
 r_s = 17 * 1000 * pc_to_cm    # scale radius, in cm
 r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
 
-rho_0 = 8.5e-25	# characteristic halo density in g/cm^3
+rho_0 = 8.5e-25	    # characteristic halo density in g/cm^3
 
-b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
 
 def find_r(los, b, l):
+    """
+    Convert line of sight distance to galactocentric distance.
+
+    Parameters
+    ----------
+    los : Float
+        Line of sight distance, in cm.
+    b : Float
+        Galactic latitude, in radians.
+    l : Float
+        Galactic longitude, in radians.
+
+    Returns
+    -------
+    Float
+        Galactocentric distance, in cm.
+
+    """
     return np.sqrt(r_odot**2 + los**2 - 2*r_odot*los*np.cos(b)*np.cos(l))
 
 
 def rho_NFW(los, b, l):
+    """
+    NFW density profile.
+
+    Parameters
+    ----------
+    los : Float
+        Line of sight distance, in cm.
+    b : Float
+        Galactic latitude, in radians.
+    l : Float
+        Galactic longitude, in radians.
+
+    Returns
+    -------
+    Array-like
+        Dark matter density, in g / cm^3.
+
+    """
     r = find_r(los, b, l)
     return rho_0 * (r_s / r) * (1 + (r/r_s))**(-2)
 
 
 def refined_energies(energies, n_refined):
+    """
+    Find energies evenly-spaced in log space in the range of the instrument.
+
+    Parameters
+    ----------
+    energies : Array-like
+        Energies at which measured flux is calculated, in GeV.
+    n_refined : Integer
+        Number of (evenly-spaced) energies to compute.
+
+    Returns
+    -------
+    ener_refined : Array-like
+        Energies evenly spaced in log-space, in GeV.
+
+    """
     E_min = min(energies)
     E_max = max(energies)
     step = (np.log10(10*E_max) - np.log10(E_min/10)) / (n_refined - 1)
-    
+
     ener_refined = []
     for i in range(0, n_refined):
-        ener_refined.append( 10**(np.log10(E_min/10) + i*step) )
+        ener_refined.append(10**(np.log10(E_min/10) + i*step))
     return ener_refined
 
+
 def refined_flux(flux, ener_spec, n_refined):
+    """
+    Calculate flux at energies evenly-spaced in log-space.
+
+    Parameters
+    ----------
+    flux : Array-like
+        Flux measured by instrument.
+    ener_spec : Array-like
+        Energies at which flux is measured by instrument.
+    n_refined : Integer
+        Number of flux values to compute.
+
+    Returns
+    -------
+    flux_refined : Array-like
+        Flux, evaluated at energies evenly-spaced in log-space.
+
+    """
     ener_refined = refined_energies(energies, n_refined)
-    
+
     nb_spec = len(ener_spec)
-    
+
     flux_refined = []
-    
+
     c = 0
     for i in range(n_refined):
         while c < nb_spec and ener_spec[c] < ener_refined[i]:
             c += 1
-        if c > 0 and c < nb_spec and flux[c-1] !=0:
+        if c > 0 and c < nb_spec and flux[c-1] != 0:
             y = np.log10(flux[c-1]) + ((np.log10(flux[c]) - np.log10(flux[c-1])) / (np.log10(ener_spec[c]) - np.log10(ener_spec[c-1]))) * (np.log10(ener_refined[i]) - np.log10(ener_spec[c-1]))
             flux_refined.append(10**y)
-        else: 
+        else:
             flux_refined.append(0)
-            
+
     return flux_refined
 
+
 def J_D(l_min, l_max, b_min, b_max):
+    """
+    Calculate J-factor.
+
+    Parameters
+    ----------
+    l_min : Float
+        Minimum galactic longitude, in radians.
+    l_max : Float
+        Maximum galactic longitude, in radians.
+    b_min : Float
+        Minimum galactic latitude, in radians.
+    b_max : Float
+        Maximum galactic latitude, in radians.
+
+    Returns
+    -------
+    Float
+        J-factor.
+
+    """
     nb_angles = 100
     nb_radii = 100
     r_max = 200 * 1000 * pc_to_cm  # maximum radius of Galactic halo in cm
-    
+
     b, l = [], []
     for i in range(0, nb_angles):
         l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
         b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
-        
+
     result = 0
-    for i in range(0, nb_angles-1): # integral over l
-        for j in range(0, nb_angles-1): # integral over b
+    for i in range(0, nb_angles-1):  # integral over l
+        for j in range(0, nb_angles-1):  # integral over b
             s_max = r_odot * np.cos(l[i]) * np.cos(b[j]) + np.sqrt(r_max**2 - r_odot**2 * (1-(np.cos(l[i])*np.cos(b[j]))**2))
             s = []
             for k in range(0, nb_radii):
                 s.append(0. + k * (s_max - 0.) / (nb_radii - 1))
-                
-            
-            for k in range(0, nb_radii-1): # integral over s(r(l, b))
+
+            for k in range(0, nb_radii-1):  # integral over s(r(l, b))
                 metric = abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
                 result += metric * rho_NFW(s[k], b[j], l[i])
-                
+
     Delta = 0
     for i in range(0, nb_angles-1):
         for j in range(0, nb_angles-1):
@@ -117,134 +208,74 @@ def J_D(l_min, l_max, b_min, b_max):
     return result / Delta
 
 
-def J_D_v2(l_min, l_max, b_min, b_max):
-    nb_angles = 100
-    nb_radii = 100
-    r_max = 200 * 1000 * pc_to_cm  # maximum radius of Galactic halo in cm
-    
-    b, l = [], []
-    for i in range(0, nb_angles):
-        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
-        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
-        
-    result = 0
-    for i in range(0, nb_angles-1): # integral over l
-        for j in range(0, nb_angles-1): # integral over b
-            s_max = r_odot * np.cos(l[i]) * np.cos(b[j]) + np.sqrt(r_max**2 - r_odot**2 * (1-(np.cos(l[i])*np.cos(b[j]))**2))
-            s = []
-            for k in range(0, nb_radii):
-                s.append(0. + k * (s_max - 0.) / (nb_radii - 1))
-                
-            
-            for k in range(0, nb_radii-1): # integral over s(r(l, b))
-                metric = abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
-                result += metric * rho_NFW(s[k], b[j], l[i])
-                
-    Delta = 0
-    for i in range(0, nb_angles-1):
-        for j in range(0, nb_angles-1):
-            Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
-    return result / Delta
+def galactic(spectrum, b_max, l_max):
+    """
+    Calculate photon flux from a population of PBHs.
 
+    Parameters
+    ----------
+    spectrum : Array-like
+        Flux measured by an instrument.
+    b_max : Float
+        Maximum galactic latitude, in radians.
+    l_max : Float
+        Maximum galactic longitude, in radians.
 
+    Returns
+    -------
+    Array-like
+        Photon flux from a population of PBHs, in each energy bin from an instrument.
 
-def J_D_v2a(l_min, l_max, b_min, b_max):
-    nb_angles = 1000
-    nb_radii = 1000
-    r_max = 200 * 1000 * pc_to_cm  # maximum radius of Galactic halo in cm
-    
-    b, l = [], []
-    for i in range(0, nb_angles):
-        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
-        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
-        
-    result = 0
-    for i in range(0, nb_angles-1): # integral over l
-        for j in range(0, nb_angles-1): # integral over b
-            s_max = r_odot * np.cos(l[i]) * np.cos(b[j]) + np.sqrt(r_max**2 - r_odot**2 * (1-(np.cos(l[i])*np.cos(b[j]))**2))
-            s = []
-            for k in range(0, nb_radii):
-                s.append(0. + k * (s_max - 0.) / (nb_radii - 1))
-                
-            
-            for k in range(0, nb_radii-1): # integral over s(r(l, b))
-                metric = abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
-                result += metric * rho_NFW(s[k], b[j], l[i])
-                
-    Delta = 0
-    for i in range(0, nb_angles-1):
-        for j in range(0, nb_angles-1):
-            Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
-    return result / Delta
-
-
-
-
-def J_D_v2b(l_min, l_max, b_min, b_max):
-    
-    r_s = 17 * 1000    # scale radius, in pc
-    r_odot = 8.5 * 1000   # galactocentric solar radius, in pc
-    rho_0 = 0.0125 * g_to_solar_mass**(-1) * pc_to_cm**(-3)  # normaliseation for NFW profile, in g cm^{-3}
-    r_max = 200 * 1000    # maximum halo radius, in pc
-
-    nb_angles = 100
-    nb_radii = 100
-    r_max = 200 * 1000 * pc_to_cm  # maximum radius of Galactic halo in cm
-    
-    b, l = [], []
-    for i in range(0, nb_angles):
-        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
-        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
-        
-    result = 0
-    for i in range(0, nb_angles-1): # integral over l
-        for j in range(0, nb_angles-1): # integral over b
-            s_max = r_odot * np.cos(l[i]) * np.cos(b[j]) + np.sqrt(r_max**2 - r_odot**2 * (1-(np.cos(l[i])*np.cos(b[j]))**2))
-            s = []
-            for k in range(0, nb_radii):
-                s.append(0. + k * (s_max - 0.) / (nb_radii - 1))
-                
-            
-            for k in range(0, nb_radii-1): # integral over s(r(l, b))
-                metric = abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
-                result += metric * rho_NFW(s[k], b[j], l[i])
-                
-    Delta = 0
-    for i in range(0, nb_angles-1):
-        for j in range(0, nb_angles-1):
-            Delta += abs(np.cos(b[j])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
-    return result / Delta
-
-
-#%%
-
-def galactic(spectrum):
+    """
     n_spec = len(spectrum)
-    
+
     # Calculate J-factor
-    b_max_Auffinger, l_max_Auffinger = np.radians(15), np.radians(30)
-    j_factor = J_D(-l_max_Auffinger, l_max_Auffinger, -b_max_Auffinger, b_max_Auffinger)
-    print('J [g cm^{-2} sr^{-1} = ', j_factor)
-    
+    j_factor = J_D(-l_max, l_max, -b_max, b_max)
+
+    print(j_factor)
+
     galactic = []
     for i in range(n_spec):
         val = j_factor * spectrum[i] / (4*np.pi*m_pbh)
         galactic.append(val)
-        
+
     return np.array(galactic)
 
+
+#%%
+
 f_PBH_isatis = []
-#m_pbh_values = np.array([0.01, 0.02, 0.03, 0.04, 0.06, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-m_pbh_values = 10**np.linspace(14, 18, 25)
+m_pbh_values = 10**np.arange(14, 18, 0.1)
 
-# COMPTEL data
-flux_minus = np.array([5.40770e-01, 7.80073e-02, 7.83239e-03])
-flux_plus = np.array([5.21580e-01, 7.35839e-02, 7.78441e-03])
-flux = np.array([2.38601e+00, 3.44189e-01, 3.40997e-02])
+file_path_data = "./../Downloads/version_finale/scripts/Isatis/constraints/photons/"
 
-energies_minus = np.array([7.21020e-04, 2.50612e-03, 7.20580e-03])
-energies_plus = np.array([1.23204e-03, 4.47746e-03, 1.26645e-02])
-energies = np.array([1.73836e-03, 5.51171e-03, 1.73730e-02])
+COMPTEL = True
+INTEGRAL = False
+EGRET = False
+FermiLAT = False
+
+exclude_last_bin = True
+
+if COMPTEL:
+    append = "COMPTEL_1107.0200"
+    b_max, l_max = np.radians(15), np.radians(30)
+
+elif INTEGRAL:
+    append = "INTEGRAL_1107.0200"
+    b_max, l_max = np.radians(15), np.radians(30)
+
+elif EGRET:
+    append = "EGRET_9811211"
+    b_max, l_max = np.radians(5), np.radians(30)
+
+elif FermiLAT:
+    append = "Fermi-LAT_1101.1381"
+    b_max, l_max = np.radians(10), np.radians(30)
+
+energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
+
+if not exclude_last_bin:
+    append = "all_bins_%s"%(append)
 
 # Number of interpolation points
 n_refined = 500
@@ -254,149 +285,71 @@ for i, m_pbh in enumerate(m_pbh_values):
     # Load photon spectra from BlackHawk outputs
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
-    
-    #file_path_data = "../blackhawk_v2.0/results/A22_Fig3_" + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
-    file_path_data = "./../Downloads/version_finale/results/runs_COMPTEL_0510_{:.0f}/".format(i+1)
+
+    #file_path_BlackHawk_data = "./../Downloads/version_finale/results/runs_COMPTEL_0510_{:.0f}/".format(i+1)
+    file_path_BlackHawk_data = "./../Downloads/version_finale/results/A22_Fig3_{:.0f}/".format(i+1)
 
     print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
-    
-    ener_spec, spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=1)
-        
-    flux_galactic = galactic(spectrum)
+
+    ener_spec, spectrum = read_blackhawk_spectra(file_path_BlackHawk_data + "instantaneous_secondary_spectra.txt", col=1)
+
+    flux_galactic = galactic(spectrum, b_max, l_max)
     ener_refined = refined_energies(energies, n_refined)
     flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
-    
-    def binned_flux(galactic_refined, ener_refined, ener_COMPTEL, ener_COMPTEL_minus, ener_COMPTEL_plus):
+
+    def binned_flux(flux_refined, ener_refined, ener_inst, ener_inst_minus, ener_inst_plus):
+        """
+        Calculate theoretical flux from PBHs in each bin of an instrument.
+
+        Parameters
+        ----------
+        flux_refined : Array-like
+            Flux, evaluated at energies evenly-spaced in log-space.
+        ener_refined : Array-like
+            DESCRIPTION.
+        ener_inst : Array-like
+            Energies measured by instrument (middle values).
+        ener_inst_minus : Array-like
+            Energies measured by instrument (upper error bar).
+        ener_inst_plus : Array-like
+            Energies measured by instrument (lower error bar).
+
+        Returns
+        -------
+        Array-like
+            Flux from a population of PBHs, sorted into energy bins measured by an instrument.
+
+        """
         flux_binned = []
-        nb_refined = len(galactic_refined)
-        nb_COMPTEL = len(ener_COMPTEL)
-        
-        for i in range(nb_COMPTEL):
+        nb_refined = len(flux_refined)
+        nb_inst = len(ener_inst)
+
+        if exclude_last_bin:
+            nb_inst = nb_inst - 1
+
+        for i in range(nb_inst):
             val_binned = 0
             c = 0
-            while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] - ener_COMPTEL_minus[i]:
+            while c < nb_refined and ener_refined[c] < ener_inst[i] - ener_inst_minus[i]:
                 c += 1
             if c > 0 and c+1 < nb_refined:
-                while c < nb_refined and ener_refined[c] < ener_COMPTEL[i] + ener_COMPTEL_plus[i]:
-                    val_binned += (ener_refined[c+1] - ener_refined[c]) * (galactic_refined[c+1] + galactic_refined[c]) / 2
+                while c < nb_refined and ener_refined[c] < ener_inst[i] + ener_inst_plus[i]:
+                    val_binned += (ener_refined[c+1] - ener_refined[c]) * (flux_refined[c+1] + flux_refined[c]) / 2
                     c += 1
-            #print(c)
-            #print(ener_refined[c])
-            #print(ener_COMPTEL[i] + ener_COMPTEL_plus[i])
             flux_binned.append(val_binned)
-        #print(val_binned)
         return np.array(flux_binned)
-    
-    # Print calculated and mean flux:
-    bin_of_interest = 3
-    print('Binned flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest, (g_to_solar_mass * (pc_to_cm)**(2))**(-1) * binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)[bin_of_interest-1]))
-    print('Measured flux (bin {:.0f}) = {:.6e}'.format(bin_of_interest, (flux * (energies_plus + energies_minus))[bin_of_interest-1]))
-    
+
     # Calculate constraint on f_PBH
-    f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+    if exclude_last_bin:
+        f_PBH = min(flux[:-1] * (energies_plus[:-1] + energies_minus[:-1]) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+
+    else:
+        print(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+        # print which bin has the smallest flux ratio, and hence puts the constraint on f_PBH
+        print("Constraining bin : ", 1+np.argmin(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)))
+        f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+
     f_PBH_isatis.append(f_PBH)
 
-# Load result extracted from Fig. 3 of Auffinger '22
-file_path_extracted = './Extracted_files/'
-m_pbh_A22_extracted, f_PBH_A22_extracted = load_data("A22_Fig3.csv")
-
-# Load result from Isatis
-
-Isatis_path = './../Downloads/version_finale/scripts/Isatis/'
-results_name = "test_COMPTEL" 
-
-constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path,results_name),dtype = "str")
-constraints_names_bis = constraints_file[0,1:]
-constraints = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
-for i in range(len(constraints)):
-    for j in range(len(constraints[0])):
-        constraints[i,j] = float(constraints_file[i+1,j+1])
-
-constraint_COMPTEL = []
-for i in range(len(constraints)):
-    constraint_COMPTEL.append(constraints[i][1])
-
- 
-results_name_mod = "test_COMPTEL_modified" 
-
-constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path,results_name_mod),dtype = "str")
-constraints_names_bis = constraints_file[0,1:]
-constraints = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
-for i in range(len(constraints)):
-    for j in range(len(constraints[0])):
-        constraints[i,j] = float(constraints_file[i+1,j+1])
-
-constraint_COMPTEL_modified = []
-for i in range(len(constraints)):
-    constraint_COMPTEL_modified.append(constraints[i][1])
-
-    
-Mmin = 1e14
-Mmax = 1e18
-masses_Isatis = np.logspace(np.log10(Mmin),np.log10(Mmax),len(constraint_COMPTEL))
-
-plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis (unmodified)")
-plt.plot(masses_Isatis, constraint_COMPTEL_modified, 'x', label="Isatis (modified loop condition)", markersize='9', color='tab:red', alpha=0.7)
-plt.plot(m_pbh_values, f_PBH_isatis, 'x', label="Reproduction (BlackHawk spectra)", color='g')
-
-plt.xlabel('$M_\mathrm{PBH}$ [g]')
-plt.ylabel('$f_\mathrm{PBH}$')
-plt.tight_layout()
-plt.legend(fontsize='small')
-plt.xscale('log')
-plt.yscale('log')
-#plt.title('Excluding highest-energy bin')
-plt.xlim(1e14, 1e18)
-plt.ylim(1e-10, 1)
-plt.tight_layout()
-
-
-
-
-plt.figure(figsize=(8,8))
-plt.plot(m_pbh_A22_extracted, f_PBH_A22_extracted, label="Extracted from Auffinger '22 ")
-plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis (unmodified)")
-plt.plot(masses_Isatis, constraint_COMPTEL_modified, 'x', label="Isatis (modified loop condition)", markersize='9', color='tab:red', alpha=0.7)
-plt.plot(m_pbh_values, f_PBH_isatis, 'x', label="Reproduction (BlackHawk spectra)", color='g')
-
-plt.xlabel('$M_\mathrm{PBH}$ [g]')
-plt.ylabel('$f_\mathrm{PBH}$')
-plt.tight_layout()
-plt.legend(fontsize='small')
-plt.xscale('log')
-plt.yscale('log')
-#plt.title('Excluding highest-energy bin')
-plt.xlim(1e14, 1e18)
-plt.ylim(1e-10, 1)
-plt.tight_layout()
-
-
-# Plot only unmodified Isatis result and my reproduction (for email to Jeremy Auffinger)
-plt.figure(figsize=(8,7))
-plt.plot(masses_Isatis, constraint_COMPTEL, 'x', label="Isatis")
-plt.plot(m_pbh_values, np.array(f_PBH_isatis), 'x', label="Reproduction")
-
-plt.xlabel('$M_\mathrm{PBH}$ [g]')
-plt.ylabel('$f_\mathrm{PBH}$')
-plt.tight_layout()
-plt.legend(fontsize='small')
-plt.xscale('log')
-plt.yscale('log')
-#plt.title('Excluding highest-energy bin')
-plt.xlim(1e14, 1e18)
-plt.ylim(1e-10, 1)
-plt.xticks()
-plt.tight_layout()
-
-
-#%%
-plt.figure()
-plt.plot(ener_spec, flux_galactic, 'x', label = 'Original')
-plt.plot(ener_refined, flux_refined, 'x', label='Refined')
-plt.title('$M_\mathrm{PBH}$ = ' + "{:.1f}e{:.0f}".format(coefficient, exponent) + 'g')
-plt.xlabel('Energy [GeV]')
-plt.ylabel('${\\rm d}\Phi/{\\rm d}E\,\, ({\\rm GeV^{-1}} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
-plt.yscale('log')
-plt.xscale('log')
-plt.legend()
-plt.tight_layout()
+# Save calculated results for f_PBH
+np.savetxt("./Data/fPBH_Auffinger22_%s.txt"%(append), np.transpose([m_pbh_values, f_PBH_isatis]), delimiter="\t", fmt="%0.8e")

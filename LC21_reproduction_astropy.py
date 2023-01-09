@@ -38,7 +38,7 @@ m_e = 5.11e-4 * u.GeV / cds.c**2 # electron/positron mass, in GeV / c^2
 epsilon = 0.5 # paper says this varies between 0.5-1
 Lambda_0 = 1.4e-27 * u.erg * u.cm**(3) * u.s**(-1) * u.K**(-0.5) # in erg cm^3 s^{-1} K^{-1/2}
 
-n_steps = 10000 # number of integration steps
+n_steps = 10 # number of integration steps
 
 # Parameters relating to clusters
 A262 = True
@@ -162,14 +162,15 @@ print('Ratio (calculated to LC21) = {:.5f}'.format(luminosity_calculated / L_0))
 
 #%%
 #m_pbh_values = np.array([0.1, 0.12, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.2, 1.5, 2, 3, 4, 6, 8]) * 10**16
-#m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
-m_pbh_values = np.array([1e15])
+m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
+#m_pbh_values = np.array([1e15])
 #m_pbh_values = 10**np.linspace(14.5, 17, 25)
 f_pbh_values = []
 
 def main():
     global m_pbh
     for i, m_pbh_val in enumerate(m_pbh_values):
+        print('M_PBH = {:.2e}'.m_pbh_val)
         m_pbh = m_pbh_val * u.g
         #exponent = np.floor(np.log10(m_pbh))
         #coefficient = m_pbh / 10**exponent

@@ -8,7 +8,7 @@ Created on Tue Sep 27 11:42:40 2022
 
 import numpy as np
 from reproduce_COMPTEL_constraints_v2 import read_blackhawk_spectra, load_data
-from scipy.integrate import dblquad
+from scipy.integrate import dblquad, cumulative_trapezoid
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import cProfile, pstats

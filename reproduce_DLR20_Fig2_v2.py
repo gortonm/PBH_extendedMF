@@ -121,9 +121,7 @@ if R == 3.5:
     annihilation_fraction = 0.8
     
     
-m_pbh_DLR20, f_pbh_DLR20 = load_data('DLR20_Fig2_a__0.csv')
-m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes = load_data('DLR20_Fig2_a__0_newaxes.csv')
-m_pbh_DLR20_newaxes_2, f_pbh_DLR20_newaxes_2 = load_data('DLR20_Fig2_a__0_newaxes_2.csv')
+m_pbh_DLR20, f_pbh_DLR20 = load_data('DLR20_Fig2_a__0_newaxes_2.csv')
 f_pbh_NFW_values = []
 
 
@@ -142,7 +140,6 @@ m_pbh_NFW_3500pc, f_pbh_NFW_3500pc = load_data('NFW_3.5.csv')
 f_pbh_NFW_3500pc = np.interp(m_pbh_values, m_pbh_NFW_3500pc, f_pbh_NFW_3500pc)
 
 
-m_pbh_values = np.linspace(1, 15, 15) * 10**16
 
 for m_pbh in m_pbh_values:
         
@@ -181,9 +178,8 @@ for m_pbh in m_pbh_values:
 #%%
    
 plt.figure(figsize=(6,6))
-plt.plot(m_pbh_DLR20, f_pbh_DLR20)
-plt.plot(m_pbh_DLR20_newaxes, f_pbh_DLR20_newaxes)
-plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced (NFW)')
+plt.plot(m_pbh_values, f_pbh_NFW_values, 'x', label='Reproduced')
+plt.plot(m_pbh_DLR20, f_pbh_DLR20, label="Extracted (DLR (2020))")
 
 plt.xlim(1e15, 10**(19))
 plt.ylim(10**(-4), 1)

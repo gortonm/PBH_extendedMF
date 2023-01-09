@@ -55,13 +55,15 @@ for i, m_pbh in tqdm(enumerate(m_pbh_values)):
     coefficient = m_pbh / 10**exponent
 
     file_path_data = file_path_data_base_PYTHIA + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
+    ep_energies_PYTHIA_prim, ep_spec_PYTHIA_prim = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
     ep_energies_PYTHIA, ep_spec_PYTHIA = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
 
     file_path_data = file_path_data_base_Hazma + "{:.1f}e{:.0f}g/".format(coefficient, exponent)
     ep_energies_Hazma, ep_spec_Hazma = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
 
     ax.plot(ep_energies_PYTHIA, ep_spec_PYTHIA, label='PYTHIA', color='r')
-    ax.plot(ep_energies_Hazma, ep_spec_Hazma, label='Hazma', color='k', linewidth=3)
+    ax.plot(ep_energies_Hazma, ep_spec_Hazma, label='Hazma', color='k', linewidth=3, alpha=0.5)
+    ax.plot(ep_energies_PYTHIA_prim, ep_spec_PYTHIA_prim, label='Primary', color='tab:blue', linestyle='dotted', linewidth=4)
     ax.set_xlim(3e-4, 0.5)
     ax.set_ylim(1e18, 5e22)
     ax.set_xscale('log')

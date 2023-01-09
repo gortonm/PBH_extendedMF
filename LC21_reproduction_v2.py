@@ -8,7 +8,7 @@ Created on Thu Oct 20 10:33:43 2022
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.integrate import quad, dblquad
+from scipy.integrate import quad, dblquad, cumulative_trapezoid
 
 from reproduce_COMPTEL_constraints_v2 import read_blackhawk_spectra, load_data
 from tqdm import tqdm
@@ -33,7 +33,7 @@ m_e = 5.11e-4 / c ** 2
 E_min = m_e * c ** 2
 E_max = 5
 
-r_min = 1
+r_min = 1e-11
 n_steps = 5000
 
 # quantities from Table I of Lee & Chan (2021) for A262
@@ -54,7 +54,7 @@ extension = "A262"
 epsilon = 0.5  # choose 0.5 to maximise magnetic field
 
 const_B = True
-scipy = False
+scipy = True
 trapz = True
 numbered_mass_range = True
 
@@ -63,8 +63,8 @@ r_values = 10 ** np.linspace(np.log10(r_min), np.log10(R), n_steps)
 
 # DM density for a NFW profile, in g cm^{-3}
 def rho_NFW(r):
-    return rho_s * (r_s / r) / (1 + (r / r_s)) ** 2
-
+    #return rho_s * (r_s / r) / (1 + (r / r_s)) ** 2
+    return r * rho_s * r_s  / (1 + (r / r_s)) ** 2
 
 # number density, in cm^{-3}
 def n(r):
@@ -99,34 +99,24 @@ def spec(E, ep_energies, ep_spec):
     return np.interp(E, ep_energies, ep_spec)
 
 
-def Q(E, r, m_pbh, ep_energies, ep_spec):
+def Q(r, m_pbh):
     return spec(E, ep_energies, ep_spec) * rho_NFW(r) / m_pbh
 
 
-def dndE(E, r, m_pbh, ep_energies, ep_spec, E_values):
+#def dndE(E, r, m_pbh, ep_energies, ep_spec, E_values):
+def dndE(r, m_pbh, spec_integral_values, E_values):
     #print("min(E_values) = {:.2e} GeV".format(min(E_values)))   
     #print("max(E_values) = {:.2e} GeV".format(max(E_values)))
-    E_prime_values = 10 ** np.linspace(np.log10(E), np.log10(max(E_values)), n_steps)
-    Q_values = [Q(E_prime, r, m_pbh, ep_energies, ep_spec) for E_prime in E_prime_values]
+    #Q_values = Q(r, m_pbh)
     
     if trapz:
-        return np.trapz(Q_values, E_prime_values) / b_T(E, r)
-
-    if scipy:
-        return quad(Q, E, E_max, args=(r, m_pbh, ep_energies, ep_spec))[0] / b_T(E, r)
-
-def L_integrand(E, r, m_pbh, ep_energies, ep_spec, E_values):
-    return dndE(E, r, m_pbh, ep_energies, ep_spec, E_values) * r ** 2 * b_Coul(E, r)
+        #return spec_integral_values / b_T(E, r)
+        return spec_integral_values / b_T(E_values, r)
 
 
-def L(m_pbh, ep_energies, ep_spec, E_values):
-
-    if trapz:
-        integrand = [np.trapz(L_integrand(E_values, r, m_pbh, ep_energies, ep_spec, E_values), E_values) for r in r_values]
-        return 4 * np.pi * np.trapz(integrand, r_values)
-
-    if scipy:
-        return 4 * np.pi * np.array(dblquad(L_integrand, r_min, R, E_min, E_max, args=(m_pbh, ep_energies, ep_spec) )[0])
+    #if scipy:
+    #    return quad(Q, E, max(E_values), args=(r, m_pbh, ep_energies, ep_spec))[0] / b_T(E, r)
+    
 
 
 if numbered_mass_range == True:
@@ -136,39 +126,87 @@ if numbered_mass_range == True:
     file_path_data_base = "../Downloads/version_finale/results/"
 
 
+def density_sq(r):
+    return rho_s * r_s * r / (1 + (r/r_s))**2
+
+def b_term(E, r):
+    return b_Coul(E, r)/b_T(E, r)
+
+def integral(m, r_values, ep_spec, ep_energies):
+    
+    Rs, Es = np.meshgrid(r_values, ep_energies)
+
+    spectral_int = cumulative_trapezoid(ep_spec, ep_energies, initial=0)
+    spectral_int = spectral_int[-1] - spectral_int
+
+    r_terms = density_sq(Rs)
+    b_terms = b_term(Es, Rs)
+    
+    integrand = r_terms*b_terms*spectral_int[:,np.newaxis]
+    
+    temp = np.trapz(integrand, x=ep_energies, axis=0)
+    res  = np.trapz(temp, x=r_values)
+    
+    return res*np.pi*4/m
+
+
+
+
+f_pbh_values_new = []
+for i, m_pbh in tqdm(enumerate(m_pbh_values), total=len(m_pbh_values)):
+
+    #file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+    file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
+
+    ep_energies_load, ep_spec_load = read_blackhawk_spectra(
+        file_path_data + "instantaneous_secondary_spectra.txt", col=2
+    )
+
+    ep_energies = ep_energies_load[ep_spec_load > 0]
+    ep_spec = ep_spec_load[ep_spec_load > 0]
+
+    # Evaluate photon spectrum at a set of pre-defined energies
+    luminosity_predicted = integral(m_pbh, r_values, ep_spec, ep_energies)
+    f_pbh_values_new.append(L_0 / integral(m_pbh_values, r_values, ep_spec, ep_energies))
+
+    
 
 def main():
 
     for i, m_pbh in tqdm(enumerate(m_pbh_values), total=len(m_pbh_values)):
 
-        if i % 2 == 0:
+        m_pbh_plotting.append(m_pbh)
+        
+        #file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
+        #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
+        file_path_data = file_path_data_base + "LC21_upper_range_{:.0f}/".format(i + 1)
+        
+        ep_energies_load, ep_spec_load = read_blackhawk_spectra(
+            file_path_data + "instantaneous_secondary_spectra.txt", col=2
+        )
+        
+        
+        E_values = ep_energies_load[ep_spec_load > 1]
+        ep_spec = ep_spec_load[ep_spec_load > 1]
+        
+        E_min = min(E_values)
+        E_max = max(E_values)
+        
+        #E_values = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+        
+        spec_integral_values = []
+        for E in E_values:
+            E_trunc = E_values[E_values > E]
+            spec_trunc = ep_spec[E_values > E]
+            spec_integral_values.append(np.trapz(spec_trunc, E_trunc))
+                        
+        print("\n E_min = {:.2e} GeV".format(E_min))
+        print("E_max = {:.2e} GeV".format(E_max))
+        print("M_PBH = {:.2e} g".format(m_pbh))
 
-            m_pbh_plotting.append(m_pbh)
-            
-            #file_path_data = file_path_data_base + "LC21_{:.0f}/".format(i + 1)
-            #file_path_data = file_path_data_base + "LC21_higherM_{:.0f}/".format(i + 1)
-            file_path_data = file_path_data_base + "LC21_upper_range_{:.0f}/".format(i + 1)
-            
-            ep_energies_load, ep_spec_load = read_blackhawk_spectra(
-                file_path_data + "instantaneous_secondary_spectra.txt", col=2
-            )
-            
-            
-            ep_energies = ep_energies_load[ep_spec_load > 0.1]
-            ep_spec = ep_spec_load[ep_spec_load > 0.1]
-            
-            E_min = min(ep_energies)
-            E_max = max(ep_energies)
-            
-            E_values = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
-            
-            print("\n E_min = {:.2e} GeV".format(E_min))
-            print("E_max = {:.2e} GeV".format(E_max))
-            print("M_PBH = {:.2e} g".format(m_pbh))
-
-            # Evaluate photon spectrum at a set of pre-defined energies
-            luminosity_predicted = L(m_pbh, ep_energies, ep_spec, E_values)
-            f_pbh_values.append(L_0 / luminosity_predicted)
+        # Evaluate photon spectrum at a set of pre-defined energies
+        luminosity_predicted = L(m_pbh, spec_integral_values, E_values)
+        f_pbh_values.append(L_0 / luminosity_predicted)
 
 #%%
 if __name__ == "__main__":
@@ -214,9 +252,8 @@ if __name__ == "__main__":
     extracted_interpolated_fewer = []
     m_pbh_fewer = []
     for i in range(0, len(extracted_interpolated)):
-        if i % 2 == 0:
-            extracted_interpolated_fewer.append(extracted_interpolated[i])
-            m_pbh_fewer.append(m_pbh_values[i])
+        extracted_interpolated_fewer.append(extracted_interpolated[i])
+        m_pbh_fewer.append(m_pbh_values[i])
             
     ratio = extracted_interpolated_fewer / np.array(f_pbh_values)
     frac_diff = ratio - 1
@@ -626,3 +663,44 @@ plt.tight_layout()
 plt.xscale('log')
 plt.yscale('log')
 plt.title('$\Gamma_e \propto (EM)^2$')
+
+#%% test for M_PBH ~ 4e16g
+
+m_pbh_values = 10 ** np.linspace(16, 17, 20)
+file_path_data_base = "../Downloads/version_finale/results/"
+
+i = 12
+m_pbh = m_pbh_values[i]
+file_path_data = file_path_data_base + "LC21_upper_range_{:.0f}/".format(i + 1)
+
+ep_energies_load, ep_spec_load = read_blackhawk_spectra(
+    file_path_data + "instantaneous_secondary_spectra.txt", col=2
+)
+
+ep_energies = ep_energies_load[ep_spec_load > 0.1]
+ep_spec = ep_spec_load[ep_spec_load > 0.1]
+
+E_min = min(ep_energies)
+E_max = max(ep_energies)
+
+E_values = 10 ** np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+
+#ep_energies = ep_energies_load[ep_spec_load > 0]
+#ep_spec = ep_spec_load[ep_spec_load > 0]
+
+r = 1 * kpc_to_cm
+
+print('M_PBH = {:.2e} g \n'.format(m_pbh))
+print('E_min = {:.2e} GeV'.format(E_min))
+print('E_max = {:.2e} GeV \n'.format(E_max))
+
+scipy = True
+
+# Vary number of steps and determine difference in dndE
+for E in 10**np.linspace(np.log10(E_min), np.log10(E_max), 5):
+    print('E = {:.2e} GeV'.format(E))
+    for n_steps in [500, 1000, 5000, 10000, 100000]:
+        value = dndE(E, r, m_pbh, ep_energies, ep_spec, E_values)
+        print('dn/dE ({:.0f} steps) = {:.5e}'.format(n_steps, value))
+        
+    

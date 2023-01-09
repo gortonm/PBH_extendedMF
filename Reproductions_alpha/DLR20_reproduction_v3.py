@@ -86,10 +86,11 @@ if upper_mass_range:
     m_pbh_values = np.linspace(1, 15, 15) * 10**16
 
 elif coarse_mass_range:
-    m_pbh_1 = np.linspace(1, 20, 20) * 10**15
+    m_pbh_1 = np.linspace(1, 2, 11) * 10**15
+    #m_pbh_1 = np.linspace(1, 20, 20) * 10**15
     m_pbh_2 = np.linspace(2, 10, 9) * 10**16
-    m_pbh_values = np.concatenate((m_pbh_1, m_pbh_2, [2e17]))
-
+    #m_pbh_values = np.concatenate(([1e14, 5e14, 1.1e15, 1.2e15], m_pbh_1, m_pbh_2, [2e17]))
+    m_pbh_values = np.concatenate((m_pbh_1, [2e15, 3e15], m_pbh_2, [2e17]))
 
 #%%
 
@@ -166,7 +167,7 @@ if __name__ == "__main__":
 
     # load results from Fig. 1 of 1912.01014, for PBHs with zero spin.
     file_path_extracted = "./Extracted_files/"
-    m_pbh_NFW_3500pc, f_pbh_NFW_3500pc = load_data('DLR20_Fig2_a__0.csv')
+    m_pbh_NFW_3500pc, f_pbh_NFW_3500pc = load_data('DLR20_Fig2_a__0_newaxes_2.csv')
 
     # plot the results from Fig. 1 of 1912.01014, for PBHs with zero spin.
     plt.figure(figsize=(7, 6))
@@ -182,12 +183,20 @@ if __name__ == "__main__":
     # calculate constraint on fraction of dark matter in PBHs.
     f_pbh_values = []
     main()
+    
+    # calculate ratio between reproduced results and those from Fig. 1 of
+    # 1912.01014.
+    f_pbh_interp = np.interp(m_pbh_values, m_pbh_NFW_3500pc, f_pbh_NFW_3500pc)
+    ratio = np.array(f_pbh_values / f_pbh_interp)
+    print(ratio)
+
 
     # plot the results from Fig. 1 of 1912.01014, and the reproduction, for
     # PBHs with zero spin.
     plt.figure(figsize=(7, 6))
     plt.plot(m_pbh_NFW_3500pc, f_pbh_NFW_3500pc, label='Fig. 2 (DLR (2020))', color='tab:orange')
-    plt.plot(m_pbh_values, f_pbh_values, 'x', linestyle='dotted', label='Reproduction')
+    plt.plot(m_pbh_values, f_pbh_values, 'x', linestyle='dotted', label='Reproduction', color='tab:blue')
+    #plt.plot(m_pbh_values, f_pbh_interp, 'x', label='Interpolated', color='tab:red')
     plt.xscale('log')
     plt.yscale('log')
     plt.ylabel('$f_\mathrm{PBH}$')
@@ -195,9 +204,27 @@ if __name__ == "__main__":
     plt.xlim(1e15, 1e19)
     plt.ylim(1e-4, 1)
     plt.tight_layout()
+    plt.legend(fontsize='small')
 
-    # calculate ratio between reproduced results and those from Fig. 1 of
-    # 1912.01014.
-    f_pbh_interp = np.interp(m_pbh_values, m_pbh_NFW_3500pc, f_pbh_NFW_3500pc)
-    ratio = np.array(f_pbh_values / f_pbh_interp)
-    print(ratio)
+    # plot the results from Fig. 1 of 1912.01014, and the reproduction, for
+    # PBHs with zero spin.
+    plt.figure(figsize=(7, 6))
+    plt.plot(m_pbh_NFW_3500pc, f_pbh_NFW_3500pc, 'x', label='Fig. 2 (DLR (2020))', color='tab:orange')
+    plt.plot(m_pbh_values, f_pbh_values, 'x', linestyle='dotted', label='Reproduction', color='tab:blue')
+    #plt.xscale('log')
+    plt.yscale('log')
+    plt.ylabel('$f_\mathrm{PBH}$')
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.xlim(1e15, 2e15)
+    plt.ylim(8e-4, 1e-2)
+    plt.tight_layout()
+    plt.legend(fontsize='small')
+
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(m_pbh_values, ratio-1, 'x', color='tab:blue')
+    plt.ylabel('$(f_\mathrm{PBH, reproduced} / f_\mathrm{PBH, extracted}) - 1$')
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.xlim(1e15, 2e15)
+    plt.ylim(-0.15, 0.05)
+    plt.tight_layout()

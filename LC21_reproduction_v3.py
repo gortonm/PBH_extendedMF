@@ -95,9 +95,9 @@ r_values = 10 ** np.linspace(np.log10(r_min), np.log10(R), n_steps)
 epsilon = 0.5  # choose 0.5 to maximise magnetic field
 
 const_B = False
-numbered_mass_range = False
+numbered_mass_range = True
 upper_mass_range = False
-interp_test = True
+interp_test = False
 
 
 #%%
@@ -232,18 +232,22 @@ if __name__ == "__main__":
     index = 3
     f_pbh_PL = f_PBH_LC21_extracted[0] * (m_pbh_LC21_extracted / m_pbh_LC21_extracted[0])**index
     
+    m_pbh_wide_space = np.concatenate((m_pbh_values[0:15], [m_pbh_values[-4]]))
+    f_pbh_wide_space = np.concatenate((f_pbh_values[0:15], [f_pbh_values[-4]]))
+    
     plt.figure(figsize=(7, 6))
-    plt.plot(m_pbh_values, np.array(f_pbh_values), label='Reproduction')
+    #plt.plot(m_pbh_values, np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Fig. 1 (Lee \& Chan (2021))', color='tab:orange')
     #plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law $(n={:.0f})$'.format(index), color='tab:green')
     plt.plot(m_pbh_values, 0.5*np.array(f_pbh_values), label=r'0.5 $\times$ Reproduction', color='tab:green')
+    plt.plot(m_pbh_wide_space, 0.5*np.array(f_pbh_wide_space), linestyle='dotted', label='Reproduction (wide spacing)', color='k')
 
     plt.plot()
     plt.xlabel('$M_\mathrm{PBH}$ [g]')
     plt.ylabel('$f_\mathrm{PBH}$')
     plt.title(extension)
     plt.tight_layout()
-    plt.legend(fontsize='small')
+    #plt.legend(fontsize='small')
     plt.ylim(1e-8, 1)
     if upper_mass_range:
         plt.xlim(1e16, 1e17)
@@ -288,9 +292,11 @@ if __name__ == "__main__":
     plt.title(extension)
     plt.tight_layout()
 
+    print("M_PBH = ", m_pbh_values)
     print("f_PBH =", f_pbh_values)
     print("ratio =", ratio)
     print("2 * ratio =", 2*ratio)
+    print("1 / ratio =", 1/ratio)
     print("fractional difference =", frac_diff)
 
 

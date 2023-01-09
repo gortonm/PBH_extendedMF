@@ -237,7 +237,8 @@ m_pbh_values = np.array([0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.5, 3, 6, 8]) * 10**16
 #m_pbh_values = np.array([1e15])
 
 if numbered_mass_range == True:
-    m_pbh_values = 10**np.linspace(np.log10(5e14), 17, 25)
+    #m_pbh_values = 10**np.linspace(np.log10(5e14), 17, 25)
+    m_pbh_values = 10 ** np.linspace(np.log10(5e14), 19, 20)
     
 f_pbh_values = []
 m_pbh_plotting = []
@@ -279,12 +280,20 @@ if __name__ == '__main__':
     
     #%%
     
+    file_path_extracted = './Extracted_files/'
+    m_pbh_LC21_extracted, f_PBH_LC21_extracted = load_data("LC21_" + extension + "_NFW_v2.csv")
+    m_pbh_plotting = []
+    
+    # higher PBH masses
+    m_pbh_values_higher = 10 ** np.linspace(np.log10(5e14), 19, 20)
+    file_path_data_base = "../Downloads/version_finale/results/"
+    
     # linear dependence of f_PBH approximation
     index = 3
     f_pbh_PL = f_PBH_LC21_extracted[0] * (m_pbh_LC21_extracted / m_pbh_LC21_extracted[0])**index
     
     plt.figure(figsize=(7, 6))
-    #plt.plot(m_pbh_plotting, 0.5*np.array(f_pbh_values), label='Reproduction')
+    plt.plot(m_pbh_plotting, 0.5*np.array(f_pbh_values), label='Reproduction')
     plt.plot(m_pbh_LC21_extracted, f_PBH_LC21_extracted, label='Extracted', color='tab:orange')
     plt.plot(m_pbh_LC21_extracted, np.array(f_pbh_PL), label='Power-law $(n={:.0f})$'.format(index), color='tab:green')
 
@@ -298,8 +307,26 @@ if __name__ == '__main__':
     plt.xlim(4e14, 1e17)
     plt.yscale('log')
     plt.xscale('log')
-    #plt.yticks(major_ticks)
-    #plt.yticks(minor_ticks)
+    
+    
+    L_extracted = L_0 / np.array(f_PBH_LC21_extracted)
+    luminosity_calculated = L_0 / np.array(f_pbh_values)
+    
+    luminosity_PL_zeroth = 10**(np.interp(np.log10(m_pbh_values_higher[0]), np.log10(m_pbh_LC21_extracted), np.log10(L_extracted)))
+    luminosity_PL = luminosity_PL_zeroth * (m_pbh_values_higher / m_pbh_values_higher[0])**-index
+    
+    plt.figure(figsize=(6, 4))
+    plt.plot(m_pbh_LC21_extracted, L_extracted, label="Inferred from LC '21", color='tab:orange')
+    plt.plot(m_pbh_values_higher, luminosity_PL, label='Power-law $(n={:.0f})$'.format(index), linestyle='dashed', color='tab:green')
+    plt.xlabel('$M_\mathrm{PBH}$ [g]')
+    plt.ylabel('$L$ [erg s$^{-1}$]')
+    plt.title(extension)
+    plt.tight_layout()
+    plt.legend()
+    plt.xlim(4e14, 1e19)
+    plt.yscale('log')
+    plt.xscale('log')
+    
     
     plt.figure()
     plt.plot(m_pbh_plotting, ratio, 'x')
@@ -367,7 +394,7 @@ plt.tight_layout()
 
 
 #%% Plot spectra
-m_pbh_values = np.array([0.1, 0.4, 1.0, 3, 10]) * 10**16
+m_pbh_values = np.array([0.1, 0.5, 1.0, 3, 10, 15]) * 10**16
 
 plt.figure(figsize=(11, 8))
 
@@ -382,12 +409,13 @@ for i, m_pbh in enumerate(m_pbh_values):
     
     # Compute Hawking temperature of the BH (from Lee & Chan 2021 Eq. 2)
     T_BH = 1.06 * (1e13 / m_pbh)
+    print(T_BH)
 
     # Load electron secondary spectrum
     energies_secondary, secondary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_secondary_spectra.txt", col=2)
     energies_primary, primary_spectrum = read_blackhawk_spectra(file_path_data + "instantaneous_primary_spectra.txt", col=7)
     
-    plt.plot(energies_secondary, secondary_spectrum, label='{:.0e}'.format(m_pbh), color=colors[i])
+    plt.plot(energies_secondary, secondary_spectrum, label='{:.1e}'.format(m_pbh), color=colors[i])
     plt.plot(energies_primary, primary_spectrum, linestyle='dotted', color=colors[i])
     plt.vlines(x=T_BH, ymin=min(secondary_spectrum), ymax=100*max(secondary_spectrum), color=colors[i], linestyle='dashed')
     max_y = max(max_y, max(secondary_spectrum))
@@ -398,7 +426,7 @@ plt.ylabel('$\mathrm{d}^2 N_{e^\pm} / (\mathrm{d}t~\mathrm{d}E_{e^\pm})$ [s$^{-1
 plt.xscale('log')
 plt.yscale('log')
 plt.ylim(1e18, 2*max_y)
-plt.xlim(1e-4, 5)
+plt.xlim(E_min, 5)
 plt.tight_layout()
 
 
@@ -453,4 +481,52 @@ plt.xscale('log')
 plt.yscale('log')
 plt.ylim(1e18, 2*max_y)
 plt.xlim(E_min, 5)
+plt.tight_layout()
+
+
+#%% Look at behaviour of b_C / b_T at large E
+
+r_values = np.array([0.001, 0.1, 1]) * kpc_to_cm
+E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+for r in r_values:
+    plt.plot(E_values, b_C(E_values, r)/b_T(E_values, r), label=r / kpc_to_cm)
+plt.xscale('log')
+plt.yscale('log')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('$b_C / b_T$')
+plt.legend(title='$r$ [kpc]')
+plt.tight_layout()
+
+#%%
+r_values = 10**np.linspace(np.log10(1e-10 * kpc_to_cm), np.log10(R), n_steps)
+E_values = 10**np.linspace(np.log10(E_min), np.log10(E_max), n_steps)
+[energies_mg, radii_mg] = np.meshgrid(E_values, r_values)
+
+luminosity_grid = np.zeros(shape=(n_steps, n_steps))
+for i in range(len(E_values)):
+    for j in range(len(r_values)):
+        luminosity_grid[i][j] = b_C(E_values[i], r_values[j]) / b_T(E_values[i], r_values[j])
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+
+# make 3D plot of integrand
+surf = ax.plot_surface(energies_mg, radii_mg, 4*np.pi*luminosity_grid)
+ax.set_xlabel('$E$ [GeV]', fontsize=14)
+ax.set_ylabel('$r$ [kpc]', fontsize=14)
+ax.set_zlabel('Luminosity integrand [$\mathrm{kpc}^{-1} \cdot \mathrm{s}^{-1}$]', fontsize=14)
+ax.set_xscale('log')
+ax.set_yscale('log')
+plt.title('$b_C / b_T$', fontsize=14)
+
+# make heat map
+heatmap = plt.figure()
+ax1 = heatmap.gca()
+plt.pcolormesh(energies_mg, radii_mg, np.log10(1+4*np.pi*(luminosity_grid)), cmap='jet')
+plt.xlabel('$E$ [GeV]')
+plt.ylabel('$r$ [kpc]')
+plt.xscale('log')
+plt.yscale('log')
+plt.title('$b_C / b_T$', fontsize=16)
+plt.colorbar()
 plt.tight_layout()
