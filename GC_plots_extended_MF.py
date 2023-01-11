@@ -78,7 +78,8 @@ mu_min = 1e14
 mu_max = 1e19
 masses = 10**np.arange(np.log10(mu_min), np.log10(mu_max), 1)
 
-# creating labels
+# choose which constraints to plot
+# create labels
 constraints_names = []
 constraints_plotting = []
 for i in range(len(constraints_names_bis)):
@@ -109,7 +110,7 @@ ax.set_yscale('log')
 ax.set_ylim(1e-10, 1)
 ax.set_xlim(mu_min, mu_max)
 ax.legend(fontsize='small')
-plt.title("Direct Isatis calculation")
+plt.title("Log-normal ($\sigma = {:.1f}$) \n (Direct Isatis calculation)".format(sigma))
 plt.tight_layout()
 
 #%% Extended mass function results using the method from 1705.05567.
@@ -163,9 +164,6 @@ def LN_MF_number_density(m, m_c, sigma, A=1):
 def f_max(m, m_GC_mono, f_max_GC_mono):
     """Linearly interpolate the maximum fraction of dark matter in PBHs (monochromatic mass distribution).
 
-
-    BOO! Need descriptions for more variables!!!!
-
     Parameters
     ----------
     m : Array-like
@@ -187,9 +185,6 @@ def f_max(m, m_GC_mono, f_max_GC_mono):
 
 def integrand(A, m, m_c, m_GC_mono, f_max_GC_mono):
     """Compute integrand appearing in Eq. 12 of 1705.05567 (for reproducing constraints with an extended mass function following 1705.05567).
-
-
-    BOO! Need descriptions for more variables!!!!
 
     Parameters
     ----------
@@ -243,5 +238,90 @@ ax.set_yscale('log')
 ax.set_ylim(1e-10, 1)
 ax.set_xlim(mu_min, mu_max)
 ax.legend(fontsize='small')
-plt.title("Using method from 1705.05567")
+plt.title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
+plt.tight_layout()
+
+
+#%%
+
+masses_mono = 10**np.arange(11, 19.05, 0.1)
+results_name_mono = "results_photons_GC_mono"
+
+constraints_mono_file = np.genfromtxt("%s%s.txt"%(Isatis_path,results_name_mono),dtype = "str")
+constraints_mono_names_bis = constraints_mono_file[0,1:]
+constraints_mono = np.zeros([len(constraints_mono_file)-1,len(constraints_mono_file[0])-1])
+for i in range(len(constraints_mono)):
+    for j in range(len(constraints_mono[0])):
+        constraints_mono[i,j] = float(constraints_mono_file[i+1,j+1])
+
+# choose which constraints to plot
+# create labels
+constraints_mono_names = []
+constraints_extended_Carr = []
+constraints_mono_plotting = []
+for i in range(len(constraints_names_bis)):
+    if np.all(constraints_mono[:, i] <= 0.):  # only include calculated constraints
+        print("all = -1 or 0")
+    else:
+        temp = constraints_names_bis[i].split("_")
+        temp2 = ""
+        for j in range(len(temp)-1):
+            temp2 = "".join([temp2,temp[j],'\,\,'])
+        temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
+        constraints_mono_names.append(temp2)
+        constraints_mono_plotting.append(constraints_mono[:, i])
+        
+        #print(constraints_mono[:, i])
+        
+        
+        # restrict range to f_max < 100 (to avoid overflow errors in the mass function calculation)
+        # remove unphysical of f_max = 0, -1, or inf
+        constraint_extended_Carr = []
+        f_max_values = constraints_mono[:, i]
+        
+        f_max_truncated = f_max_values[f_max_values<1e2]
+        masses_mono_truncated = masses_mono[f_max_values<1e2]
+        
+        masses_mono_truncated = masses_mono_truncated[f_max_truncated>0]
+        f_max_truncated = f_max_truncated[f_max_truncated>0]
+        
+        masses_mono_truncated = masses_mono_truncated[f_max_truncated != float('inf')]
+        f_max_truncated = f_max_truncated[f_max_truncated != float('inf')]
+        
+        for m_c in masses:
+            constraint_extended_Carr.append(1/np.trapz(integrand(1, masses_mono_truncated, m_c, masses_mono_truncated, f_max_truncated), masses_mono_truncated))
+        
+        constraints_extended_Carr.append(constraint_extended_Carr)
+        
+        
+# Plot the monochromatic MF constraints, as a check
+plt.figure(figsize=(6,6))
+ax = plt.gca()
+for i in range(len(constraints_mono_names)):
+    ax.plot(masses_mono, constraints_mono_plotting[i], marker='x', label=constraints_mono_names[i])
+    print(constraints_mono_plotting[i])
+ax.set_xlabel("$M_\mathrm{PBH}$ [g]")
+ax.set_ylabel("$f_\mathrm{PBH}$")
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylim(1e-10, 1)
+ax.set_xlim(1e14, 1e18)
+ax.legend(fontsize='small')
+plt.title("Monochromatic MF (Isatis calculation)")
+plt.tight_layout()
+
+# Plot the log-normal mass function constraints, calculated using the method
+# from 1705.05567.
+plt.figure(figsize=(6,6))
+ax = plt.gca()
+for i in range(len(constraints_extended_Carr)):
+    ax.plot(masses, constraints_extended_Carr[i], marker='x', label=constraints_mono_names[i])
+ax.set_xlabel("$M_c$ [g]")
+ax.set_ylabel("$f_\mathrm{PBH}$")
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax.set_ylim(1e-10, 1)
+ax.set_xlim(1e14, 1e19)
+ax.legend(fontsize='small')
+plt.title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
 plt.tight_layout()
