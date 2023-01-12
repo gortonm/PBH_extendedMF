@@ -53,68 +53,6 @@ def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
 
-lognormal_MF = True
-sigma = 0.5
-
-if lognormal_MF:
-    filename_append = "_lognormal_sigma={:.1f}".format(sigma)
-
-
-
-#%% Plot extended mass function results obtained using Isatis.
-
-# Load result from Isatis
-Isatis_path = "./../Downloads/version_finale/scripts/Isatis/"
-results_name = "results_photons_GC%s"%(filename_append)
-
-constraints_file = np.genfromtxt("%s%s.txt"%(Isatis_path,results_name),dtype = "str")
-constraints_names_bis = constraints_file[0,1:]
-constraints = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
-for i in range(len(constraints)):
-    for j in range(len(constraints[0])):
-        constraints[i,j] = float(constraints_file[i+1,j+1])
-
-mu_min = 1e14
-mu_max = 1e19
-masses = 10**np.arange(np.log10(mu_min), np.log10(mu_max), 1)
-
-# choose which constraints to plot
-# create labels
-constraints_names = []
-constraints_plotting = []
-for i in range(len(constraints_names_bis)):
-    print(constraints[:, i])
-
-    if np.all(constraints[:, i] == -1.):  # only include calculated constraints
-        print("all = -1")
-    elif np.all(constraints[:, i] == 0.):  # only include calculated constraints
-        print("all = 0")
-    else:
-        temp = constraints_names_bis[i].split("_")
-        temp2 = ""
-        for j in range(len(temp)-1):
-            temp2 = "".join([temp2,temp[j],'\,\,'])
-        temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
-        constraints_names.append(temp2)
-        constraints_plotting.append(constraints[:, i])
-
-plt.figure(figsize=(6,6))
-ax = plt.gca()
-for i in range(len(constraints_names)):
-    ax.plot(masses, constraints_plotting[i], marker='x', label=constraints_names[i])
-    
-ax.set_xlabel("$M_c$ [g]")
-ax.set_ylabel("$f_\mathrm{PBH}$")
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_ylim(1e-10, 1)
-ax.set_xlim(mu_min, mu_max)
-ax.legend(fontsize='small')
-plt.title("Log-normal ($\sigma = {:.1f}$) \n (Direct Isatis calculation)".format(sigma))
-plt.tight_layout()
-
-#%% Extended mass function results using the method from 1705.05567.
-
 def LN_MF_density(m, m_c, sigma, A=1):
     """Log-normal distribution function (for PBH mass density).
 
@@ -208,29 +146,57 @@ def integrand(A, m, m_c, m_GC_mono, f_max_GC_mono):
     return LN_MF_number_density(m, m_c, sigma, A) / f_max(m, m_GC_mono, f_max_GC_mono)
 
 
-# calculate constraints for extended MF from evaporation
-f_pbh_GC_Carr_COMPTEL = []
-f_pbh_GC_Carr_EGRET = []
-f_pbh_GC_Carr_INTEGRAL = []
-f_pbh_GC_Carr_FermiLAT = []
+lognormal_MF = True
+sigma = 0.5
 
-m_GC_COMPTEL, f_max_GC_COMPTEL = np.genfromtxt("./Data/fPBH_Auffinger22_all_bins_COMPTEL_1107.0200.txt", delimiter="\t", unpack=True)
-m_GC_EGRET, f_max_GC_EGRET = np.genfromtxt("./Data/fPBH_Auffinger22_all_bins_EGRET_9811211.txt", delimiter="\t", unpack=True)
-m_GC_INTEGRAL, f_max_GC_INTEGRAL = np.genfromtxt("./Data/fPBH_Auffinger22_all_bins_INTEGRAL_1107.0200.txt", delimiter="\t", unpack=True)
-m_GC_FermiLAT, f_max_GC_FermiLAT = np.genfromtxt("./Data/fPBH_Auffinger22_all_bins_Fermi-LAT_1101.1381.txt", delimiter="\t", unpack=True)
+if lognormal_MF:
+    filename_append = "_lognormal_sigma={:.1f}".format(sigma)
 
-for m_c in masses:
-    f_pbh_GC_Carr_COMPTEL.append(1/np.trapz(integrand(1, m_GC_COMPTEL, m_c, m_GC_COMPTEL, f_max_GC_COMPTEL), m_GC_COMPTEL))
-    f_pbh_GC_Carr_EGRET.append(1/np.trapz(integrand(1, m_GC_EGRET, m_c, m_GC_EGRET, f_max_GC_EGRET), m_GC_EGRET))
-    f_pbh_GC_Carr_INTEGRAL.append(1/np.trapz(integrand(1, m_GC_INTEGRAL, m_c, m_GC_INTEGRAL, f_max_GC_INTEGRAL), m_GC_INTEGRAL))
-    f_pbh_GC_Carr_FermiLAT.append(1/np.trapz(integrand(1, m_GC_FermiLAT, m_c, m_GC_FermiLAT, f_max_GC_FermiLAT), m_GC_FermiLAT))
 
-plt.figure(figsize=(6,6))
-ax = plt.gca()
-ax.plot(masses, f_pbh_GC_Carr_COMPTEL, marker='x', label = "COMPTEL")
-ax.plot(masses, f_pbh_GC_Carr_EGRET, marker='x', label = "EGRET")
-ax.plot(masses, f_pbh_GC_Carr_FermiLAT, marker='x', label = "Fermi-LAT")
-ax.plot(masses, f_pbh_GC_Carr_INTEGRAL, marker='x', label = "INTEGRAL")
+# Load result from Isatis
+Isatis_path = "./../Downloads/version_finale/scripts/Isatis/"
+results_name = "results_photons_GC%s"%(filename_append)
+
+constraints_file = np.genfromtxt("%s%s.txt"%(Isatis_path,results_name),dtype = "str")
+constraints_names_bis = constraints_file[0,1:]
+constraints = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
+for i in range(len(constraints)):
+    for j in range(len(constraints[0])):
+        constraints[i,j] = float(constraints_file[i+1,j+1])
+
+mu_min = 1e14
+mu_max = 1e19
+masses = 10**np.arange(np.log10(mu_min), np.log10(mu_max), 0.1)
+
+# choose which constraints to plot
+# create labels
+constraints_names = []
+constraints_plotting = []
+for i in range(len(constraints_names_bis)):
+    #print(constraints[:, i])
+
+    if np.all(constraints[:, i] == -1.):  # only include calculated constraints
+        print("all = -1")
+    elif np.all(constraints[:, i] == 0.):  # only include calculated constraints
+        print("all = 0")
+    else:
+        temp = constraints_names_bis[i].split("_")
+        temp2 = ""
+        for j in range(len(temp)-1):
+            temp2 = "".join([temp2,temp[j],'\,\,'])
+        temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
+        constraints_names.append(temp2)
+        constraints_plotting.append(constraints[:, i])
+
+colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
+
+fig, ax = plt.subplots(figsize=(6,6))
+fig1, ax1 = plt.subplots(figsize=(6,6))
+
+for i in range(len(constraints_names)):
+    ax.plot(masses, constraints_plotting[i], marker='x', label=constraints_names[i])
+    ax1.plot(masses, constraints_plotting[i], color=colors[i], alpha=0.5)
+    
 ax.set_xlabel("$M_c$ [g]")
 ax.set_ylabel("$f_\mathrm{PBH}$")
 ax.set_xscale('log')
@@ -238,12 +204,13 @@ ax.set_yscale('log')
 ax.set_ylim(1e-10, 1)
 ax.set_xlim(mu_min, mu_max)
 ax.legend(fontsize='small')
-plt.title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
-plt.tight_layout()
+ax.set_title("Log-normal ($\sigma = {:.1f}$) \n (Direct Isatis calculation)".format(sigma))
+fig.tight_layout()
 
 
-#%%
+# Extended mass function results using the method from 1705.05567.
 
+masses = 10**np.arange(np.log10(mu_min), np.log10(mu_max), 0.1)
 masses_mono = 10**np.arange(11, 19.05, 0.1)
 results_name_mono = "results_photons_GC_mono"
 
@@ -271,9 +238,6 @@ for i in range(len(constraints_names_bis)):
         constraints_mono_names.append(temp2)
         constraints_mono_plotting.append(constraints_mono[:, i])
         
-        #print(constraints_mono[:, i])
-        
-        
         # restrict range to f_max < 100 (to avoid overflow errors in the mass function calculation)
         # remove unphysical of f_max = 0, -1, or inf
         constraint_extended_Carr = []
@@ -295,33 +259,45 @@ for i in range(len(constraints_names_bis)):
         
         
 # Plot the monochromatic MF constraints, as a check
-plt.figure(figsize=(6,6))
-ax = plt.gca()
+fig2, ax2 = plt.subplots(figsize=(6,6))
 for i in range(len(constraints_mono_names)):
-    ax.plot(masses_mono, constraints_mono_plotting[i], marker='x', label=constraints_mono_names[i])
-    print(constraints_mono_plotting[i])
-ax.set_xlabel("$M_\mathrm{PBH}$ [g]")
-ax.set_ylabel("$f_\mathrm{PBH}$")
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_ylim(1e-10, 1)
-ax.set_xlim(1e14, 1e18)
-ax.legend(fontsize='small')
-plt.title("Monochromatic MF (Isatis calculation)")
-plt.tight_layout()
+    ax2.plot(masses_mono, constraints_mono_plotting[i], marker='x', label=constraints_mono_names[i])
+    #print(constraints_mono_plotting[i])
+    
+ax2.set_xlabel("$M_\mathrm{PBH}$ [g]")
+ax2.set_ylabel("$f_\mathrm{PBH}$")
+ax2.set_xscale('log')
+ax2.set_yscale('log')
+ax2.set_ylim(1e-10, 1)
+ax2.set_xlim(1e14, 1e18)
+ax2.legend(fontsize='small')
+ax2.set_title("Monochromatic MF (Isatis calculation)")
+fig2.tight_layout()
 
 # Plot the log-normal mass function constraints, calculated using the method
 # from 1705.05567.
-plt.figure(figsize=(6,6))
-ax = plt.gca()
+fig3, ax3 = plt.subplots(figsize=(6,6))
+ax3 = plt.gca()
 for i in range(len(constraints_extended_Carr)):
-    ax.plot(masses, constraints_extended_Carr[i], marker='x', label=constraints_mono_names[i])
-ax.set_xlabel("$M_c$ [g]")
-ax.set_ylabel("$f_\mathrm{PBH}$")
-ax.set_xscale('log')
-ax.set_yscale('log')
-ax.set_ylim(1e-10, 1)
-ax.set_xlim(1e14, 1e19)
-ax.legend(fontsize='small')
-plt.title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
-plt.tight_layout()
+    ax3.plot(masses, constraints_extended_Carr[i], marker='x', label=constraints_mono_names[i])
+    ax1.plot(masses, constraints_extended_Carr[i], marker='x', linestyle='None', color=colors[i], label=constraints_mono_names[i])
+ax3.set_xlabel("$M_c$ [g]")
+ax3.set_ylabel("$f_\mathrm{PBH}$")
+ax3.set_xscale('log')
+ax3.set_yscale('log')
+ax3.set_ylim(1e-10, 1)
+ax3.set_xlim(1e14, 1e19)
+ax3.legend(fontsize='small')
+ax3.set_title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
+fig3.tight_layout()
+
+ax1.set_xlabel("$M_c$ [g]")
+ax1.set_ylabel("$f_\mathrm{PBH}$")
+ax1.set_xscale('log')
+ax1.set_yscale('log')
+ax1.set_ylim(1e-10, 1)
+ax1.set_xlim(1e14, 1e19)
+ax1.legend(fontsize='small')
+ax1.set_title("Log-normal ($\sigma = {:.1f}$)".format(sigma))
+fig1.tight_layout()
+
