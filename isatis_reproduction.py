@@ -37,7 +37,6 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 file_path_extracted = './Extracted_files/'
 
-#%%
 
 # Unit conversions
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
@@ -242,11 +241,15 @@ def galactic(spectrum, b_max, l_max):
     return np.array(galactic)
 
 
-#%%
+monochromatic_MF = True
+sigma = 0.5
+
+if monochromatic_MF:
+    filename_append = "_monochromatic"
+    m_pbh_values = 10**np.arange(11, 19, 0.1)
+
 
 f_PBH_isatis = []
-m_pbh_values = 10**np.arange(14, 18, 0.1)
-
 file_path_data = "./../Downloads/version_finale/scripts/Isatis/constraints/photons/"
 
 COMPTEL = True
@@ -254,7 +257,8 @@ INTEGRAL = False
 EGRET = False
 FermiLAT = False
 
-exclude_last_bin = True
+exclude_last_bin = False
+save_each_bin = True
 
 if COMPTEL:
     append = "COMPTEL_1107.0200"
@@ -276,6 +280,9 @@ energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfro
 
 if not exclude_last_bin:
     append = "all_bins_%s"%(append)
+    
+if save_each_bin:
+    append = "full_%s"%(append)
 
 # Number of interpolation points
 n_refined = 500
@@ -286,8 +293,8 @@ for i, m_pbh in enumerate(m_pbh_values):
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent
 
-    #file_path_BlackHawk_data = "./../Downloads/version_finale/results/runs_COMPTEL_0510_{:.0f}/".format(i+1)
-    file_path_BlackHawk_data = "./../Downloads/version_finale/results/A22_Fig3_{:.0f}/".format(i+1)
+    if monochromatic_MF:
+        file_path_BlackHawk_data = "./../Downloads/version_finale/results/GC_mono_{:.0f}/".format(i+1)
 
     print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
 
@@ -344,12 +351,11 @@ for i, m_pbh in enumerate(m_pbh_values):
         f_PBH = min(flux[:-1] * (energies_plus[:-1] + energies_minus[:-1]) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
 
     else:
-        print(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
-        # print which bin has the smallest flux ratio, and hence puts the constraint on f_PBH
-        print("Constraining bin : ", 1+np.argmin(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)))
         f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
-
+        if save_each_bin:
+            f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
+        
     f_PBH_isatis.append(f_PBH)
 
 # Save calculated results for f_PBH
-np.savetxt("./Data/fPBH_Auffinger22_%s.txt"%(append), np.transpose([m_pbh_values, f_PBH_isatis]), delimiter="\t", fmt="%0.8e")
+np.savetxt("./Data/fPBH_GC_%s.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
