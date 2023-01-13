@@ -210,9 +210,8 @@ fig.tight_layout()
 
 # Extended mass function results using the method from 1705.05567.
 masses = 10**np.arange(np.log10(mu_min), np.log10(mu_max), 0.1)
-constraints_names = []
-#constraints_names_bis = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-constraints_names_bis = ["COMPTEL_1107.0200"]
+constraints_labels = []
+constraints_names_bis = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
 for i in range(len(constraints_names_bis)):
     temp = constraints_names_bis[i].split("_")
@@ -220,7 +219,7 @@ for i in range(len(constraints_names_bis)):
     for j in range(len(temp)-1):
         temp2 = "".join([temp2,temp[j],'\,\,'])
     temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
-    constraints_names.append(temp2)
+    constraints_labels.append(temp2)
 
 constraints_extended_Carr = []
 
@@ -248,9 +247,14 @@ for i in range(len(constraints_names_bis)):
             masses_mono_truncated = masses_mono_truncated[f_max_truncated != float('inf')]
             f_max_truncated = f_max_truncated[f_max_truncated != float('inf')]
             
-            # constraint from each bin
-            constraints_over_bins.append(1/np.trapz(integrand(1, masses_mono_truncated, m_c, masses_mono_truncated, f_max_truncated), masses_mono_truncated))
-        
+            # if no values of f_max satisfy the constraint, assign a 
+            # non-physical value f_PBH = 10 to the constraint at that mass.
+            if len(f_max_truncated) == 0:
+                constraints_over_bins.append(10.)
+            else:
+                # constraint from each bin
+                constraints_over_bins.append(1/np.trapz(integrand(1, masses_mono_truncated, m_c, masses_mono_truncated, f_max_truncated), masses_mono_truncated))
+            
         # constraint from given instrument
         constraint_extended_Carr.append(min(constraints_over_bins))
             
@@ -329,8 +333,8 @@ fig2.tight_layout()
 fig3, ax3 = plt.subplots(figsize=(6,6))
 ax3 = plt.gca()
 for i in range(len(constraints_extended_Carr)):
-    ax3.plot(masses, constraints_extended_Carr[i], marker='x', label=constraints_mono_names_bis[i])
-    ax1.plot(masses, constraints_extended_Carr[i], marker='x', linestyle='None', color=colors[i], label=constraints_mono_names_bis[i])
+    ax3.plot(masses, constraints_extended_Carr[i], marker='x', label=constraints_labels[i])
+    ax1.plot(masses, constraints_extended_Carr[i], marker='x', linestyle='None', color=colors[i], label=constraints_labels[i])
 ax3.set_xlabel("$M_c$ [g]")
 ax3.set_ylabel("$f_\mathrm{PBH}$")
 ax3.set_xscale('log')
