@@ -148,10 +148,16 @@ def integrand(A, m, m_c, m_GC_mono, f_max_GC_mono):
 
 lognormal_MF = True
 sigma = 0.5
-
 if lognormal_MF:
     filename_append = "_lognormal_sigma={:.1f}".format(sigma)
 
+# Range of log-normal mass function central PBH masses.
+mc_min = 1e14
+mc_max = 1e19
+masses = 10**np.arange(np.log10(mc_min), np.log10(mc_max), 0.1)
+
+
+# Extended mass function constraints using Isatis.
 
 # Load result from Isatis
 Isatis_path = "./../Downloads/version_finale/scripts/Isatis/"
@@ -164,17 +170,10 @@ for i in range(len(constraints)):
     for j in range(len(constraints[0])):
         constraints[i,j] = float(constraints_file[i+1,j+1])
 
-mu_min = 1e14
-mu_max = 1e19
-masses = 10**np.arange(np.log10(mu_min), np.log10(mu_max), 0.1)
-
-# choose which constraints to plot
-# create labels
+# Choose which constraints to plot, and create labels.
 constraints_names = []
-constraints_plotting = []
+constraints_extended_plotting = []
 for i in range(len(constraints_names_bis)):
-    #print(constraints[:, i])
-
     if np.all(constraints[:, i] == -1.):  # only include calculated constraints
         print("all = -1")
     elif np.all(constraints[:, i] == 0.):  # only include calculated constraints
@@ -186,35 +185,36 @@ for i in range(len(constraints_names_bis)):
             temp2 = "".join([temp2,temp[j],'\,\,'])
         temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
         constraints_names.append(temp2)
-        constraints_plotting.append(constraints[:, i])
+        constraints_extended_plotting.append(constraints[:, i])
 
 colors = ['tab:blue', 'tab:orange', 'tab:green', 'tab:red']
 
 fig, ax = plt.subplots(figsize=(6,6))
 fig1, ax1 = plt.subplots(figsize=(6,6))
+fig2, ax2 = plt.subplots(figsize=(6,6))
 
 for i in range(len(constraints_names)):
-    ax.plot(masses, constraints_plotting[i], marker='x', label=constraints_names[i])
-    ax1.plot(masses, constraints_plotting[i], color=colors[i], alpha=0.5)
+    ax.plot(masses, constraints_extended_plotting[i], marker='x', label=constraints_names[i])
+    ax1.plot(masses, constraints_extended_plotting[i], color=colors[i], alpha=0.5)
     
 ax.set_xlabel("$M_c$ [g]")
 ax.set_ylabel("$f_\mathrm{PBH}$")
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.set_ylim(1e-10, 1)
-ax.set_xlim(mu_min, mu_max)
+ax.set_xlim(mc_min, mc_max)
 ax.legend(fontsize='small')
 ax.set_title("Log-normal ($\sigma = {:.1f}$) \n (Direct Isatis calculation)".format(sigma))
 fig.tight_layout()
 
-
-# Extended mass function results using the method from 1705.05567.
-masses = 10**np.arange(np.log10(mu_min), np.log10(mu_max), 0.1)
+# Extended mass function constraints using the method from 1705.05567.
+# Choose which constraints to plot, and create labels
 constraints_labels = []
-constraints_names_bis = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "INTEGRAL_1107.0200", "INTEGRAL_1107.0200"]
+#constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
-for i in range(len(constraints_names_bis)):
-    temp = constraints_names_bis[i].split("_")
+for i in range(len(constraints_names)):
+    temp = constraints_names[i].split("_")
     temp2 = ""
     for j in range(len(temp)-1):
         temp2 = "".join([temp2,temp[j],'\,\,'])
@@ -223,19 +223,39 @@ for i in range(len(constraints_names_bis)):
 
 constraints_extended_Carr = []
 
+# Constraints for monochromatic MF, calculated using isatis_reproduction.py.
 masses_mono = 10**np.arange(11, 19.05, 0.1)
 constraints_mono_plotting = []
+constraints_mono_calculated = []
 
-for i in range(len(constraints_names_bis)):
+
+# Loop through instruments
+for i in range(len(constraints_names)):
     
-    constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_bis[i])))
-    constraint_extended_Carr = []  # constraint from given instrument
+    print(constraints_names[i])
+    constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
     
-    for m_c in masses:   # cycle through central PBH masses
+    # Constraint from given instrument
+    constraint_extended_Carr = []
+    constraint_mono_Carr = []
+    
+    for k in range(len(masses_mono)):
+        constraint_mass_m = []
+        for l in range(len(constraints_mono_file)):   # cycle over bins
+            constraint_mass_m.append(constraints_mono_file[l][k])
         
-        constraints_over_bins = []  # constraint from each bin
-        
-        for j in range(len(constraints_mono_file)):   # cycle through energy bins 
+        constraint_mono_Carr.append(min(constraint_mass_m))
+    
+    constraints_mono_calculated.append(constraint_mono_Carr)
+    
+    # Loop through central PBH masses
+    for m_c in masses:
+    
+        # Constraint from each energy bin
+        constraints_over_bins_extended = []
+       
+        # Loop through energy bins 
+        for j in range(len(constraints_mono_file)):   
             f_max_values = constraints_mono_file[j]
 
             masses_mono_truncated = masses_mono[f_max_values<1e2]
@@ -247,38 +267,34 @@ for i in range(len(constraints_names_bis)):
             masses_mono_truncated = masses_mono_truncated[f_max_truncated != float('inf')]
             f_max_truncated = f_max_truncated[f_max_truncated != float('inf')]
             
-            # if no values of f_max satisfy the constraint, assign a 
+            # If no values of f_max satisfy the constraint, assign a 
             # non-physical value f_PBH = 10 to the constraint at that mass.
             if len(f_max_truncated) == 0:
-                constraints_over_bins.append(10.)
+                constraints_over_bins_extended.append(10.)
             else:
-                # constraint from each bin
-                constraints_over_bins.append(1/np.trapz(integrand(1, masses_mono_truncated, m_c, masses_mono_truncated, f_max_truncated), masses_mono_truncated))
+                # Constraint from each bin
+                constraints_over_bins_extended.append(1/np.trapz(integrand(1, masses_mono_truncated, m_c, masses_mono_truncated, f_max_truncated), masses_mono_truncated))
+
+        # Constraint from given instrument (extended MF)
+        constraint_extended_Carr.append(min(constraints_over_bins_extended))
             
-        # constraint from given instrument
-        constraint_extended_Carr.append(min(constraints_over_bins))
-            
-    constraints_extended_Carr.append(constraint_extended_Carr)
-
-print(constraints_extended_Carr)
+    constraints_extended_Carr.append(np.array(constraint_extended_Carr))
 
 
-masses = 10**np.arange(np.log10(mu_min), np.log10(mu_max), 0.1)
-masses_mono = 10**np.arange(11, 19.05, 0.1)
+# Constraints for monochromatic MF, calculated using Isatis.
 results_name_mono = "results_photons_GC_mono"
 
 constraints_mono_file = np.genfromtxt("%s%s.txt"%(Isatis_path,results_name_mono),dtype = "str")
-constraints_mono_names_bis = constraints_mono_file[0,1:]
+constraints_names_bis = constraints_mono_file[0,1:]
 constraints_mono = np.zeros([len(constraints_mono_file)-1,len(constraints_mono_file[0])-1])
+
 for i in range(len(constraints_mono)):
     for j in range(len(constraints_mono[0])):
         constraints_mono[i,j] = float(constraints_mono_file[i+1,j+1])
 
-# choose which constraints to plot
-# create labels
+# Choose which constraints to plot, and create labels.
 constraints_mono_names = []
 constraints_mono_plotting = []
-
 
 for i in range(len(constraints_names_bis)):
     if np.all(constraints_mono[:, i] <= 0.):  # only include calculated constraints
@@ -291,67 +307,32 @@ for i in range(len(constraints_names_bis)):
         temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
         constraints_mono_names.append(temp2)
         constraints_mono_plotting.append(constraints_mono[:, i])
-        """
-        # restrict range to f_max < 100 (to avoid overflow errors in the mass function calculation)
-        # remove unphysical of f_max = 0, -1, or inf
-        constraint_extended_Carr = []
-        f_max_values = constraints_mono[:, i]
-        
-        f_max_truncated = f_max_values[f_max_values<1e2]
-        masses_mono_truncated = masses_mono[f_max_values<1e2]
-        
-        masses_mono_truncated = masses_mono_truncated[f_max_truncated>0]
-        f_max_truncated = f_max_truncated[f_max_truncated>0]
-        
-        masses_mono_truncated = masses_mono_truncated[f_max_truncated != float('inf')]
-        f_max_truncated = f_max_truncated[f_max_truncated != float('inf')]
-        
-        for m_c in masses:
-            constraint_extended_Carr.append(1/np.trapz(integrand(1, masses_mono_truncated, m_c, masses_mono_truncated, f_max_truncated), masses_mono_truncated))
-        
-        constraints_extended_Carr.append(constraint_extended_Carr)
-        """
-"""
-# Plot the monochromatic MF constraints, as a check
-fig2, ax2 = plt.subplots(figsize=(6,6))
-for i in range(len(constraints_names_bis)):
-    ax2.plot(masses_mono, constraints_mono_plotting[i], marker='x', label=constraints_mono_names[i])
-    #print(constraints_mono_plotting[i])
-    
-ax2.set_xlabel("$M_\mathrm{PBH}$ [g]")
+
+for i in range(len(constraints_extended_Carr)):
+    ax2.plot(masses, constraints_extended_Carr[i], marker='x', label=constraints_labels[i])
+    ax1.plot(masses, constraints_extended_Carr[i], marker='x', linestyle='None', color=colors[i], label=constraints_labels[i])
+
+# Plot the log-normal mass function constraints, calculated using the method
+# from 1705.05567.
+ax2.set_xlabel("$M_c$ [g]")
 ax2.set_ylabel("$f_\mathrm{PBH}$")
 ax2.set_xscale('log')
 ax2.set_yscale('log')
 ax2.set_ylim(1e-10, 1)
-ax2.set_xlim(1e14, 1e18)
+ax2.set_xlim(mc_min, mc_max)
 ax2.legend(fontsize='small')
-ax2.set_title("Monochromatic MF (Isatis calculation)")
+ax2.set_title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
 fig2.tight_layout()
-"""
-# Plot the log-normal mass function constraints, calculated using the method
-# from 1705.05567.
-fig3, ax3 = plt.subplots(figsize=(6,6))
-ax3 = plt.gca()
-for i in range(len(constraints_extended_Carr)):
-    ax3.plot(masses, constraints_extended_Carr[i], marker='x', label=constraints_labels[i])
-    ax1.plot(masses, constraints_extended_Carr[i], marker='x', linestyle='None', color=colors[i], label=constraints_labels[i])
-ax3.set_xlabel("$M_c$ [g]")
-ax3.set_ylabel("$f_\mathrm{PBH}$")
-ax3.set_xscale('log')
-ax3.set_yscale('log')
-ax3.set_ylim(1e-10, 1)
-ax3.set_xlim(1e14, 1e19)
-ax3.legend(fontsize='small')
-ax3.set_title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
-fig3.tight_layout()
 
+# Comparison of log-normal mass function constraints (crosses), calculated 
+# using the method from 1705.05567, and direct Isatis calculation (translucent 
+# lines). 
 ax1.set_xlabel("$M_c$ [g]")
 ax1.set_ylabel("$f_\mathrm{PBH}$")
 ax1.set_xscale('log')
 ax1.set_yscale('log')
 ax1.set_ylim(1e-10, 1)
-ax1.set_xlim(1e14, 1e19)
+ax1.set_xlim(mc_min, mc_max)
 ax1.legend(fontsize='small')
 ax1.set_title("Log-normal ($\sigma = {:.1f}$)".format(sigma))
 fig1.tight_layout()
-
