@@ -51,7 +51,7 @@ if "__main__" == __name__:
     
     fig, ax = plt.subplots(figsize=(6,6))
     ax.plot(m_subaru_mono, f_max_subaru_mono, label='Extracted')
-    ax.plot(m_subaru_mono, f_evap(m_subaru_mono), linestyle='dotted', label='Interpolated')
+    ax.plot(m_subaru_mono, f_max(m_subaru_mono, m_subaru_mono, f_max_subaru_mono), linestyle='dotted', label='Interpolated')
     ax.set_xlabel('$M_\mathrm{PBH}~[M_\odot]$')
     ax.set_ylabel('$f_\mathrm{PBH}$')
     ax.set_xscale('log')
@@ -127,7 +127,6 @@ if "__main__" == __name__:
     ax.set_ylim(1e-3, 1)
     ax.set_title("Log-normal MF ($\sigma = {:.2f}$)".format(sigma) + ", $R_{90} = 0$")
     fig.tight_layout()
-
 
 
 #%%
