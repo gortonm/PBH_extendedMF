@@ -43,6 +43,7 @@ mc_subaru = 10**np.linspace(-15, -4, 100)
 
 # Load data files
 m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_mono.csv")
+m_subaru_mono_Smyth, f_max_subaru_mono_Smyth = load_data("Subaru-HSC_mono.csv")
 mc_subaru_LN, f_pbh_subaru_LN = load_data("Subaru-HSC_LN.csv")
 
 sigma = 2
@@ -50,8 +51,9 @@ sigma = 2
 if "__main__" == __name__:
     
     fig, ax = plt.subplots(figsize=(6,6))
-    ax.plot(m_subaru_mono, f_max_subaru_mono, label='Extracted')
-    ax.plot(m_subaru_mono, f_max(m_subaru_mono, m_subaru_mono, f_max_subaru_mono), linestyle='dotted', label='Interpolated')
+    ax.plot(m_subaru_mono, f_max_subaru_mono, label='Extracted (2002.12778)')
+    ax.plot(m_subaru_mono_Smyth, f_max_subaru_mono_Smyth, linewidth=7, alpha=0.5, linestyle='dotted', label='Extracted (1910.01285)')
+    ax.plot(m_subaru_mono, f_max(m_subaru_mono, m_subaru_mono, f_max_subaru_mono), linestyle='dotted', linewidth=4, label='Interpolated')
     ax.set_xlabel('$M_\mathrm{PBH}~[M_\odot]$')
     ax.set_ylabel('$f_\mathrm{PBH}$')
     ax.set_xscale('log')
