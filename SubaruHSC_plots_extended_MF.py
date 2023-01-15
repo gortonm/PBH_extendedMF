@@ -82,16 +82,64 @@ if "__main__" == __name__:
     ax.set_title("Log-normal MF ($\sigma = {:.1f}$)".format(sigma))
     fig.tight_layout()
 
+
+#%%
+# Calculate Subaru-HSC constraint for an extended MF, using the monochromatic
+# MF constraint from 2007.12697.
+# Sanity check for a very small sigma to compare to the monochromatic MF
+# constraint.
+# Also compare to the PBHbounds constraint
+
+mc_subaru = 10**np.linspace(20, 29, 1000)
+
+# Load data files
+m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
+
+# Load comparison constraint from PBHbounds
+PBHbounds = np.transpose(np.genfromtxt("./../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
+print(PBHbounds)
+m_subaru_mono_PBHbounds, f_max_subaru_mono_PBHbounds = np.transpose(np.genfromtxt("./../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
+
+sigma = 0.2
+
+if "__main__" == __name__:
+    
+   
+    # Calculate constraints for extended MF from microlensing.
+    f_pbh_subaru = []
+    
+    for m_c in mc_subaru:
+        
+        m_range = m_subaru_mono
+        f_pbh_subaru.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, sigma, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+        
+    fig, ax = plt.subplots(figsize=(6,6.5))
+        
+    ax.plot(mc_subaru, f_pbh_subaru, label="Calculated", )
+    ax.plot(m_subaru_mono, f_max_subaru_mono, linestyle='dotted', label="Monochromatic (Croon et al. (2020))")
+    ax.plot(m_subaru_mono_PBHbounds * 1.989e33, f_max_subaru_mono_PBHbounds, linestyle='dotted', linewidth=1.5, label="Monochromatic (PBHbounds)")
+    ax.set_xlabel('$M_\mathrm{PBH}~[\mathrm{g}]$')
+    ax.set_ylabel('$f_\mathrm{PBH}$')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.legend()
+    ax.set_xlim(1e20, 1e29)
+    ax.set_ylim(1e-3, 1)
+    ax.set_title("Log-normal MF ($\sigma = {:.2f}$)".format(sigma) + ", $R_{90} = 0$")
+    fig.tight_layout()
+
+
+
 #%%
 # Calculate Subaru-HSC constraint for an extended MF, using the monochromatic
 # MF constraint from 2007.12697.
 
-mc_subaru = 10**np.linspace(-15, -4, 100)
+mc_subaru = 10**np.linspace(20, 29, 100)
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("R_90_0_BS.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
 
-sigma = 1.
+sigma = .5
 
 if "__main__" == __name__:
     
@@ -105,7 +153,7 @@ if "__main__" == __name__:
         f_pbh_subaru.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, sigma, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
         
     fig, ax = plt.subplots(figsize=(6,6))
-    ax.plot(mc_subaru * 1.989e33, f_pbh_subaru, label="$R_{90} = 0$", )
+    ax.plot(mc_subaru, f_pbh_subaru, label="$R_{90} = 0$", )
     ax.set_xlabel('$M_\mathrm{c}~[\mathrm{g}]$')
     ax.set_ylabel('$f_\mathrm{PBH}$')
     ax.set_xscale('log')
