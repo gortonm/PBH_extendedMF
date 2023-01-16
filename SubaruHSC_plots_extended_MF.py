@@ -67,7 +67,6 @@ if "__main__" == __name__:
     
     for m_c in mc_subaru:
         
-        m_range = m_subaru_mono
         f_pbh_subaru.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, sigma, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
         
     fig, ax = plt.subplots(figsize=(6,6))
@@ -111,8 +110,7 @@ if "__main__" == __name__:
     f_pbh_subaru = []
     
     for m_c in mc_subaru:
-        
-        m_range = m_subaru_mono
+
         f_pbh_subaru.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, sigma, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
         
     fig, ax = plt.subplots(figsize=(6,6.5))
@@ -143,14 +141,12 @@ m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
 sigma = .5
 
 if "__main__" == __name__:
-    
    
     # Calculate constraints for extended MF from microlensing.
     f_pbh_subaru = []
     
     for m_c in mc_subaru:
         
-        m_range = m_subaru_mono
         f_pbh_subaru.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, sigma, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
         
     fig, ax = plt.subplots(figsize=(6,6))
@@ -163,4 +159,40 @@ if "__main__" == __name__:
     ax.set_xlim(1e20, 1e29)
     ax.set_ylim(1e-3, 1)
     ax.set_title("Log-normal MF ($\sigma = {:.1f}$)".format(sigma))
+    fig.tight_layout()
+
+
+#%%
+# Calculate Subaru-HSC constraint for an extended MF, using the monochromatic
+# MF constraint from 2007.12697. Plot sigma=0.5 and sigma=1.0 results on the 
+# same figure.
+
+mc_subaru = 10**np.linspace(20, 29, 100)
+
+# Load data files
+m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
+
+if "__main__" == __name__:
+    
+    # Calculate constraints for extended MF from microlensing.
+    f_pbh_subaru_sigma05 = []
+    f_pbh_subaru_sigma10 = []
+    
+    for m_c in mc_subaru:
+        
+        f_pbh_subaru_sigma05.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, 0.5, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+        f_pbh_subaru_sigma10.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, 1.0, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+       
+    fig, ax = plt.subplots(figsize=(5.5,5.5))
+    ax.plot(mc_subaru, f_pbh_subaru_sigma05, label="$\sigma = 0.5$")
+    ax.plot(mc_subaru, f_pbh_subaru_sigma10, label="$\sigma = 1.0$")
+    ax.plot(m_subaru_mono, f_max_subaru_mono, color='k', linestyle='dotted', linewidth=3, alpha=0.5, label="Monochromatic")
+    ax.set_xlabel('$M_\mathrm{c} / M_\mathrm{PBH} ~[\mathrm{g}]$')
+    ax.set_ylabel('$f_\mathrm{PBH}$')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.legend()
+    ax.set_xlim(1e21, 1e29)
+    ax.set_ylim(1e-3, 1)
+    ax.set_title("Log-normal MF")
     fig.tight_layout()
