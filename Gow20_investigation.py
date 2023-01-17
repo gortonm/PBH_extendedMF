@@ -60,7 +60,7 @@ sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
 alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
 mps_SL = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 mps_CC = np.array([40.8, 40.8, 40.7, 40.7, 40.8, 40.6, 35.1])
-alphas_CC = np.array([3.06, 3.09, 3.34, 3.92, 5.76, 18.9, 13.9])
+alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
 betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
 # maximum values of the mass function
 psis_SL_max = skew_LN(mps_SL, np.exp(ln_mcs), sigmas, alphas_SL)
@@ -95,8 +95,8 @@ fig.tight_layout(h_pad=2)
 
 
 # Compare mass functions to those plotted in Fig. 5 of 2009.03204.
-fig_SL, axes_SL = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
-fig_CC, axes_CC = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
+fig_SL, axes_SL = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
+fig_CC, axes_CC = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
 
 for j in range(2):
     ax_comp = axes_SL[j]
@@ -130,6 +130,7 @@ for j in range(2):
     ax_comp.legend()
     ax_comp.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
 
+fig_CC.suptitle("Skew-lognormal")
 fig_SL.tight_layout(h_pad=2)
 
 
@@ -145,7 +146,7 @@ for j in range(2):
 
     m_CC_comp, CC_comp = load_data("Delta_{:.1f}_CC.csv".format(deltas[i]))
     ax_comp.plot(m_CC_comp, CC_comp, color='g', marker='x', linestyle='None', label="Extracted")
-    ax_comp.plot(m_pbh_values, psi_CC, color='tab:green', linestyle="dashed", alpha=0.5, label="Extracted")
+    ax_comp.plot(m_pbh_values, psi_CC, color='tab:green', linestyle="dashed", alpha=0.5, label="Calculated")
     ax_comp.set_ylabel("$\psi(m) / \psi_\mathrm{max}$")
     ax_comp.set_xlabel("$m~[M_\odot]$")
     ax_comp.set_xscale("log")
@@ -159,4 +160,5 @@ for j in range(2):
     ax_comp.legend()
     ax_comp.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
 
+fig_CC.suptitle("Generalised critical collapse")
 fig_CC.tight_layout(h_pad=2)
