@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Jan 16 15:44:36 2023
-
 @author: ppxmg2
 """
 
@@ -11,6 +10,8 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from scipy.special import erf
 from scipy.special import gamma as Gamma
+from loadBH import load_data
+
 
 # Code for studying 2009.03204, on extended mass functions. 
 
@@ -87,3 +88,36 @@ for i in range(len(deltas)):
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(0.1, 2)
     ax.legend(title="$\Delta = {:.1f}$".format(deltas[i]))
+    
+fig.tight_layout(h_pad=2)
+
+
+
+# Compare mass functions to those plotted in Fig. 5 of 2009.03204.
+fig_comp, axes_comp = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
+
+for j in range(2):
+    ax_comp = axes_comp[j]
+    i = j+3
+    
+    psi_SL = skew_LN(m_pbh_values, m_c=np.exp(ln_mcs[i]), sigma=sigmas[i], alpha=alphas_SL[i]) / psis_SL_max[i]
+    psi_CC = CC(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
+    
+    # find x-axis limits
+    xmin = m_pbh_values[min(min(np.where(psi_SL > 0.05)))]
+    xmax = m_pbh_values[max(max(np.where(psi_SL > 0.05)))]
+
+    m_SL_comp, SL_comp = load_data("Delta_{:.1f}_SL.csv".format(deltas[i]))
+    m_CC_comp, CC_comp = load_data("Delta_{:.1f}_CC.csv".format(deltas[i]))
+    ax_comp.plot(m_SL_comp, SL_comp, color='cyan', marker='x', linestyle='None')
+    ax_comp.plot(m_CC_comp, CC_comp, color='greenyellow', marker='x', linestyle='None')
+    ax_comp.plot(m_pbh_values, psi_SL, color='tab:blue', linestyle=(0, (5, 7)), label="Skew-LN")
+    ax_comp.plot(m_pbh_values, psi_CC, color='tab:green', linestyle="dashed", label="Generalised CC")
+    ax_comp.set_xscale("log")
+    ax_comp.set_yscale("log")
+    ax_comp.set_xlim(xmin, xmax)
+    ax_comp.set_ylim(0.1, 2)
+    ax_comp.legend()
+    ax_comp.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
+
+fig_comp.tight_layout(h_pad=2)
