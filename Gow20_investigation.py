@@ -201,15 +201,15 @@ fig_CC.tight_layout(h_pad=2)
 # Reproduce Fig. 3 curve for the CC3 mass function, Delta = 5
 fig, ax = plt.subplots(figsize=(6,6))
 
-psi_CC_normalised = CC_v2(m_pbh_values, mps_CC[i], alphas_CC[i], betas[i]) / psis_CC_max[i]
+i = 6
+psi_CC = CC_v2(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
 
 # find x-axis limits
-xmin = m_pbh_values[min(min(np.where(psi_CC_normalised > 0.05)))]
-xmax = m_pbh_values[max(max(np.where(psi_CC_normalised > 0.05)))]
+xmin = m_pbh_values[min(min(np.where(psi_CC > 0.05)))]
+xmax = m_pbh_values[max(max(np.where(psi_CC > 0.05)))]
 
-i = 6
 m_CC_comp, CC_comp = load_data("Gow20_Fig3_Delta_{:.1f}_CC.csv".format(deltas[i]))
-ax.plot(m_pbh_values, psi_CC_normalised, color='k', label="Calculated")
+ax.plot(m_pbh_values, psi_CC, color='k', label="Calculated")
 ax.plot(m_CC_comp, CC_comp, color='g', marker='x', linestyle='None', alpha=0.5,  label="Extracted")
 ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
 ax.set_xlabel(r"$m~[M_\odot]$")
