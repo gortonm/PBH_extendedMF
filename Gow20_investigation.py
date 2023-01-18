@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from matplotlib.ticker import ScalarFormatter
-from scipy.special import erf
+from scipy.special import erf, loggamma
 from scipy.special import gamma as Gamma
 from loadBH import load_data
 import warnings
@@ -76,6 +76,15 @@ def CC(m, m_f, alpha, beta, gamma=0.36):
 def CC_normalised(m, m_p, alpha, beta):
     return np.power(m/m_p, alpha) * np.exp((alpha/beta)*(1 - np.power(m/m_p, beta)))
 
+def CC_v2(m, m_f, alpha, beta):
+    log_psi = np.log(beta/m_f) - loggamma((alpha+1) / beta) + (alpha * np.log(m/m_f)) - np.power(m/m_f, beta)
+    print("ln(beta/m_f) = ", np.log(beta/m_f))
+    print("ln(Gamma ((alpha+1)/beta)) = ", loggamma((alpha+1)/beta))
+    print("alpha ln(m/m_f) = ", alpha * np.log(m/m_f))
+    print("(m/m_f)^beta = ", np.power(m/m_f, beta))
+    print("log_psi = ", log_psi)
+    return np.exp(log_psi)
+
 fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(12, 22))
 
 deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
@@ -88,7 +97,7 @@ alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
 betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
 # maximum values of the mass function
 psis_SL_max = skew_LN(mps_SL, np.exp(ln_mcs), sigmas, alphas_SL)
-#psis_CC_max = CC(mps_CC, loc_param_CC(mps_CC, alphas_CC, betas), alphas_CC, betas)
+psis_CC_max = CC_v2(mps_CC, loc_param_CC(mps_CC, alphas_CC, betas), alphas_CC, betas)
 
 # PBH masses (in solar masses)
 m_pbh_values = np.logspace(0, 3.5, 1000)
@@ -96,7 +105,7 @@ m_pbh_values = np.logspace(0, 3.5, 1000)
 for i in range(len(deltas)):
     
     psi_SL = skew_LN(m_pbh_values, m_c=np.exp(ln_mcs[i]), sigma=sigmas[i], alpha=alphas_SL[i]) / psis_SL_max[i]
-    psi_CC_normalised = CC_normalised(m_pbh_values, mps_CC[i], alphas_CC[i], betas[i])
+    psi_CC = CC_v2(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
     
     # find x-axis limits
     xmin = m_pbh_values[min(min(np.where(psi_SL > 0.1)))]
@@ -104,16 +113,16 @@ for i in range(len(deltas)):
     
     ax = axes[int((i+1)/2)][(i+1)%2]
     ax.plot(m_pbh_values, psi_SL, color='b', linestyle=(0, (5, 7)))
-    ax.plot(m_pbh_values, psi_CC_normalised, color='g', linestyle="dashed")
+    ax.plot(m_pbh_values, psi_CC, color='g', linestyle="dashed")
     if (i+1)%2 == 0:
-        ax.set_ylabel("$\psi(m) / \psi_\mathrm{max}$")
+        ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
     if int((i+1)/2) == 3:
-        ax.set_xlabel("$m~[M_\odot]$")
+        ax.set_xlabel(r"$m~[M_\odot]$")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(0.1, 2)
-    ax.legend(title="$\Delta = {:.1f}$".format(deltas[i]))
+    ax.legend(title=r"$\Delta = {:.1f}$".format(deltas[i]))
     
 fig.tight_layout(h_pad=2)
 
@@ -142,8 +151,8 @@ for j in range(2):
     m_SL_comp, SL_comp = load_data("Delta_{:.1f}_SL.csv".format(deltas[i]))
     ax_comp.plot(m_SL_comp, SL_comp, color='b', marker='x', linestyle='None', label="Extracted")
     ax_comp.plot(m_pbh_values, psi_SL, color='tab:blue', linestyle="dashed", alpha=0.5, label="Calculated")
-    ax_comp.set_ylabel("$\psi(m) / \psi_\mathrm{max}$")
-    ax_comp.set_xlabel("$m~[M_\odot]$")
+    ax_comp.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+    ax_comp.set_xlabel(r"$m~[M_\odot]$")
     ax_comp.set_xscale("log")
     ax_comp.set_yscale("log")
     ax_comp.set_xlim(xmin, xmax)
@@ -155,7 +164,7 @@ for j in range(2):
     ax_comp.legend()
     ax_comp.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
 
-fig_CC.suptitle("Skew-lognormal")
+fig_CC.suptitle("Generalised Critical Collapse")
 fig_SL.tight_layout(h_pad=2)
 
 
@@ -163,15 +172,15 @@ for j in range(2):
     ax_comp = axes_CC[j]
     i = j+3
     
-    psi_CC_normalised = CC_normalised(m_pbh_values, mps_CC[i], alphas_CC[i], betas[i])
+    psi_CC = CC_v2(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
     
     # find x-axis limits
-    xmin = m_pbh_values[min(min(np.where(psi_CC_normalised > 0.05)))]
-    xmax = m_pbh_values[max(max(np.where(psi_CC_normalised > 0.05)))]
+    xmin = m_pbh_values[min(min(np.where(psi_CC > 0.05)))]
+    xmax = m_pbh_values[max(max(np.where(psi_CC > 0.05)))]
 
     m_CC_comp, CC_comp = load_data("Delta_{:.1f}_CC.csv".format(deltas[i]))
     ax_comp.plot(m_CC_comp, CC_comp, color='g', marker='x', linestyle='None', label="Extracted")
-    ax_comp.plot(m_pbh_values, psi_CC_normalised, color='tab:green', linestyle="dashed", alpha=0.5, label="Calculated")
+    ax_comp.plot(m_pbh_values, psi_CC, color='tab:green', linestyle="dashed", alpha=0.5, label="Calculated")
     ax_comp.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
     ax_comp.set_xlabel(r"$m~[M_\odot]$")
     ax_comp.set_xscale("log")
@@ -192,7 +201,7 @@ fig_CC.tight_layout(h_pad=2)
 # Reproduce Fig. 3 curve for the CC3 mass function, Delta = 5
 fig, ax = plt.subplots(figsize=(6,6))
 
-psi_CC_normalised = CC_normalised(m_pbh_values, mps_CC[i], alphas_CC[i], betas[i])
+psi_CC_normalised = CC_v2(m_pbh_values, mps_CC[i], alphas_CC[i], betas[i]) / psis_CC_max[i]
 
 # find x-axis limits
 xmin = m_pbh_values[min(min(np.where(psi_CC_normalised > 0.05)))]
@@ -214,6 +223,10 @@ ax.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
 fig.suptitle("Generalised critical collapse")
 fig.tight_layout(h_pad=2)
 
+# There is a difference in the results here, but I think they can be 
+# explained sensibly. For the reasoning, see the 18/1 entry of 
+# https://www.evernote.com/shard/s463/nl/233603521/4c05ae9d-c9cc-76b2-a4fb-bb0783b7246d?title=Gow%20et%20al.%20(2020)%20%5B2009.03204%5D:%20reproducing%20Fig.%205.
+
 
 #%% Check individual sections of the GCC mass function.
 
@@ -222,10 +235,12 @@ m_p = 40
 alphas = [5.76, 18.9]
 betas = [0.51, 0.0669]
 
+"""
 for i in range(len(alphas)):
     alpha = alphas[i]
     beta = betas[i]
     m_f = loc_param_CC(m_p, alpha, beta)
+    
     
     print("alpha = ", alpha)
     print("beta = ", beta)
@@ -236,3 +251,22 @@ for i in range(len(alphas)):
     print("np.exp(-(m/m_f)^beta) = ", np.exp(-np.power(m/m_f, beta)))
     print("(m / m_f)^alpha = ", np.power((m / m_f), alpha))
     print("psi_CC = ", CC(m, m_f, alpha, beta))
+"""
+
+# check logarithms of quantities
+for i in range(len(alphas)):
+    alpha = alphas[i]
+    beta = betas[i]
+    m_f = loc_param_CC(m_p, alpha, beta)
+    
+    """
+    print("alpha = ", alpha)
+    print("beta = ", beta)
+    print("m_f = ", m_f)
+    print("ln(beta/m_f) = ", np.log(beta/m_f))
+    print("ln(1 / Gamma ((alpha+1)/beta)) = ", loggamma((alpha+1)/beta))
+    print("alpha ln(m/m_f) = ", alpha * np.log(m/m_f))
+    print("(m/m_f)^beta = ", np.power(m/m_f, beta))
+    """
+    #print("(m / m_f)^alpha = ", np.power((m / m_f), alpha))
+    print("log(psi_CC) = ", np.log(CC_v2(m, m_f, alpha, beta)))
