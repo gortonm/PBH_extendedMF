@@ -78,12 +78,14 @@ def CC_normalised(m, m_p, alpha, beta):
 
 def CC_v2(m, m_f, alpha, beta):
     log_psi = np.log(beta/m_f) - loggamma((alpha+1) / beta) + (alpha * np.log(m/m_f)) - np.power(m/m_f, beta)
-    print("ln(beta/m_f) = ", np.log(beta/m_f))
-    print("ln(Gamma ((alpha+1)/beta)) = ", loggamma((alpha+1)/beta))
-    print("alpha ln(m/m_f) = ", alpha * np.log(m/m_f))
-    print("(m/m_f)^beta = ", np.power(m/m_f, beta))
-    print("log_psi = ", log_psi)
+    #print("ln(beta/m_f) = ", np.log(beta/m_f))
+    #print("ln(Gamma ((alpha+1)/beta)) = ", loggamma((alpha+1)/beta))
+    #print("alpha ln(m/m_f) = ", alpha * np.log(m/m_f))
+    #print("(m/m_f)^beta = ", np.power(m/m_f, beta))
+    #print("log_psi = ", log_psi)
     return np.exp(log_psi)
+
+#%%
 
 fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(12, 22))
 
@@ -124,8 +126,10 @@ for i in range(len(deltas)):
     ax.set_ylim(0.1, 2)
     ax.legend(title=r"$\Delta = {:.1f}$".format(deltas[i]))
     
+axes[0][0].axis("off")
 fig.tight_layout(h_pad=2)
-
+fig.show()
+fig.savefig("20-1_Gow20_Fig5.pdf")
 
 
 # Compare mass functions to those plotted in Fig. 5 of 2009.03204.
@@ -196,6 +200,7 @@ for j in range(2):
 
 fig_CC.suptitle("Generalised critical collapse")
 fig_CC.tight_layout(h_pad=2)
+fig_CC.show()
 
 #%%
 # Reproduce Fig. 3 curve for the CC3 mass function, Delta = 5
@@ -222,6 +227,8 @@ ax.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
 
 fig.suptitle("Generalised critical collapse")
 fig.tight_layout(h_pad=2)
+fig.show()
+fig.savefig("20-1_Gow20_Fig3_GCC.pdf")
 
 # There is a difference in the results here, but I think they can be 
 # explained sensibly. For the reasoning, see the 18/1 entry of 
@@ -270,3 +277,59 @@ for i in range(len(alphas)):
     """
     #print("(m / m_f)^alpha = ", np.power((m / m_f), alpha))
     print("log(psi_CC) = ", np.log(CC_v2(m, m_f, alpha, beta)))
+    
+    
+#%% Plot the mass functions, centred in the asteroid-mass window.
+
+fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(12, 22))
+
+deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+ln_mcs = np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41])
+sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
+alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+mps_SL = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9]) * 1e18
+mps_CC = np.array([40.8, 40.8, 40.7, 40.7, 40.8, 40.6, 35.1]) * 1e18
+alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
+betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
+# maximum values of the mass function
+psis_SL_max = skew_LN(mps_SL, np.exp(ln_mcs) * 1e18, sigmas, alphas_SL)
+psis_CC_max = CC_v2(mps_CC, loc_param_CC(mps_CC, alphas_CC, betas), alphas_CC, betas)
+
+# PBH masses (in solar masses)
+m_pbh_values = np.logspace(0, 3.5, 1000) * 1e18
+
+for i in range(len(deltas)):
+    
+    psi_SL = skew_LN(m_pbh_values, m_c=np.exp(ln_mcs[i]) * 1e18, sigma=sigmas[i], alpha=alphas_SL[i]) / psis_SL_max[i]
+    psi_CC = CC_v2(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
+    
+    # find x-axis limits
+    xmin = m_pbh_values[min(min(np.where(psi_SL > 0.1)))]
+    xmax = m_pbh_values[max(max(np.where(psi_SL > 0.1)))]
+    
+    ax = axes[int((i+1)/2)][(i+1)%2]
+    ax.plot(m_pbh_values, psi_SL, color='b', linestyle=(0, (5, 7)))
+    ax.plot(m_pbh_values, psi_CC, color='g', linestyle="dashed")
+    if (i+1)%2 == 0:
+        ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+    if int((i+1)/2) == 3:
+        ax.set_xlabel(r"$m~[g]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(0.1, 2)
+    ax.legend(title=r"$\Delta = {:.1f}$".format(deltas[i]))
+
+axes[0][0].axis("off")
+
+fig.tight_layout(h_pad=2)
+fig.show()
+fig.savefig("20-1_Gow20_Fig5_shifted.pdf")
+
+#%% Plot skew-lognormal values for fixed sigma = 0.37 and alpha=-2 with different m_p
+mc_values = [1, 10, 100]
+m_pbh_values = np.arange(0.1, 200, 0.1)
+
+plt.figure()
+for m_c in mc_values:
+    plt.plot(m_pbh_values, skew_LN(m_pbh_values, m_c=m_c, sigma=0.37, alpha=-2))
