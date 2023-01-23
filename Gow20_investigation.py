@@ -333,3 +333,89 @@ m_pbh_values = np.arange(0.1, 200, 0.1)
 plt.figure()
 for m_c in mc_values:
     plt.plot(m_pbh_values, skew_LN(m_pbh_values, m_c=m_c, sigma=0.37, alpha=-2))
+
+#%% Create plots varying one parameter whilst keeping others fixed
+
+# Skew-lognormal
+sigmas = np.linspace(0.5, 3, 6)
+alphas_SL = np.linspace(-2.5, 0.5, 5)
+m_pbh_values = np.logspace(-3, 3.5, 1000)
+m_p = 40
+
+import pylab
+colors = pylab.cm.hot(np.linspace(0,0.8,len(alphas_SL)))
+fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(14, 10))
+
+for i in range(len(sigmas)):
+    
+    j = 0
+    
+    if i > 2:
+        j = 1
+    
+    print("j = ", j)
+    print("i%3 = ", i%3)
+    
+    ax = axes[j][i%3]
+
+    for k, alpha in enumerate(alphas_SL):
+        psi_SL = skew_LN(m_pbh_values, m_c=m_p, sigma=sigmas[i], alpha=alpha)
+        ax.plot(m_pbh_values, psi_SL, label="{:.1f}".format(alpha), color=colors[k])
+    
+    if i == 0:
+        ax.legend(title=r"$\alpha$")
+    ax.vlines(x=m_p, ymin=0, ymax=100, color='k', linestyle='dashed', alpha=0.5)
+    ax.set_ylabel(r"$\psi(m)$")
+    ax.set_xlabel(r"$m~[M_\odot]$")
+    ax.set_title(r"$\sigma = {:.1f}$".format(sigmas[i]))
+    ax.set_ylim(max(psi_SL) / 1e5, max(psi_SL)*100)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
+fig.suptitle("Skew-lognormal")
+fig.tight_layout(h_pad = 2)
+fig.savefig("SL_var_alpha_sigma.pdf")
+
+#%%
+# Critical collapse MF
+betas = 10**np.linspace(np.log10(0.022), np.log10(2.2), 6)
+alphas_CC = np.linspace(3, 20, 5)
+m_pbh_values = np.logspace(-2, 4., 1000)
+m_p = 40
+
+colors = pylab.cm.cool(np.linspace(0,0.8,len(alphas_SL)))
+fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(14, 10))
+
+for i in range(len(betas)):
+    
+    j = 0
+    
+    if i > 2:
+        j = 1
+    
+    print("j = ", j)
+    print("i%3 = ", i%3)
+    
+    ax = axes[j][i%3]
+    beta = betas[i]
+
+    for k, alpha in enumerate(alphas_CC):
+        print("beta/alpha", beta/alpha)
+        print("1/beta", 1/beta)
+
+        psi_CC = CC_v2(m=m_pbh_values, m_f=loc_param_CC(m_p, alpha, beta), alpha=alpha, beta=beta)
+        ax.plot(m_pbh_values, psi_CC, label="{:.1f}".format(alpha), color=colors[k])
+    
+    if i == 0:
+        ax.legend(title=r"$\alpha$")
+    ax.vlines(x=m_p, ymin=0, ymax=100, color='k', linestyle='dashed', alpha=0.5)
+    ax.set_ylabel(r"$\psi(m)$")
+    ax.set_xlabel(r"$m~[M_\odot]$")
+    ax.set_title(r"$\beta = {:.2f}$".format(beta))
+    ax.set_ylim(max(psi_SL) / 1e5, max(psi_SL)*5)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+
+fig.suptitle("Generalised CC")
+fig.tight_layout(h_pad = 2)
+fig.savefig("CC_var_beta_sigma.pdf")
