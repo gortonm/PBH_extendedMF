@@ -129,7 +129,7 @@ for i in range(len(deltas)):
 axes[0][0].axis("off")
 fig.tight_layout(h_pad=2)
 fig.show()
-fig.savefig("20-1_Gow20_Fig5.pdf")
+plt.savefig("./Figures/20-1_Gow20_Fig5.pdf")
 
 
 # Compare mass functions to those plotted in Fig. 5 of 2009.03204.
@@ -228,7 +228,6 @@ ax.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
 fig.suptitle("Generalised critical collapse")
 fig.tight_layout(h_pad=2)
 fig.show()
-fig.savefig("20-1_Gow20_Fig3_GCC.pdf")
 
 # There is a difference in the results here, but I think they can be 
 # explained sensibly. For the reasoning, see the 18/1 entry of 
@@ -324,7 +323,7 @@ axes[0][0].axis("off")
 
 fig.tight_layout(h_pad=2)
 fig.show()
-fig.savefig("20-1_Gow20_Fig5_shifted.pdf")
+plt.savefig("20-1_Gow20_Fig5_shifted.png")
 
 #%% Plot skew-lognormal values for fixed sigma = 0.37 and alpha=-2 with different m_p
 mc_values = [1, 10, 100]
@@ -338,7 +337,7 @@ for m_c in mc_values:
 
 # Skew-lognormal
 sigmas = np.linspace(0.5, 3, 6)
-alphas_SL = np.linspace(-2.5, 0.5, 5)
+alphas_SL = np.linspace(-2.5, 0., 6)
 m_pbh_values = np.logspace(-3, 3.5, 1000)
 m_p = 40
 
@@ -374,13 +373,13 @@ for i in range(len(sigmas)):
 
 fig.suptitle("Skew-lognormal")
 fig.tight_layout(h_pad = 2)
-fig.savefig("SL_var_alpha_sigma.pdf")
+plt.savefig("./Figures/SL_var_alpha_sigma.png")
 
 #%%
 # Critical collapse MF
 betas = 10**np.linspace(np.log10(0.022), np.log10(2.2), 6)
 alphas_CC = np.linspace(3, 20, 5)
-m_pbh_values = np.logspace(-2, 4., 1000)
+m_pbh_values = np.logspace(-1, 4., 1000)
 m_p = 40
 
 colors = pylab.cm.cool(np.linspace(0,0.8,len(alphas_SL)))
@@ -406,16 +405,16 @@ for i in range(len(betas)):
         psi_CC = CC_v2(m=m_pbh_values, m_f=loc_param_CC(m_p, alpha, beta), alpha=alpha, beta=beta)
         ax.plot(m_pbh_values, psi_CC, label="{:.1f}".format(alpha), color=colors[k])
     
-    if i == 0:
+    if i == len(betas)-1:
         ax.legend(title=r"$\alpha$")
     ax.vlines(x=m_p, ymin=0, ymax=100, color='k', linestyle='dashed', alpha=0.5)
     ax.set_ylabel(r"$\psi(m)$")
     ax.set_xlabel(r"$m~[M_\odot]$")
     ax.set_title(r"$\beta = {:.2f}$".format(beta))
-    ax.set_ylim(max(psi_SL) / 1e5, max(psi_SL)*5)
+    ax.set_ylim(max(psi_CC) / 1e5, max(psi_CC)*10)
     ax.set_xscale("log")
     ax.set_yscale("log")
 
 fig.suptitle("Generalised CC")
 fig.tight_layout(h_pad = 2)
-fig.savefig("CC_var_beta_sigma.pdf")
+plt.savefig("./Figures/CC_var_beta_sigma.png")
