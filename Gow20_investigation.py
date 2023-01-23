@@ -335,6 +335,8 @@ for m_c in mc_values:
 
 #%% Create plots varying one parameter whilst keeping others fixed
 
+ratio_plot = False
+
 # Skew-lognormal
 sigmas = np.linspace(0.5, 3, 6)
 alphas_SL = np.linspace(-2.5, 0., 6)
@@ -344,7 +346,6 @@ m_p = 40
 import pylab
 colors = pylab.cm.hot(np.linspace(0,0.8,len(alphas_SL)))
 fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(14, 10))
-
 for i in range(len(sigmas)):
     
     j = 0
@@ -359,21 +360,31 @@ for i in range(len(sigmas)):
 
     for k, alpha in enumerate(alphas_SL):
         psi_SL = skew_LN(m_pbh_values, m_c=m_p, sigma=sigmas[i], alpha=alpha)
-        ax.plot(m_pbh_values, psi_SL, label="{:.1f}".format(alpha), color=colors[k])
+        if ratio_plot:
+            ax.plot(m_pbh_values, psi_SL / max(psi_SL), label="{:.1f}".format(alpha), color=colors[k])
+        else:
+            ax.plot(m_pbh_values, psi_SL, label="{:.1f}".format(alpha), color=colors[k])
     
     if i == 0:
         ax.legend(title=r"$\alpha$")
     ax.vlines(x=m_p, ymin=0, ymax=100, color='k', linestyle='dashed', alpha=0.5)
-    ax.set_ylabel(r"$\psi(m)$")
     ax.set_xlabel(r"$m~[M_\odot]$")
     ax.set_title(r"$\sigma = {:.1f}$".format(sigmas[i]))
-    ax.set_ylim(max(psi_SL) / 1e5, max(psi_SL)*100)
+    if ratio_plot:
+        ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+        ax.set_ylim(1e-5, 10)
+    else:
+        ax.set_ylabel(r"$\psi(m)$")
+        ax.set_ylim(max(psi_SL) / 1e5, max(psi_SL)*100)
     ax.set_xscale("log")
     ax.set_yscale("log")
 
 fig.suptitle("Skew-lognormal")
 fig.tight_layout(h_pad = 2)
-plt.savefig("./Figures/SL_var_alpha_sigma.png")
+if ratio_plot:
+    plt.savefig("./Figures/SL_var_alpha_sigma_ratio.png")
+else:
+    plt.savefig("./Figures/SL_var_alpha_sigma.png")
 
 #%%
 # Critical collapse MF
@@ -403,18 +414,28 @@ for i in range(len(betas)):
         print("1/beta", 1/beta)
 
         psi_CC = CC_v2(m=m_pbh_values, m_f=loc_param_CC(m_p, alpha, beta), alpha=alpha, beta=beta)
-        ax.plot(m_pbh_values, psi_CC, label="{:.1f}".format(alpha), color=colors[k])
-    
+        if ratio_plot:
+            ax.plot(m_pbh_values, psi_CC / max(psi_CC), label="{:.1f}".format(alpha), color=colors[k])
+        else:
+            ax.plot(m_pbh_values, psi_CC, label="{:.1f}".format(alpha), color=colors[k])   
+            
     if i == len(betas)-1:
         ax.legend(title=r"$\alpha$")
     ax.vlines(x=m_p, ymin=0, ymax=100, color='k', linestyle='dashed', alpha=0.5)
-    ax.set_ylabel(r"$\psi(m)$")
     ax.set_xlabel(r"$m~[M_\odot]$")
     ax.set_title(r"$\beta = {:.2f}$".format(beta))
-    ax.set_ylim(max(psi_CC) / 1e5, max(psi_CC)*10)
+    if ratio_plot:
+        ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+        ax.set_ylim(1e-5, 10)
+    else:
+        ax.set_ylabel(r"$\psi(m)$")
+        ax.set_ylim(max(psi_CC) / 1e5, max(psi_CC)*10)
     ax.set_xscale("log")
     ax.set_yscale("log")
 
 fig.suptitle("Generalised CC")
 fig.tight_layout(h_pad = 2)
-plt.savefig("./Figures/CC_var_beta_sigma.png")
+if ratio_plot:
+    plt.savefig("./Figures/CC_var_beta_sigma_ratio.png")
+else:
+    plt.savefig("./Figures/CC_var_beta_sigma.png")
