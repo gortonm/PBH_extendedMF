@@ -89,9 +89,17 @@ omega_PBH_trapz = [omega_PBH_new_numeric(sigma) for sigma in sigmas]
 plt.figure()
 plt.plot(sigmas, omega_PBH_trapz, label="Trapezium rule")
 plt.plot(sigmas, omega_PBH_new_approx_v2(sigmas), label="Approximate expression from Eq. (7)")
-
 plt.xlabel("$\sigma$")
 plt.ylabel("$\hat{\Omega}_\mathrm{PBH, new} / k$")
 plt.yscale("log")
 plt.legend()
 plt.tight_layout()
+
+
+plt.figure()
+plt.plot(sigmas, omega_PBH_trapz/omega_PBH_new_approx_v2(sigmas), label="Trapezium rule \n / Approximate analytic expression")
+plt.xlabel("$\sigma$")
+plt.ylabel("$\hat{\Omega}_\mathrm{PBH, new}$")
+plt.legend()
+plt.tight_layout()
+
