@@ -255,9 +255,9 @@ m_num, MF_num = load_data("Gow22_Fig3_Delta0_numerical.csv")
 
 plt.figure(figsize=(8.3, 5.5))   # dimensions roughly match the plots from Fig. 3 of 2009.03204
 plt.plot(m_num, MF_num, color="k", label=r"Numerical")
-plt.plot(m_pbh_values, LN1/max(LN1), color="r", label=r"LN $(\sigma={:.2f})$".format(sigma1))
-plt.plot(m_pbh_values, SLN2/max(SLN2), color="b", label=r"Skew-LN $(\sigma={:.2f})$".format(sigma2))
-plt.plot(m_pbh_values, SLN1/max(SLN1), color="tab:blue", linestyle="dashed", label=r"Skew-LN $(\sigma={:.2f})$".format(sigma1))
+plt.plot(m_pbh_values, LN1/max(LN1), color="r", label=r"LN $(\sigma_\mathrm{{LN}}=" + "{:.3f})$".format(sigma1))
+plt.plot(m_pbh_values, SLN2/max(SLN2), color="b", label=r"Skew-LN $(\sigma_" + r"\mathrm{{SLN}}={:.3f})$".format(sigma2))
+plt.plot(m_pbh_values, SLN1/max(SLN1), color="tab:blue", linestyle="dashed", label=r"Skew-LN $(\sigma_" + r"\mathrm{{SLN}}={:.3f})$".format(sigma1))
 plt.xscale("log")
 plt.yscale("log")
 plt.ylim(1e-1, 1.25)   # yaxis limits match Fig. 3 of 2009.03204 (for Delta=0)
@@ -266,6 +266,20 @@ plt.legend(fontsize="small")
 plt.ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
 plt.xlabel(r"$m~[M_\odot]$")
 plt.savefig("./Figures/min_width/3-2_LN_skewLN_varsigma.png", dpi=1200)
+
+plt.figure(figsize=(8.3, 5.5))   # dimensions roughly match the plots from Fig. 3 of 2009.03204
+plt.plot(m_pbh_values, LN1/max(LN1), color="r", label=r"LN $(\sigma =" + "{:.3f})$".format(sigma1))
+plt.plot(m_pbh_values, SLN2/max(SLN2), color="b", label=r"Skew-LN $(\sigma" + r"={:.2f})$".format(sigma2))
+plt.plot(m_pbh_values, SLN1/max(SLN1), color="tab:blue", linestyle="dashed", label=r"Skew-LN $(\sigma" + r"={:.3f})$".format(sigma1))
+plt.xscale("log")
+plt.yscale("log")
+plt.ylim(1e-1, 1.25)   # yaxis limits match Fig. 3 of 2009.03204 (for Delta=0)
+plt.xlim(12, 78)   # x-axis limits match Fig. 3 of 2009.03204 (for Delta=0)
+plt.legend(fontsize="small")
+plt.ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+plt.xlabel(r"$m~[M_\odot]$")
+plt.savefig("./Figures/min_width/LN_skewLN.png", dpi=300)
+
 
 #%% Check individual sections of the GCC mass function.
 
