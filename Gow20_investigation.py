@@ -233,6 +233,39 @@ fig.show()
 # explained sensibly. For the reasoning, see the 18/1 entry of 
 # https://www.evernote.com/shard/s463/nl/233603521/4c05ae9d-c9cc-76b2-a4fb-bb0783b7246d?title=Gow%20et%20al.%20(2020)%20%5B2009.03204%5D:%20reproducing%20Fig.%205.
 
+#%%
+# Compare log-normal and skew-lognormal mass functions, comparing 
+# the minimum widths quoted in 2008.03289 (0.37) for a lognormal and the 
+# minimum value from Table I (0.55) from 2009.03204.
+
+# PBH masses (in solar masses)
+m_pbh_values = np.logspace(0, 3.5, 1000)
+sigma1 = 0.374
+sigma2 = 0.55
+alpha_SLN = -2.27
+m_c = np.exp(4.13)
+m_h = 17   # normalised horizon mass, from Eq. (2.18) of 2008.03289.
+
+mp_LN = 39  # chose peak mass of lognormal to approximately match the peak mass for the lognormal shown in Fig. 3 of 2009.03204 (for Delta=0).
+SLN1 = skew_LN(m=m_pbh_values, m_c=0.97 * m_c / np.exp(sigma1**2), sigma=sigma1, alpha=alpha_SLN)
+SLN2 = skew_LN(m=m_pbh_values, m_c=m_c, sigma=sigma2, alpha=alpha_SLN)
+LN1 = skew_LN(m=m_pbh_values, m_c=mp_LN * np.exp(sigma1**2), sigma=sigma1, alpha=0)
+
+m_num, MF_num = load_data("Gow22_Fig3_Delta0_numerical.csv")
+
+plt.figure(figsize=(8.3, 5.5))   # dimensions roughly match the plots from Fig. 3 of 2009.03204
+plt.plot(m_num, MF_num, color="k", label=r"Numerical")
+plt.plot(m_pbh_values, LN1/max(LN1), color="r", label=r"LN $(\sigma={:.2f})$".format(sigma1))
+plt.plot(m_pbh_values, SLN2/max(SLN2), color="b", label=r"Skew-LN $(\sigma={:.2f})$".format(sigma2))
+plt.plot(m_pbh_values, SLN1/max(SLN1), color="tab:blue", linestyle="dashed", label=r"Skew-LN $(\sigma={:.2f})$".format(sigma1))
+plt.xscale("log")
+plt.yscale("log")
+plt.ylim(1e-1, 1.25)   # yaxis limits match Fig. 3 of 2009.03204 (for Delta=0)
+plt.xlim(12, 78)   # x-axis limits match Fig. 3 of 2009.03204 (for Delta=0)
+plt.legend(fontsize="small")
+plt.ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+plt.xlabel(r"$m~[M_\odot]$")
+plt.savefig("./Figures/min_width/3-2_LN_skewLN_varsigma.png", dpi=1200)
 
 #%% Check individual sections of the GCC mass function.
 
@@ -335,7 +368,7 @@ for m_c in mc_values:
 
 #%% Create plots varying one parameter whilst keeping others fixed
 
-ratio_plot = False
+ratio_plot = True
 
 # Skew-lognormal
 sigmas = np.linspace(0.5, 3, 6)
@@ -372,10 +405,10 @@ for i in range(len(sigmas)):
     ax.set_title(r"$\sigma = {:.1f}$".format(sigmas[i]))
     if ratio_plot:
         ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
-        ax.set_ylim(1e-5, 10)
+        ax.set_ylim(1e-9, 10)
     else:
         ax.set_ylabel(r"$\psi(m)$")
-        ax.set_ylim(max(psi_SL) / 1e5, max(psi_SL)*100)
+        ax.set_ylim(max(psi_SL) / 1e9, max(psi_SL)*100)
     ax.set_xscale("log")
     ax.set_yscale("log")
 
