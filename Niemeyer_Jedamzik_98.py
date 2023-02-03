@@ -119,8 +119,8 @@ def var(mf, m_min=1e-5, m_max=1e5, n_steps=10000):
     ln_term_integrand = np.log(m_values) * mf(m_values)
     ln_square_term_integrand = np.log(m_values)**2 * mf(m_values)
     
-    ln_term = np.trapz(m_values, ln_term_integrand)
-    ln_square_term = np.trapz(m_values, ln_square_term_integrand)
+    ln_term = np.trapz(ln_term_integrand, m_values)
+    ln_square_term = np.trapz(ln_square_term_integrand, m_values)
     
     var = ln_square_term - ln_term**2
     return var
@@ -143,36 +143,41 @@ m_p = 25   # this can be chosen freely
 
 # quantities appearing in the Niemeyer & Jedamzik (1998) mass function
 delta_c = 1/3
-sigma_PS = 0.15   # power spectrum standard deviation
+sigma_PS = 0.1   # power spectrum standard deviation
 K = 1   # this can be chosen freely
 
 # quantities appearing in the skew-LN mass function
 sigma_SLN = 0.55
 alpha_SLN = -2.27
-m_c = 10
+m_c = 100   # this can be chosen freely
 
 # quantities appearing in the critical collapse mass function
 alpha_CC = 3.06
 beta = 2.12
-m_f = 10
+m_f = 100   # this can be chosen freely
 
 def mf_LN(m):
     # Lognormal mass function
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
+# shape of mass function differs from Eq. (9) in Yokoyama (1998) since it is in
+# terms of the peak mass, and the MF shown is d\Omega / dM rather than
+# d\Omega / d\ln(M)
 def mf_Yokoyama_shape(m, m_p=m_p, gamma=gamma):   
     return np.power(m/m_p, 1/gamma) * np.exp(-np.power(m/m_p, 1/gamma))
 
-mf_Yokoyama_normalisation = 1/np.trapz(m_values, mf_Yokoyama_shape(m_values, m_p, gamma))
+mf_Yokoyama_normalisation = 1/np.trapz(mf_Yokoyama_shape(m_values, m_p, gamma), m_values)
 
 def mf_Yokoyama(m, m_p=m_p, gamma=gamma):
     return mf_Yokoyama_normalisation * mf_Yokoyama_shape(m, m_p, gamma)
 
+# mass function for d\Omega / dM has the same shape as d\phi / d\ln M, since
+# d\phi / d\ln M = M * d\phi / dM \propto M * dn / dM \propto d\Omega / dM
 def mf_NJ98_shape(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
     m_bh = m / K
     return np.power(m_bh, 1/gamma) * np.exp(- np.power(delta_c + np.power(m_bh, 1/gamma), 2) / (2*sigma_PS**2) )
 
-mf_NJ98_normalisation = 1/np.trapz(m_values, mf_NJ98_shape(m_values, K, gamma, delta_c, sigma_PS))
+mf_NJ98_normalisation = 1/np.trapz(mf_NJ98_shape(m_values, K, gamma, delta_c, sigma_PS), m_values)
 
 def mf_NJ98(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
     return mf_NJ98_normalisation * mf_NJ98_shape(m)
@@ -182,27 +187,22 @@ def skew_LN(m, m_c=m_c, sigma=sigma_SLN, alpha=alpha_SLN):
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha_SLN * np.log(m/m_c) / (np.sqrt(2) * sigma_SLN))) / (np.sqrt(2*np.pi) * sigma_SLN * m)
 
 def CC_v2(m, m_f=m_f, alpha_CC=alpha_CC, beta=beta):
+    # Critical collapse mass function, as defined in Eq. (9) of 2009.03204.
     log_psi = np.log(beta/m_f) - loggamma((alpha_CC+1) / beta) + (alpha_CC * np.log(m/m_f)) - np.power(m/m_f, beta)
     return np.exp(log_psi)
 
+print("Log-normal (sigma = {:.2f})".format(sigma))
+print("sd = " + str(np.sqrt(var(mf_LN))) + "\n")
 
-print(var(mf_LN))
-print(np.sqrt(abs(var(mf_LN))))
+print("Yokoyama (1998) MF")
+print("sd = " + str(np.sqrt(var(mf_Yokoyama))) + "\n")
 
-print(var(mf_Yokoyama))
-print(np.sqrt(abs(var(mf_Yokoyama))))
+print("Niemeyer & Jedamzik (1998) MF")
+print("sd = " + str(np.sqrt(var(mf_NJ98))) + "\n")
 
-print(var(mf_NJ98))
-print(np.sqrt(abs(var(mf_NJ98))))
+print("Skew LN")
+print("sd = "+ str(np.sqrt(var(skew_LN))) + "\n")
 
-print(var(skew_LN))
-print(np.sqrt(abs(var(skew_LN))))
-
-print(var(CC_v2))
-print(np.sqrt(abs(var(CC_v2))))
-
-# check if the skew-LN and critical collapse MFs are normalised to 1
-print(np.trapz(m_values, skew_LN(m_values)))
-print(np.trapz(m_values, CC_v2(m_values)))
-
+print("GCC3")
+print("sd = " + str(np.sqrt(var(CC_v2))) + "\n")
 
