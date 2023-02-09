@@ -130,7 +130,7 @@ def f_max(m, m_GC_mono, f_max_GC_mono):
 
 
 def integrand(A, m, m_c, sigma, m_GC_mono, f_max_GC_mono):
-    """Compute integrand appearing in Eq. 12 of 1705.05567 (for reproducing constraints with an extended mass function following 1705.05567).
+    """Compute integrand appearing in Eq. 12 of 1705.05567 for a log-normal mass function (for reproducing constraints with an extended mass function following 1705.05567).
 
     Parameters
     ----------
@@ -154,6 +154,34 @@ def integrand(A, m, m_c, sigma, m_GC_mono, f_max_GC_mono):
 
     """
     return LN_MF_number_density(m, m_c, sigma, A) / f_max(m, m_GC_mono, f_max_GC_mono)
+
+
+def integrand_general_mf(m, mf, m_c, params, m_GC_mono, f_max_GC_mono):
+    """Compute integrand appearing in Eq. 12 of 1705.05567 for a general mass
+    function.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses (in grams).
+    mf : Function
+        PBH mass function.
+    m_c : Float
+        Characteristic PBH mass.
+    params : Array-like
+        Other parameters of the PBH mass function.
+    m_GC_mono : Array-like
+        PBH masses for the monochromatic MF, to use for interpolation.
+    f_max_GC_mono : Array-like
+        Constraint on abundance of PBHs (loaded data, monochromatic MF).
+
+    Returns
+    -------
+    Array-like
+        Integrand appearing in Eq. 12 of 1705.05567.
+
+    """
+    return mf(m, m_c, *params) / f_max(m, m_GC_mono, f_max_GC_mono)
 
 
 def isatis_constraints(sigma, lognormal_MF=True):
@@ -190,7 +218,7 @@ def isatis_constraints(sigma, lognormal_MF=True):
     # Choose which constraints to plot, and create labels.
     constraints_names = []
     constraints_extended_plotting = []
-    
+
     for i in range(len(constraints_names_bis)):
         # Only include labels for constraints that Isatis calculated.
         if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
@@ -226,7 +254,7 @@ def constraints_Carr(sigma, lognormal_MF=True):
     constraints_mono_calculated = []
 
     constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    constraints_extended_Carr = []    
+    constraints_extended_Carr = []
 
     # Loop through instruments
     for i in range(len(constraints_names)):
@@ -283,6 +311,91 @@ def constraints_Carr(sigma, lognormal_MF=True):
 
     return constraints_extended_Carr
 
+
+def constraints_Carr_general(mf, params):
+    """Calculate constraints for a general extended mass function, using the method from 1705.05567.
+
+    Parameters
+    ----------
+    mf : Function
+        PBH mass function.
+    params : Array-like
+        Other parameters of the PBH mass function.
+
+    Returns
+    -------
+    constraints_extended_Carr : Array-like
+        Constraints on f_PBH.
+
+    """
+    # Constraints for monochromatic MF, calculated using isatis_reproduction.py.
+    masses_mono = 10**np.arange(11, 19.05, 0.1)
+    constraints_mono_calculated = []
+
+    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    constraints_extended_Carr = []
+
+    # Loop through instruments
+    for i in range(len(constraints_names)):
+
+        constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
+
+        # Constraint from given instrument
+        constraint_extended_Carr = []
+        constraint_mono_Carr = []
+
+        for l in range(len(masses_mono)):
+            constraint_mass_m = []
+            for k in range(len(constraints_mono_file)):   # cycle over bins
+                constraint_mass_m.append(constraints_mono_file[k][l])
+
+            constraint_mono_Carr.append(min(constraint_mass_m))
+
+        constraints_mono_calculated.append(constraint_mono_Carr)
+
+        # Loop through central PBH masses
+        for m_c in masses:
+
+            # Constraint from each energy bin
+            constraints_over_bins_extended = []
+
+            # Loop through energy bins
+            for j in range(len(constraints_mono_file)):
+                f_max_values = constraints_mono_file[j]
+
+                # Only include positive values of f_max.
+                # Exclude f_max > 100, since including these can cause 
+                # overflow errors.
+                masses_mono_truncated = masses_mono[f_max_values < 1e2]
+                f_max_truncated = f_max_values[f_max_values < 1e2]
+
+                masses_mono_truncated = masses_mono_truncated[f_max_truncated > 0]
+                f_max_truncated = f_max_truncated[f_max_truncated > 0]
+
+                masses_mono_truncated = masses_mono_truncated[f_max_truncated != float("inf")]
+                f_max_truncated = f_max_truncated[f_max_truncated != float("inf")]
+
+                # If all values of f_max are excluded, assign a non-
+                # physical value f_PBH = 10 to the constraint at that mass.
+                if len(f_max_truncated) == 0:
+                    constraints_over_bins_extended.append(10.)
+                else:
+                    # Constraint from each bin
+                    integral = np.trapz(integrand_general_mf(masses_mono_truncated, mf, m_c, params, masses_mono_truncated, f_max_truncated), masses_mono_truncated)
+                    if integral == 0:
+                        constraints_over_bins_extended.append(10)
+                    else:
+                        constraints_over_bins_extended.append(1/integral)
+
+            # Constraint from given instrument (extended MF)
+            constraint_extended_Carr.append(min(constraints_over_bins_extended))
+
+        constraints_extended_Carr.append(np.array(constraint_extended_Carr))
+
+    return constraints_extended_Carr
+
+
+#%%
 
 if "__main__" == __name__:
     
@@ -404,3 +517,86 @@ if "__main__" == __name__:
     ax3.legend(fontsize='small')
     ax3.set_title("Log-normal ($\sigma = {:.1f}$)".format(sigma))
     fig3.tight_layout()
+    
+#%%
+from scipy.special import erf, loggamma
+
+
+def skew_LN(m, m_c, sigma, alpha):
+    # Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204.
+    return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
+
+def loc_param_GCC(m_p, alpha, beta):
+    # Location parameter for critical collapse mass function, from Table I of 2009.03204.
+    return m_p * np.power(beta/alpha, 1/beta)
+
+def GCC(m, m_f, alpha, beta):
+    log_psi = np.log(beta/m_f) - loggamma((alpha+1) / beta) + (alpha * np.log(m/m_f)) - np.power(m/m_f, beta)
+    return np.exp(log_psi)
+
+
+if "__main__" == __name__:
+    
+    # Choose which constraints to plot, and create labels.
+    constraints_names = []
+    constraints_extended_plotting = []
+    
+    # Extended mass function constraints using the method from 1705.05567.
+    # Choose which constraints to plot, and create labels
+    constraints_labels = []
+    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+
+    # Mass function parameter values, from 2009.03204.
+    deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+    sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
+    alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+
+    alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
+    betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
+    
+    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
+    
+    for k in range(len(deltas)):
+        fig, ax = plt.subplots(figsize=(6,6))
+        
+        # Calculate constraints for extended MF from gamma-rays.
+        f_pbh_skew_LN = []
+        f_pbh_GCC = []
+        
+        params_SLN = [sigmas[k], alphas_SL[k]]
+        params_GCC = [alphas_CC[k], betas[k]]
+
+        constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN, params_SLN)
+        constraints_extended_Carr_GCC = constraints_Carr_general(GCC, params_GCC)
+        
+        
+        # envelope of constraints, with the tightest constraint
+        envelope_SLN = []
+        envelope_GCC = []
+        
+        for i in range(len(constraints_names)):
+            ax.plot(masses, constraints_extended_Carr_SLN[i], linestyle="dotted", label="SLN, " + str(constraints_names[i]), color=colors[i])
+            ax.plot(masses, constraints_extended_Carr_GCC[i], linestyle="dashed", label="GCC, " + str(constraints_names[i]), color=colors[i])
+            
+        for j in range(len(masses)):
+            constraints_SLN = []
+            constraints_GCC = []
+            for l in range(len(constraints_names)):
+                constraints_SLN.append(constraints_extended_Carr_SLN[l][j])
+                constraints_GCC.append(constraints_extended_Carr_GCC[l][j])
+                
+            envelope_SLN.append(min(constraints_SLN))
+            envelope_GCC.append(min(constraints_GCC))
+        
+        ax.plot(masses, envelope_SLN, linestyle="dotted", label="Envelope (SLN)", color="k")
+        ax.plot(masses, envelope_GCC, linestyle="dashed", label="Envelope (GCC)", color="k")
+
+        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-10, 1)
+        ax.set_xlim(mc_min, mc_max)
+        ax.legend(fontsize="small")
+        ax.legend(title=r"$\Delta = {:.1f}$".format(deltas[k]))
+        fig.tight_layout()
