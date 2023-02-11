@@ -575,14 +575,72 @@ from scipy.special import erf, loggamma
 
 
 def skew_LN(m, m_c, sigma, alpha):
-    # Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204.
+    """
+    Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses.
+    m_c : Float
+        Characteristic PBH mass.
+    sigma : Float
+        Parameter controlling width of mass function (corresponds to the standard deviation when alpha=0).
+    alpha : Float
+        Parameter controlling skew of the distribution.
+
+    Returns
+    -------
+    Array-like
+        Values of the mass function, evaluated at m.
+
+    """
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
 
+
 def loc_param_GCC(m_p, alpha, beta):
-    # Location parameter for critical collapse mass function, from Table I of 2009.03204.
+    """
+    Location parameter for generalised critical collapse mass function, from Table I of 2009.03204 (denoted m_f in that paper).
+    
+    Parameters
+    ----------
+    m_p : Array-like
+        Peak mass of generalised critical collapse mass function.
+    alpha : Float
+        Parameter controlling width of mass function.
+    beta : Float
+        Parameter controlling strength of tail at small masses.
+
+    Returns
+    -------
+    Array-like
+        Location parameter.
+
+    """
     return m_p * np.power(beta/alpha, 1/beta)
 
+
 def GCC(m, m_f, alpha, beta):
+    """
+    Generalised critical collapse mass function, as defined in Eq. (9) of 2009.03204.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses.
+    m_f : Float
+        Location parameter.
+    alpha : Float
+        Parameter controlling width of mass function.
+    beta : Float
+        Parameter controlling strength of tail at small masses.
+
+    Returns
+    -------
+    Array-like
+        Values of the mass function, evaluated at m.
+
+    """
     log_psi = np.log(beta/m_f) - loggamma((alpha+1) / beta) + (alpha * np.log(m/m_f)) - np.power(m/m_f, beta)
     return np.exp(log_psi)
 
