@@ -690,7 +690,7 @@ if "__main__" == __name__:
                            
             for i in range(len(constraints_names)):
                 ax.plot(masses, constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
-                ax.plot(masses, constraints_Isatis_GCC[i], linestyle="dotted", color=colors[i])
+                ax.plot(masses, constraints_Isatis_GCC[i], linestyle="dashed", color=colors[i])
         
         for i in range(len(constraints_names)):
             ax.plot(masses, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label="SLN, " + str(constraints_names[i]), color=colors[i])
