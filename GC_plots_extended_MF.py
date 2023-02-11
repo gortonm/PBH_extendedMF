@@ -745,13 +745,13 @@ if "__main__" == __name__:
                 constraints_SLN.append(constraints_extended_Carr_SLN[l][j])
                 constraints_GCC.append(constraints_extended_Carr_GCC[l][j])
                 
-            envelope_SLN.append(m in(constraints_SLN))
+            envelope_SLN.append(min(constraints_SLN))
             envelope_GCC.append(min(constraints_GCC))
         
         ax.plot(mp_values_GCC, envelope_SLN, linestyle="dotted", label="Envelope (SLN)", color="k")
         ax.plot(mp_values_GCC, envelope_GCC, linestyle="dashed", label="Envelope (GCC)", color="k")
 
-        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_xlabel(r"$M_P$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
         ax.set_yscale('log')
