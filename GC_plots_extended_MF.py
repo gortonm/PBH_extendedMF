@@ -620,7 +620,7 @@ def loc_param_GCC(m_p, alpha, beta):
     return m_p * np.power(beta/alpha, 1/beta)
 
 
-def GCC(m, m_f, alpha, beta):
+def GCC(m, m_p, alpha, beta):
     """
     Generalised critical collapse mass function, as defined in Eq. (9) of 2009.03204.
 
@@ -628,8 +628,8 @@ def GCC(m, m_f, alpha, beta):
     ----------
     m : Array-like
         PBH masses.
-    m_f : Float
-        Location parameter.
+    m_p : Float
+        Peak mass of generalised critical collapse mass function.
     alpha : Float
         Parameter controlling width of mass function.
     beta : Float
@@ -641,6 +641,7 @@ def GCC(m, m_f, alpha, beta):
         Values of the mass function, evaluated at m.
 
     """
+    m_f = loc_param_GCC(m_p, alpha, beta)
     log_psi = np.log(beta/m_f) - loggamma((alpha+1) / beta) + (alpha * np.log(m/m_f)) - np.power(m/m_f, beta)
     return np.exp(log_psi)
 
@@ -657,7 +658,7 @@ if "__main__" == __name__:
     constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
     # Mass function parameter values, from 2009.03204.
-    deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+    Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
     sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
     alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
 
@@ -666,8 +667,8 @@ if "__main__" == __name__:
     
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
     
-    for k in range(len(deltas)):
-        fig, ax = plt.subplots(figsize=(6,6))
+    for k in range(len(Deltas)):
+        fig, ax = plt.subplots(figsize=(12,6))
         
         # Calculate constraints for extended MF from gamma-rays.
         f_pbh_skew_LN = []
@@ -683,17 +684,17 @@ if "__main__" == __name__:
         envelope_SLN = []
         envelope_GCC = []
         
-        if deltas[k] == 0:
-            constraints_Isatis_SLN, constraints_names= isatis_constraints_general(skew_LN, deltas[k])
-            constraints_Isatis_GCC, constraints_names = isatis_constraints_general(GCC, deltas[k])
+        if Deltas[k] == 0:
+            constraints_Isatis_SLN, constraints_names= isatis_constraints_general(skew_LN, Deltas[k])
+            constraints_Isatis_GCC, constraints_names = isatis_constraints_general(GCC, Deltas[k])
                            
             for i in range(len(constraints_names)):
-                ax.plot(masses, constraints_Isatis_SLN[i], marker='x', linestyle='None', color=colors[i])
-                ax.plot(masses, constraints_Isatis_GCC[i], marker='x', linestyle='None', color=colors[i])
+                ax.plot(masses, constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
+                ax.plot(masses, constraints_Isatis_GCC[i], linestyle="dotted", color=colors[i])
         
         for i in range(len(constraints_names)):
-            ax.plot(masses, constraints_extended_Carr_SLN[i], linestyle="dotted", label="SLN, " + str(constraints_names[i]), color=colors[i])
-            ax.plot(masses, constraints_extended_Carr_GCC[i], linestyle="dashed", label="GCC, " + str(constraints_names[i]), color=colors[i])
+            ax.plot(masses, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label="SLN, " + str(constraints_names[i]), color=colors[i])
+            ax.plot(masses, constraints_extended_Carr_GCC[i],marker='x', linestyle='None', label="GCC, " + str(constraints_names[i]), color=colors[i])
                         
         for j in range(len(masses)):
             constraints_SLN = []
@@ -715,5 +716,6 @@ if "__main__" == __name__:
         ax.set_ylim(1e-10, 1)
         ax.set_xlim(mc_min, mc_max)
         ax.legend(fontsize="small")
-        ax.legend(title=r"$\Delta = {:.1f}$".format(deltas[k]))
+        ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[k]))
         fig.tight_layout()
+        plt.savefig("./Figures/GC_constraints/Delta={:.1f}.png".format(Deltas[k]))

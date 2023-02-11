@@ -139,7 +139,7 @@ for i, Delta in enumerate(Deltas[0:1]):
         if SLN_bool:
             spec_values = skew_LN(masses_mono, m_c=m_c, sigma=sigmas[i], alpha=alphas_SL[i])
         elif GCC_bool:
-            spec_values = GCC(masses_mono, loc_param_GCC(m_c, alphas_CC[i], betas[i]), alphas_CC[i], betas[i])
+            spec_values = GCC(masses_mono, m_c, alphas_CC[i], betas[i])
 
         for k in range(len(masses_mono)):
             file.append("{:.5e}\t{:.5e}".format(masses_mono[k], spec_values[k]))
