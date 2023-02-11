@@ -38,6 +38,7 @@ runs_file_content.append("nb_runs = {:.0f}".format(len(mc_values)))
 runs_file_content.append("")
 
 
+#%%
 if log_normal:    
     mc_values = 10**np.arange(np.log10(mc_min), np.log10(mc_max), 0.1)
     number_of_sd = 4   # number of standard deviations away from median when calculating minimum and maximum PBH mass
@@ -111,42 +112,42 @@ from GC_plots_extended_MF import skew_LN, loc_param_GCC, GCC
 Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
 sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
 alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
-
+ 
 alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
 betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
 
 file_initial_line = "mass/spin \t 0.00000e+00"
 os.chdir(BlackHawk_path)
 
-for i, Delta in enumerate(Deltas):
+for i, Delta in enumerate(Deltas[0:1]):
 
     if SLN_bool:
-        append = "SLN_Delta={:.1f}".format(Delta)
+        append = "GC_SLN_Delta={:.1f}".format(Delta)
 
     elif GCC_bool:
-        append = "GCC_Delta={:.1f}".format(Delta)
+        append = "GC_GCC_Delta={:.1f}".format(Delta)
         
     # name of runs file
-    runs_filename = BlackHawk_path + "scripts/Isatis/BH_launcher/runs_GC_" + append
+    runs_filename = BlackHawk_path + "scripts/Isatis/BH_launcher/runs_" + append
         
     for j, m_c in enumerate(mc_values):
         
         file = []
         file.append(file_initial_line)
-        filename_BH_spec = "src/tables/users_spectra/BH_spectra_" + append + "_mc={:.5e}.txt".format(m_c)
+        filename_BH_spec = "src/tables/users_spectra/" + append + "_{:.0f}.txt".format(j)
     
         if SLN_bool:
             spec_values = skew_LN(masses_mono, m_c=m_c, sigma=sigmas[i], alpha=alphas_SL[i])
         elif GCC_bool:
             spec_values = GCC(masses_mono, loc_param_GCC(m_c, alphas_CC[i], betas[i]), alphas_CC[i], betas[i])
 
-        for j in range(len(masses_mono)):
-            file.append("{:.5e}\t{:.5e}".format(masses_mono[j], spec_values[j]))
+        for k in range(len(masses_mono)):
+            file.append("{:.5e}\t{:.5e}".format(masses_mono[k], spec_values[k]))
             
         np.savetxt(filename_BH_spec, file, fmt="%s", delimiter = " = ")
             
-        destination_folder = append + "_mc={:.5e}.txt".format(m_c)
-        filename_BlackHawk = BlackHawk_path + "scripts/Isatis/BH_launcher/" + append + "_mc={:.5e}_{:.0f}.txt".format(m_c, j)
+        destination_folder = append + "_{:.0f}".format(j)
+        filename_BlackHawk = BlackHawk_path + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt".format(j)
         
         filepath_Isatis = BlackHawk_path + "results/" + destination_folder
         if not os.path.exists(filepath_Isatis):
@@ -158,23 +159,19 @@ for i, Delta in enumerate(Deltas):
         parameters[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(min(masses_mono))
         parameters[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(max(masses_mono))
         parameters[15][1] = "-1\t\t\t\t\t\t\t\t\t\t"
-        parameters[28][1] = "BH_spectra_" + append + "_mc={:.5e}.txt".format(m_c)
+        parameters[28][1] = append + "_{:.0f}.txt".format(j)
         parameters[34][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(E_number)
         parameters[35][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_min)
         parameters[36][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_max)
         parameters[-1][1] = "3\t\t\t\t\t\t\t\t\t\t"
-    
-        print("BH_spectra_" + append + "_mc={:.5e}.txt".format(m_c))
-        print(parameters[28][1])
-    
-        runs_file_content.append(append + "_mc={:.5e}.txt".format(m_c))
+        
+        runs_file_content.append(append +"_{:.0f}".format(j))
         np.savetxt(filename_BlackHawk, parameters, fmt="%s", delimiter = " = ")
         np.savetxt(filename_Isatis, parameters, fmt="%s", delimiter = " = ")
-        
+                
         # run BlackHawk
-        """
         os.chdir(BlackHawk_path)
-        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_mc={:.5e}.txt".format(m_c)
+        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt".format(j)
         os.system(command)
-        """
+        
     np.savetxt(runs_filename, runs_file_content, fmt="%s")

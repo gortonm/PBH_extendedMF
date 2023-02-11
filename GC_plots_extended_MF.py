@@ -185,7 +185,7 @@ def integrand_general_mf(m, mf, m_c, params, m_GC_mono, f_max_GC_mono):
 
 
 def isatis_constraints(sigma, lognormal_MF=True):
-    """Output constraints on f_PBH, calculated directly using Isatis.
+    """Output constraints on f_PBH for a log-normal MF, calculated directly using Isatis.
 
     Parameters
     ----------
@@ -233,8 +233,60 @@ def isatis_constraints(sigma, lognormal_MF=True):
     return constraints_extended_plotting, constraints_names
 
 
+def isatis_constraints_general(mf, Delta, lognormal_MF=True):
+    """Output constraints for a general extended mass function, calculated directly using Isatis.
+
+    Parameters
+    ----------
+    mf : Function
+        PBH mass function.
+    Delta : Float
+        Power spectrum width generating the PBH MF.
+
+    Returns
+    -------
+    constraints_extended_plotting : Array-like
+        Constraints on f_PBH.
+    constraints_names : Array-like
+        Names of the constraints used.
+
+    """
+    if mf == skew_LN:
+        filename_append = "_SLN_Delta={:.1f}".format(Delta)
+    if mf == GCC:
+        filename_append = "_GCC_Delta={:.1f}".format(Delta)
+        
+    # Load result from Isatis
+    results_name = "results_photons_GC%s" % (filename_append)
+
+    constraints_file = np.genfromtxt("%s%s.txt" % (Isatis_path,results_name), dtype="str")
+    constraints_names_bis = constraints_file[0, 1:]
+    constraints = np.zeros([len(constraints_file)-1, len(constraints_file[0])-1])
+    for i in range(len(constraints)):
+        for j in range(len(constraints[0])):
+            constraints[i, j] = float(constraints_file[i+1, j+1])
+
+    # Choose which constraints to plot, and create labels.
+    constraints_names = []
+    constraints_extended_plotting = []
+
+    for i in range(len(constraints_names_bis)):
+        # Only include labels for constraints that Isatis calculated.
+        if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
+            temp = constraints_names_bis[i].split("_")
+            temp2 = ""
+            for j in range(len(temp)-1):
+                temp2 = "".join([temp2, temp[j], "\,\,"])
+            temp2 = "".join([temp2, "\,\,[arXiv:",temp[-1], "]"])
+            constraints_names.append(temp2)
+            constraints_extended_plotting.append(constraints[:, i])
+
+    return constraints_extended_plotting, constraints_names
+
+
+
 def constraints_Carr(sigma, lognormal_MF=True):
-    """Calculate constraints for an extended mass function, using the method from 1705.05567.
+    """Calculate constraints for a log-normal MF, using the method from 1705.05567.
 
     Parameters
     ----------
@@ -393,7 +445,7 @@ def constraints_Carr_general(mf, params):
         constraints_extended_Carr.append(np.array(constraint_extended_Carr))
 
     return constraints_extended_Carr
-
+ 
 
 #%%
 
@@ -568,16 +620,23 @@ if "__main__" == __name__:
 
         constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN, params_SLN)
         constraints_extended_Carr_GCC = constraints_Carr_general(GCC, params_GCC)
-        
-        
+    
         # envelope of constraints, with the tightest constraint
         envelope_SLN = []
         envelope_GCC = []
         
+        if deltas[k] == 0:
+            constraints_Isatis_SLN, constraints_names= isatis_constraints_general(skew_LN, deltas[k])
+            constraints_Isatis_GCC, constraints_names = isatis_constraints_general(GCC, deltas[k])
+                           
+            for i in range(len(constraints_names)):
+                ax.plot(masses, constraints_Isatis_SLN[i], marker='x', linestyle='None', color=colors[i])
+                ax.plot(masses, constraints_Isatis_GCC[i], marker='x', linestyle='None', color=colors[i])
+        
         for i in range(len(constraints_names)):
             ax.plot(masses, constraints_extended_Carr_SLN[i], linestyle="dotted", label="SLN, " + str(constraints_names[i]), color=colors[i])
             ax.plot(masses, constraints_extended_Carr_GCC[i], linestyle="dashed", label="GCC, " + str(constraints_names[i]), color=colors[i])
-            
+                        
         for j in range(len(masses)):
             constraints_SLN = []
             constraints_GCC = []
