@@ -36,9 +36,15 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 filepath = './Extracted_files/'
 
 # Range of log-normal mass function central PBH masses.
+"""
 mc_min = 1e14
 mc_max = 1e19
 masses = 10**np.arange(np.log10(mc_min), np.log10(mc_max), 0.1)
+"""
+# Range of masses at which the mass function peaks.
+m_min = 1e14
+m_max = 1e19
+masses = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
 
 Isatis_path = "./../Downloads/version_finale/scripts/Isatis/"
 
@@ -479,7 +485,7 @@ if "__main__" == __name__:
     ax.set_xscale('log')
     ax.set_yscale('log')
     ax.set_ylim(1e-10, 1)
-    ax.set_xlim(mc_min, mc_max)
+    ax.set_xlim(m_min, m_max)
     ax.legend(fontsize='small')
     ax.set_title("Log-normal ($\sigma = {:.1f}$) \n (Direct Isatis calculation)".format(sigma))
     fig.tight_layout()
@@ -537,7 +543,7 @@ if "__main__" == __name__:
     ax2.set_xscale("log")
     ax2.set_yscale("log")
     ax2.set_ylim(1e-10, 1)
-    ax2.set_xlim(mc_min, mc_max)
+    ax2.set_xlim(m_min, m_max)
     ax2.legend(fontsize='small')
     ax2.set_title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
     fig2.tight_layout()
@@ -551,7 +557,7 @@ if "__main__" == __name__:
         ax1.set_xscale("log")
         ax1.set_yscale("log")
         ax1.set_ylim(1e-10, 1)
-        ax1.set_xlim(mc_min, mc_max)
+        ax1.set_xlim(m_min, m_max)
     ax1b.legend(fontsize='small')
     ax1a.set_title("$\sigma = 0.5$")
     ax1b.set_title("$\sigma = 1.0$")
@@ -564,7 +570,7 @@ if "__main__" == __name__:
     ax3.set_xlabel("$M_c$ [g]")
     ax3.set_ylabel("$f_\mathrm{PBH, Isatis} / f_\mathrm{PBH, Carr} - 1$")
     ax3.set_xscale("log")
-    ax3.set_xlim(mc_min, mc_max)
+    ax3.set_xlim(m_min, m_max)
     ax3.set_ylim(0.007, 0.0115)
     ax3.legend(fontsize='small')
     ax3.set_title("Log-normal ($\sigma = {:.1f}$)".format(sigma))
@@ -596,6 +602,34 @@ def skew_LN(m, m_c, sigma, alpha):
 
     """
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
+
+
+def skew_LN_peak(m, m_p, sigma, alpha, Delta_index):
+    """
+    Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204. Expressed in terms of the peak mass instead of M_c.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses.
+    m_p : Float
+        PBH mass at which the mass function peaks.
+    sigma : Float
+        Parameter controlling width of mass function (corresponds to the standard deviation when alpha=0).
+    alpha : Float
+        Parameter controlling skew of the distribution.
+    Delta_index : Integer
+        Index corresponding to the value of the power spectrum width Delta adopted.
+
+    Returns
+    -------
+    Array-like
+        Values of the mass function, evaluated at m.
+
+    """
+    m_c = m_p * mcs_SLN_Gow22[Delta_index] / mps_GCC_Gow22[Delta_index]
+    return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
+
 
 
 def loc_param_GCC(m_p, alpha, beta):
@@ -665,6 +699,9 @@ if "__main__" == __name__:
     alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
     betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
     
+    mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
+    mps_GCC_Gow22 = np.array([40.8, 40.8, 40.7, 40.7, 40.8, 40.6, 35.1])
+    
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
     
     for k in range(len(Deltas)):
@@ -674,48 +711,93 @@ if "__main__" == __name__:
         f_pbh_skew_LN = []
         f_pbh_GCC = []
         
-        params_SLN = [sigmas[k], alphas_SL[k]]
+        params_SLN_peak = [sigmas[k], alphas_SL[k], k]
         params_GCC = [alphas_CC[k], betas[k]]
 
-        constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN, params_SLN)
+        constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN_peak, params_SLN_peak)
         constraints_extended_Carr_GCC = constraints_Carr_general(GCC, params_GCC)
     
         # envelope of constraints, with the tightest constraint
         envelope_SLN = []
         envelope_GCC = []
         
+        mc_values_SLN = masses
+        mp_values_GCC = masses
+        mp_values_SLN = mc_values_SLN * (mps_GCC_Gow22[k] / mcs_SLN_Gow22[k])
+        
         if Deltas[k] == 0:
-            constraints_Isatis_SLN, constraints_names= isatis_constraints_general(skew_LN, Deltas[k])
+            constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, Deltas[k])
             constraints_Isatis_GCC, constraints_names = isatis_constraints_general(GCC, Deltas[k])
                            
             for i in range(len(constraints_names)):
-                ax.plot(masses, constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
-                ax.plot(masses, constraints_Isatis_GCC[i], linestyle="dashed", color=colors[i])
+                ax.plot(mp_values_SLN, constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
+                ax.plot(mp_values_GCC, constraints_Isatis_GCC[i], linestyle="dashed", color=colors[i])
         
         for i in range(len(constraints_names)):
-            ax.plot(masses, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label="SLN, " + str(constraints_names[i]), color=colors[i])
-            ax.plot(masses, constraints_extended_Carr_GCC[i],marker='x', linestyle='None', label="GCC, " + str(constraints_names[i]), color=colors[i])
+            ax.plot(mp_values_GCC, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label="SLN, " + str(constraints_names[i]), color=colors[i])
+            ax.plot(mp_values_GCC, constraints_extended_Carr_GCC[i], marker='x', linestyle='None', label="GCC, " + str(constraints_names[i]), color=colors[i])
                         
         for j in range(len(masses)):
             constraints_SLN = []
             constraints_GCC = []
+            
             for l in range(len(constraints_names)):
                 constraints_SLN.append(constraints_extended_Carr_SLN[l][j])
                 constraints_GCC.append(constraints_extended_Carr_GCC[l][j])
                 
-            envelope_SLN.append(min(constraints_SLN))
+            envelope_SLN.append(m in(constraints_SLN))
             envelope_GCC.append(min(constraints_GCC))
         
-        ax.plot(masses, envelope_SLN, linestyle="dotted", label="Envelope (SLN)", color="k")
-        ax.plot(masses, envelope_GCC, linestyle="dashed", label="Envelope (GCC)", color="k")
+        ax.plot(mp_values_GCC, envelope_SLN, linestyle="dotted", label="Envelope (SLN)", color="k")
+        ax.plot(mp_values_GCC, envelope_GCC, linestyle="dashed", label="Envelope (GCC)", color="k")
 
         ax.set_xlabel(r"$M_c$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_ylim(1e-10, 1)
-        ax.set_xlim(mc_min, mc_max)
+        ax.set_xlim(m_min, m_max)
         ax.legend(fontsize="small")
         ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[k]))
         fig.tight_layout()
         plt.savefig("./Figures/GC_constraints/Delta={:.1f}.png".format(Deltas[k]))
+        
+#%% Check formula for the approximate relation between M_c in the SLN and
+# M_p in the GCC MFs.
+
+Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
+alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+
+alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
+betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
+
+mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
+mps_GCC_Gow22 = np.array([40.8, 40.8, 40.7, 40.7, 40.8, 40.6, 35.1])
+
+mp_GCC = 1e20
+m = np.logspace(19, 21, 100)
+
+for i in [0, 3, 5]:
+    fig, ax = plt.subplots(figsize=(6, 6))
+    mc_SLN = mp_GCC * mcs_SLN_Gow22[i] / mps_GCC_Gow22[i]
+    
+    psi_SLN = skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
+    psi_GCC = GCC(m, mp_GCC, alphas_CC[i], betas[i]) / max(GCC(m, mp_GCC, alphas_CC[i], betas[i]))
+    
+    xmin = m[min(min(np.where(psi_SLN > 0.1)))]
+    xmax = m[max(max(np.where(psi_SLN > 0.1)))]
+
+    ax.plot(m, psi_SLN, label="SLN")
+    ax.plot(m, psi_GCC, label="GCC")
+    ax.set_xlabel(r"$M_c$ [g]")
+    ax.set_ylabel(r"$f_\mathrm{PBH}$")
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel(r"$M$ [g]")
+    ax.set_ylabel(r"$\psi(M) / \psi_\mathrm{max}$")
+    ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
+    ax.set_xlim(xmin, xmax)
+    ax.set_ylim(0.1, 2)
+    fig.tight_layout()
+    plt.savefig("./Figures/Test_plots/test_comp_MP_MC_Delta={:.1f}.png".format(Deltas[i]))
