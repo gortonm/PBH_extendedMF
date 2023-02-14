@@ -749,8 +749,8 @@ if "__main__" == __name__:
                 ax.plot(mp_values_CC3, constraints_Isatis_CC3[i], linestyle="dashed", color=colors[i])
         
         for i in range(len(constraints_names)):
-            ax.plot(mp_values_SLN, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label="SLN, " + str(constraints_names[i]), color=colors[i])
-            ax.plot(mp_values_CC3, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', label="CC3, " + str(constraints_names[i]), color=colors[i])
+            ax.plot(mp_values_SLN, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
+            ax.plot(mp_values_CC3, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', color=colors[i])
                         
         for j in range(len(masses)):
             constraints_SLN = []
@@ -763,8 +763,8 @@ if "__main__" == __name__:
             envelope_SLN.append(min(constraints_SLN))
             envelope_CC3.append(min(constraints_CC3))
         
-        ax.plot(mp_values_SLN, envelope_SLN, linestyle="dotted", label="Envelope (SLN)", color="k")
-        ax.plot(mp_values_CC3, envelope_CC3, linestyle="dashed", label="Envelope (CC3)", color="k")
+        ax.plot(mp_values_SLN, envelope_SLN, linestyle="dotted", label="SLN", color="k")
+        ax.plot(mp_values_CC3, envelope_CC3, linestyle="dashed", label="CC3", color="k")
         
         ax.set_xlabel(r"$M_p$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
@@ -775,7 +775,7 @@ if "__main__" == __name__:
         ax.legend(fontsize="small")
         ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[k]))
         fig.tight_layout()
-        plt.savefig("./Figures/GC_constraints/Delta={:.1f}.png".format(Deltas[k]))
+        plt.savefig("./Figures/GC_constraints/Delta={:.1f}.pdf".format(Deltas[k]))
         
         # Save constraints data
         
