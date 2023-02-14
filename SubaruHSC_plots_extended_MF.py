@@ -200,21 +200,7 @@ if "__main__" == __name__:
 #%%
 # Use skew-lognormal mass function from 2009.03204.
 # Include test case with alpha=0 to compare to results obtained using a log-
-# normal mass function.
-
-from scipy.special import erf, loggamma
-
-def skew_LN(m, m_c, sigma, alpha):
-    # Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204.
-    return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
-
-def loc_param_GCC(m_p, alpha, beta):
-    # Location parameter for critical collapse mass function, from Table I of 2009.03204.
-    return m_p * np.power(beta/alpha, 1/beta)
-
-def GCC(m, m_f, alpha, beta):
-    log_psi = np.log(beta/m_f) - loggamma((alpha+1) / beta) + (alpha * np.log(m/m_f)) - np.power(m/m_f, beta)
-    return np.exp(log_psi)
+# normal mass function. Monochromatic MF constraints from 2007.12697.
 
 # Load data files
 m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
@@ -224,7 +210,7 @@ mp_subaru = 10**np.linspace(20, 29, 100)
 
 # Mass function parameter values, from 2009.03204.
 # The Delta=-1.0 cases are a test case for when alpha=0 (i.e. a log-normal, with sigma=0.5)
-deltas = np.array([-1, 0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+deltas = np.array([-1])
 sigmas = np.array([0.5, 0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
 alphas_SL = np.array([0., -2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
 
@@ -258,7 +244,7 @@ for i in range(len(deltas)):
 
     if deltas[i] == -1.0:
         ax.plot(mp_subaru, f_pbh_skew_LN, label=r"Skew-lognormal ($\alpha={:.0f}$, $\sigma={:.1f}$)".format(alphas_SL[0], sigmas[0]))
-        ax.plot(mp_subaru, f_pbh_subaru_LN_sigma05, label=r"Lognormal ($\sigma={:.1f}$)".format(sigmas[0]))
+        ax.plot(mp_subaru, f_pbh_subaru_LN_sigma05, label=r"Lognormal ($\sigma={:.1f}$)".format(sigmas[0]), linestyle="dotted", linewidth=3)
 
     else:
         ax.plot(mp_subaru, f_pbh_skew_LN, label=r"$\Delta = {:.1f}$".format(deltas[i]))
@@ -270,16 +256,85 @@ for i in range(len(deltas)):
     ax.legend()
     ax.set_xlim(1e21, 1e29)
     ax.set_ylim(1e-3, 1)
-    ax.set_title("Skew-lognormal")
+    ax.set_title("Croon et al. (2020) [2007.12697]")
     fig.tight_layout()
+    plt.savefig("./Figures/HSC_constraints/test_2007.12697_LN_SLN.pdf")
+
+
+#%%
+# Use skew-lognormal mass function from 2009.03204.
+# Include test case with alpha=0 to compare to results obtained using a log-
+# normal mass function. Monochromatic MF constraints from 1910.01285.
+
+# Load data files
+m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_mono.csv")
+mp_subaru_LN, f_pbh_subaru_LN = load_data("Subaru-HSC_LN.csv")
+
+# Convert from solar masses to grams
+m_subaru_mono *= 1.989e33
+mp_subaru_LN *= 1.989e33
+
+sigma = 2
+
+# Range of central masses
+mc_subaru = 10**np.linspace(20, 29, 100)
+
+# Mass function parameter values, from 2009.03204.
+# The Delta=-1.0 cases are a test case for when alpha=0 (i.e. a log-normal, with sigma=0.5)
+deltas = np.array([-1])
+sigmas = np.array([2, 0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
+alphas_SL = np.array([0., -2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+
+# Skew-lognormal MF results
+for i in range(len(deltas)):
+
+    # Calculate constraints for extended MF from microlensing.
+    f_pbh_skew_LN = []
+
+    params = [sigmas[i], alphas_SL[i]]
+
+    for m_c in mc_subaru:
+        integral = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m_c, params, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+        if integral == 0:
+            f_pbh_skew_LN.append(10)
+        else:
+            f_pbh_skew_LN.append(1/integral)
+
+    # Test case comparison for skew-lognormal with alpha=0 (reduces to a log-normal)
+    if deltas[i] == -1.0:
+        f_pbh_subaru_LN_sigma2 = []
+
+        for m_c in mp_subaru:
+            integral = np.trapz(integrand(1, m_subaru_mono, m_c, 2, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+            if integral == 0:
+                f_pbh_subaru_LN_sigma2.append(10)
+            else:
+                f_pbh_subaru_LN_sigma2.append(1/integral)
+
+    fig, ax = plt.subplots(figsize=(5.5, 5.5))
+
+    if deltas[i] == -1.0:
+        ax.plot(mp_subaru, f_pbh_skew_LN, label=r"Skew-lognormal ($\alpha={:.0f}$, $\sigma={:.1f}$)".format(alphas_SL[0], sigmas[0]))
+        ax.plot(mp_subaru, f_pbh_subaru_LN_sigma2, label=r"Lognormal ($\sigma={:.1f}$)".format(sigmas[0]), linestyle="dashed", linewidth=3)
+        ax.plot(mp_subaru_LN, f_pbh_subaru_LN, label="Lognormal (Fig.~20 [2002.12778])", linestyle="dotted")
+    else:
+        ax.plot(mp_subaru, f_pbh_skew_LN, label=r"$\Delta = {:.1f}$".format(deltas[i]))
+
+    ax.set_xlabel(r"$m_\mathrm{c}~[\mathrm{g}]$")
+    ax.set_ylabel(r"$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend()
+    ax.set_xlim(1e21, 1e29)
+    ax.set_ylim(1e-3, 1)
+    ax.set_title("Smyth et al. (2019) [1910.01285]")
+    fig.tight_layout()
+    plt.savefig("./Figures/HSC_constraints/test_1910.01285_LN_SLN.pdf")
 
 
 #%%
 
-from scipy.special import erf, loggamma
-
 mp_subaru = 10**np.linspace(17, 29, 1000)
-
 
 # Load data files
 m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
@@ -320,13 +375,13 @@ for i in range(len(Deltas)):
     fig, ax = plt.subplots(figsize=(5.5, 5.5))
 
     ax.plot(mp_subaru, f_pbh_skew_LN_peak, label="SLN")
-    ax.plot(mp_subaru, f_pbh_GCC, label="GCC")
+    ax.plot(mp_subaru, f_pbh_GCC, label="GCC", linestyle="dashed")
     ax.set_xlabel(r"$m_\mathrm{p}~[\mathrm{g}]$")
     ax.set_ylabel(r"$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
-    ax.set_xlim(1e21, 1e29)
+    ax.set_xlim(min(mp_subaru), max(mp_subaru))
     ax.set_ylim(1e-3, 1)
     fig.tight_layout()
     
@@ -334,5 +389,5 @@ for i in range(len(Deltas)):
     data_filename_GCC = "./Data_files/constraints_extended_MF/GCC_HSC_Carr_Delta={:.1f}".format(Deltas[i])
     np.savetxt(data_filename_SLN, [mp_subaru, f_pbh_skew_LN_peak], delimiter="\t")
     np.savetxt(data_filename_GCC, [mp_subaru, f_pbh_GCC], delimiter="\t")
-       
+    plt.savefig("./Figures/HSC_constraints/Delta={:.1f}.png".format(Deltas[i]))
 
