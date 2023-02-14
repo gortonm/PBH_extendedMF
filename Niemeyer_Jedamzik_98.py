@@ -34,7 +34,7 @@ mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 delta_c = 1/3
-gamma = 0.356
+gamma = 0.35
 k = 1
 
 # choose range of sigma between 0.1 delta_c and 0.2 delta_c, corresponding
@@ -95,7 +95,7 @@ plt.ylabel("$\hat{\Omega}_\mathrm{PBH, new} / k$")
 plt.yscale("log")
 plt.legend()
 plt.tight_layout()
-plt.savefig("./Figures/Critical_collapse/30-1_trapezium_approx_comparison.png", doi=1200)
+plt.savefig("./Figures/Critical_collapse/30-1_trapezium_approx_comparison.pdf")
 
 plt.figure()
 plt.plot(sigmas, omega_PBH_trapz/omega_PBH_new_approx_v2(sigmas), label="Trapezium rule \n / Approximate analytic expression")
@@ -103,7 +103,7 @@ plt.xlabel("$\sigma$")
 plt.ylabel("$\hat{\Omega}_\mathrm{PBH, new} / k$")
 plt.legend()
 plt.tight_layout()
-plt.savefig("./Figures/Critical_collapse/30-1_trapezium_approx_ratio.png", doi=1200)
+plt.savefig("./Figures/Critical_collapse/30-1_trapezium_approx_ratio.pdf")
 
 #%% Estimate the variance of the mass function
 # Note that the mass function given in Eq. (10) is the fraction of PBH number
@@ -138,12 +138,13 @@ n_steps = 10000
 m_values = np.logspace(np.log10(m_min), np.log10(m_max), n_steps)
 
 # quantities appearing in the Yokoyama (1998) mass function
-gamma = 0.3558019   # using the precise value from gr-qc/9503007
+#gamma = 0.3558019   # using the precise value from gr-qc/9503007
+gamma = 0.36   # using value from Niemeyer & Jedamzik (1998) and Gow et al. (2021)
 m_p = 25   # this can be chosen freely
 
 # quantities appearing in the Niemeyer & Jedamzik (1998) mass function
-delta_c = 1/3
-sigma_PS = 0.1   # power spectrum standard deviation
+delta_c = 0.5
+sigma_PS = 0.1 * delta_c  # power spectrum standard deviation
 K = 1   # this can be chosen freely
 
 # quantities appearing in the skew-LN mass function
@@ -166,21 +167,28 @@ def mf_LN(m):
 def mf_Yokoyama_shape(m, m_p=m_p, gamma=gamma):   
     return np.power(m/m_p, 1/gamma) * np.exp(-np.power(m/m_p, 1/gamma))
 
-mf_Yokoyama_normalisation = 1/np.trapz(mf_Yokoyama_shape(m_values, m_p, gamma), m_values)
-
 def mf_Yokoyama(m, m_p=m_p, gamma=gamma):
+    mf_Yokoyama_normalisation = 1/np.trapz(mf_Yokoyama_shape(m_values, m_p, gamma), m_values)
     return mf_Yokoyama_normalisation * mf_Yokoyama_shape(m, m_p, gamma)
 
 # mass function for d\Omega / dM has the same shape as d\phi / d\ln M, since
 # d\phi / d\ln M = M * d\phi / dM \propto M * dn / dM \propto d\Omega / dM
 def mf_NJ98_shape(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
     m_bh = m / K
+    #print("term 1 = ", np.power(delta_c/sigma, 2))
+    #print("term 2 = ", np.power( np.power(m/K, 1/gamma) / sigma , 2))
+    #print("term 3 = ", (2/sigma) * np.power(m/K, 1/gamma) * delta_c/sigma )
     return np.power(m_bh, 1/gamma) * np.exp(- np.power(delta_c + np.power(m_bh, 1/gamma), 2) / (2*sigma_PS**2) )
 
-mf_NJ98_normalisation = 1/np.trapz(mf_NJ98_shape(m_values, K, gamma, delta_c, sigma_PS), m_values)
-
 def mf_NJ98(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
-    return mf_NJ98_normalisation * mf_NJ98_shape(m)
+    print(sigma_PS)
+    mf_NJ98_normalisation = 1/np.trapz(mf_NJ98_shape(m_values, K, gamma, delta_c, sigma_PS), m_values)
+    return mf_NJ98_normalisation * mf_NJ98_shape(m, K, gamma, delta_c, sigma_PS)
+
+def mf_NJ98_approx(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
+    mf_NJ98_normalisation = 1/np.trapz(mf_NJ98_shape(m_values, K, gamma, delta_c, sigma_PS), m_values)
+    m_bh = m / K
+    return mf_NJ98_normalisation * np.power(m_bh, 1/gamma) * np.exp(-np.power(delta_c / sigma_PS, 2) / 2)
 
 def skew_LN(m, m_c=m_c, sigma=sigma_SLN, alpha=alpha_SLN):
     # Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204.
@@ -191,18 +199,138 @@ def CC_v2(m, m_f=m_f, alpha_CC=alpha_CC, beta=beta):
     log_psi = np.log(beta/m_f) - loggamma((alpha_CC+1) / beta) + (alpha_CC * np.log(m/m_f)) - np.power(m/m_f, beta)
     return np.exp(log_psi)
 
-print("Log-normal (sigma = {:.2f})".format(sigma))
-print("sd = " + str(np.sqrt(var(mf_LN))) + "\n")
+def Gaussian(x, mu, sigma):
+    return np.exp(-(x-mu)**2 / (2*sigma**2)) / (sigma * np.sqrt(2*np.pi))
 
-print("Yokoyama (1998) MF")
-print("sd = " + str(np.sqrt(var(mf_Yokoyama))) + "\n")
+#print("Log-normal (sigma = {:.2f})".format(sigma))
+#print("sd = " + str(np.sqrt(var(mf_LN))) + "\n")
+
+#print("Yokoyama (1998) MF")
+#print("sd = " + str(np.sqrt(var(mf_Yokoyama))) + "\n")
 
 print("Niemeyer & Jedamzik (1998) MF")
 print("sd = " + str(np.sqrt(var(mf_NJ98))) + "\n")
+print("sd^2 = " + str(var(mf_NJ98)) + "\n")
+print("sd~^2 = " + str(var(mf_NJ98_approx)) + "\n")
 
-print("Skew LN")
-print("sd = "+ str(np.sqrt(var(skew_LN))) + "\n")
+#print("Skew LN")
+#print("sd = "+ str(np.sqrt(var(skew_LN))) + "\n")
 
-print("GCC3")
-print("sd = " + str(np.sqrt(var(CC_v2))) + "\n")
+#print("GCC3")
+#print("sd = " + str(np.sqrt(var(CC_v2))) + "\n")
 
+
+#%%
+
+def Mmax_NJ(m, K, gamma, delta_c, sigma_PS):
+    return K * np.power(0.5*delta_c*(np.sqrt(4*(sigma_PS/delta_c)**2 + 1) - 1), gamma)
+
+def Mmax_NJ_approx(m, K, gamma, delta_c, sigma_PS):
+    return K * np.power(sigma_PS**2 / delta_c, gamma)
+
+
+# Plot the mass functions
+m_H = 1
+m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
+plt.figure(figsize=(6, 6))
+plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), label="Yokoyama")
+plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
+plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
+#plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.1*0.5), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 0.5$)")
+#plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.2*1/3), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 1/3$)")
+plt.plot(m_pbh_plotting/m_H, Gaussian(m_pbh_plotting, m_H, sigma=0.374), label="Gaussian", color='k', linestyle="dashed", alpha=0.75)
+
+ax = plt.gca()
+ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:orange')
+ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:green')
+ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
+ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:green')
+
+plt.xlabel("$M_\mathrm{PBH} / M_\mathrm{H}$")
+plt.ylabel("$\mathrm{d}\phi / \mathrm{d}\ln M_\mathrm{PBH}$")
+plt.yscale("log")
+plt.ylim(0.1, 3)
+plt.legend(fontsize="small")
+plt.tight_layout()
+plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama.png")
+
+
+# Plot the mass functions against the maximum value
+m_H = 1
+m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
+plt.figure(figsize=(6, 6))
+plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), label="Yokoyama")
+plt.plot(m_pbh_plotting/Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
+plt.plot(m_pbh_plotting/Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
+#plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.1*0.5), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 0.5$)")
+#plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.2*1/3), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 1/3$)")
+plt.plot(m_pbh_plotting/m_H, Gaussian(m_pbh_plotting, m_H, sigma=0.374), label="Gaussian", color='k', linestyle="dashed", alpha=0.75)
+
+plt.xlabel("$M_\mathrm{PBH} / M_\mathrm{max}$")
+plt.ylabel("$\mathrm{d}\phi / \mathrm{d}\ln M_\mathrm{PBH}$")
+plt.yscale("log")
+plt.ylim(0.1, 3)
+plt.xlim(0, 2)
+plt.legend(fontsize="small")
+plt.tight_layout()
+plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama_Mmax.png")
+
+
+
+#%% Calculations from Gow et al. (2021) mass function with a delta-function
+# power spectrum peak
+
+top_hat = True
+Gaussian = False
+
+g_star = 10.75   # number of relativistic degrees of freedom at PBH formation
+M_H = 1.  # horizon mass at PBH formation, in solar masses
+
+A = 1e-2  # power spectrum peak amplitude
+gamma = 0.36   # critical exponent
+
+
+def k_p(M_H):
+    # peak scale in terms of the horizon mass it corresponds to (in Mpc^{-1})
+    return np.sqrt(17) * 1e6 * np.power(g_star / 10.75, -1/12) * np.power(M_H, -1/2)
+
+if top_hat:
+    K = 4
+    C_c = 0.55
+
+if Gaussian:
+    K = 10
+    C_c = 0.25
+
+def window_top_hat(k, R):
+    if k * R < 4.49 / R:
+        return 3 * (np.sin(k*R) - (k*R)*np.cos(k*R)) / (k*R)**3
+    else:
+        return 0
+
+def window_Gaussian(k, R):
+    return np.exp(-(k*R)**2 / 4)
+
+def window(k, R):
+    if top_hat:
+        return window_top_hat(k, R)
+    elif Gaussian:
+        return window_Gaussian(k, R)
+
+k_p = k_p(M_H)
+
+
+# Hubble radius at formation (in Mpc), in terms of the horizon mass it 
+# corresponds to
+R = 3.1e-7 * np.sqrt(M_H)
+
+sigma0 = (16/81) * A * (k_p * R)**4 * window(k_p, R)**2 / k_p
+print(sigma0)
+
+
+def mf_Gow21_delta_shape(m, K=K, gamma=gamma, C_c=C_c, sigma0=sigma0):
+    x = m / (M_H * K)
+    return np.power(x, 1/gamma) * np.exp(- np.power(C_c + np.power(x, 1/gamma), 2) / (2*sigma0**2) )
+
+print("Gow et al. (2021) MF (delta-function power spectrum)")
+print("sd = " + str(np.sqrt(var(mf_Gow21_delta_shape))) + "\n")
