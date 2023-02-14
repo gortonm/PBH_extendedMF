@@ -70,10 +70,10 @@ for i in range(len(Deltas)):
     fig, ax = plt.subplots(figsize=(5.5, 5.5))
 
     ax.plot(mp_HSC, f_pbh_SLN_peak_HSC, label="SLN", color=colors[0])
-    ax.plot(mp_HSC, f_pbh_GCC_HSC, label="GCC", color=colors[1])
+    ax.plot(mp_HSC, f_pbh_GCC_HSC, label="GCC", color=colors[1], linestyle="dotted", linewidth=3)
     
     ax.plot(mp_evap, f_pbh_SLN_peak_evap_envelope, color=colors[0])
-    ax.plot(mp_evap, f_pbh_GCC_evap_envelope, color=colors[1])
+    ax.plot(mp_evap, f_pbh_GCC_evap_envelope, color=colors[1], linestyle="dotted", linewidth=3)
     
     """
     for j in range(len(constraints_names)):
@@ -90,4 +90,4 @@ for i in range(len(Deltas)):
     ax.set_xlim(1e14, 1e29)
     ax.set_ylim(1e-3, 1)
     fig.tight_layout()
-    
+    plt.savefig("./Figures/Combined_constraints/Delta={:.1f}.pdf".format(Deltas[i]))
