@@ -140,7 +140,7 @@ m_values = np.logspace(np.log10(m_min), np.log10(m_max), n_steps)
 # quantities appearing in the Yokoyama (1998) mass function
 #gamma = 0.3558019   # using the precise value from gr-qc/9503007
 gamma = 0.36   # using value from Niemeyer & Jedamzik (1998) and Gow et al. (2021)
-m_p = 25   # this can be chosen freely
+m_p = 555   # this can be chosen freely
 
 # quantities appearing in the Niemeyer & Jedamzik (1998) mass function
 delta_c = 0.5
@@ -181,7 +181,6 @@ def mf_NJ98_shape(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
     return np.power(m_bh, 1/gamma) * np.exp(- np.power(delta_c + np.power(m_bh, 1/gamma), 2) / (2*sigma_PS**2) )
 
 def mf_NJ98(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
-    print(sigma_PS)
     mf_NJ98_normalisation = 1/np.trapz(mf_NJ98_shape(m_values, K, gamma, delta_c, sigma_PS), m_values)
     return mf_NJ98_normalisation * mf_NJ98_shape(m, K, gamma, delta_c, sigma_PS)
 
@@ -205,8 +204,8 @@ def Gaussian(x, mu, sigma):
 #print("Log-normal (sigma = {:.2f})".format(sigma))
 #print("sd = " + str(np.sqrt(var(mf_LN))) + "\n")
 
-#print("Yokoyama (1998) MF")
-#print("sd = " + str(np.sqrt(var(mf_Yokoyama))) + "\n")
+print("Yokoyama (1998) MF")
+print("sd = " + str(np.sqrt(var(mf_Yokoyama))) + "\n")
 
 print("Niemeyer & Jedamzik (1998) MF")
 print("sd = " + str(np.sqrt(var(mf_NJ98))) + "\n")
@@ -218,6 +217,24 @@ print("sd~^2 = " + str(var(mf_NJ98_approx)) + "\n")
 
 #print("GCC3")
 #print("sd = " + str(np.sqrt(var(CC_v2))) + "\n")
+
+
+#%%
+from constraints_extended_MF import load_data
+
+# Estimate variance of the numerical mass function calculated by 2008.03289
+# for a delta-function peak in the power spectrum
+m, psi = load_data("Gow22_Fig3_Delta0_numerical.csv")
+psi_normalised = psi / np.trapz(psi, m)
+
+ln_term_integrand = np.log(m) * psi_normalised
+ln_square_term_integrand = np.log(m)**2 * psi_normalised
+
+ln_term = np.trapz(ln_term_integrand, m)
+ln_square_term = np.trapz(ln_square_term_integrand, m)
+
+var = ln_square_term - ln_term**2
+print(np.sqrt(abs(var)))
 
 
 #%%
@@ -233,47 +250,44 @@ def Mmax_NJ_approx(m, K, gamma, delta_c, sigma_PS):
 m_H = 1
 m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
 plt.figure(figsize=(6, 6))
-plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), label="Yokoyama")
+plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), label="Approximate")
 plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
 plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
 #plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.1*0.5), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 0.5$)")
 #plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.2*1/3), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 1/3$)")
-plt.plot(m_pbh_plotting/m_H, Gaussian(m_pbh_plotting, m_H, sigma=0.374), label="Gaussian", color='k', linestyle="dashed", alpha=0.75)
+#plt.plot(m_pbh_plotting/m_H, Gaussian(m_pbh_plotting, m_H, sigma=0.374), label="Gaussian", color='k', linestyle="dashed", alpha=0.75)
 
 ax = plt.gca()
-ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:orange')
-ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:green')
-ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
-ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:green')
+#ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:orange')
+#ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:green')
+#ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
+#ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:green')
 
 plt.xlabel("$M_\mathrm{PBH} / M_\mathrm{H}$")
-plt.ylabel("$\mathrm{d}\phi / \mathrm{d}\ln M_\mathrm{PBH}$")
+plt.ylabel("$\psi(M_\mathrm{PBH})$")
 plt.yscale("log")
 plt.ylim(0.1, 3)
 plt.legend(fontsize="small")
 plt.tight_layout()
-plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama.png")
+plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama.pdf")
 
 
 # Plot the mass functions against the maximum value
 m_H = 1
-m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
+m_pbh_plotting = np.linspace(0.01*m_H, 3*m_H, 100)
 plt.figure(figsize=(6, 6))
-plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), label="Yokoyama")
-plt.plot(m_pbh_plotting/Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
-plt.plot(m_pbh_plotting/Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
-#plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.1*0.5), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 0.5$)")
-#plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.2*1/3), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 1/3$)")
-plt.plot(m_pbh_plotting/m_H, Gaussian(m_pbh_plotting, m_H, sigma=0.374), label="Gaussian", color='k', linestyle="dashed", alpha=0.75)
-
-plt.xlabel("$M_\mathrm{PBH} / M_\mathrm{max}$")
-plt.ylabel("$\mathrm{d}\phi / \mathrm{d}\ln M_\mathrm{PBH}$")
+plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), label="Approximate")
+plt.plot(m_pbh_plotting/Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
+plt.plot(m_pbh_plotting/Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
+#plt.plot(m_pbh_plotting/Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.2*1/3), mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.2*1/3), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 1/3$)")
+plt.xlabel("$M_\mathrm{PBH} / M_\mathrm{peak}$")
+plt.ylabel("$\psi(M_\mathrm{PBH})$")
 plt.yscale("log")
 plt.ylim(0.1, 3)
 plt.xlim(0, 2)
 plt.legend(fontsize="small")
 plt.tight_layout()
-plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama_Mmax.png")
+plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama_Mmax.pdf")
 
 
 
