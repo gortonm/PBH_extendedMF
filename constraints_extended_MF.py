@@ -696,7 +696,6 @@ def CC3(m, m_p, alpha, beta):
 mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
 mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 
-
 if "__main__" == __name__:
     
     # Choose which constraints to plot, and create labels.
@@ -716,8 +715,6 @@ if "__main__" == __name__:
     alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
     betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
     
-    mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
-    mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
     
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
     
@@ -739,16 +736,16 @@ if "__main__" == __name__:
         envelope_SLN = []
         envelope_CC3 = []
         
-        mc_values_SLN = masses
         mp_values_CC3 = masses
-        mp_values_SLN = mc_values_SLN * (mps_SLN_Gow22[k] / mcs_SLN_Gow22[k])
+        #mp_values_SLN = mc_values_SLN * (mps_SLN_Gow22[k] / mcs_SLN_Gow22[k])
+        mp_values_SLN = masses
         
         if Deltas[k] == 0:
             constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, Deltas[k])
             constraints_Isatis_CC3, constraints_names = isatis_constraints_general(CC3, Deltas[k])
                            
             for i in range(len(constraints_names)):
-                ax.plot(mp_values_SLN, constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
+                ax.plot(masses * (mps_SLN_Gow22[k] / mcs_SLN_Gow22[k]), constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
                 ax.plot(mp_values_CC3, constraints_Isatis_CC3[i], linestyle="dashed", color=colors[i])
         
         for i in range(len(constraints_names)):
@@ -791,8 +788,12 @@ if "__main__" == __name__:
         data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_GC_envelope_Carr_Delta={:.1f}".format(Deltas[k])
         data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_GC_envelope_Carr_Delta={:.1f}".format(Deltas[k])
         np.savetxt(data_filename_SLN, np.array([mp_values_SLN, envelope_SLN]), fmt="%s", delimiter="\t")
-        np.savetxt(data_filename_CC3, np.array([mp_values_CC3, envelope_CC3]), fmt="%s", delimiter="\t")
+        np.savetxt(data_filename_CC3, np.array([mp_values_CC3, envelope_CC3]), fmt="%s", delimiter="\t")       
+        
        
+#%% Comparison between plots against M_c and M_p
+
+
 
 #%% Constraints for a log-normal MF, using the values of sigma found as best-
 # fit values from Table II of 2008.03289.
@@ -825,9 +826,9 @@ if "__main__" == __name__:
         envelope_LN = []
         
         mc_values_LN = masses
-        mp_values_LN = mc_values_LN * np.exp(sigmas_LN[k]**2)
-        
-        print("m_c / m_p = ", np.exp(sigmas_LN[k]**2))
+        mp_values_LN = mc_values_LN * np.exp(-sigmas_LN[k]**2)
+        # This isn't giving the values I'm expecting
+        print("m_c / m_p = ", 1/np.exp(-sigmas_LN[k]**2))
                 
         for i in range(len(constraints_names)):
             ax.plot(mp_values_LN, constraints_extended_Carr_LN[i], marker='x', linestyle='None', label="LN, " + str(constraints_names[i]), color=colors[i])
@@ -907,6 +908,8 @@ if "__main__" == __name__:
 
 
 if "__main__" == __name__:
+    
+    
 
     Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
     sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
@@ -921,16 +924,27 @@ if "__main__" == __name__:
     m = np.logspace(17, 23, 1000)
     
     for i in range(len(Deltas)):
-        fig, ax = plt.subplots(figsize=(6, 6))
+        
+        fig, ax = plt.subplots(figsize=(7, 5))
         mc_SLN = mp_CC3 * mcs_SLN_Gow22[i] / mps_SLN_Gow22[i]
         
-        psi_SLN = skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
+        #psi_SLN = skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
+        psi_SLN = skew_LN_peak(m, mp_CC3, sigmas[i], alphas_SL[i], i) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
         psi_CC3 = CC3(m, mp_CC3, alphas_CC[i], betas[i]) / max(CC3(m, mp_CC3, alphas_CC[i], betas[i]))
         
-        #xmin = m[min(min(np.where(psi_SLN > 0.1)))]
-        #xmax = m[max(max(np.where(psi_SLN > 0.1)))]
         xmin = 1e18
         xmax = 1e22
+
+        
+        # Plot the numerically calculated MF for a delta-function peak
+        # in the power spectrum.
+        if i==0:
+            m_num, psi_num = load_data("Gow22_Fig3_Delta0_numerical.csv")
+            psi_normalised = psi_num / max(psi_num)
+            ax.plot(m_num * mp_CC3 / mps_SLN_Gow22[0], psi_num, color="k", label="Numeric")
+            
+            xmin = m[min(min(np.where(psi_CC3 > 0.1)))]
+            xmax = m[max(max(np.where(psi_CC3 > 0.1)))]
     
         ax.plot(m, psi_SLN, label="SLN")
         ax.plot(m, psi_CC3, label="CC3", linestyle="dashed")
