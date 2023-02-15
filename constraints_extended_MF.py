@@ -33,7 +33,6 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
-
 filepath = './Extracted_files/'
 
 # Range of characteristic PBH masses
@@ -66,42 +65,17 @@ def load_data(filename):
     return np.genfromtxt(filepath+filename, delimiter=',', unpack=True)
 
 
-def LN_MF_density(m, m_c, sigma, A=1):
-    """Log-normal distribution function (for PBH mass density).
-
-    Parameters
-    ----------
-    m : Float
-        PBH mass, in grams.
-    m_c : Float
-        Critical (median) PBH mass for log-normal mass function, in grams.
-    sigma : Float
-        Width of the log-normal distribution.
-    A : Float, optional
-        Amplitude of the distribution. The default is 1.
-
-    Returns
-    -------
-    Array-like
-        Log-normal distribution function (for PBH masses).
-
-    """
-    return A * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m**2)
-
-
-def LN_MF_number_density(m, m_c, sigma, A=1):
+def lognormal_number_density(m, m_c, sigma):
     """Log-normal distribution function (for PBH number density).
 
     Parameters
     ----------
-    m : Float
-        PBH mass, in grams.
+    m : Array-like
+        PBH masses.
     m_c : Float
-        Critical (median) PBH mass for log-normal mass function, in grams.
+        Characteristic PBH mass.
     sigma : Float
-        Width of the log-normal distribution.
-    A : Float, optional
-        Amplitude of the distribution. The default is 1.
+        Standard deviation of the log-normal distribution.
 
     Returns
     -------
@@ -109,362 +83,7 @@ def LN_MF_number_density(m, m_c, sigma, A=1):
         Log-normal distribution function (for PBH masses).
 
     """
-    return A * np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
-
-
-def f_max(m, m_GC_mono, f_max_GC_mono):
-    """Linearly interpolate the maximum fraction of dark matter in PBHs 
-    (monochromatic mass distribution).
-
-    Parameters
-    ----------
-    m : Array-like
-        PBH masses (in grams).
-    m_GC_mono : Array-like
-        PBH masses for the monochromatic MF, to use for interpolation.
-    f_max_GC_mono : Array-like
-        Constraint on abundance of PBHs (loaded data, monochromatic MF).
-
-    Returns
-    -------
-    Array-like
-        Maximum observationally allowed fraction of dark matter in PBHs for a
-        monochromatic mass distribution.
-
-    """
-    return 10**np.interp(np.log10(m), np.log10(m_GC_mono), np.log10(f_max_GC_mono))
-
-
-def integrand(A, m, m_c, sigma, m_GC_mono, f_max_GC_mono):
-    """Compute integrand appearing in Eq. 12 of 1705.05567 for a log-normal 
-    mass function (for reproducing constraints with an extended mass function 
-    following 1705.05567).
-
-    Parameters
-    ----------
-    A : Float.
-        Amplitude of log-normal mass function.
-    m : Array-like
-        PBH masses (in grams).
-    m_c : Float
-        Critical (median) PBH mass for log-normal mass function (in grams).
-    sigma : Float
-        Width of the log-normal distribution.
-    m_GC_mono : Array-like
-        PBH masses for the monochromatic MF, to use for interpolation.
-    f_max_GC_mono : Array-like
-        Constraint on abundance of PBHs (loaded data, monochromatic MF).
-
-    Returns
-    -------
-    Array-like
-        Integrand appearing in Eq. 12 of 1705.05567.
-
-    """
-    return LN_MF_number_density(m, m_c, sigma, A) / f_max(m, m_GC_mono, f_max_GC_mono)
-
-
-def integrand_general_mf(m, mf, m_c, params, m_GC_mono, f_max_GC_mono):
-    """Compute integrand appearing in Eq. 12 of 1705.05567 for a general mass
-    function.
-
-    Parameters
-    ----------
-    m : Array-like
-        PBH masses (in grams).
-    mf : Function
-        PBH mass function.
-    m_c : Float
-        Characteristic PBH mass.
-    params : Array-like
-        Other parameters of the PBH mass function.
-    m_GC_mono : Array-like
-        PBH masses for the monochromatic MF, to use for interpolation.
-    f_max_GC_mono : Array-like
-        Constraint on abundance of PBHs (loaded data, monochromatic MF).
-
-    Returns
-    -------
-    Array-like
-        Integrand appearing in Eq. 12 of 1705.05567.
-
-    """
-    return mf(m, m_c, *params) / f_max(m, m_GC_mono, f_max_GC_mono)
-
-
-def isatis_constraints(sigma, lognormal_MF=True):
-    """Output constraints on f_PBH for a log-normal MF, calculated directly 
-    using Isatis.
-
-    Parameters
-    ----------
-    sigma : Float
-        Width of the mass function.
-    lognormal_MF : Boolean, optional
-        If True, use a log-normal mass function. The default is True.
-
-    Returns
-    -------
-    constraints_extended_plotting : Array-like
-        Constraints on f_PBH.
-    constraints_names : Array-like
-        Names of the constraints used.
-
-    """
-    if lognormal_MF:
-        filename_append = "_lognormal_sigma={:.1f}".format(sigma)
-
-    # Load result from Isatis
-    results_name = "results_photons_GC%s" % (filename_append)
-
-    constraints_file = np.genfromtxt("%s%s.txt" % (Isatis_path,results_name), dtype="str")
-    constraints_names_bis = constraints_file[0, 1:]
-    constraints = np.zeros([len(constraints_file)-1, len(constraints_file[0])-1])
-    for i in range(len(constraints)):
-        for j in range(len(constraints[0])):
-            constraints[i, j] = float(constraints_file[i+1, j+1])
-
-    # Choose which constraints to plot, and create labels.
-    constraints_names = []
-    constraints_extended_plotting = []
-
-    for i in range(len(constraints_names_bis)):
-        # Only include labels for constraints that Isatis calculated.
-        if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
-            temp = constraints_names_bis[i].split("_")
-            temp2 = ""
-            """
-            for j in range(len(temp)-1):
-                temp2 = "".join([temp2, temp[j], "\,\,"])
-            temp2 = "".join([temp2, "\,\,[arXiv:",temp[-1], "]"])
-            """
-            for j in range(len(temp)-1):
-                temp2 = "".join([temp2, temp[j]])
-            temp2 = "".join([temp2, "[arXiv:",temp[-1], "]"])
-
-            constraints_names.append(temp2)
-            constraints_extended_plotting.append(constraints[:, i])
-
-    return constraints_extended_plotting, constraints_names
-
-
-def isatis_constraints_general(mf, Delta, lognormal_MF=True):
-    """Output constraints for a general extended mass function, calculated 
-    directly using Isatis.
-
-    Parameters
-    ----------
-    mf : Function
-        PBH mass function.
-    Delta : Float
-        Power spectrum width generating the PBH MF.
-
-    Returns
-    -------
-    constraints_extended_plotting : Array-like
-        Constraints on f_PBH.
-    constraints_names : Array-like
-        Names of the constraints used.
-
-    """
-    if mf == skew_LN:
-        filename_append = "_SLN_Delta={:.1f}".format(Delta)
-    elif mf == CC3:
-        filename_append = "_CC3_Delta={:.1f}".format(Delta)
-        
-    # Load result from Isatis
-    results_name = "results_photons_GC%s" % (filename_append)
-
-    constraints_file = np.genfromtxt("%s%s.txt" % (Isatis_path,results_name), dtype="str")
-    constraints_names_bis = constraints_file[0, 1:]
-    constraints = np.zeros([len(constraints_file)-1, len(constraints_file[0])-1])
-    for i in range(len(constraints)):
-        for j in range(len(constraints[0])):
-            constraints[i, j] = float(constraints_file[i+1, j+1])
-
-    # Choose which constraints to plot, and create labels.
-    constraints_names = []
-    constraints_extended_plotting = []
-
-    for i in range(len(constraints_names_bis)):
-        # Only include labels for constraints that Isatis calculated.
-        if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
-            temp = constraints_names_bis[i].split("_")
-            temp2 = ""
-            
-            for j in range(len(temp)-1):
-                temp2 = "".join([temp2, temp[j], "\,\,"])
-            temp2 = "".join([temp2, "\,\,[arXiv:",temp[-1], "]"])
-
-            constraints_names.append(temp2)
-            constraints_extended_plotting.append(constraints[:, i])
-
-    return constraints_extended_plotting, constraints_names
-
-
-
-def constraints_Carr(sigma, lognormal_MF=True):
-    """Calculate constraints for a log-normal MF, using the method from 
-    1705.05567.
-
-    Parameters
-    ----------
-    sigma : Float
-        Width of the mass function.
-    lognormal_MF : Boolean, optional
-        If True, use a log-normal mass function. The default is True.
-
-    Returns
-    -------
-    constraints_extended_Carr : Array-like
-        Constraints on f_PBH.
-
-    """
-    # Constraints for monochromatic MF, calculated using isatis_reproduction.py.
-    masses_mono = 10**np.arange(11, 19.05, 0.1)
-    constraints_mono_calculated = []
-
-    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    constraints_extended_Carr = []
-
-    # Loop through instruments
-    for i in range(len(constraints_names)):
-
-        constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
-
-        # Constraint from given instrument
-        constraint_extended_Carr = []
-        constraint_mono_Carr = []
-
-        for l in range(len(masses_mono)):
-            constraint_mass_m = []
-            for k in range(len(constraints_mono_file)):   # cycle over bins
-                constraint_mass_m.append(constraints_mono_file[k][l])
-
-            constraint_mono_Carr.append(min(constraint_mass_m))
-
-        constraints_mono_calculated.append(constraint_mono_Carr)
-        
-        # Loop through central PBH masses
-        for m_c in masses:
-
-            # Constraint from each energy bin
-            constraints_over_bins_extended = []
-
-            # Loop through energy bins
-            for j in range(len(constraints_mono_file)):
-                f_max_values = constraints_mono_file[j]
-
-                # Only include positive values of f_max.
-                # Exclude f_max > 100, since including these can cause 
-                # overflow errors.
-                masses_mono_truncated = masses_mono[f_max_values < 1e2]
-                f_max_truncated = f_max_values[f_max_values < 1e2]
-
-                masses_mono_truncated = masses_mono_truncated[f_max_truncated > 0]
-                f_max_truncated = f_max_truncated[f_max_truncated > 0]
-
-                masses_mono_truncated = masses_mono_truncated[f_max_truncated != float("inf")]
-                f_max_truncated = f_max_truncated[f_max_truncated != float("inf")]
-
-                # If all values of f_max are excluded, assign a non-
-                # physical value f_PBH = 10 to the constraint at that mass.
-                if len(f_max_truncated) == 0:
-                    constraints_over_bins_extended.append(10.)
-                else:
-                    # Constraint from each bin
-                    constraints_over_bins_extended.append(1/np.trapz(integrand(1, masses_mono_truncated, m_c, sigma, masses_mono_truncated, f_max_truncated), masses_mono_truncated))
-
-            # Constraint from given instrument (extended MF)
-            constraint_extended_Carr.append(min(constraints_over_bins_extended))
-
-        constraints_extended_Carr.append(np.array(constraint_extended_Carr))
-
-    return constraints_extended_Carr
-
-
-def constraints_Carr_general(mf, params):
-    """Calculate constraints for a general extended mass function, using the 
-    method from 1705.05567.
-
-    Parameters
-    ----------
-    mf : Function
-        PBH mass function.
-    params : Array-like
-        Other parameters of the PBH mass function.
-
-    Returns
-    -------
-    constraints_extended_Carr : Array-like
-        Constraints on f_PBH.
-
-    """
-    # Constraints for monochromatic MF, calculated using isatis_reproduction.py.
-    masses_mono = 10**np.arange(11, 19.05, 0.1)
-    constraints_mono_calculated = []
-
-    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    constraints_extended_Carr = []
-
-    # Loop through instruments
-    for i in range(len(constraints_names)):
-
-        constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
-
-        # Constraint from given instrument
-        constraint_extended_Carr = []
-        constraint_mono_Carr = []
-
-        for l in range(len(masses_mono)):
-            constraint_mass_m = []
-            for k in range(len(constraints_mono_file)):   # cycle over bins
-                constraint_mass_m.append(constraints_mono_file[k][l])
-
-            constraint_mono_Carr.append(min(constraint_mass_m))
-
-        constraints_mono_calculated.append(constraint_mono_Carr)
-
-        # Loop through central PBH masses
-        for m_c in masses:
-
-            # Constraint from each energy bin
-            constraints_over_bins_extended = []
-
-            # Loop through energy bins
-            for j in range(len(constraints_mono_file)):
-                f_max_values = constraints_mono_file[j]
-
-                # Only include positive values of f_max.
-                # Exclude f_max > 100, since including these can cause
-                # overflow errors.
-                masses_mono_truncated = masses_mono[f_max_values < 1e2]
-                f_max_truncated = f_max_values[f_max_values < 1e2]
-
-                masses_mono_truncated = masses_mono_truncated[f_max_truncated > 0]
-                f_max_truncated = f_max_truncated[f_max_truncated > 0]
-
-                masses_mono_truncated = masses_mono_truncated[f_max_truncated != float("inf")]
-                f_max_truncated = f_max_truncated[f_max_truncated != float("inf")]
-
-                # If all values of f_max are excluded, assign a non-
-                # physical value f_PBH = 10 to the constraint at that mass.
-                if len(f_max_truncated) == 0:
-                    constraints_over_bins_extended.append(10.)
-                else:
-                    # Constraint from each bin
-                    integral = np.trapz(integrand_general_mf(masses_mono_truncated, mf, m_c, params, masses_mono_truncated, f_max_truncated), masses_mono_truncated)
-                    if integral == 0:
-                        constraints_over_bins_extended.append(10)
-                    else:
-                        constraints_over_bins_extended.append(1/integral)
-
-            # Constraint from given instrument (extended MF)
-            constraint_extended_Carr.append(min(constraints_over_bins_extended))
-
-        constraints_extended_Carr.append(np.array(constraint_extended_Carr))
-
-    return constraints_extended_Carr
+    return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
 
 def skew_LN(m, m_c, sigma, alpha):
@@ -523,13 +142,13 @@ def skew_LN_peak(m, m_p, sigma, alpha, Delta_index):
 
 def loc_param_CC3(m_p, alpha, beta):
     """
-    Location parameter for generalised critical collapse mass function, from 
+    Location parameter for generalised critical collapse 3 mass function, from 
     Table I of 2009.03204 (denoted m_f in that paper).
 
     Parameters
     ----------
     m_p : Array-like
-        Peak mass of generalised critical collapse mass function.
+        Peak mass of generalised critical collapse 3 mass function.
     alpha : Float
         Parameter controlling width of mass function.
     beta : Float
@@ -546,7 +165,7 @@ def loc_param_CC3(m_p, alpha, beta):
 
 def CC3(m, m_p, alpha, beta):
     """
-    Generalised critical collapse mass function, as defined in Eq. (9) of 
+    Generalised critical collapse 3 mass function, as defined in Eq. (9) of 
     2009.03204.
 
     Parameters
@@ -554,7 +173,7 @@ def CC3(m, m_p, alpha, beta):
     m : Array-like
         PBH masses.
     m_p : Float
-        Peak mass of generalised critical collapse mass function.
+        Peak mass of generalised critical collapse 3 mass function.
     alpha : Float
         Parameter controlling width of mass function.
     beta : Float
@@ -570,16 +189,205 @@ def CC3(m, m_p, alpha, beta):
     log_psi = np.log(beta/m_f) - loggamma((alpha+1) / beta) + (alpha * np.log(m/m_f)) - np.power(m/m_f, beta)
     return np.exp(log_psi)
 
+
+def f_max(m, m_GC_mono, f_max_GC_mono):
+    """Linearly interpolate the maximum fraction of dark matter in PBHs 
+    (monochromatic mass distribution).
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses (in grams).
+    m_GC_mono : Array-like
+        PBH masses for the monochromatic MF, to use for interpolation.
+    f_max_GC_mono : Array-like
+        Constraint on abundance of PBHs (loaded data, monochromatic MF).
+
+    Returns
+    -------
+    Array-like
+        Maximum observationally allowed fraction of dark matter in PBHs for a
+        monochromatic mass distribution.
+
+    """
+    return 10**np.interp(np.log10(m), np.log10(m_GC_mono), np.log10(f_max_GC_mono))
+
+
+def integrand_general_mf(m, mf, m_c, params, m_GC_mono, f_max_GC_mono):
+    """Compute integrand appearing in Eq. 12 of 1705.05567 for a general mass
+    function.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses (in grams).
+    mf : Function
+        PBH mass function.
+    m_c : Float
+        Characteristic PBH mass.
+    params : Array-like
+        Other parameters of the PBH mass function.
+    m_GC_mono : Array-like
+        PBH masses for the monochromatic MF, to use for interpolation.
+    f_max_GC_mono : Array-like
+        Constraint on abundance of PBHs (loaded data, monochromatic MF).
+
+    Returns
+    -------
+    Array-like
+        Integrand appearing in Eq. 12 of 1705.05567.
+
+    """
+    return mf(m, m_c, *params) / f_max(m, m_GC_mono, f_max_GC_mono)
+
+
+def isatis_constraints_general(mf, Delta_index):
+    """Output constraints for a general extended mass function, calculated 
+    directly using Isatis.
+
+    Parameters
+    ----------
+    mf : Function
+        PBH mass function.
+    Delta_index : Integer
+        Index corresponding to the value of the power spectrum width Delta.
+
+    Returns
+    -------
+    constraints_extended_plotting : Array-like
+        Constraints on f_PBH.
+    constraints_names : Array-like
+        Names of the constraints used.
+
+    """
+    if mf == lognormal_number_density:
+        filename_append = "_lognormal_sigma={:.2f}".format(sigmas_LN[Delta_index])
+    elif mf == skew_LN:
+        filename_append = "_SLN_Delta={:.1f}".format(Deltas[Delta_index])
+    elif mf == CC3:
+        filename_append = "_CC3_Delta={:.1f}".format(Deltas[Delta_index])
+        
+    # Load result from Isatis
+    results_name = "results_photons_GC%s" % (filename_append)
+
+    constraints_file = np.genfromtxt("%s%s.txt" % (Isatis_path,results_name), dtype="str")
+    constraints_names_bis = constraints_file[0, 1:]
+    constraints = np.zeros([len(constraints_file)-1, len(constraints_file[0])-1])
+    for i in range(len(constraints)):
+        for j in range(len(constraints[0])):
+            constraints[i, j] = float(constraints_file[i+1, j+1])
+
+    # Choose which constraints to plot, and create labels.
+    constraints_names = []
+    constraints_extended_plotting = []
+
+    for i in range(len(constraints_names_bis)):
+        # Only include labels for constraints that Isatis calculated.
+        if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
+            temp = constraints_names_bis[i].split("_")
+            temp2 = ""
+            
+            for j in range(len(temp)-1):
+                temp2 = "".join([temp2, temp[j], "\,\,"])
+            temp2 = "".join([temp2, "\,\,[arXiv:",temp[-1], "]"])
+
+            constraints_names.append(temp2)
+            constraints_extended_plotting.append(constraints[:, i])
+
+    return constraints_extended_plotting, constraints_names
+
+
+def constraints_Carr_general(mf, params):
+    """Calculate constraints for a general extended mass function, using the 
+    method from 1705.05567.
+
+    Parameters
+    ----------
+    mf : Function
+        PBH mass function.
+    params : Array-like
+        Other parameters of the PBH mass function.
+
+    Returns
+    -------
+    constraints_extended_Carr : Array-like
+        Constraints on f_PBH.
+
+    """
+    # Constraints for monochromatic MF, calculated using isatis_reproduction.py.
+    masses_mono = 10**np.arange(11, 19.05, 0.1)
+    constraints_mono_calculated = []
+
+    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    constraints_extended_Carr = []
+
+    # Loop through instruments
+    for i in range(len(constraints_names)):
+
+        constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
+
+        # Constraint from given instrument
+        constraint_extended_Carr = []
+        constraint_mono_Carr = []
+
+        for l in range(len(masses_mono)):
+            constraint_mass_m = []
+            # Cycle over energy bins in each instrument
+            for k in range(len(constraints_mono_file)):
+                constraint_mass_m.append(constraints_mono_file[k][l])
+
+            constraint_mono_Carr.append(min(constraint_mass_m))
+
+        constraints_mono_calculated.append(constraint_mono_Carr)
+
+        # Loop through characteristic PBH masses
+        for m_c in masses:
+
+            # Constraint from each energy bin
+            constraints_over_bins_extended = []
+
+            # Loop through energy bins
+            for j in range(len(constraints_mono_file)):
+                f_max_values = constraints_mono_file[j]
+
+                # Only include positive values of f_max.
+                # Exclude f_max > 100, since including these can cause
+                # overflow errors.
+                masses_mono_truncated = masses_mono[f_max_values < 1e2]
+                f_max_truncated = f_max_values[f_max_values < 1e2]
+
+                masses_mono_truncated = masses_mono_truncated[f_max_truncated > 0]
+                f_max_truncated = f_max_truncated[f_max_truncated > 0]
+
+                masses_mono_truncated = masses_mono_truncated[f_max_truncated != float("inf")]
+                f_max_truncated = f_max_truncated[f_max_truncated != float("inf")]
+
+                # If all values of f_max are excluded, assign a non-
+                # physical value f_PBH = 10 to the constraint at that mass.
+                if len(f_max_truncated) == 0:
+                    constraints_over_bins_extended.append(10.)
+                else:
+                    # Constraint from each bin
+                    integral = np.trapz(integrand_general_mf(masses_mono_truncated, mf, m_c, params, masses_mono_truncated, f_max_truncated), masses_mono_truncated)
+                    if integral == 0:
+                        constraints_over_bins_extended.append(10)
+                    else:
+                        constraints_over_bins_extended.append(1/integral)
+
+            # Constraint from given instrument (extended MF)
+            constraint_extended_Carr.append(min(constraints_over_bins_extended))
+            
+        # Array contains constraints from each instrument
+        constraints_extended_Carr.append(np.array(constraint_extended_Carr))
+
+    return constraints_extended_Carr
+
 #%% 
 # Compute constraints for the fitting functions from 2009.03204.
 mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
 mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 
 if "__main__" == __name__:
-
-    # Choose which constraints to plot, and create labels.
-    constraints_names = []
-    constraints_extended_plotting = []
 
     # Extended mass function constraints using the method from 1705.05567.
     # Choose which constraints to plot, and create labels
@@ -610,17 +418,16 @@ if "__main__" == __name__:
 
         constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN_peak, params_SLN_peak)
         constraints_extended_Carr_CC3 = constraints_Carr_general(CC3, params_CC3)
-
-        # envelope of constraints, with the tightest constraint
-        envelope_SLN = []
-        envelope_CC3 = []
-
+        
         mp_values_CC3 = masses
         mp_values_SLN = masses
 
+        # For now, include if statement since the Delta-function power spectrum
+        # peak is the only one that I have calculated constraints from Isatis
+        # for so far.
         if Deltas[k] == 0:
-            constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, Deltas[k])
-            constraints_Isatis_CC3, constraints_names = isatis_constraints_general(CC3, Deltas[k])
+            constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, k)
+            constraints_Isatis_CC3, constraints_names = isatis_constraints_general(CC3, k)
 
             for i in range(len(constraints_names)):
                 ax.plot(masses * (mps_SLN_Gow22[k] / mcs_SLN_Gow22[k]), constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
@@ -629,6 +436,10 @@ if "__main__" == __name__:
         for i in range(len(constraints_names)):
             ax.plot(mp_values_SLN, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
             ax.plot(mp_values_CC3, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', color=colors[i])
+
+        # Envelope of constraints, with the tightest constraint
+        envelope_SLN = []
+        envelope_CC3 = []
 
         for j in range(len(masses)):
             constraints_SLN = []
@@ -652,9 +463,10 @@ if "__main__" == __name__:
         ax.legend(fontsize="small")
         ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[k]))
         fig.tight_layout()
+        """
         plt.savefig("./Figures/GC_constraints/Delta={:.1f}.png".format(Deltas[k]))
         
-        # Save constraints data
+        # Save constraints
         for i in range(len(constraints_names)):
             data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_GC_" + str(constraints_names[i]) + "_Carr_Delta={:.1f}".format(Deltas[k])
             data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_GC_" + str(constraints_names[i]) + "_Carr_Delta={:.1f}".format(Deltas[k])
@@ -665,18 +477,14 @@ if "__main__" == __name__:
         data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_GC_envelope_Carr_Delta={:.1f}".format(Deltas[k])
         np.savetxt(data_filename_SLN, np.array([mp_values_SLN, envelope_SLN]), fmt="%s", delimiter="\t")
         np.savetxt(data_filename_CC3, np.array([mp_values_CC3, envelope_CC3]), fmt="%s", delimiter="\t")       
-        
+        """
        
-#%% Comparison between plots against M_c for the SLN MF and M_p for the CC3 MF.
+#%% Comparison between plots against m_c for the SLN MF and m_p for the CC3 MF.
 
 mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
 mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 
 if "__main__" == __name__:
-    
-    # Choose which constraints to plot, and create labels.
-    constraints_names = []
-    constraints_extended_plotting = []
     
     # Extended mass function constraints using the method from 1705.05567.
     # Choose which constraints to plot, and create labels
@@ -778,7 +586,7 @@ if "__main__" == __name__:
         
         f_pbh_N = []
         
-        constraints_extended_Carr_LN = constraints_Carr(sigma=sigmas_LN[k])
+        constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, [sigmas_LN[k]])
     
         # envelope of constraints, with the tightest constraint
         envelope_LN = []
@@ -821,17 +629,13 @@ if "__main__" == __name__:
         data_filename_LN = "./Data_files/constraints_extended_MF/LN_GC_envelope_Carr_Delta={:.1f}".format(Deltas[k])
         np.savetxt(data_filename_LN, np.array([mp_values_LN, envelope_LN]), fmt="%s", delimiter="\t")
 
-
-
 #%% Test case: compare results obtained using a LN MF with sigma=0.5 to the
 # input skew LN MF with alpha=0
 
 if "__main__" == __name__:
+    # Calculate constraints for extended MF from gamma-rays.
 
     fig, ax = plt.subplots(figsize=(12,6))
-    
-    # Calculate constraints for extended MF from gamma-rays.
-    
     f_pbh_skew_LN = []
     f_pbh_CC3 = []
     
@@ -839,7 +643,7 @@ if "__main__" == __name__:
     params_SLN = [sigma, 0.]
     
     constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN, params_SLN)
-    constraints_extended_Carr_LN = constraints_Carr(sigma)
+    constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, [sigma])
     
     mc_values = masses
     constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
@@ -866,7 +670,6 @@ if "__main__" == __name__:
 # M_p in the CC3 MFs, by comparing the mass functions calculated in terms of 
 # M_c and M_p.
 
-
 if "__main__" == __name__:
     
     Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
@@ -882,7 +685,6 @@ if "__main__" == __name__:
     m = np.logspace(17, 23, 1000)
     
     for i in range(len(Deltas)):
-        
         fig, ax = plt.subplots(figsize=(7, 5))
         mc_SLN = mp_CC3 * mcs_SLN_Gow22[i] / mps_SLN_Gow22[i]
         
@@ -893,7 +695,6 @@ if "__main__" == __name__:
         xmin = 1e18
         xmax = 1e22
 
-        
         # Plot the numerically calculated MF for a delta-function peak
         # in the power spectrum.
         if i==0:
@@ -907,7 +708,6 @@ if "__main__" == __name__:
 # M_p in the CC3 MFs, by comparing the mass functions calculated in terms of 
 # M_c and M_p.
 
-
 if "__main__" == __name__:
     
     Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
@@ -934,7 +734,6 @@ if "__main__" == __name__:
         xmin = 1e18
         xmax = 1e22
 
-        
         # Plot the numerically calculated MF for a delta-function peak
         # in the power spectrum.
         if i==0:
@@ -959,8 +758,7 @@ if "__main__" == __name__:
         fig.tight_layout()
         plt.savefig("./Figures/Test_plots/test_comp_MP_MC_Delta={:.1f}.png".format(Deltas[i]))
 
-            xmax = m[max(max(np.where(psi_CC3 > 0.1)))]
-    
+        xmax = m[max(max(np.where(psi_CC3 > 0.1)))]
         ax.plot(m, psi_SLN, label="SLN")
         ax.plot(m, psi_CC3, label="CC3", linestyle="dashed")
         ax.set_xlabel(r"$M_c$ [g]")
