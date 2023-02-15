@@ -190,7 +190,7 @@ def CC3(m, m_p, alpha, beta):
     return np.exp(log_psi)
 
 
-def f_max(m, m_GC_mono, f_max_GC_mono):
+def f_max(m, m_mono, f_max_mono):
     """Linearly interpolate the maximum fraction of dark matter in PBHs 
     (monochromatic mass distribution).
 
@@ -198,9 +198,9 @@ def f_max(m, m_GC_mono, f_max_GC_mono):
     ----------
     m : Array-like
         PBH masses (in grams).
-    m_GC_mono : Array-like
+    m_mono : Array-like
         PBH masses for the monochromatic MF, to use for interpolation.
-    f_max_GC_mono : Array-like
+    f_max_mono : Array-like
         Constraint on abundance of PBHs (loaded data, monochromatic MF).
 
     Returns
@@ -210,10 +210,10 @@ def f_max(m, m_GC_mono, f_max_GC_mono):
         monochromatic mass distribution.
 
     """
-    return 10**np.interp(np.log10(m), np.log10(m_GC_mono), np.log10(f_max_GC_mono))
+    return 10**np.interp(np.log10(m), np.log10(m_mono), np.log10(f_max_mono))
 
 
-def integrand_general_mf(m, mf, m_c, params, m_GC_mono, f_max_GC_mono):
+def integrand_general_mf(m, mf, m_c, params, m_mono, f_max_mono):
     """Compute integrand appearing in Eq. 12 of 1705.05567 for a general mass
     function.
 
@@ -227,9 +227,9 @@ def integrand_general_mf(m, mf, m_c, params, m_GC_mono, f_max_GC_mono):
         Characteristic PBH mass.
     params : Array-like
         Other parameters of the PBH mass function.
-    m_GC_mono : Array-like
+    m_mono : Array-like
         PBH masses for the monochromatic MF, to use for interpolation.
-    f_max_GC_mono : Array-like
+    f_max_mono : Array-like
         Constraint on abundance of PBHs (loaded data, monochromatic MF).
 
     Returns
@@ -238,7 +238,7 @@ def integrand_general_mf(m, mf, m_c, params, m_GC_mono, f_max_GC_mono):
         Integrand appearing in Eq. 12 of 1705.05567.
 
     """
-    return mf(m, m_c, *params) / f_max(m, m_GC_mono, f_max_GC_mono)
+    return mf(m, m_c, *params) / f_max(m, m_mono, f_max_mono)
 
 
 def isatis_constraints_general(mf, Delta_index):
@@ -419,9 +419,6 @@ if "__main__" == __name__:
         constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN_peak, params_SLN_peak)
         constraints_extended_Carr_CC3 = constraints_Carr_general(CC3, params_CC3)
         
-        mp_values_CC3 = masses
-        mp_values_SLN = masses
-
         # For now, include if statement since the Delta-function power spectrum
         # peak is the only one that I have calculated constraints from Isatis
         # for so far.
@@ -431,11 +428,11 @@ if "__main__" == __name__:
 
             for i in range(len(constraints_names)):
                 ax.plot(masses * (mps_SLN_Gow22[k] / mcs_SLN_Gow22[k]), constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
-                ax.plot(mp_values_CC3, constraints_Isatis_CC3[i], linestyle="dashed", color=colors[i])
+                ax.plot(masses, constraints_Isatis_CC3[i], linestyle="dashed", color=colors[i])
 
         for i in range(len(constraints_names)):
-            ax.plot(mp_values_SLN, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
-            ax.plot(mp_values_CC3, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', color=colors[i])
+            ax.plot(masses, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
+            ax.plot(masses, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', color=colors[i])
 
         # Envelope of constraints, with the tightest constraint
         envelope_SLN = []
@@ -452,8 +449,8 @@ if "__main__" == __name__:
             envelope_SLN.append(min(constraints_SLN))
             envelope_CC3.append(min(constraints_CC3))
         
-        ax.plot(mp_values_SLN, envelope_SLN, linestyle="dotted", label="SLN", color="k")
-        ax.plot(mp_values_CC3, envelope_CC3, linestyle="dashed", label="CC3", color="k")
+        ax.plot(masses, envelope_SLN, linestyle="dotted", label="SLN", color="k")
+        ax.plot(masses, envelope_CC3, linestyle="dashed", label="CC3", color="k")
         ax.set_xlabel(r"$M_p$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
@@ -515,18 +512,14 @@ if "__main__" == __name__:
 
         constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN_peak, params_SLN_peak)
         constraints_extended_Carr_CC3 = constraints_Carr_general(CC3, params_CC3)
-    
-        # envelope of constraints, with the tightest constraint
-        envelope_SLN = []
-        envelope_CC3 = []
-        
+            
         mp_values_CC3 = masses
         mp_values_SLN = masses
         mc_values_SLN = mp_values_SLN * (mcs_SLN_Gow22[k] / mps_SLN_Gow22[k])
         
         if Deltas[k] == 0:
-            constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, Deltas[k])
-            constraints_Isatis_CC3, constraints_names = isatis_constraints_general(CC3, Deltas[k])
+            constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, k)
+            constraints_Isatis_CC3, constraints_names = isatis_constraints_general(CC3, k)
                            
             for i in range(len(constraints_names)):
                 ax.plot(masses, constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
@@ -535,7 +528,12 @@ if "__main__" == __name__:
         for i in range(len(constraints_names)):
             ax.plot(mc_values_SLN, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
             ax.plot(mp_values_CC3, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', color=colors[i])
-                        
+                       
+            
+        # envelope of constraints, with the tightest constraint
+        envelope_SLN = []
+        envelope_CC3 = []
+            
         for j in range(len(masses)):
             constraints_SLN = []
             constraints_CC3 = []
@@ -608,7 +606,6 @@ if "__main__" == __name__:
             envelope_LN.append(min(constraints_LN))
         
         ax.plot(mp_values_LN, envelope_LN, linestyle="dotted", label="Envelope (SLN)", color="k")
-        
         ax.set_xlabel(r"$M_p$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
@@ -664,45 +661,6 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     fig.tight_layout()
     plt.savefig("./Figures/GC_constraints/test_LN_SLN.png")
-
-
-#%% Check formula for the approximate relation between M_c in the SLN and
-# M_p in the CC3 MFs, by comparing the mass functions calculated in terms of 
-# M_c and M_p.
-
-if "__main__" == __name__:
-    
-    Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
-    sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-    alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
-    alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
-    betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
-    
-    mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
-    mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
-    
-    mp_CC3 = 1e20
-    m = np.logspace(17, 23, 1000)
-    
-    for i in range(len(Deltas)):
-        fig, ax = plt.subplots(figsize=(7, 5))
-        mc_SLN = mp_CC3 * mcs_SLN_Gow22[i] / mps_SLN_Gow22[i]
-        
-        #psi_SLN = skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
-        psi_SLN = skew_LN_peak(m, mp_CC3, sigmas[i], alphas_SL[i], i) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
-        psi_CC3 = CC3(m, mp_CC3, alphas_CC[i], betas[i]) / max(CC3(m, mp_CC3, alphas_CC[i], betas[i]))
-        
-        xmin = 1e18
-        xmax = 1e22
-
-        # Plot the numerically calculated MF for a delta-function peak
-        # in the power spectrum.
-        if i==0:
-            m_num, psi_num = load_data("Gow22_Fig3_Delta0_numerical.csv")
-            psi_normalised = psi_num / max(psi_num)
-            ax.plot(m_num * mp_CC3 / mps_SLN_Gow22[0], psi_num, color="k", label="Numeric")
-            
-            xmin = m[min(min(np.where(psi_CC3 > 0.1)))]
 
 #%% Check formula for the approximate relation between M_c in the SLN and
 # M_p in the CC3 MFs, by comparing the mass functions calculated in terms of 
