@@ -9,6 +9,7 @@ Created on Thu Jun 16 18:25:20 2022
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from scipy.special import erf, loggamma
 
 # Produce plots of the Galctic Centre photon constraints on PBHs, for 
 # extended mass functions.
@@ -35,22 +36,18 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 filepath = './Extracted_files/'
 
-# Range of log-normal mass function central PBH masses.
-"""
-mc_min = 1e14
-mc_max = 1e19
-masses = 10**np.arange(np.log10(mc_min), np.log10(mc_max), 0.1)
-"""
-# Range of masses at which the mass function peaks.
+# Range of characteristic PBH masses
 m_min = 1e14
 m_max = 1e19
 masses = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
 
+# Path to Isatis
 Isatis_path = "./../Downloads/version_finale/scripts/Isatis/"
 
+# Values of the peak mass m_p and characteristic mass m_c from 2009.03204 Table
+# II.
 mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
 mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
-
 
 def load_data(filename):
     """
@@ -116,7 +113,8 @@ def LN_MF_number_density(m, m_c, sigma, A=1):
 
 
 def f_max(m, m_GC_mono, f_max_GC_mono):
-    """Linearly interpolate the maximum fraction of dark matter in PBHs (monochromatic mass distribution).
+    """Linearly interpolate the maximum fraction of dark matter in PBHs 
+    (monochromatic mass distribution).
 
     Parameters
     ----------
@@ -138,7 +136,9 @@ def f_max(m, m_GC_mono, f_max_GC_mono):
 
 
 def integrand(A, m, m_c, sigma, m_GC_mono, f_max_GC_mono):
-    """Compute integrand appearing in Eq. 12 of 1705.05567 for a log-normal mass function (for reproducing constraints with an extended mass function following 1705.05567).
+    """Compute integrand appearing in Eq. 12 of 1705.05567 for a log-normal 
+    mass function (for reproducing constraints with an extended mass function 
+    following 1705.05567).
 
     Parameters
     ----------
@@ -193,7 +193,8 @@ def integrand_general_mf(m, mf, m_c, params, m_GC_mono, f_max_GC_mono):
 
 
 def isatis_constraints(sigma, lognormal_MF=True):
-    """Output constraints on f_PBH for a log-normal MF, calculated directly using Isatis.
+    """Output constraints on f_PBH for a log-normal MF, calculated directly 
+    using Isatis.
 
     Parameters
     ----------
@@ -248,7 +249,8 @@ def isatis_constraints(sigma, lognormal_MF=True):
 
 
 def isatis_constraints_general(mf, Delta, lognormal_MF=True):
-    """Output constraints for a general extended mass function, calculated directly using Isatis.
+    """Output constraints for a general extended mass function, calculated 
+    directly using Isatis.
 
     Parameters
     ----------
@@ -267,7 +269,7 @@ def isatis_constraints_general(mf, Delta, lognormal_MF=True):
     """
     if mf == skew_LN:
         filename_append = "_SLN_Delta={:.1f}".format(Delta)
-    if mf == CC3:
+    elif mf == CC3:
         filename_append = "_CC3_Delta={:.1f}".format(Delta)
         
     # Load result from Isatis
@@ -289,14 +291,10 @@ def isatis_constraints_general(mf, Delta, lognormal_MF=True):
         if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
             temp = constraints_names_bis[i].split("_")
             temp2 = ""
-            """
+            
             for j in range(len(temp)-1):
                 temp2 = "".join([temp2, temp[j], "\,\,"])
             temp2 = "".join([temp2, "\,\,[arXiv:",temp[-1], "]"])
-            """
-            for j in range(len(temp)-1):
-                temp2 = "".join([temp2, temp[j]])
-            temp2 = "".join([temp2, "[arXiv:",temp[-1], "]"])
 
             constraints_names.append(temp2)
             constraints_extended_plotting.append(constraints[:, i])
@@ -306,7 +304,8 @@ def isatis_constraints_general(mf, Delta, lognormal_MF=True):
 
 
 def constraints_Carr(sigma, lognormal_MF=True):
-    """Calculate constraints for a log-normal MF, using the method from 1705.05567.
+    """Calculate constraints for a log-normal MF, using the method from 
+    1705.05567.
 
     Parameters
     ----------
@@ -385,7 +384,8 @@ def constraints_Carr(sigma, lognormal_MF=True):
 
 
 def constraints_Carr_general(mf, params):
-    """Calculate constraints for a general extended mass function, using the method from 1705.05567.
+    """Calculate constraints for a general extended mass function, using the 
+    method from 1705.05567.
 
     Parameters
     ----------
@@ -436,7 +436,7 @@ def constraints_Carr_general(mf, params):
                 f_max_values = constraints_mono_file[j]
 
                 # Only include positive values of f_max.
-                # Exclude f_max > 100, since including these can cause 
+                # Exclude f_max > 100, since including these can cause
                 # overflow errors.
                 masses_mono_truncated = masses_mono[f_max_values < 1e2]
                 f_max_truncated = f_max_values[f_max_values < 1e2]
@@ -465,133 +465,6 @@ def constraints_Carr_general(mf, params):
         constraints_extended_Carr.append(np.array(constraint_extended_Carr))
 
     return constraints_extended_Carr
- 
-
-#%%
-
-if "__main__" == __name__:
-    
-    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
-    
-    fig, ax = plt.subplots(figsize=(6,6))
-    fig1, (ax1a, ax1b) = plt.subplots(nrows=2, ncols=1, figsize=(6.5, 10))
-    fig2, ax2 = plt.subplots(figsize=(6,6))
-    fig3, ax3 = plt.subplots(figsize=(6,6))
-    #fig4, ax4 = plt.subplots(figsize=(6,6))
-    
-    sigma = 0.5
-    constraints_extended_plotting, constraints_names = isatis_constraints(sigma)
-        
-    constraints_extended_Isatis_sigma05, constraints_names = isatis_constraints(sigma=0.5)
-    constraints_extended_Isatis_sigma10, constraints_names = isatis_constraints(sigma=1.)
-
-    constraints_extended_Carr_sigma05 = constraints_Carr(sigma=0.5)
-    constraints_extended_Carr_sigma10 = constraints_Carr(sigma=1.)
-    constraints_extended_Carr = constraints_Carr(sigma=sigma)
-    
-    for i in range(len(constraints_names)):
-        ax.plot(masses, constraints_extended_plotting[i], marker='x', label=constraints_names[i])
-        ax1a.plot(masses, constraints_extended_Carr_sigma05[i], color=colors[i], alpha=0.5)
-        ax1b.plot(masses, constraints_extended_Carr_sigma10[i], color=colors[i], alpha=0.5)
-        
-    ax.set_xlabel("$M_c$ [g]")
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_ylim(1e-10, 1)
-    ax.set_xlim(m_min, m_max)
-    ax.legend(fontsize='small')
-    ax.set_title("Log-normal ($\sigma = {:.1f}$) \n (Direct Isatis calculation)".format(sigma))
-    fig.tight_layout()
-    
-    # Extended mass function constraints using the method from 1705.05567.
-    # Choose which constraints to plot, and create labels
-    constraints_labels = []
-    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    
-    for i in range(len(constraints_names)):
-        temp = constraints_names[i].split("_")
-        temp2 = ""
-        for j in range(len(temp)-1):
-            temp2 = "".join([temp2, temp[j], "\,\,"])
-        temp2 = "".join([temp2, "\,\,[arXiv:", temp[-1], "]"])
-        constraints_labels.append(temp2)
-        
-    # Constraints for monochromatic MF, calculated using Isatis.
-    results_name_mono = "results_photons_GC_mono"
-    
-    constraints_mono_file = np.genfromtxt("%s%s.txt"%(Isatis_path,results_name_mono),dtype = "str")
-    constraints_names_bis = constraints_mono_file[0,1:]
-    constraints_mono = np.zeros([len(constraints_mono_file)-1,len(constraints_mono_file[0])-1])
-    
-    for i in range(len(constraints_mono)):
-        for j in range(len(constraints_mono[0])):
-            constraints_mono[i,j] = float(constraints_mono_file[i+1,j+1])
-    
-    # Choose which constraints to plot, and create labels.
-    constraints_mono_names = []
-    constraints_mono_plotting = []
-    
-    for i in range(len(constraints_names_bis)):
-        if np.all(constraints_mono[:, i] <= 0.):  # only include calculated constraints
-            print("all = -1 or 0")
-        else:
-            temp = constraints_names_bis[i].split("_")
-            temp2 = ""
-            for j in range(len(temp)-1):
-                temp2 = "".join([temp2,temp[j],"\,\,"])
-            temp2 = "".join([temp2,"\,\,[arXiv:",temp[-1],"]"])
-            constraints_mono_names.append(temp2)
-            constraints_mono_plotting.append(constraints_mono[:, i])
-    
-    for i in range(len(constraints_extended_Carr)):
-        ax2.plot(masses, constraints_extended_Carr[i], marker='x', label=constraints_labels[i])
-        ax1a.plot(masses, constraints_extended_Carr_sigma05[i], marker='x', linestyle='None', color=colors[i], label=constraints_labels[i])
-        ax1b.plot(masses, constraints_extended_Carr_sigma10[i], marker='x', linestyle='None', color=colors[i], label=constraints_labels[i])
-        ax3.plot(masses, constraints_extended_plotting[i]/constraints_extended_Carr[i] - 1, marker='x', color=colors[i], label=constraints_labels[i])
-       
-    # Plot the log-normal mass function constraints, calculated using the method
-    # from 1705.05567.
-    ax2.set_xlabel("$M_c$ [g]")
-    ax2.set_ylabel("$f_\mathrm{PBH}$")
-    ax2.set_xscale("log")
-    ax2.set_yscale("log")
-    ax2.set_ylim(1e-10, 1)
-    ax2.set_xlim(m_min, m_max)
-    ax2.legend(fontsize='small')
-    ax2.set_title("Log-normal ($\sigma = {:.1f}$) \n (1705.05567 method)".format(sigma))
-    fig2.tight_layout()
-    
-    # Comparison of log-normal mass function constraints (crosses), calculated 
-    # using the method from 1705.05567, and direct Isatis calculation (translucent 
-    # lines).
-    for ax1 in (ax1a, ax1b):
-        ax1.set_xlabel("$M_c$ [g]")
-        ax1.set_ylabel("$f_\mathrm{PBH}$")
-        ax1.set_xscale("log")
-        ax1.set_yscale("log")
-        ax1.set_ylim(1e-10, 1)
-        ax1.set_xlim(m_min, m_max)
-    ax1b.legend(fontsize='small')
-    ax1a.set_title("$\sigma = 0.5$")
-    ax1b.set_title("$\sigma = 1.0$")
-    fig1.suptitle("Log-normal")
-    fig1.tight_layout()
-    
-    # Comparison of log-normal mass function constraints (crosses), calculated 
-    # using the method from 1705.05567, and direct Isatis calculation (translucent 
-    # lines).
-    ax3.set_xlabel("$M_c$ [g]")
-    ax3.set_ylabel("$f_\mathrm{PBH, Isatis} / f_\mathrm{PBH, Carr} - 1$")
-    ax3.set_xscale("log")
-    ax3.set_xlim(m_min, m_max)
-    ax3.set_ylim(0.007, 0.0115)
-    ax3.legend(fontsize='small')
-    ax3.set_title("Log-normal ($\sigma = {:.1f}$)".format(sigma))
-    fig3.tight_layout()
-    
-#%%
-from scipy.special import erf, loggamma
 
 
 def skew_LN(m, m_c, sigma, alpha):
@@ -605,7 +478,8 @@ def skew_LN(m, m_c, sigma, alpha):
     m_c : Float
         Characteristic PBH mass.
     sigma : Float
-        Parameter controlling width of mass function (corresponds to the standard deviation when alpha=0).
+        Parameter controlling width of mass function (corresponds to the 
+        standard deviation when alpha=0).
     alpha : Float
         Parameter controlling skew of the distribution.
 
@@ -620,7 +494,8 @@ def skew_LN(m, m_c, sigma, alpha):
 
 def skew_LN_peak(m, m_p, sigma, alpha, Delta_index):
     """
-    Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204. Expressed in terms of the peak mass instead of M_c.
+    Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204. 
+    Expressed in terms of the peak mass m_p instead of m_c.
 
     Parameters
     ----------
@@ -629,11 +504,12 @@ def skew_LN_peak(m, m_p, sigma, alpha, Delta_index):
     m_p : Float
         PBH mass at which the mass function peaks.
     sigma : Float
-        Parameter controlling width of mass function (corresponds to the standard deviation when alpha=0).
+        Parameter controlling width of mass function (corresponds to the 
+        standard deviation when alpha=0).
     alpha : Float
         Parameter controlling skew of the distribution.
     Delta_index : Integer
-        Index corresponding to the value of the power spectrum width Delta adopted.
+        Index corresponding to the value of the power spectrum width Delta .
 
     Returns
     -------
@@ -645,11 +521,11 @@ def skew_LN_peak(m, m_p, sigma, alpha, Delta_index):
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
 
 
-
 def loc_param_CC3(m_p, alpha, beta):
     """
-    Location parameter for generalised critical collapse mass function, from Table I of 2009.03204 (denoted m_f in that paper).
-    
+    Location parameter for generalised critical collapse mass function, from 
+    Table I of 2009.03204 (denoted m_f in that paper).
+
     Parameters
     ----------
     m_p : Array-like
@@ -670,7 +546,8 @@ def loc_param_CC3(m_p, alpha, beta):
 
 def CC3(m, m_p, alpha, beta):
     """
-    Generalised critical collapse mass function, as defined in Eq. (9) of 2009.03204.
+    Generalised critical collapse mass function, as defined in Eq. (9) of 
+    2009.03204.
 
     Parameters
     ----------
@@ -693,15 +570,17 @@ def CC3(m, m_p, alpha, beta):
     log_psi = np.log(beta/m_f) - loggamma((alpha+1) / beta) + (alpha * np.log(m/m_f)) - np.power(m/m_f, beta)
     return np.exp(log_psi)
 
+#%% 
+# Compute constraints for the fitting functions from 2009.03204.
 mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
 mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 
 if "__main__" == __name__:
-    
+
     # Choose which constraints to plot, and create labels.
     constraints_names = []
     constraints_extended_plotting = []
-    
+
     # Extended mass function constraints using the method from 1705.05567.
     # Choose which constraints to plot, and create labels
     constraints_labels = []
@@ -714,44 +593,43 @@ if "__main__" == __name__:
 
     alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
     betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
-    
-    
+
+    # Colours corresponding to each instrument
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
-    
+
     for k in range(len(Deltas)):
         fig, ax = plt.subplots(figsize=(12,6))
-        
+
         # Calculate constraints for extended MF from gamma-rays.
-        
+
         f_pbh_skew_LN = []
         f_pbh_CC3 = []
-        
+
         params_SLN_peak = [sigmas[k], alphas_SL[k], k]
         params_CC3 = [alphas_CC[k], betas[k]]
 
         constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN_peak, params_SLN_peak)
         constraints_extended_Carr_CC3 = constraints_Carr_general(CC3, params_CC3)
-    
+
         # envelope of constraints, with the tightest constraint
         envelope_SLN = []
         envelope_CC3 = []
-        
+
         mp_values_CC3 = masses
-        #mp_values_SLN = mc_values_SLN * (mps_SLN_Gow22[k] / mcs_SLN_Gow22[k])
         mp_values_SLN = masses
-        
+
         if Deltas[k] == 0:
             constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, Deltas[k])
             constraints_Isatis_CC3, constraints_names = isatis_constraints_general(CC3, Deltas[k])
-                           
+
             for i in range(len(constraints_names)):
                 ax.plot(masses * (mps_SLN_Gow22[k] / mcs_SLN_Gow22[k]), constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
                 ax.plot(mp_values_CC3, constraints_Isatis_CC3[i], linestyle="dashed", color=colors[i])
-        
+
         for i in range(len(constraints_names)):
             ax.plot(mp_values_SLN, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
             ax.plot(mp_values_CC3, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', color=colors[i])
-                        
+
         for j in range(len(masses)):
             constraints_SLN = []
             constraints_CC3 = []
@@ -765,7 +643,6 @@ if "__main__" == __name__:
         
         ax.plot(mp_values_SLN, envelope_SLN, linestyle="dotted", label="SLN", color="k")
         ax.plot(mp_values_CC3, envelope_CC3, linestyle="dashed", label="CC3", color="k")
-        
         ax.set_xlabel(r"$M_p$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
@@ -778,7 +655,6 @@ if "__main__" == __name__:
         plt.savefig("./Figures/GC_constraints/Delta={:.1f}.png".format(Deltas[k]))
         
         # Save constraints data
-        
         for i in range(len(constraints_names)):
             data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_GC_" + str(constraints_names[i]) + "_Carr_Delta={:.1f}".format(Deltas[k])
             data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_GC_" + str(constraints_names[i]) + "_Carr_Delta={:.1f}".format(Deltas[k])
@@ -791,8 +667,7 @@ if "__main__" == __name__:
         np.savetxt(data_filename_CC3, np.array([mp_values_CC3, envelope_CC3]), fmt="%s", delimiter="\t")       
         
        
-#%% Comparison between plots against M_c and M_p
-
+#%% Comparison between plots against M_c for the SLN MF and M_p for the CC3 MF.
 
 mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
 mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
@@ -816,7 +691,7 @@ if "__main__" == __name__:
     alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
     betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
     
-    
+    # Colours corresponding to each instrument    
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
     
     for k in range(len(Deltas)):
@@ -839,7 +714,7 @@ if "__main__" == __name__:
         
         mp_values_CC3 = masses
         mp_values_SLN = masses
-        mc_values_SLN = mp_values_SLN * mcs_SLN_Gow22[k] / mps_SLN_Gow22[k]
+        mc_values_SLN = mp_values_SLN * (mcs_SLN_Gow22[k] / mps_SLN_Gow22[k])
         
         if Deltas[k] == 0:
             constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, Deltas[k])
@@ -850,7 +725,7 @@ if "__main__" == __name__:
                 ax.plot(mp_values_CC3, constraints_Isatis_CC3[i], linestyle="dashed", color=colors[i])
         
         for i in range(len(constraints_names)):
-            ax.plot(mp_values_SLN, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
+            ax.plot(mc_values_SLN, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
             ax.plot(mp_values_CC3, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', color=colors[i])
                         
         for j in range(len(masses)):
@@ -866,7 +741,6 @@ if "__main__" == __name__:
         
         ax.plot(mc_values_SLN, envelope_SLN, linestyle="dotted", label="SLN", color="k")
         ax.plot(mp_values_CC3, envelope_CC3, linestyle="dashed", label="CC3", color="k")
-        
         ax.set_xlabel(r"$M_p$ or $M_c$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
@@ -878,10 +752,9 @@ if "__main__" == __name__:
         fig.tight_layout()
         plt.savefig("./Figures/GC_constraints/Delta={:.1f}_Mc_Mp.png".format(Deltas[k]))
         
-
-
 #%% Constraints for a log-normal MF, using the values of sigma found as best-
 # fit values from Table II of 2008.03289.
+
 Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0])
 sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864])
 
@@ -952,6 +825,7 @@ if "__main__" == __name__:
 
 #%% Test case: compare results obtained using a LN MF with sigma=0.5 to the
 # input skew LN MF with alpha=0
+
 if "__main__" == __name__:
 
     fig, ax = plt.subplots(figsize=(12,6))
@@ -989,13 +863,12 @@ if "__main__" == __name__:
 
 
 #%% Check formula for the approximate relation between M_c in the SLN and
-# M_p in the CC3 MFs.
+# M_p in the CC3 MFs, by comparing the mass functions calculated in terms of 
+# M_c and M_p.
 
 
 if "__main__" == __name__:
     
-    
-
     Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
     sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
     alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
@@ -1029,6 +902,63 @@ if "__main__" == __name__:
             ax.plot(m_num * mp_CC3 / mps_SLN_Gow22[0], psi_num, color="k", label="Numeric")
             
             xmin = m[min(min(np.where(psi_CC3 > 0.1)))]
+
+#%% Check formula for the approximate relation between M_c in the SLN and
+# M_p in the CC3 MFs, by comparing the mass functions calculated in terms of 
+# M_c and M_p.
+
+
+if "__main__" == __name__:
+    
+    Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+    sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
+    alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+    alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
+    betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
+    
+    mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
+    mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
+    
+    mp_CC3 = 1e20
+    m = np.logspace(17, 23, 1000)
+    
+    for i in range(len(Deltas)):
+        
+        fig, ax = plt.subplots(figsize=(7, 5))
+        mc_SLN = mp_CC3 * mcs_SLN_Gow22[i] / mps_SLN_Gow22[i]
+        
+        #psi_SLN = skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
+        psi_SLN = skew_LN_peak(m, mp_CC3, sigmas[i], alphas_SL[i], i) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
+        psi_CC3 = CC3(m, mp_CC3, alphas_CC[i], betas[i]) / max(CC3(m, mp_CC3, alphas_CC[i], betas[i]))
+        
+        xmin = 1e18
+        xmax = 1e22
+
+        
+        # Plot the numerically calculated MF for a delta-function peak
+        # in the power spectrum.
+        if i==0:
+            m_num, psi_num = load_data("Gow22_Fig3_Delta0_numerical.csv")
+            psi_normalised = psi_num / max(psi_num)
+            ax.plot(m_num * mp_CC3 / mps_SLN_Gow22[0], psi_num, color="k", label="Numeric")
+            
+            xmin = m[min(min(np.where(psi_CC3 > 0.1)))]
+            xmax = m[max(max(np.where(psi_CC3 > 0.1)))]
+    
+        ax.plot(m, psi_SLN, label="SLN")
+        ax.plot(m, psi_CC3, label="CC3", linestyle="dashed")
+        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_xlabel(r"$M$ [g]")
+        ax.set_ylabel(r"$\psi(M) / \psi_\mathrm{max}$")
+        ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(0.1, 2)
+        fig.tight_layout()
+        plt.savefig("./Figures/Test_plots/test_comp_MP_MC_Delta={:.1f}.png".format(Deltas[i]))
+
             xmax = m[max(max(np.where(psi_CC3 > 0.1)))]
     
         ax.plot(m, psi_SLN, label="SLN")
