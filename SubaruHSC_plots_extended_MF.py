@@ -39,17 +39,21 @@ filepath = './Extracted_files/'
 # Test: calculate constraints from Fig. 20 of 2002.12778.
 # The monochromatic MF constraints used match Fig. 6 of 1910.01285.
 
-mp_subaru = 10**np.linspace(-15, -4, 100)
+mc_subaru = 10**np.linspace(-15, -4, 100)
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_mono.csv")
-m_subaru_mono_Smyth, f_max_subaru_mono_Smyth = load_data("Subaru-HSC_mono.csv")
-mp_subaru_LN, f_pbh_subaru_LN = load_data("Subaru-HSC_LN.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2002.12778_mono.csv")
+m_subaru_mono_Smyth, f_max_subaru_mono_Smyth = load_data("Subaru-HSC_1910.01285.csv")
+mc_subaru_LN, f_pbh_subaru_LN = load_data("Subaru-HSC_2002.12778_LN.csv")
+
+# Convert 1910.01285 constraint masses from grams to solar masses
+m_subaru_mono_Smyth /= 1.989e33
 
 sigma = 2
 
 if "__main__" == __name__:
-
+    
+    # Compare constraints from Subaru-HSC for a monochromatic MF.
     fig, ax = plt.subplots(figsize=(6,6))
     ax.plot(m_subaru_mono, f_max_subaru_mono, label='Extracted (2002.12778)')
     ax.plot(m_subaru_mono_Smyth, f_max_subaru_mono_Smyth, linewidth=7, alpha=0.5, linestyle='dotted', label='Extracted (1910.01285)')
@@ -62,17 +66,17 @@ if "__main__" == __name__:
     ax.legend()
     fig.tight_layout()
 
-    # Calculate constraints for extended MF from microlensing.
+    # Calculate constraints from Subaru-HSC for a log-normal mass function.
+    # Compare to results extracted from RH panel of Fig. 20 of 2002.12778.
     f_pbh_subaru = []
+    params = [sigma]
 
-    for m_c in mp_subaru:
-
-        f_pbh_subaru.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, sigma, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+    for m_c in mc_subaru:
+        f_pbh_subaru.append(1/np.trapz(integrand_general_mf(m_subaru_mono_Smyth, lognormal_number_density, m_c, params, m_subaru_mono_Smyth, f_max_subaru_mono_Smyth)))
 
     fig, ax = plt.subplots(figsize=(6,6))
-    plt.plot(mp_subaru_LN, f_pbh_subaru_LN, label='Extracted (2002.12778)')
-    plt.plot(mp_subaru, f_pbh_subaru, label='Calculated', linestyle='dashed')
-
+    ax.plot(mc_subaru_LN, f_pbh_subaru_LN, label='Extracted (2002.12778)')
+    ax.plot(mc_subaru, f_pbh_subaru, label='Calculated', linestyle='dashed')
     ax.set_xlabel('$M_\mathrm{c}~[M_\odot]$')
     ax.set_ylabel('$f_\mathrm{PBH}$')
     ax.set_xscale('log')
@@ -82,7 +86,6 @@ if "__main__" == __name__:
     ax.set_ylim(1e-3, 1)
     ax.set_title("Log-normal MF ($\sigma = {:.1f}$)".format(sigma))
     fig.tight_layout()
-
 
 #%%
 # Calculate Subaru-HSC constraint for an extended MF, using the monochromatic
@@ -94,7 +97,7 @@ if "__main__" == __name__:
 mp_subaru = 10**np.linspace(20, 29, 1000)
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
+m_subaru_mono_Croon, f_max_mono_Croon = load_data("Croon2020_R90_0.csv")
 
 # Load comparison constraint from PBHbounds
 PBHbounds = np.transpose(np.genfromtxt("./../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
@@ -104,19 +107,16 @@ m_subaru_mono_PBHbounds, f_max_subaru_mono_PBHbounds = np.transpose(np.genfromtx
 sigma = 0.2
 
 if "__main__" == __name__:
-
-
     # Calculate constraints for extended MF from microlensing.
     f_pbh_subaru = []
-
+    params = [sigma]
+    
     for m_c in mp_subaru:
-
-        f_pbh_subaru.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, sigma, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+        f_pbh_subaru.append(1/np.trapz(integrand_general_mf(m_subaru_mono_Croon, lognormal_number_density, m_c, params, m_subaru_mono_Croon, f_max_mono_Croon), m_subaru_mono_Croon))
 
     fig, ax = plt.subplots(figsize=(6,6.5))
-
     ax.plot(mp_subaru, f_pbh_subaru, label="Calculated", )
-    ax.plot(m_subaru_mono, f_max_subaru_mono, linestyle='dotted', label="Monochromatic (Croon et al. (2020))")
+    ax.plot(m_subaru_mono_Croon, m_subaru_mono_Croon, linestyle='dotted', label="Monochromatic (Croon et al. (2020))")
     ax.plot(m_subaru_mono_PBHbounds * 1.989e33, f_max_subaru_mono_PBHbounds, linestyle='dotted', linewidth=1.5, label="Monochromatic (PBHbounds)")
     ax.set_xlabel(r'$M_\mathrm{PBH}~[\mathrm{g}]$')
     ax.set_ylabel(r'$f_\mathrm{PBH}$')
@@ -258,7 +258,7 @@ for i in range(len(deltas)):
     ax.set_ylim(1e-3, 1)
     ax.set_title("Croon et al. (2020) [2007.12697]")
     fig.tight_layout()
-    plt.savefig("./Figures/HSC_constraints/test_2007.12697_LN_SLN.pdf")
+    plt.savefig("./Figures/HSC_constraints/test_2007.12697_LN_SLN.png", dpi=1200)
 
 
 #%%
@@ -329,7 +329,7 @@ for i in range(len(deltas)):
     ax.set_ylim(1e-3, 1)
     ax.set_title("Smyth et al. (2019) [1910.01285]")
     fig.tight_layout()
-    plt.savefig("./Figures/HSC_constraints/test_1910.01285_LN_SLN.pdf")
+    plt.savefig("./Figures/HSC_constraints/test_1910.01285_LN_SLN.png", dpi=1200)
 
 
 #%%
