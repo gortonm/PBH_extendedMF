@@ -72,7 +72,7 @@ if "__main__" == __name__:
     params = [sigma]
 
     for m_c in mc_subaru:
-        f_pbh_subaru.append(1/np.trapz(integrand_general_mf(m_subaru_mono_Smyth, lognormal_number_density, m_c, params, m_subaru_mono_Smyth, f_max_subaru_mono_Smyth)))
+        f_pbh_subaru.append(1/np.trapz(integrand_general_mf(m_subaru_mono_Smyth, lognormal_number_density, m_c, params, m_subaru_mono_Smyth, f_max_subaru_mono_Smyth), m_subaru_mono_Smyth))
 
     fig, ax = plt.subplots(figsize=(6,6))
     ax.plot(mc_subaru_LN, f_pbh_subaru_LN, label='Extracted (2002.12778)')
@@ -94,14 +94,13 @@ if "__main__" == __name__:
 # constraint.
 # Also compare to the PBHbounds constraint
 
-mp_subaru = 10**np.linspace(20, 29, 1000)
+mc_subaru = 10**np.linspace(20, 29, 1000)
 
 # Load data files
-m_subaru_mono_Croon, f_max_mono_Croon = load_data("Croon2020_R90_0.csv")
+m_subaru_mono_Croon, f_max_mono_Croon = load_data("Subaru-HSC_2007.12697.csv")
 
 # Load comparison constraint from PBHbounds
 PBHbounds = np.transpose(np.genfromtxt("./../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
-print(PBHbounds)
 m_subaru_mono_PBHbounds, f_max_subaru_mono_PBHbounds = np.transpose(np.genfromtxt("./../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
 
 sigma = 0.2
@@ -111,13 +110,13 @@ if "__main__" == __name__:
     f_pbh_subaru = []
     params = [sigma]
     
-    for m_c in mp_subaru:
+    for m_c in mc_subaru:
         f_pbh_subaru.append(1/np.trapz(integrand_general_mf(m_subaru_mono_Croon, lognormal_number_density, m_c, params, m_subaru_mono_Croon, f_max_mono_Croon), m_subaru_mono_Croon))
 
     fig, ax = plt.subplots(figsize=(6,6.5))
-    ax.plot(mp_subaru, f_pbh_subaru, label="Calculated", )
-    ax.plot(m_subaru_mono_Croon, m_subaru_mono_Croon, linestyle='dotted', label="Monochromatic (Croon et al. (2020))")
-    ax.plot(m_subaru_mono_PBHbounds * 1.989e33, f_max_subaru_mono_PBHbounds, linestyle='dotted', linewidth=1.5, label="Monochromatic (PBHbounds)")
+    ax.plot(mc_subaru, f_pbh_subaru, label="Calculated")
+    ax.plot(m_subaru_mono_Croon, f_max_mono_Croon, linestyle='dotted', label="Monochromatic (Croon et al. (2020))")
+    ax.plot(m_subaru_mono_PBHbounds * 1.989e33, f_max_subaru_mono_PBHbounds, linestyle='dotted', linewidth=2, label="Monochromatic (PBHbounds)")
     ax.set_xlabel(r'$M_\mathrm{PBH}~[\mathrm{g}]$')
     ax.set_ylabel(r'$f_\mathrm{PBH}$')
     ax.set_xscale('log')
@@ -132,10 +131,10 @@ if "__main__" == __name__:
 # Calculate Subaru-HSC constraint for an extended MF, using the monochromatic
 # MF constraint from 2007.12697.
 
-mp_subaru = 10**np.linspace(20, 29, 100)
+mc_subaru = 10**np.linspace(20, 29, 100)
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
 
 sigma = .5
 
@@ -143,13 +142,13 @@ if "__main__" == __name__:
 
     # Calculate constraints for extended MF from microlensing.
     f_pbh_subaru = []
-
-    for m_c in mp_subaru:
-
-        f_pbh_subaru.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, sigma, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+    params = [sigma]
+    
+    for m_c in mc_subaru:
+        f_pbh_subaru.append(1/np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m_c, params, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
 
     fig, ax = plt.subplots(figsize=(6,6))
-    ax.plot(mp_subaru, f_pbh_subaru, label="$R_{90} = 0$", )
+    ax.plot(mc_subaru, f_pbh_subaru, label="$R_{90} = 0$", )
     ax.set_xlabel('$M_\mathrm{c}~[\mathrm{g}]$')
     ax.set_ylabel('$f_\mathrm{PBH}$')
     ax.set_xscale('log')
@@ -166,10 +165,10 @@ if "__main__" == __name__:
 # MF constraint from 2007.12697. Plot sigma=0.5 and sigma=1.0 results on the
 # same figure.
 
-mp_subaru = 10**np.linspace(20, 29, 100)
+mc_subaru = 10**np.linspace(20, 29, 100)
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
 
 if "__main__" == __name__:
 
@@ -177,14 +176,13 @@ if "__main__" == __name__:
     f_pbh_subaru_sigma05 = []
     f_pbh_subaru_sigma10 = []
 
-    for m_c in mp_subaru:
-
-        f_pbh_subaru_sigma05.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, 0.5, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
-        f_pbh_subaru_sigma10.append(1/np.trapz(integrand(1, m_subaru_mono, m_c, 1.0, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+    for m_c in mc_subaru:
+        f_pbh_subaru_sigma05.append(1/np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m_c, [0.5], m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+        f_pbh_subaru_sigma10.append(1/np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m_c, [1.0], m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
 
     fig, ax = plt.subplots(figsize=(5.5,5.5))
-    ax.plot(mp_subaru, f_pbh_subaru_sigma05, label=r"$\sigma = 0.5$")
-    ax.plot(mp_subaru, f_pbh_subaru_sigma10, label=r"$\sigma = 1.0$")
+    ax.plot(mc_subaru, f_pbh_subaru_sigma05, label=r"$\sigma = 0.5$")
+    ax.plot(mc_subaru, f_pbh_subaru_sigma10, label=r"$\sigma = 1.0$")
     ax.plot(m_subaru_mono, f_max_subaru_mono, color='k', linestyle='dotted', linewidth=3, alpha=0.5, label="Monochromatic")
     ax.set_xlabel(r'$M_\mathrm{c} / M_\mathrm{PBH} ~[\mathrm{g}]$')
     ax.set_ylabel(r'$f_\mathrm{PBH}$')
@@ -203,7 +201,7 @@ if "__main__" == __name__:
 # normal mass function. Monochromatic MF constraints from 2007.12697.
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
 
 # Range of central masses
 mp_subaru = 10**np.linspace(20, 29, 100)
@@ -234,7 +232,7 @@ for i in range(len(deltas)):
         f_pbh_subaru_LN_sigma05 = []
 
         for m_c in mp_subaru:
-            integral = np.trapz(integrand(1, m_subaru_mono, m_c, 0.5, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+            integral = np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m_c, [sigmas[i]], m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
             if integral == 0:
                 f_pbh_subaru_LN_sigma05.append(10)
             else:
@@ -267,8 +265,8 @@ for i in range(len(deltas)):
 # normal mass function. Monochromatic MF constraints from 1910.01285.
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_mono.csv")
-mp_subaru_LN, f_pbh_subaru_LN = load_data("Subaru-HSC_LN.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2002.12778_mono.csv")
+mp_subaru_LN, f_pbh_subaru_LN = load_data("Subaru-HSC_2002.12778_LN.csv")
 
 # Convert from solar masses to grams
 m_subaru_mono *= 1.989e33
@@ -305,7 +303,7 @@ for i in range(len(deltas)):
         f_pbh_subaru_LN_sigma2 = []
 
         for m_c in mp_subaru:
-            integral = np.trapz(integrand(1, m_subaru_mono, m_c, 2, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+            integral = np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m_c, [sigmas[i]], m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
             if integral == 0:
                 f_pbh_subaru_LN_sigma2.append(10)
             else:
@@ -337,7 +335,7 @@ for i in range(len(deltas)):
 mp_subaru = 10**np.linspace(17, 29, 1000)
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("Croon2020_R90_0.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
 
 # Mass function parameter values, from 2009.03204.
 Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
@@ -352,30 +350,30 @@ for i in range(len(Deltas)):
     # Calculate constraints for extended MF from microlensing.
     f_pbh_skew_LN = []
     f_pbh_skew_LN_peak = []
-    f_pbh_GCC = []
+    f_pbh_CC3 = []
 
     params_SLN = [sigmas[i], alphas_SL[i]]
     params_SLN_peak = [sigmas[i], alphas_SL[i], i]
-    params_GCC = [alphas_CC[i], betas[i]]
+    params_CC3 = [alphas_CC[i], betas[i]]
 
     for m_p in mp_subaru:
         integral_SLN_peak = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN_peak, m_p, params_SLN_peak, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
-        integral_GCC = np.trapz(integrand_general_mf(m_subaru_mono, GCC, m_p, params_GCC, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+        integral_CC3 = np.trapz(integrand_general_mf(m_subaru_mono, CC3, m_p, params_CC3, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
 
         if integral_SLN_peak == 0:
             f_pbh_skew_LN_peak.append(10)
         else:
             f_pbh_skew_LN_peak.append(1/integral_SLN_peak)
 
-        if integral_GCC == 0:
-            f_pbh_GCC.append(10)
+        if integral_CC3 == 0:
+            f_pbh_CC3.append(10)
         else:
-            f_pbh_GCC.append(1/integral_GCC)
+            f_pbh_CC3.append(1/integral_CC3)
 
     fig, ax = plt.subplots(figsize=(5.5, 5.5))
 
     ax.plot(mp_subaru, f_pbh_skew_LN_peak, label="SLN")
-    ax.plot(mp_subaru, f_pbh_GCC, label="GCC", linestyle="dashed")
+    ax.plot(mp_subaru, f_pbh_CC3, label="CC3", linestyle="dashed")
     ax.set_xlabel(r"$m_\mathrm{p}~[\mathrm{g}]$")
     ax.set_ylabel(r"$f_\mathrm{PBH}$")
     ax.set_xscale("log")
@@ -386,8 +384,8 @@ for i in range(len(Deltas)):
     fig.tight_layout()
     
     data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_HSC_Carr_Delta={:.1f}".format(Deltas[i])
-    data_filename_GCC = "./Data_files/constraints_extended_MF/GCC_HSC_Carr_Delta={:.1f}".format(Deltas[i])
+    data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_HSC_Carr_Delta={:.1f}".format(Deltas[i])
     np.savetxt(data_filename_SLN, [mp_subaru, f_pbh_skew_LN_peak], delimiter="\t")
-    np.savetxt(data_filename_GCC, [mp_subaru, f_pbh_GCC], delimiter="\t")
+    np.savetxt(data_filename_CC3, [mp_subaru, f_pbh_CC3], delimiter="\t")
     plt.savefig("./Figures/HSC_constraints/Delta={:.1f}.png".format(Deltas[i]))
 
