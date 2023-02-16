@@ -559,8 +559,6 @@ ax.plot(m_numeric, psi_numeric, label="Numeric", color="k")
 psi_1 = skew_LN(m_pbh_values, m_c, sigma, alpha)
 psi_2 = skew_LN(m_pbh_values, m_c, sigma, -alpha)
 
-print(psi_1)
-
 ax.plot(m_pbh_values, psi_1 / max(psi_1), label=r"$\alpha={:.2f}$".format(alpha))
 ax.plot(m_pbh_values, psi_2 / max(psi_2), linestyle="dashed", label=r"$\alpha={:.2f}$".format(-alpha))
 ax.legend(title=r"$\Delta = {:.1f}$".format(Delta))
@@ -570,5 +568,56 @@ ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
 ax.set_xscale("log")
 ax.set_yscale("log")
 plt.tight_layout()
-plt.savefig("./Figures/Gow_investigation/SLN_alpha_comparison.pdf")
+#plt.savefig("./Figures/Gow_investigation/SLN_alpha_comparison.pdf")
 plt.savefig("./Figures/Gow_investigation/SLN_alpha_comparison.png")
+
+#%%  Compare how well the skew-LN MF fits with the numerical MF with the value 
+# of 40.9 M_\odot from Table II and the calculated value of 40.3 M_\odot. 
+# For Delta = 0.3.
+
+m_c = np.exp(4.15)
+Delta = 0.3
+sigma = 0.57
+alpha = -2.07
+
+mp_table = 40.9
+
+m_numeric, psi_numeric = load_data("Gow22_Fig5_Delta_0.3.csv")
+
+m_pbh_values = np.arange(15, 80, 0.01)
+fig, ax = plt.subplots(figsize=(7, 6))
+ax.plot(m_numeric, psi_numeric, label="Numeric", color="k")
+
+psi = skew_LN(m_pbh_values, m_c, sigma, alpha)
+m_max = m_pbh_values[np.argmax(psi)]
+
+ax.plot(m_pbh_values, psi / max(psi), linestyle="dashed", label="Skew-LN fit")
+ax.vlines(mp_table, ymin=0, ymax=1.5, color="grey", linestyle="dashed", label=r"From Table II : $m_p = {:.1f} M_\odot$".format(mp_table))
+ax.vlines(m_max, ymin=0, ymax=1.5, color="grey", linestyle="dotted", label=r"Calculated : $m_p = {:.1f} M_\odot$".format(m_max))
+
+ax.legend(title=r"$\Delta = {:.1f}$".format(Delta), fontsize="small")
+ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+ax.set_xlabel(r"$m~[M_\odot]$")
+ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+ax.set_ylim(0.1, 1.5)
+ax.set_xscale("log")
+ax.set_yscale("log")
+plt.tight_layout()
+#plt.savefig("./Figures/Gow_investigation/SLN_alpha_comparison.pdf")
+#plt.savefig("./Figures/Gow_investigation/SLN_Delta=0.3_comparison.png")
+
+ax.set_xlim(37, 44)
+ax.set_ylim(0.95, 1.05)
+ax.set_xscale("linear")
+ax.set_yscale("linear")
+#plt.savefig("./Figures/Gow_investigation/SLN_Delta=0.3_comparison_zoom_peak.png")
+
+# Calculate mass at which the fit peaks, for sigma and alpha values in the
+# bound allowed by the 2SF displays of sigma and alpha.
+
+for sigma in [0.565, 0.57, 0.575]:
+    for alpha in [-2.075, -2.07, -2.065]:
+        psi = skew_LN(m_pbh_values, m_c, sigma, alpha)
+        m_max = m_pbh_values[np.argmax(psi)]
+        print("\n" + r"sigma={:.3f}, alpha={:.3f}".format(sigma, alpha))
+        print(r"Mass at which MF peaks (directly calculated) = {:.2e}".format(m_max))
