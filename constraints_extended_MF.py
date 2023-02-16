@@ -384,8 +384,6 @@ def constraints_Carr_general(mf, params):
 
 #%% 
 # Compute constraints for the fitting functions from 2009.03204.
-mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
-mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 
 if "__main__" == __name__:
 
@@ -396,28 +394,32 @@ if "__main__" == __name__:
 
     # Mass function parameter values, from 2009.03204.
     Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
-    sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-    alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
+    sigmas_SLN = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
+    alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
 
     alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
     betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
+    
+    # Log-normal parameter values, from 2008.02389
+    sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, 0.01])
 
     # Colours corresponding to each instrument
     colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
 
     for k in range(len(Deltas)):
-        fig, ax = plt.subplots(figsize=(12,6))
-
-        # Calculate constraints for extended MF from gamma-rays.
+        # Calculate constraints for extended MF from Galactic gamma-rays.
 
         f_pbh_skew_LN = []
         f_pbh_CC3 = []
-
-        params_SLN_peak = [sigmas[k], alphas_SL[k], k]
+        f_pbh_LN = []
+        
+        params_SLN = [sigmas_SLN[k], alphas_SL[k]]
         params_CC3 = [alphas_CC[k], betas[k]]
+        params_LN = [sigmas_LN[k]]
 
-        constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN_peak, params_SLN_peak)
+        constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN, params_SLN)
         constraints_extended_Carr_CC3 = constraints_Carr_general(CC3, params_CC3)
+        constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, params_LN)
         
         # For now, include if statement since the Delta-function power spectrum
         # peak is the only one that I have calculated constraints from Isatis
@@ -426,55 +428,42 @@ if "__main__" == __name__:
             constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, k)
             constraints_Isatis_CC3, constraints_names = isatis_constraints_general(CC3, k)
 
-            for i in range(len(constraints_names)):
-                ax.plot(masses * (mps_SLN_Gow22[k] / mcs_SLN_Gow22[k]), constraints_Isatis_SLN[i], linestyle="dotted", color=colors[i])
-                ax.plot(masses, constraints_Isatis_CC3[i], linestyle="dashed", color=colors[i])
-
-        for i in range(len(constraints_names)):
-            ax.plot(masses, constraints_extended_Carr_SLN[i], marker='x', linestyle='None', label=constraints_names[i], color=colors[i])
-            ax.plot(masses, constraints_extended_Carr_CC3[i], marker='x', linestyle='None', color=colors[i])
-
         # Envelope of constraints, with the tightest constraint
         envelope_SLN = []
         envelope_CC3 = []
+        envelope_LN = []
 
         for j in range(len(masses)):
             constraints_SLN = []
             constraints_CC3 = []
+            constraints_LN = []
             
             for l in range(len(constraints_names)):
                 constraints_SLN.append(constraints_extended_Carr_SLN[l][j])
                 constraints_CC3.append(constraints_extended_Carr_CC3[l][j])
+                constraints_LN.append(constraints_extended_Carr_LN[l][j])
                 
             envelope_SLN.append(min(constraints_SLN))
             envelope_CC3.append(min(constraints_CC3))
-        
-        ax.plot(masses, envelope_SLN, linestyle="dotted", label="SLN", color="k")
-        ax.plot(masses, envelope_CC3, linestyle="dashed", label="CC3", color="k")
-        ax.set_xlabel(r"$M_p$ [g]")
-        ax.set_ylabel(r"$f_\mathrm{PBH}$")
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_ylim(1e-10, 1)
-        ax.set_xlim(m_min, m_max)
-        ax.legend(fontsize="small")
-        ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[k]))
-        fig.tight_layout()
-        """
-        plt.savefig("./Figures/GC_constraints/Delta={:.1f}.png".format(Deltas[k]))
-        
+            envelope_LN.append(min(constraints_LN))
+            
         # Save constraints
         for i in range(len(constraints_names)):
             data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_GC_" + str(constraints_names[i]) + "_Carr_Delta={:.1f}".format(Deltas[k])
             data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_GC_" + str(constraints_names[i]) + "_Carr_Delta={:.1f}".format(Deltas[k])
-            np.savetxt(data_filename_SLN, [mp_values_SLN, constraints_extended_Carr_SLN[i]], delimiter="\t")
-            np.savetxt(data_filename_CC3, [mp_values_CC3, constraints_extended_Carr_CC3[i]], delimiter="\t")
+            data_filename_LN = "./Data_files/constraints_extended_MF/LN_GC_" + str(constraints_names[i]) + "_Carr_Delta={:.1f}".format(Deltas[k])
+            
+            np.savetxt(data_filename_SLN, [masses, constraints_extended_Carr_SLN[i]], delimiter="\t")
+            np.savetxt(data_filename_CC3, [masses, constraints_extended_Carr_CC3[i]], delimiter="\t")
+            np.savetxt(data_filename_LN, [masses, constraints_extended_Carr_LN[i]], delimiter="\t")
         
         data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_GC_envelope_Carr_Delta={:.1f}".format(Deltas[k])
         data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_GC_envelope_Carr_Delta={:.1f}".format(Deltas[k])
-        np.savetxt(data_filename_SLN, np.array([mp_values_SLN, envelope_SLN]), fmt="%s", delimiter="\t")
-        np.savetxt(data_filename_CC3, np.array([mp_values_CC3, envelope_CC3]), fmt="%s", delimiter="\t")       
-        """
+        data_filename_LN = "./Data_files/constraints_extended_MF/LN_GC_envelope_Carr_Delta={:.1f}".format(Deltas[k])
+        
+        np.savetxt(data_filename_SLN, np.array([masses, envelope_SLN]), fmt="%s", delimiter="\t")
+        np.savetxt(data_filename_CC3, np.array([masses, envelope_CC3]), fmt="%s", delimiter="\t")       
+        np.savetxt(data_filename_LN, np.array([masses, envelope_LN]), fmt="%s", delimiter="\t")       
        
 #%% Comparison between plots against m_c for the SLN MF and m_p for the CC3 MF.
 
@@ -491,7 +480,7 @@ if "__main__" == __name__:
     # Mass function parameter values, from 2009.03204.
     Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
     sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-    alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
+    alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
 
     alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
     betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
@@ -557,74 +546,6 @@ if "__main__" == __name__:
         ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[k]))
         fig.tight_layout()
         plt.savefig("./Figures/GC_constraints/Delta={:.1f}_Mc_Mp.png".format(Deltas[k]))
-        
-#%% Constraints for a log-normal MF, using the values of sigma found as best-
-# fit values from Table II of 2008.03289.
-
-Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0])
-sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864])
-
-if "__main__" == __name__:
-    
-    # Choose which constraints to plot, and create labels.
-    constraints_names = []
-    constraints_extended_plotting = []
-    
-    # Extended mass function constraints using the method from 1705.05567.
-    # Choose which constraints to plot, and create labels
-    constraints_labels = []
-    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    
-    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
-    
-    for k in range(len(Deltas)):
-        fig, ax = plt.subplots(figsize=(12,6))
-        
-        # Calculate constraints for extended MF from gamma-rays.
-        
-        f_pbh_N = []
-        
-        constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, [sigmas_LN[k]])
-    
-        # envelope of constraints, with the tightest constraint
-        envelope_LN = []
-        
-        mc_values_LN = masses
-        mp_values_LN = mc_values_LN * np.exp(-sigmas_LN[k]**2)
-        # This isn't giving the values I'm expecting
-        print("m_c / m_p = ", 1/np.exp(-sigmas_LN[k]**2))
-                
-        for i in range(len(constraints_names)):
-            ax.plot(mp_values_LN, constraints_extended_Carr_LN[i], marker='x', linestyle='None', label="LN, " + str(constraints_names[i]), color=colors[i])
-                        
-        for j in range(len(masses)):
-            constraints_LN = []
-            
-            for l in range(len(constraints_names)):
-                constraints_LN.append(constraints_extended_Carr_LN[l][j])
-                
-            envelope_LN.append(min(constraints_LN))
-        
-        ax.plot(mp_values_LN, envelope_LN, linestyle="dotted", label="Envelope (SLN)", color="k")
-        ax.set_xlabel(r"$M_p$ [g]")
-        ax.set_ylabel(r"$f_\mathrm{PBH}$")
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_ylim(1e-10, 1)
-        ax.set_xlim(m_min, m_max)
-        ax.legend(fontsize="small")
-        ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[k]))
-        fig.tight_layout()
-        plt.savefig("./Figures/GC_constraints/Delta={:.1f}.png".format(Deltas[k]))
-        
-        # Save constraints data
-        
-        for i in range(len(constraints_names)):
-            data_filename_LN = "./Data_files/constraints_extended_MF/LN_GC_" + str(constraints_names[i]) + "_Carr_Delta={:.1f}".format(Deltas[k])
-            np.savetxt(data_filename_LN, [mp_values_LN, constraints_extended_Carr_LN[i]], delimiter="\t")
-        
-        data_filename_LN = "./Data_files/constraints_extended_MF/LN_GC_envelope_Carr_Delta={:.1f}".format(Deltas[k])
-        np.savetxt(data_filename_LN, np.array([mp_values_LN, envelope_LN]), fmt="%s", delimiter="\t")
 
 #%% Test case: compare results obtained using a LN MF with sigma=0.5 to the
 # input skew LN MF with alpha=0
@@ -661,72 +582,3 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     fig.tight_layout()
     plt.savefig("./Figures/GC_constraints/test_LN_SLN.png")
-
-#%% Check formula for the approximate relation between M_c in the SLN and
-# M_p in the CC3 MFs, by comparing the mass functions calculated in terms of 
-# M_c and M_p.
-
-if "__main__" == __name__:
-    
-    Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
-    sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-    alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
-    alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
-    betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
-    
-    mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
-    mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
-    
-    mp_CC3 = 1e20
-    m = np.logspace(17, 23, 1000)
-    
-    for i in range(len(Deltas)):
-        
-        fig, ax = plt.subplots(figsize=(7, 5))
-        mc_SLN = mp_CC3 * mcs_SLN_Gow22[i] / mps_SLN_Gow22[i]
-        
-        #psi_SLN = skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
-        psi_SLN = skew_LN_peak(m, mp_CC3, sigmas[i], alphas_SL[i], i) / max(skew_LN(m, mc_SLN, sigmas[i], alphas_SL[i]))
-        psi_CC3 = CC3(m, mp_CC3, alphas_CC[i], betas[i]) / max(CC3(m, mp_CC3, alphas_CC[i], betas[i]))
-        
-        xmin = 1e18
-        xmax = 1e22
-
-        # Plot the numerically calculated MF for a delta-function peak
-        # in the power spectrum.
-        if i==0:
-            m_num, psi_num = load_data("Gow22_Fig3_Delta0_numerical.csv")
-            psi_normalised = psi_num / max(psi_num)
-            ax.plot(m_num * mp_CC3 / mps_SLN_Gow22[0], psi_num, color="k", label="Numeric")
-            
-            xmin = m[min(min(np.where(psi_CC3 > 0.1)))]
-            xmax = m[max(max(np.where(psi_CC3 > 0.1)))]
-    
-        ax.plot(m, psi_SLN, label="SLN")
-        ax.plot(m, psi_CC3, label="CC3", linestyle="dashed")
-        ax.set_xlabel(r"$M_c$ [g]")
-        ax.set_ylabel(r"$f_\mathrm{PBH}$")
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlabel(r"$M$ [g]")
-        ax.set_ylabel(r"$\psi(M) / \psi_\mathrm{max}$")
-        ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(0.1, 2)
-        fig.tight_layout()
-        plt.savefig("./Figures/Test_plots/test_comp_MP_MC_Delta={:.1f}.png".format(Deltas[i]))
-
-        xmax = m[max(max(np.where(psi_CC3 > 0.1)))]
-        ax.plot(m, psi_SLN, label="SLN")
-        ax.plot(m, psi_CC3, label="CC3", linestyle="dashed")
-        ax.set_xlabel(r"$M_c$ [g]")
-        ax.set_ylabel(r"$f_\mathrm{PBH}$")
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlabel(r"$M$ [g]")
-        ax.set_ylabel(r"$\psi(M) / \psi_\mathrm{max}$")
-        ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
-        ax.set_xlim(xmin, xmax)
-        ax.set_ylim(0.1, 2)
-        fig.tight_layout()
-        plt.savefig("./Figures/Test_plots/test_comp_MP_MC_Delta={:.1f}.png".format(Deltas[i]))
