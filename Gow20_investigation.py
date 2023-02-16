@@ -130,8 +130,7 @@ if "__main__" == __name__:
     axes[0][0].axis("off")
     fig.tight_layout(h_pad=2)
     fig.show()
-    plt.savefig("./Figures/20-1_Gow20_Fig5.pdf")
-    
+    plt.savefig("./Figures/Gow_investigation/20-1_Gow20_Fig5.png")
     
     # Compare mass functions to those plotted in Fig. 5 of 2009.03204.
     fig_SL, axes_SL = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
@@ -371,9 +370,9 @@ axes[0][0].axis("off")
 
 fig.tight_layout(h_pad=2)
 fig.show()
-plt.savefig("20-1_Gow20_Fig5_shifted.png")
+plt.savefig("./Figures/Gow_investigation/20-1_Gow20_Fig5_shifted.png")
 
-#%% Plot skew-lognormal values for fixed sigma = 0.37 and alpha=-2 with different m_p
+#%% Plot skew-lognormal values for fixed sigma = 0.37 and alpha=-2 with different m_c
 mc_values = [1, 10, 100]
 m_pbh_values = np.arange(0.1, 200, 0.1)
 
@@ -430,9 +429,9 @@ for i in range(len(sigmas)):
 fig.suptitle("Skew-lognormal")
 fig.tight_layout(h_pad = 2)
 if ratio_plot:
-    plt.savefig("./Figures/SL_var_alpha_sigma_ratio.png")
+    plt.savefig("./Figures/Gow_investigation/SL_var_alpha_sigma_ratio.png")
 else:
-    plt.savefig("./Figures/SL_var_alpha_sigma.png")
+    plt.savefig("./Figures/Gow_investigation/SL_var_alpha_sigma.png")
 
 #%%
 # Critical collapse MF
@@ -484,9 +483,9 @@ for i in range(len(betas)):
 fig.suptitle("Generalised CC")
 fig.tight_layout(h_pad = 2)
 if ratio_plot:
-    plt.savefig("./Figures/CC_var_beta_sigma_ratio.png")
+    plt.savefig("./Figures/Gow_investigation/CC_var_beta_sigma_ratio.png")
 else:
-    plt.savefig("./Figures/CC_var_beta_sigma.png")
+    plt.savefig("./Figures/Gow_investigation/CC_var_beta_sigma.png")
 
 #%% Compare maximum of the skew-lognormal MF with the values obtained from 
 # Table II of 2009.02304.
@@ -495,7 +494,7 @@ mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
 mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
 sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
+alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
 
 m_pbh_values = np.arange(0.1, 100, 0.01)
 
@@ -505,6 +504,7 @@ for i in range(len(mcs_SLN_Gow22)):
     
     m_max = m_pbh_values[np.argmax(psi_values)]
     
+    print("Delta={:.1f}".format(Deltas[i]))
     print("Mass at which MF peaks (Table II) = {:.2e}".format(mps_SLN_Gow22[i]))
     print("Mass at which MF peaks (calculated) = {:.2e}".format(m_max))
     
@@ -520,16 +520,17 @@ for i in range(len(mcs_SLN_Gow22)):
 # Second check: scaling the masses by a common factor.
 print("\n" + "Scaling masses to asteroid mass range:")
 m_pbh_values = np.arange(0.1, 20, 0.01) * 1e20
-mc_values = np.linspace(1, 5, 5) * 1e20
+m_c = 1e20
 mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
 mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 
-for i in range(len(mc_values)):
-    psi_values = skew_LN(m_pbh_values, mc_values[i], sigma=sigmas[i], alpha=alphas_SL[i])
+for i in range(len(Deltas)):
+    psi_values = skew_LN(m_pbh_values, m_c, sigma=sigmas[i], alpha=alphas_SL[i])
     
-    m_max_table = mc_values[i] * mps_SLN_Gow22[i] / mcs_SLN_Gow22[i]
+    m_max_table = m_c * mps_SLN_Gow22[i] / mcs_SLN_Gow22[i]
     m_max = m_pbh_values[np.argmax(psi_values)]
     
+    print("Delta={:.1f}".format(Deltas[i]))    
     print("Mass at which MF peaks (calcualted using Table II) = {:.2e}".format(m_max_table))
     print("Mass at which MF peaks (directly calculated) = {:.2e}".format(m_max))
     
@@ -541,3 +542,33 @@ for i in range(len(mc_values)):
     ax.set_ylabel(r"$\psi(m)$")
     ax.set_xlabel(r"$m~[\mathrm{g}]$")
     plt.tight_layout()
+
+#%% Plot skew-lognormal for alpha=1.39 and alpha=+1.39
+
+m_c = np.exp(5.41)
+Delta = 5.0
+sigma = 2.77
+alpha = 1.39
+
+m_numeric, psi_numeric = load_data("Gow22_Fig3_Delta_5.0_numeric.csv")
+
+m_pbh_values = np.logspace(1, 3, 100)
+fig, ax = plt.subplots()
+ax.plot(m_numeric, psi_numeric, label="Numeric", color="k")
+
+psi_1 = skew_LN(m_pbh_values, m_c, sigma, alpha)
+psi_2 = skew_LN(m_pbh_values, m_c, sigma, -alpha)
+
+print(psi_1)
+
+ax.plot(m_pbh_values, psi_1 / max(psi_1), label=r"$\alpha={:.2f}$".format(alpha))
+ax.plot(m_pbh_values, psi_2 / max(psi_2), linestyle="dashed", label=r"$\alpha={:.2f}$".format(-alpha))
+ax.legend(title=r"$\Delta = {:.1f}$".format(Delta))
+ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+ax.set_xlabel(r"$m~[M_\odot]$")
+ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+ax.set_xscale("log")
+ax.set_yscale("log")
+plt.tight_layout()
+plt.savefig("./Figures/Gow_investigation/SLN_alpha_comparison.pdf")
+plt.savefig("./Figures/Gow_investigation/SLN_alpha_comparison.png")
