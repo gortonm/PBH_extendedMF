@@ -614,10 +614,10 @@ ax.set_yscale("linear")
 
 # Calculate mass at which the fit peaks, for sigma and alpha values in the
 # bound allowed by the 2SF displays of sigma and alpha.
-
-for sigma in [0.565, 0.57, 0.575]:
-    for alpha in [-2.075, -2.07, -2.065]:
-        psi = skew_LN(m_pbh_values, m_c, sigma, alpha)
-        m_max = m_pbh_values[np.argmax(psi)]
-        print("\n" + r"sigma={:.3f}, alpha={:.3f}".format(sigma, alpha))
-        print(r"Mass at which MF peaks (directly calculated) = {:.2e}".format(m_max))
+for m_c in [np.exp(4.145), np.exp(4.155)]:
+    for sigma in [0.565, 0.575]:
+        for alpha in [-2.075, -2.065]:
+            psi = skew_LN(m_pbh_values, m_c, sigma, alpha)
+            m_max = m_pbh_values[np.argmax(psi)]
+            print("\n" + r"sigma={:.3f}, alpha={:.3f}, m_c={:.3f}".format(sigma, alpha, m_c))
+            print(r"Mass at which MF peaks (directly calculated) = {:.2e}".format(m_max))
