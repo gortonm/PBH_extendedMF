@@ -210,7 +210,7 @@ mp_subaru = 10**np.linspace(20, 29, 100)
 # The Delta=-1.0 cases are a test case for when alpha=0 (i.e. a log-normal, with sigma=0.5)
 deltas = np.array([-1])
 sigmas = np.array([0.5, 0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-alphas_SL = np.array([0., -2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+alphas_SL = np.array([0., -2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
 
 # Skew-lognormal MF results
 for i in range(len(deltas)):
@@ -281,7 +281,7 @@ mc_subaru = 10**np.linspace(20, 29, 100)
 # The Delta=-1.0 cases are a test case for when alpha=0 (i.e. a log-normal, with sigma=0.5)
 deltas = np.array([-1])
 sigmas = np.array([2, 0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-alphas_SL = np.array([0., -2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+alphas_SL = np.array([0., -2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
 
 # Skew-lognormal MF results
 for i in range(len(deltas)):
@@ -340,7 +340,7 @@ m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
 # Mass function parameter values, from 2009.03204.
 Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
 sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
 
 alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
 betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])

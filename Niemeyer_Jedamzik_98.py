@@ -175,9 +175,6 @@ def mf_Yokoyama(m, m_p=m_p, gamma=gamma):
 # d\phi / d\ln M = M * d\phi / dM \propto M * dn / dM \propto d\Omega / dM
 def mf_NJ98_shape(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
     m_bh = m / K
-    #print("term 1 = ", np.power(delta_c/sigma, 2))
-    #print("term 2 = ", np.power( np.power(m/K, 1/gamma) / sigma , 2))
-    #print("term 3 = ", (2/sigma) * np.power(m/K, 1/gamma) * delta_c/sigma )
     return np.power(m_bh, 1/gamma) * np.exp(- np.power(delta_c + np.power(m_bh, 1/gamma), 2) / (2*sigma_PS**2) )
 
 def mf_NJ98(m, K=K, gamma=gamma, delta_c=delta_c, sigma_PS=sigma_PS):
@@ -250,7 +247,7 @@ def Mmax_NJ_approx(m, K, gamma, delta_c, sigma_PS):
 m_H = 1
 m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
 plt.figure(figsize=(6, 6))
-plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), label="Approximate")
+plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H*np.power(1+gamma, -gamma), gamma=0.36), label="Approximate")
 plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
 plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
 #plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.1*0.5), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 0.5$)")
@@ -269,7 +266,7 @@ plt.yscale("log")
 plt.ylim(0.1, 3)
 plt.legend(fontsize="small")
 plt.tight_layout()
-plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama.pdf")
+plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama.png")
 
 
 # Plot the mass functions against the maximum value

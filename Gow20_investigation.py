@@ -92,7 +92,7 @@ fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(12, 22))
 deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
 ln_mcs = np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41])
 sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
 mps_SL = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
 mps_CC = np.array([40.8, 40.8, 40.7, 40.7, 40.8, 40.6, 35.1])
 alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
@@ -104,104 +104,105 @@ psis_CC_max = CC_v2(mps_CC, loc_param_CC(mps_CC, alphas_CC, betas), alphas_CC, b
 # PBH masses (in solar masses)
 m_pbh_values = np.logspace(0, 3.5, 1000)
 
-for i in range(len(deltas)):
+if "__main__" == __name__:
+    for i in range(len(deltas)):
+        
+        psi_SL = skew_LN(m_pbh_values, m_c=np.exp(ln_mcs[i]), sigma=sigmas[i], alpha=alphas_SL[i]) / psis_SL_max[i]
+        psi_CC = CC_v2(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
+        
+        # find x-axis limits
+        xmin = m_pbh_values[min(min(np.where(psi_SL > 0.1)))]
+        xmax = m_pbh_values[max(max(np.where(psi_SL > 0.1)))]
+        
+        ax = axes[int((i+1)/2)][(i+1)%2]
+        ax.plot(m_pbh_values, psi_SL, color='b', linestyle=(0, (5, 7)))
+        ax.plot(m_pbh_values, psi_CC, color='g', linestyle="dashed")
+        if (i+1)%2 == 0:
+            ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+        if int((i+1)/2) == 3:
+            ax.set_xlabel(r"$m~[M_\odot]$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(0.1, 2)
+        ax.legend(title=r"$\Delta = {:.1f}$".format(deltas[i]))
+        
+    axes[0][0].axis("off")
+    fig.tight_layout(h_pad=2)
+    fig.show()
+    plt.savefig("./Figures/20-1_Gow20_Fig5.pdf")
     
-    psi_SL = skew_LN(m_pbh_values, m_c=np.exp(ln_mcs[i]), sigma=sigmas[i], alpha=alphas_SL[i]) / psis_SL_max[i]
-    psi_CC = CC_v2(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
     
-    # find x-axis limits
-    xmin = m_pbh_values[min(min(np.where(psi_SL > 0.1)))]
-    xmax = m_pbh_values[max(max(np.where(psi_SL > 0.1)))]
+    # Compare mass functions to those plotted in Fig. 5 of 2009.03204.
+    fig_SL, axes_SL = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
+    fig_CC, axes_CC = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
     
-    ax = axes[int((i+1)/2)][(i+1)%2]
-    ax.plot(m_pbh_values, psi_SL, color='b', linestyle=(0, (5, 7)))
-    ax.plot(m_pbh_values, psi_CC, color='g', linestyle="dashed")
-    if (i+1)%2 == 0:
-        ax.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
-    if int((i+1)/2) == 3:
-        ax.set_xlabel(r"$m~[M_\odot]$")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlim(xmin, xmax)
-    ax.set_ylim(0.1, 2)
-    ax.legend(title=r"$\Delta = {:.1f}$".format(deltas[i]))
+    for j in range(2):
+        ax_comp = axes_SL[j]
+        i = j+3
+        
+        for axis in [ax_comp.xaxis, ax_comp.yaxis]:
+            formatter = ScalarFormatter()
+            formatter.set_scientific(False)
+            axis.set_major_formatter(formatter)
+            axis.set_minor_formatter(formatter)
+        
+        psi_SL = skew_LN(m_pbh_values, m_c=np.exp(ln_mcs[i]), sigma=sigmas[i], alpha=alphas_SL[i]) / psis_SL_max[i]
+        
+        # find x-axis limits
+        xmin = m_pbh_values[min(min(np.where(psi_SL > 0.05)))]
+        xmax = m_pbh_values[max(max(np.where(psi_SL > 0.05)))]
     
-axes[0][0].axis("off")
-fig.tight_layout(h_pad=2)
-fig.show()
-plt.savefig("./Figures/20-1_Gow20_Fig5.pdf")
-
-
-# Compare mass functions to those plotted in Fig. 5 of 2009.03204.
-fig_SL, axes_SL = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
-fig_CC, axes_CC = plt.subplots(nrows=1, ncols=2, figsize=(12, 5))
-
-for j in range(2):
-    ax_comp = axes_SL[j]
-    i = j+3
+        m_SL_comp, SL_comp = load_data("Delta_{:.1f}_SL.csv".format(deltas[i]))
+        ax_comp.plot(m_SL_comp, SL_comp, color='b', marker='x', linestyle='None', label="Extracted")
+        ax_comp.plot(m_pbh_values, psi_SL, color='tab:blue', linestyle="dashed", alpha=0.5, label="Calculated")
+        ax_comp.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+        ax_comp.set_xlabel(r"$m~[M_\odot]$")
+        ax_comp.set_xscale("log")
+        ax_comp.set_yscale("log")
+        ax_comp.set_xlim(xmin, xmax)
+        ax_comp.set_ylim(0.1, 2)
+        for axis in [ax_comp.xaxis, ax_comp.yaxis]:
+            axis.set_major_formatter(ScalarFormatter())
+        ax_comp.xaxis.set_minor_formatter(ScalarFormatter())
+        ax_comp.set_xticks([20, 40, 60, 80])
+        ax_comp.legend()
+        ax_comp.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
     
-    for axis in [ax_comp.xaxis, ax_comp.yaxis]:
-        formatter = ScalarFormatter()
-        formatter.set_scientific(False)
-        axis.set_major_formatter(formatter)
-        axis.set_minor_formatter(formatter)
+    fig_CC.suptitle("Generalised Critical Collapse")
+    fig_SL.tight_layout(h_pad=2)
     
-    psi_SL = skew_LN(m_pbh_values, m_c=np.exp(ln_mcs[i]), sigma=sigmas[i], alpha=alphas_SL[i]) / psis_SL_max[i]
     
-    # find x-axis limits
-    xmin = m_pbh_values[min(min(np.where(psi_SL > 0.05)))]
-    xmax = m_pbh_values[max(max(np.where(psi_SL > 0.05)))]
-
-    m_SL_comp, SL_comp = load_data("Delta_{:.1f}_SL.csv".format(deltas[i]))
-    ax_comp.plot(m_SL_comp, SL_comp, color='b', marker='x', linestyle='None', label="Extracted")
-    ax_comp.plot(m_pbh_values, psi_SL, color='tab:blue', linestyle="dashed", alpha=0.5, label="Calculated")
-    ax_comp.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
-    ax_comp.set_xlabel(r"$m~[M_\odot]$")
-    ax_comp.set_xscale("log")
-    ax_comp.set_yscale("log")
-    ax_comp.set_xlim(xmin, xmax)
-    ax_comp.set_ylim(0.1, 2)
-    for axis in [ax_comp.xaxis, ax_comp.yaxis]:
-        axis.set_major_formatter(ScalarFormatter())
-    ax_comp.xaxis.set_minor_formatter(ScalarFormatter())
-    ax_comp.set_xticks([20, 40, 60, 80])
-    ax_comp.legend()
-    ax_comp.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
-
-fig_CC.suptitle("Generalised Critical Collapse")
-fig_SL.tight_layout(h_pad=2)
-
-
-for j in range(2):
-    ax_comp = axes_CC[j]
-    i = j+3
+    for j in range(2):
+        ax_comp = axes_CC[j]
+        i = j+3
+        
+        psi_CC = CC_v2(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
+        
+        # find x-axis limits
+        xmin = m_pbh_values[min(min(np.where(psi_CC > 0.05)))]
+        xmax = m_pbh_values[max(max(np.where(psi_CC > 0.05)))]
     
-    psi_CC = CC_v2(m_pbh_values, loc_param_CC(mps_CC[i], alphas_CC[i], betas[i]), alphas_CC[i], betas[i]) / psis_CC_max[i]
+        m_CC_comp, CC_comp = load_data("Delta_{:.1f}_CC.csv".format(deltas[i]))
+        ax_comp.plot(m_CC_comp, CC_comp, color='g', marker='x', linestyle='None', label="Extracted")
+        ax_comp.plot(m_pbh_values, psi_CC, color='tab:green', linestyle="dashed", alpha=0.5, label="Calculated")
+        ax_comp.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
+        ax_comp.set_xlabel(r"$m~[M_\odot]$")
+        ax_comp.set_xscale("log")
+        ax_comp.set_yscale("log")
+        ax_comp.set_xlim(xmin, xmax)
+        ax_comp.set_ylim(0.1, 2)
+        for axis in [ax_comp.xaxis, ax_comp.yaxis]:
+            axis.set_major_formatter(ScalarFormatter())
+        ax_comp.xaxis.set_minor_formatter(ScalarFormatter())
+        ax_comp.set_xticks([10, 20, 50, 100])
+        ax_comp.legend()
+        ax_comp.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
     
-    # find x-axis limits
-    xmin = m_pbh_values[min(min(np.where(psi_CC > 0.05)))]
-    xmax = m_pbh_values[max(max(np.where(psi_CC > 0.05)))]
-
-    m_CC_comp, CC_comp = load_data("Delta_{:.1f}_CC.csv".format(deltas[i]))
-    ax_comp.plot(m_CC_comp, CC_comp, color='g', marker='x', linestyle='None', label="Extracted")
-    ax_comp.plot(m_pbh_values, psi_CC, color='tab:green', linestyle="dashed", alpha=0.5, label="Calculated")
-    ax_comp.set_ylabel(r"$\psi(m) / \psi_\mathrm{max}$")
-    ax_comp.set_xlabel(r"$m~[M_\odot]$")
-    ax_comp.set_xscale("log")
-    ax_comp.set_yscale("log")
-    ax_comp.set_xlim(xmin, xmax)
-    ax_comp.set_ylim(0.1, 2)
-    for axis in [ax_comp.xaxis, ax_comp.yaxis]:
-        axis.set_major_formatter(ScalarFormatter())
-    ax_comp.xaxis.set_minor_formatter(ScalarFormatter())
-    ax_comp.set_xticks([10, 20, 50, 100])
-    ax_comp.legend()
-    ax_comp.set_title(r"$\Delta = {:.1f}$".format(deltas[i]))
-
-fig_CC.suptitle("Generalised critical collapse")
-fig_CC.tight_layout(h_pad=2)
-fig_CC.show()
-
+    fig_CC.suptitle("Generalised critical collapse")
+    fig_CC.tight_layout(h_pad=2)
+    fig_CC.show()
+    
 #%%
 # Reproduce Fig. 3 curve for the CC3 mass function, Delta = 5
 fig, ax = plt.subplots(figsize=(6,6))
@@ -332,7 +333,7 @@ fig, axes = plt.subplots(nrows=4, ncols=2, figsize=(12, 22))
 deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
 ln_mcs = np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41])
 sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
 mps_SL = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9]) * 1e18
 mps_CC = np.array([40.8, 40.8, 40.7, 40.7, 40.8, 40.6, 35.1]) * 1e18
 alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
@@ -486,3 +487,57 @@ if ratio_plot:
     plt.savefig("./Figures/CC_var_beta_sigma_ratio.png")
 else:
     plt.savefig("./Figures/CC_var_beta_sigma.png")
+
+#%% Compare maximum of the skew-lognormal MF with the values obtained from 
+# Table II of 2009.02304.
+
+mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
+mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
+Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
+alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, -1.39])
+
+m_pbh_values = np.arange(0.1, 100, 0.01)
+
+# First check: using the mass range given in 2009.02304.
+for i in range(len(mcs_SLN_Gow22)):
+    psi_values = skew_LN(m_pbh_values, mcs_SLN_Gow22[i], sigma=sigmas[i], alpha=alphas_SL[i])
+    
+    m_max = m_pbh_values[np.argmax(psi_values)]
+    
+    print("Mass at which MF peaks (Table II) = {:.2e}".format(mps_SLN_Gow22[i]))
+    print("Mass at which MF peaks (calculated) = {:.2e}".format(m_max))
+    
+    fig, ax = plt.subplots()
+    ax.plot(m_pbh_values, psi_values)
+    ax.vlines(mps_SLN_Gow22[i], ymin=0, ymax=max(psi_values), linestyle="dashed", label="Maximum (Table II)")
+    ax.vlines(m_max, ymin=0, ymax=max(psi_values), linestyle="dotted", label="Maximum (calculated)")
+    ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
+    ax.set_ylabel(r"$\psi(m)$")
+    ax.set_xlabel(r"$m~[M_\odot]$")
+    plt.tight_layout()
+    
+# Second check: scaling the masses by a common factor.
+print("\n" + "Scaling masses to asteroid mass range:")
+m_pbh_values = np.arange(0.1, 20, 0.01) * 1e20
+mc_values = np.linspace(1, 5, 5) * 1e20
+mcs_SLN_Gow22 = np.exp(np.array([4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]))
+mps_SLN_Gow22 = np.array([40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9])
+
+for i in range(len(mc_values)):
+    psi_values = skew_LN(m_pbh_values, mc_values[i], sigma=sigmas[i], alpha=alphas_SL[i])
+    
+    m_max_table = mc_values[i] * mps_SLN_Gow22[i] / mcs_SLN_Gow22[i]
+    m_max = m_pbh_values[np.argmax(psi_values)]
+    
+    print("Mass at which MF peaks (calcualted using Table II) = {:.2e}".format(m_max_table))
+    print("Mass at which MF peaks (directly calculated) = {:.2e}".format(m_max))
+    
+    fig, ax = plt.subplots()
+    ax.plot(m_pbh_values, psi_values)
+    ax.vlines(m_max_table, ymin=0, ymax=max(psi_values), linestyle="dashed", label="Maximum (Table II)")
+    ax.vlines(m_max, ymin=0, ymax=max(psi_values), linestyle="dotted", label="Maximum (calculated)")
+    ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
+    ax.set_ylabel(r"$\psi(m)$")
+    ax.set_xlabel(r"$m~[\mathrm{g}]$")
+    plt.tight_layout()
