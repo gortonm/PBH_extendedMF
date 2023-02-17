@@ -32,8 +32,11 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
-
+# Path to data for extended MF results
 filepath = './Data_files/constraints_extended_MF'
+
+# Path to Isatis
+Isatis_path = "./../Downloads/version_finale/scripts/Isatis/"
 
 
 # Mass function parameter values, from 2009.03204.
@@ -49,7 +52,7 @@ sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864])
 
 mp_subaru = 10**np.linspace(20, 29, 1000)
 
-constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+#%% Plot Isatis constraints on Galactic centre photons for a monochromatic MF.
 colors=["tab:blue", "tab:orange", "k"]
 styles=["solid", "dashdot", "dashed", "dotted"]
 
@@ -57,30 +60,64 @@ styles=["solid", "dashdot", "dashed", "dotted"]
 envelope_evap_mono = []
 m_pbh_values = 10**np.arange(11, 19.05, 0.1)
 
-constraints_all_mono = []
 
-for i in range(len(constraints_names)):
-    constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
+# Load result from Isatis
+results_name = "results_photons_GC_mono"
 
-    # Constraint from given instrument
-    constraint_mono = []
+constraints_file = np.genfromtxt("%s%s.txt" % (Isatis_path,results_name), dtype="str")
+constraints_names_bis = constraints_file[0, 1:]
+constraints = np.zeros([len(constraints_file)-1, len(constraints_file[0])-1])
+for i in range(len(constraints)):
+    for j in range(len(constraints[0])):
+        constraints[i, j] = float(constraints_file[i+1, j+1])
 
-    for l in range(len(m_pbh_values)):
-        constraint_mass_m = []
-        # Cycle over energy bins in each instrument
-        for k in range(len(constraints_mono_file)):
-            constraint_mass_m.append(constraints_mono_file[k][l])
+# Choose which constraints to plot, and create labels.
+constraints_names = []
+constraints_extended_plotting = []
 
-        constraint_mono.append(min(constraint_mass_m))
-    
-    constraints_all_mono.append(constraint_mono)
+fig, ax = plt.subplots(figsize=(6,6))
+
+for i in range(len(constraints_names_bis)):
+    # Only include labels for constraints that Isatis calculated.
+    if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
+        temp = constraints_names_bis[i].split("_")
+        temp2 = ""
         
+        for j in range(len(temp)-1):
+            temp2 = "".join([temp2, temp[j], "\,\,"])
+        temp2 = "".join([temp2, "\,\,[arXiv:",temp[-1], "]"])
+
+        constraints_names.append(temp2)
+        constraints_extended_plotting.append(constraints[:, i])
+
+
 for j in range(len(m_pbh_values)):
     constraints_mono = []
     for l in range(len(constraints_names)):
-        constraints_mono.append(constraints_all_mono[l][j])
-    
-    envelope_evap_mono.append(min(constraints_mono))
+        constraints_mono.append(constraints_extended_plotting[l][j])
+        
+    # use absolute value sign to not include unphysical cases with
+    # f_PBH = -1 in the envelope
+    envelope_evap_mono.append(min(abs(np.array(constraints_mono))))
+
+# Plot evaporation constraints loaded from Isatis, to check the envelope
+# works correctly
+colors_evap = ["tab:blue", "tab:orange", "tab:red", "tab:green"]
+
+for i in range(len(constraints_names)):
+    ax.plot(m_pbh_values, constraints_extended_plotting[i], label=constraints_names[i], color=colors_evap[i])
+ax.plot(m_pbh_values, envelope_evap_mono, label="Envelope", color="k")
+ax.set_xlim(1e14, 1e18)
+ax.set_ylim(10**(-10), 1)
+ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+ax.set_ylabel("$f_\mathrm{PBH}$")
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.legend(fontsize="small")
+plt.tight_layout()
+plt.savefig("./Figures/Combined_constraints/test_envelope_GC.png")
+
+#%%
 
 # Subaru-HSC constraints, for a monochromatic mass function.
 m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
@@ -150,7 +187,6 @@ for i in range(len(Deltas)):
         ax.plot(m_subaru_mono, f_max_subaru_mono, color=colors[2], linestyle="dotted")
         ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
 
-    
     for fig in [fig1, fig2]:
         fig.tight_layout()
     
