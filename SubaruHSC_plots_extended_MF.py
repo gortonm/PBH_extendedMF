@@ -346,7 +346,7 @@ alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
 betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
 
 # Log-normal parameter values, from 2008.02389
-sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, 0.01])
+sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, -1])
 
 for i in range(len(Deltas)):
 
@@ -354,15 +354,18 @@ for i in range(len(Deltas)):
     f_pbh_skew_LN = []
     f_pbh_CC3 = []
     f_pbh_LN = []
+    f_pbh_SLN_test = []
 
     params_SLN = [sigmas[i], alphas_SL[i]]
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
+    params_SLN_test = [sigmas_LN[i], 0.]
     
-    for m_p in masses_subaru:
-        integral_SLN_peak = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m_p, params_SLN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
-        integral_CC3 = np.trapz(integrand_general_mf(m_subaru_mono, CC3, m_p, params_CC3, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
-        integral_LN = np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m_p, params_LN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+    for m in masses_subaru:
+        integral_SLN_peak = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m, params_SLN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+        integral_CC3 = np.trapz(integrand_general_mf(m_subaru_mono, CC3, m, params_CC3, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+        integral_LN = np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m, params_LN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+        integral_SLN_test = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m, params_SLN_test, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
 
         if integral_SLN_peak == 0:
             f_pbh_skew_LN.append(10)
@@ -378,6 +381,12 @@ for i in range(len(Deltas)):
             f_pbh_LN.append(10)
         else:
             f_pbh_LN.append(1/integral_CC3)
+            
+        if integral_SLN_test == 0:
+            f_pbh_SLN_test.append(10)
+        else:
+            f_pbh_SLN_test.append(1/integral_CC3)
+
 
     data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_HSC_Carr_Delta={:.1f}".format(Deltas[i])
     data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_HSC_Carr_Delta={:.1f}".format(Deltas[i])
@@ -386,3 +395,36 @@ for i in range(len(Deltas)):
     np.savetxt(data_filename_SLN, [masses_subaru, f_pbh_skew_LN], delimiter="\t")
     np.savetxt(data_filename_CC3, [masses_subaru, f_pbh_CC3], delimiter="\t")
     np.savetxt(data_filename_LN, [masses_subaru, f_pbh_LN], delimiter="\t")
+
+    if Deltas[i] < 5.0:
+        
+        m_min, m_max = min(masses_subaru), max(masses_subaru)
+        
+        # Plot data to check
+        fig, ax = plt.subplots()
+        ax.plot(masses_subaru, f_pbh_skew_LN, label="SLN")
+        ax.plot(masses_subaru, f_pbh_LN, linestyle="dashed", label="LN")
+        ax.plot(masses_subaru, f_pbh_LN, linestyle="dotted", label="LN (test)")   
+        ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")
+        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-3, 1)
+        ax.set_xlim(m_min, m_max)
+        ax.legend(fontsize="small", title="$\Delta={:.1f}$".format(Deltas[i]))
+        fig.tight_layout()
+
+        fig, ax = plt.subplots()
+        ax.plot(masses_subaru, f_pbh_CC3, label="CC3")
+        ax.plot(masses_subaru, f_pbh_LN, linestyle="dashed", label="LN")   
+        ax.plot(masses_subaru, f_pbh_LN, linestyle="dotted", label="LN (test)")   
+        ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")
+        ax.set_xlabel(r"$M_p$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-3, 1)
+        ax.set_xlim(m_min, m_max)
+        ax.legend(fontsize="small", title="$\Delta={:.1f}$".format(Deltas[i]))
+        fig.tight_layout()
