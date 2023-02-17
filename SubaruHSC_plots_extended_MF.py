@@ -398,11 +398,20 @@ for i in range(len(Deltas)):
 
     if Deltas[i] < 5.0:
         
+        # Estimate mass at which the SLN MF peaks.
+        mp_SLN_evap = []
+        mp_SLN_HSC = []
+        
+        for m_c in masses_subaru:
+            m_pbh_values = np.logspace(np.log10(m_c)-2, np.log10(m_c)+2, 1000)
+            psi_values = skew_LN(m_pbh_values, m_c, sigma=sigmas[i], alpha=alphas_SL[i])
+            mp_SLN_evap.append(m_pbh_values[np.argmax(psi_values)])
+        
         m_min, m_max = min(masses_subaru), max(masses_subaru)
         
         # Plot data to check
         fig, ax = plt.subplots()
-        ax.plot(masses_subaru, f_pbh_skew_LN, label="SLN")
+        ax.plot(mp_SLN_evap, f_pbh_skew_LN, label="SLN")
         ax.plot(masses_subaru, f_pbh_LN, linestyle="dashed", label="LN")
         ax.plot(masses_subaru, f_pbh_LN, linestyle="dotted", label="LN (test)")   
         ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")

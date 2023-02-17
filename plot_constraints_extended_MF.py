@@ -9,7 +9,7 @@ Created on Mon Feb 13 14:06:29 2023
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from constraints_extended_MF import load_data
+from constraints_extended_MF import load_data, skew_LN, CC3
 
 # Code for studying 2009.03204, on extended mass functions. 
 
@@ -124,6 +124,7 @@ m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
 
 
 for i in range(len(Deltas)):
+
     # Constraints for extended MF from microlensing.    
     data_filename_SLN_HSC = filepath + "/SLN_HSC_Carr_Delta={:.1f}".format(Deltas[i])
     data_filename_CC3_HSC = filepath + "/CC3_HSC_Carr_Delta={:.1f}".format(Deltas[i])
@@ -153,6 +154,22 @@ for i in range(len(Deltas)):
     ax1.plot(mc_HSC, f_pbh_SLN_HSC, label="SLN", color=colors[0])
     ax1.plot(mc_evap, f_pbh_SLN_evap_envelope, color=colors[0])
     ax1.plot(mc_evap, f_pbh_LN_evap_envelope, color=colors[1], label="LN", linestyle="dashed", linewidth=3)
+    
+    
+    # Estimate mass at which the SLN MF peaks.
+    mp_SLN_evap = []
+    mp_SLN_HSC = []
+    
+    for m_c in mc_evap:
+        m_pbh_values = np.logspace(np.log10(m_c)-2, np.log10(m_c)+2, 1000)
+        psi_values = skew_LN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
+        mp_SLN_evap.append(m_pbh_values[np.argmax(psi_values)])
+
+    for m_c in mc_HSC:
+        m_pbh_values = np.logspace(np.log10(m_c)-2, np.log10(m_c)+2, 1000)
+        psi_values = skew_LN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
+        mp_SLN_evap.append(m_pbh_values[np.argmax(psi_values)])
+
 
     # Don't plot lognormal results for Delta=5.0
     if Deltas[i] < 5.0:
@@ -190,5 +207,5 @@ for i in range(len(Deltas)):
     for fig in [fig1, fig2]:
         fig.tight_layout()
     
-    fig1.savefig("./Figures/Combined_constraints/SLN_LN_delta_Delta={:.1f}.png".format(Deltas[i]))
-    fig2.savefig("./Figures/Combined_constraints/CC3_LN_delta_Delta={:.1f}.png".format(Deltas[i]))
+    #fig1.savefig("./Figures/Combined_constraints/SLN_LN_delta_Delta={:.1f}.png".format(Deltas[i]))
+    #fig2.savefig("./Figures/Combined_constraints/CC3_LN_delta_Delta={:.1f}.png".format(Deltas[i]))
