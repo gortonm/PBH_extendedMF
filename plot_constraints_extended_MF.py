@@ -45,7 +45,7 @@ alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
 betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
 
 # Log-normal parameter values, from 2008.02389
-sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, 0.01])
+sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864])
 
 mp_subaru = 10**np.linspace(20, 29, 1000)
 
@@ -60,27 +60,27 @@ m_pbh_values = 10**np.arange(11, 19.05, 0.1)
 constraints_all_mono = []
 
 for i in range(len(constraints_names)):
-        constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
+    constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
 
-        # Constraint from given instrument
-        constraint_mono = []
+    # Constraint from given instrument
+    constraint_mono = []
 
-        for l in range(len(m_pbh_values)):
-            constraint_mass_m = []
-            # Cycle over energy bins in each instrument
-            for k in range(len(constraints_mono_file)):
-                constraint_mass_m.append(constraints_mono_file[k][l])
+    for l in range(len(m_pbh_values)):
+        constraint_mass_m = []
+        # Cycle over energy bins in each instrument
+        for k in range(len(constraints_mono_file)):
+            constraint_mass_m.append(constraints_mono_file[k][l])
 
-            constraint_mono.append(min(constraint_mass_m))
-        
-        constraints_all_mono.append(constraint_mono)
+        constraint_mono.append(min(constraint_mass_m))
+    
+    constraints_all_mono.append(constraint_mono)
         
 for j in range(len(m_pbh_values)):
     constraints_mono = []
     for l in range(len(constraints_names)):
         constraints_mono.append(constraints_all_mono[l][j])
     
-    envelope_evap_mono.append(min(constraints_all_mono))
+    envelope_evap_mono.append(min(constraints_mono))
 
 # Subaru-HSC constraints, for a monochromatic mass function.
 m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
@@ -116,12 +116,18 @@ for i in range(len(Deltas)):
     ax1.plot(mc_HSC, f_pbh_SLN_HSC, label="SLN", color=colors[0])
     ax1.plot(mc_evap, f_pbh_SLN_evap_envelope, color=colors[0])
     ax1.plot(mc_evap, f_pbh_LN_evap_envelope, color=colors[1], label="LN", linestyle="dashed", linewidth=3)
-    ax1.plot(mc_HSC, f_pbh_LN_HSC, color=colors[1], linestyle="dashed", linewidth=3)
+
+    # Don't plot lognormal results for Delta=5.0
+    if Deltas[i] < 5.0:
+        ax1.plot(mc_HSC, f_pbh_LN_HSC, color=colors[1], linestyle="dashed", linewidth=3)
 
     ax2.plot(mp_HSC, f_pbh_CC3_HSC, label="CC3", color=colors[0])
     ax2.plot(mp_evap, f_pbh_CC3_evap_envelope, color=colors[0])
-    ax2.plot(mc_evap * np.exp(-sigmas_LN[i]**2), f_pbh_LN_evap_envelope, color=colors[1], label="LN", linestyle="dashed", linewidth=3)
-    ax2.plot(mc_HSC * np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[1], linestyle="dashed", linewidth=3)
+    
+    # Don't plot lognormal results for Delta=5.0
+    if Deltas[i] < 5.0:
+        ax2.plot(mc_evap * np.exp(-sigmas_LN[i]**2), f_pbh_LN_evap_envelope, color=colors[1], label="LN", linestyle="dashed", linewidth=3)
+        ax2.plot(mc_HSC * np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[1], linestyle="dashed", linewidth=3)
    
     """
     for j in range(len(constraints_names)):
