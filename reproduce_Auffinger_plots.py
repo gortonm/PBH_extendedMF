@@ -104,19 +104,29 @@ def find_beta_prime(f_PBH, m):
 
 m_D20, beta_D20 = load_data('Auffinger21_Fig10_D20.csv')
 m_GC, beta_GC = load_data('Auffinger21_Fig14_GC.csv')
+m_EX_XG, beta_XG = load_data('Auffinger22_Fig14_XG.csv')
+
 
 m_D20_v2, fPBH_D20 = load_data('DLR20_Fig2_a__0.csv')
 m_GC_v2, fPBH_GC = load_data('A22_Fig3.csv')
 
+m_EX, fPBH_EX = load_data('AAS20_Fig4_mono.csv')
+
+
 beta_prime_DLR20 = find_beta_prime(fPBH_D20, m_D20_v2)
 beta_prime_GC = find_beta_prime(fPBH_GC, m_GC_v2)
+beta_prime_AAS20 = find_beta_prime(fPBH_EX, m_EX)
 
 plt.figure(figsize=(5.5,5.5))
 ax = plt.gca()
 ax.plot(m_D20, beta_D20, color='tab:blue', label = "511 keV \n (Auffinger review Fig. 14)")
 ax.plot(m_GC, beta_GC, color='tab:orange', label = "Galactic Centre \n (Auffinger review Fig. 14)")
+ax.plot(m_EX_XG, beta_XG, color='grey', label = "EXGB \n (Auffinger review Fig. 14)")
+
 ax.plot(m_D20_v2, beta_prime_DLR20, linewidth=2, linestyle='dotted', color='g', label = "Positron annihilation \n Dasgupta, Laha \& Ray (2020)")
 ax.plot(m_GC_v2, beta_prime_GC, linewidth=2, linestyle='dotted', color='r', label = "Galactic Centre photons \n Auffinger (2022) ")
+ax.plot(m_EX, beta_prime_AAS20, linewidth=2, color='k', linestyle='dotted', label = "EXGB \n (Arbey, Auffinger \& Silk (2020))")
+
 ax.set_xlabel("$M_\mathrm{PBH}$ [g]")
 ax.set_ylabel(r"$\beta '$")
 ax.set_xscale('log')
@@ -135,6 +145,9 @@ fPBH_GC_Auffinger = find_f_PBH(beta_GC, m_GC)
 m_BC19_v2_weakest, fPBH_BC19_weakest = load_data("BC19_prop_B_nobkg.csv")
 m_BC19_v2_strongest, fPBH_BC19_strongest = load_data("BC19_prop_A_bkg.csv")
 
+m_KP23_LMC_weakest, fPBH_KP23_LMC_weakest = load_data("KP23_LMC_weakest.csv")
+m_KP23_LMC_strongest, fPBH_KP23_LMC_strongest = load_data("KP23_LMC_tightest.csv")
+
 # calculate weakest constraint (within the uncertainties) from Dasgupta, Laha & Ray (2020)
 r_s = 20    # scale radius, in kpc
 R_min = 1.5    # minimum positron propagation distance, in kpc
@@ -147,8 +160,11 @@ ax = plt.gca()
 ax2 = ax.twinx()
 ax3 = ax.twinx()
 ax.plot(m_GC, fPBH_GC_Auffinger, label = "Auffinger review Fig. 14")
-ax2.plot(m_D20_v2, fPBH_D20_weakest, color="tab:orange", linestyle='dotted', label = "1.5 kpc")
-ax2.plot(m_D20_v2, fPBH_D20, color="tab:orange", label = "NFW, 3.5 kpc")
+ax2.plot(m_D20_v2, fPBH_D20_weakest, color="tab:orange", linestyle='dotted', label = "DLR Iso 1.5 kpc")
+ax2.plot(m_D20_v2, fPBH_D20, color="tab:orange", label = "DLR '20 NFW, 3.5 kpc")
+ax2.plot(m_KP23_LMC_weakest, fPBH_KP23_LMC_weakest, linestyle="dotted", color="k")
+ax2.plot(m_KP23_LMC_strongest, fPBH_KP23_LMC_strongest, color="k", label = "KP23 (LMC)")
+
 ax3.plot(m_BC19_v2_weakest, fPBH_BC19_weakest, color="tab:red", linestyle='dotted', label = "Prop B, w/o background")
 ax3.plot(m_BC19_v2_strongest, fPBH_BC19_strongest, color="tab:red", label = "Prop A, w/ background")
 
@@ -168,11 +184,11 @@ ax3.get_yaxis().set_visible(False)
 
 ax.set_xlim(1e15, 1e18)
 ax.legend(fontsize='small', title="Galactic centre photons", loc=[0.526, 0.45])
-ax2.legend(fontsize='small', title="511 keV \n (Dasgupta, Laha \& Ray 2020)", loc=[0.45, 0.22])
+ax2.legend(fontsize='small', title="511 keV", loc=[0.45, 0.22])
 ax3.legend(fontsize='small', title="Voyager-1 (Boudaud \& Cirelli 2019)", loc=[0.35, 0.025])
 
 plt.tight_layout()
-
+plt.savefig("./Figures/Existing_constraints/evap_tightest.png")
 
 
 fPBH_GC_Auffinger = find_f_PBH(beta_GC, m_GC)
@@ -186,6 +202,10 @@ m_GC_EGRET_all_bins, fPBH_GC_EGRET_all_bins = np.genfromtxt("./Data/fPBH_Auffing
 m_GC_INTEGRAL_all_bins, fPBH_GC_INTEGRAL_all_bins = np.genfromtxt("./Data/fPBH_Auffinger22_all_bins_INTEGRAL_1107.0200.txt", delimiter="\t", unpack=True)
 m_GC_FermiLAT_all_bins, fPBH_GC_FermiLAT_all_bins = np.genfromtxt("./Data/fPBH_Auffinger22_all_bins_Fermi-LAT_1101.1381.txt", delimiter="\t", unpack=True)
 
+fPBH_GC_envelope = []
+for i in range(len(fPBH_GC_COMPTEL_all_bins)):
+    fPBH_GC_envelope.append(min([fPBH_GC_COMPTEL_all_bins[i], fPBH_GC_EGRET_all_bins[i], fPBH_GC_INTEGRAL_all_bins[i], fPBH_GC_FermiLAT_all_bins[i]]))
+
 plt.figure(figsize=(6,6))
 ax = plt.gca()
 ax.plot(m_GC, fPBH_GC_Auffinger, color='k', label = "Galactic Centre \n (Auffinger review Fig. 14)")
@@ -194,6 +214,7 @@ ax.plot(m_GC_INTEGRAL_all_bins, fPBH_GC_INTEGRAL_all_bins, linewidth=1.5, marker
 ax.plot(m_GC_COMPTEL_all_bins, fPBH_GC_COMPTEL_all_bins, linewidth=1.5, marker='x', linestyle='dotted', label = "COMPTEL")
 ax.plot(m_GC_EGRET_all_bins, fPBH_GC_EGRET_all_bins, linewidth=1.5, marker='x', linestyle='dotted', label = "EGRET")
 ax.plot(m_GC_FermiLAT_all_bins, fPBH_GC_FermiLAT_all_bins, linewidth=1.5, marker='x', linestyle='dotted', label = "Fermi-LAT")
+ax.plot(m_GC_INTEGRAL_all_bins, fPBH_GC_envelope, linewidth=1.5, marker='x', linestyle='dotted', label = "envelope")
 
 ax.set_xlabel("$M_\mathrm{PBH}$ [g]")
 ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -260,6 +281,42 @@ ax.set_ylim(1e-10, 1)
 ax.set_xlim(1e14, 1e18)
 ax.legend(fontsize='small')
 plt.title("Excluding highest-energy bin")
+plt.tight_layout()
+
+
+# Compare constraints on PBHs from photons (Galactic photons and extragalactic)
+#, to those from Voyager-1 and 511 keV line constraints
+
+plt.figure(figsize=(10,6))
+ax = plt.gca()
+ax2 = ax.twinx()
+ax3 = ax.twinx()
+ax.plot(m_GC_INTEGRAL_all_bins, fPBH_GC_envelope, label = "Galactic centre")
+ax.plot(m_EX, fPBH_EX, color='cyan', label='Extragalactic \n (Arbey, Auffinger \& Silk (2020))')
+ax2.plot(m_D20_v2, fPBH_D20_weakest, color="tab:orange", linestyle='dotted', label = "1.5 kpc")
+ax2.plot(m_D20_v2, fPBH_D20, color="tab:orange", label = "NFW, 3.5 kpc")
+ax3.plot(m_BC19_v2_weakest, fPBH_BC19_weakest, color="tab:red", linestyle='dotted', label = "Prop B, w/o background")
+ax3.plot(m_BC19_v2_strongest, fPBH_BC19_strongest, color="tab:red", label = "Prop A, w/ background")
+
+ax.set_xlabel("$M_\mathrm{PBH}$ [g]")
+ax.set_ylabel("$f_\mathrm{PBH}$")
+ax.set_xscale('log')
+ax.set_yscale('log')
+ax2.set_xscale("log")
+ax2.set_yscale("log")
+ax3.set_xscale("log")
+ax3.set_yscale("log")
+ax.set_ylim(1e-8, 1)
+ax2.set_ylim(1e-8, 1)
+ax3.set_ylim(1e-8, 1)
+ax2.get_yaxis().set_visible(False)
+ax3.get_yaxis().set_visible(False)
+
+ax.set_xlim(1e15, 1e18)
+ax.legend(fontsize='small', title="Photons", loc=[0.57, 0.45])
+ax2.legend(fontsize='small', title="511 keV \n (Dasgupta, Laha \& Ray 2020)", loc=[0.57, 0.21])
+ax3.legend(fontsize='small', title="Voyager-1 (Boudaud \& Cirelli 2019)", loc=[0.57, 0.025])
+
 plt.tight_layout()
 
 
