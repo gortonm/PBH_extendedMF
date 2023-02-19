@@ -243,30 +243,56 @@ def Mmax_NJ_approx(m, K, gamma, delta_c, sigma_PS):
     return K * np.power(sigma_PS**2 / delta_c, gamma)
 
 
-# Plot the mass functions
+# Plot mass functions against the horizon mass
 m_H = 1
 m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
-plt.figure(figsize=(6, 6))
-plt.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H*np.power(1+gamma, -gamma), gamma=0.36), label="Approximate")
-plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
-plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
-#plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.1*0.5), label="NJ $(\sigma/\delta_c = 0.1$, $\delta_c = 0.5$)")
-#plt.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.2*1/3), label="NJ $(\sigma/\delta_c = 0.2$, $\delta_c = 1/3$)")
-#plt.plot(m_pbh_plotting/m_H, Gaussian(m_pbh_plotting, m_H, sigma=0.374), label="Gaussian", color='k', linestyle="dashed", alpha=0.75)
+fig, ax = plt.subplots(figsize=(7, 6))
+ax1 = ax.twinx()
+ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), color="tab:blue", label="$\sigma/\delta_c = 0.1$, $\delta_c = 1/3$")
+ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), color="tab:orange", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0.5$")
+ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), gamma=0.36), color="k", linestyle="dashed", label="$\sigma/\delta_c = 0.1$, $\delta_c = 1/3$")
+ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), gamma=0.36), color="k", linestyle="dotted", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0,5$")
+ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:blue')
+ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
+ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:blue')
+ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:orange')
 
-ax = plt.gca()
-#ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:orange')
-#ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:green')
-#ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
-#ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:green')
+ax.set_xlabel("$M_\mathrm{PBH} / M_\mathrm{H}$")
+ax.set_ylabel("$\psi(M_\mathrm{PBH})$")
+ax.set_yscale("log")
+ax1.set_yscale("log")
+ax.set_xlim(0., 2)
+ax1.set_xlim(0., 2)
+ax.set_ylim(0.1, 3)
+ax1.set_ylim(0.1, 3)
+ax.legend(fontsize="small", title="Exact")
+ax1.legend(fontsize="small", title="Approximate", loc=[0.58, 0.61])
+ax1.get_yaxis().set_visible(False)
+fig.tight_layout()
+plt.savefig("./Figures/Critical_collapse/MF_comparison_approx_exact.png")
 
-plt.xlabel("$M_\mathrm{PBH} / M_\mathrm{H}$")
-plt.ylabel("$\psi(M_\mathrm{PBH})$")
-plt.yscale("log")
-plt.ylim(0.1, 3)
-plt.legend(fontsize="small")
-plt.tight_layout()
+
+# Plot mass functions against the horizon mass
+m_H = 1
+m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
+fig, ax = plt.subplots(figsize=(7, 6))
+ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), color="tab:blue", label="Exact ($\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
+ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), color="tab:orange", label="Exact ($\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
+ax.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), color="k", linestyle="dashed", label="Approximate")
+ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:blue')
+ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
+ax.vlines(m_H/m_H, ymin=0.1, ymax=3, linestyle='dotted', color="k")
+
+ax.set_xlabel("$M_\mathrm{PBH} / M_\mathrm{H}$")
+ax.set_ylabel("$\psi(M_\mathrm{PBH})$")
+ax.set_yscale("log")
+ax1.set_yscale("log")
+ax.set_xlim(0., 2)
+ax.set_ylim(0.1, 3)
+ax.legend(fontsize="small")
+fig.tight_layout()
 plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama.png")
+
 
 
 # Plot the mass functions against the maximum value
