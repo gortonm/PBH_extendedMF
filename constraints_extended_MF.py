@@ -111,35 +111,6 @@ def skew_LN(m, m_c, sigma, alpha):
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
 
 
-def skew_LN_peak(m, m_p, sigma, alpha, Delta_index):
-    """
-    Skew-lognormal mass function, as defined in Eq. (8) of 2009.03204. 
-    Expressed in terms of the peak mass m_p instead of m_c.
-
-    Parameters
-    ----------
-    m : Array-like
-        PBH masses.
-    m_p : Float
-        PBH mass at which the mass function peaks.
-    sigma : Float
-        Parameter controlling width of mass function (corresponds to the 
-        standard deviation when alpha=0).
-    alpha : Float
-        Parameter controlling skew of the distribution.
-    Delta_index : Integer
-        Index corresponding to the value of the power spectrum width Delta .
-
-    Returns
-    -------
-    Array-like
-        Values of the mass function, evaluated at m.
-
-    """
-    m_c = m_p * mcs_SLN_Gow22[Delta_index] / mps_SLN_Gow22[Delta_index]
-    return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
-
-
 def loc_param_CC3(m_p, alpha, beta):
     """
     Location parameter for generalised critical collapse 3 mass function, from 
@@ -298,8 +269,8 @@ def isatis_constraints_general(mf, Delta_index):
 
 
 def constraints_Carr_general(mf, params):
-    """Calculate constraints for a general extended mass function, using the 
-    method from 1705.05567.
+    """Calculate constraints from Galactic centre gamma rays for a general 
+    extended mass function, using the method from 1705.05567.
 
     Parameters
     ----------
@@ -408,10 +379,6 @@ if "__main__" == __name__:
 
     for k in range(len(Deltas)):
         # Calculate constraints for extended MF from Galactic gamma-rays.
-
-        f_pbh_skew_LN = []
-        f_pbh_CC3 = []
-        f_pbh_LN = []
         
         params_SLN = [sigmas_SLN[k], alphas_SL[k]]
         params_CC3 = [alphas_CC[k], betas[k]]
@@ -421,13 +388,15 @@ if "__main__" == __name__:
         constraints_extended_Carr_CC3 = constraints_Carr_general(CC3, params_CC3)
         constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, params_LN)
         
+        """
         # For now, include if statement since the Delta-function power spectrum
         # peak is the only one that I have calculated constraints from Isatis
         # for so far.
         if Deltas[k] == 0:
             constraints_Isatis_SLN, constraints_names = isatis_constraints_general(skew_LN, k)
             constraints_Isatis_CC3, constraints_names = isatis_constraints_general(CC3, k)
-
+        """
+        
         # Envelope of constraints, with the tightest constraint
         envelope_SLN = []
         envelope_CC3 = []
