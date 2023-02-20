@@ -83,6 +83,8 @@ def lognormal_number_density(m, m_c, sigma):
         Log-normal distribution function (for PBH masses).
 
     """
+    if m_c > 9.99e28 or m_c <= m_min:
+        print("LN m_c = {:.4e}".format(m_c))
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
 
@@ -108,6 +110,8 @@ def skew_LN(m, m_c, sigma, alpha):
         Values of the mass function, evaluated at m.
 
     """
+    if m_c > 9.99e28 or m_c <= m_min:
+        print("SLN m_c = {:.4e}".format(m_c))
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
 
 
