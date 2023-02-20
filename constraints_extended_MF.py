@@ -195,7 +195,7 @@ def integrand_general_mf(m, mf, m_c, params, m_mono, f_max_mono):
     mf : Function
         PBH mass function.
     m_c : Float
-        Characteristic PBH mass.
+        Characteristic PBH mass (m_c for a (skew-)lognormal, m_p for CC3).
     params : Array-like
         Other parameters of the PBH mass function.
     m_mono : Array-like
@@ -367,6 +367,7 @@ if "__main__" == __name__:
         constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN, params_SLN)
         constraints_extended_Carr_CC3 = constraints_Carr_general(CC3, params_CC3)
         constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, params_LN)
+
         
         """
         # For now, include if statement since the Delta-function power spectrum
@@ -449,6 +450,7 @@ if "__main__" == __name__:
 
 #%% Test case: compare results obtained using a LN MF with sigma=0.5 using
 # the Carr et al. method to the result obtained directly using Isatis.
+
 if "__main__" == __name__:
 
     fig, ax = plt.subplots(figsize=(12,6))
