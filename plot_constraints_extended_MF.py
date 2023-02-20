@@ -51,14 +51,12 @@ betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
 sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864])
 
 mp_subaru = 10**np.linspace(20, 29, 1000)
+m_pbh_values = 10**np.arange(11, 19.05, 0.1)
 
 #%% Plot Isatis constraints on Galactic centre photons for a monochromatic MF.
-colors=["tab:blue", "tab:orange", "k"]
-styles=["solid", "dashdot", "dashed", "dotted"]
 
 # Load monochromatic MF results from evaporation, and calculate the envelope of constraints.
 envelope_evap_mono = []
-m_pbh_values = 10**np.arange(11, 19.05, 0.1)
 
 
 # Load result from Isatis
@@ -119,6 +117,12 @@ plt.savefig("./Figures/Combined_constraints/test_envelope_GC.png")
 
 #%%
 
+# use first three colours from colourblind-friendly colour cycle
+# "tableau-colorblind10" 
+# viscid-hub.github.io/Viscid-docs/docs/dev/styles/tableau-colorblind10.html
+colors=["#006BA4", "#FF800E", "#ABABAB", "k"]
+styles=["solid", "dashdot", "dashed", "dotted"]
+
 # Subaru-HSC constraints, for a monochromatic mass function.
 m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
 
@@ -148,64 +152,100 @@ for i in range(len(Deltas)):
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
 
-    fig1, ax1 = plt.subplots(figsize=(5.5, 5.5))
-    fig2, ax2 = plt.subplots(figsize=(5.5, 5.5))
-
-    ax1.plot(mc_HSC, f_pbh_SLN_HSC, label="SLN", color=colors[0])
-    ax1.plot(mc_evap, f_pbh_SLN_evap_envelope, color=colors[0])
-    ax1.plot(mc_evap, f_pbh_LN_evap_envelope, color=colors[1], label="LN", linestyle="dashed", linewidth=3)
-    
+    fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+    ax1 = axes[0][0]
+    ax2 = axes[0][1]
+    ax3 = axes[1][0]
+    ax4 = axes[1][1]
     
     # Estimate mass at which the SLN MF peaks.
     mp_SLN_evap = []
     mp_SLN_HSC = []
     
+    # Mass at which the LN MF peaks
+    mp_LN_evap = mc_evap * np.exp(-sigmas_LN[i]**2)
+    mp_LN_HSC = mc_HSC * np.exp(-sigmas_LN[i]**2)
+    
+    # Estimate mean mass of the SLN MF.
+    m_mean_SLN_evap = []
+    m_mean_SLN_HSC = []
+    
+    # Estimate mean mass of the CC3 MF.
+    m_mean_CC3_evap = []
+    m_mean_CC3_HSC = []
+    
+    # Mean mass of the lognormal MF.
+    m_mean_LN_evap = mc_evap * np.exp(sigmas_LN[i]**2/2)
+    m_mean_LN_HSC = mc_HSC * np.exp(sigmas_LN[i]**2/2)
+
+
     for m_c in mc_evap:
-        m_pbh_values = np.logspace(np.log10(m_c)-2, np.log10(m_c)+2, 1000)
-        psi_values = skew_LN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
-        mp_SLN_evap.append(m_pbh_values[np.argmax(psi_values)])
+        m_pbh_values_temp = np.logspace(np.log10(m_c)-4, np.log10(m_c)+4, 10000)
+        psi_SLN_values = skew_LN(m_pbh_values_temp, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
+        psi_CC3_values = CC3(m_pbh_values_temp, m_c, alpha=alphas_CC[i], beta=betas[i])
+        
+        mp_SLN_evap.append(m_pbh_values_temp[np.argmax(psi_SLN_values)])
+        
+        m_mean_SLN_evap.append(np.trapz(psi_SLN_values*m_pbh_values_temp, m_pbh_values_temp))
+        m_mean_CC3_evap.append(np.trapz(psi_CC3_values*m_pbh_values_temp, m_pbh_values_temp))
 
     for m_c in mc_HSC:
-        m_pbh_values = np.logspace(np.log10(m_c)-2, np.log10(m_c)+2, 1000)
-        psi_values = skew_LN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
-        mp_SLN_evap.append(m_pbh_values[np.argmax(psi_values)])
+        m_pbh_values_temp = np.logspace(np.log10(m_c)-4, np.log10(m_c)+4, 10000)
+        psi_SLN_values = skew_LN(m_pbh_values_temp, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
+        psi_CC3_values = CC3(m_pbh_values_temp, m_c, alpha=alphas_CC[i], beta=betas[i])
+        
+        mp_SLN_HSC.append(m_pbh_values_temp[np.argmax(psi_SLN_values)])
+        
+        m_mean_SLN_HSC.append(np.trapz(psi_SLN_values*m_pbh_values_temp, m_pbh_values_temp))
+        m_mean_CC3_HSC.append(np.trapz(psi_CC3_values*m_pbh_values_temp, m_pbh_values_temp))
 
+    ax1.plot(mp_SLN_HSC, f_pbh_SLN_HSC, label="SLN", color=colors[0])
+    ax1.plot(mp_SLN_evap, f_pbh_SLN_evap_envelope, color=colors[0])
+    
+    ax2.plot(mp_HSC, f_pbh_CC3_HSC, label="CC3", color=colors[1])
+    ax2.plot(mp_evap, f_pbh_CC3_evap_envelope, color=colors[1])
+    
+    ax3.plot(m_mean_SLN_HSC, f_pbh_SLN_HSC, label="SLN", color=colors[0])
+    ax3.plot(m_mean_SLN_evap, f_pbh_SLN_evap_envelope, color=colors[0])
+
+    ax4.plot(m_mean_CC3_HSC, f_pbh_CC3_HSC, label="CC3", color=colors[1])
+    ax4.plot(m_mean_CC3_evap, f_pbh_CC3_evap_envelope, color=colors[1])
+    
+    # Plot a single point of the CC3 MF so that it appears in the legend
+    # for the first axis.
+    ax1.plot(0, 0, color=colors[1], label="CC3")
 
     # Don't plot lognormal results for Delta=5.0
     if Deltas[i] < 5.0:
-        ax1.plot(mc_HSC, f_pbh_LN_HSC, color=colors[1], linestyle="dashed", linewidth=3)
+        ax1.plot(mc_evap, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax1.plot(mc_HSC, f_pbh_LN_HSC, color=colors[2], linestyle="dashed", linewidth=3)
+        
+        ax2.plot(mc_evap*np.exp(-sigmas_LN[i]**2), f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax2.plot(mc_HSC*np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[2], linestyle="dashed", linewidth=2)    
 
-    ax2.plot(mp_HSC, f_pbh_CC3_HSC, label="CC3", color=colors[0])
-    ax2.plot(mp_evap, f_pbh_CC3_evap_envelope, color=colors[0])
+        ax3.plot(m_mean_LN_evap, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax3.plot(m_mean_LN_HSC*np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[2], linestyle="dashed", linewidth=2)    
+
+        ax4.plot(m_mean_LN_evap, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax4.plot(m_mean_LN_HSC*np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[2], linestyle="dashed", linewidth=2)    
     
-    # Don't plot lognormal results for Delta=5.0
-    if Deltas[i] < 5.0:
-        ax2.plot(mc_evap * np.exp(-sigmas_LN[i]**2), f_pbh_LN_evap_envelope, color=colors[1], label="LN", linestyle="dashed", linewidth=3)
-        ax2.plot(mc_HSC * np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[1], linestyle="dashed", linewidth=3)
-   
-    """
-    for j in range(len(constraints_names)):
-        mp_evap, constraints_extended_Carr_SLN = np.loadtxt(filepath + "/SLN_GC_" + str(constraints_names[j]) + "_Carr_Delta={:.1f}".format(Deltas[i]), delimiter="\t")
-        mp_evap, constraints_extended_Carr_CC3 = np.loadtxt(filepath + "/CC3_GC_" + str(constraints_names[j]) + "_Carr_Delta={:.1f}".format(Deltas[i]), delimiter="\t")
-        ax.plot(mp_evap, constraints_extended_Carr_SLN, label=constraints_names[j], color=colors[0], alpha=0.5, linestyle=styles[j])
-        ax.plot(mp_evap, constraints_extended_Carr_CC3, color=colors[1], alpha=0.5, linestyle=styles[j])
-    """
-    
-    ax1.set_xlabel(r"$M_{c}~[\mathrm{g}]$")
+    ax1.set_xlabel(r"$M_{c}$ [g]")
     ax2.set_xlabel(r"$M_{p}~[\mathrm{g}]$")
-    
-    for ax in [ax1, ax2]:
+    ax3.set_xlabel(r"$\langle M \rangle$ [g]")
+    ax4.set_xlabel(r"$\langle M \rangle$ [g]")
+   
+    for ax in [ax1, ax2, ax3, ax4]:
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_xlim(1e14, 1e29)
         ax.set_ylim(1e-3, 1)
-        ax.plot(m_pbh_values, envelope_evap_mono, color=colors[2], linestyle="dotted")
-        ax.plot(m_subaru_mono, f_max_subaru_mono, color=colors[2], linestyle="dotted")
-        ax.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]))
+        ax.plot(m_pbh_values, envelope_evap_mono, color=colors[3], linestyle="dotted", label="Monochromatic")
+        ax.plot(m_subaru_mono, f_max_subaru_mono, color=colors[3], linestyle="dotted")
+    
+    ax1.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]), fontsize="small")
 
-    for fig in [fig1, fig2]:
-        fig.tight_layout()
+    fig.tight_layout()
     
     #fig1.savefig("./Figures/Combined_constraints/SLN_LN_delta_Delta={:.1f}.png".format(Deltas[i]))
     #fig2.savefig("./Figures/Combined_constraints/CC3_LN_delta_Delta={:.1f}.png".format(Deltas[i]))
