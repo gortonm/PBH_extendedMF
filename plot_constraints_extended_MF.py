@@ -125,7 +125,8 @@ styles=["solid", "dashdot", "dashed", "dotted"]
 
 # Subaru-HSC constraints, for a monochromatic mass function.
 m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
-
+f_mono = np.concatenate((envelope_evap_mono, f_max_subaru_mono))
+m_mono = np.concatenate((m_pbh_values, m_subaru_mono))
 
 for i in range(len(Deltas)):
 
@@ -203,8 +204,8 @@ for i in range(len(Deltas)):
     if Deltas[i] < 5.0:
         ax1.plot(mc_values, f_pbh_LN, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
         ax2.plot(mp_LN, f_pbh_LN, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
-        ax3.plot(m_mean_LN, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
-        ax4.plot(m_mean_LN, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax3.plot(m_mean_LN, f_pbh_LN, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax4.plot(m_mean_LN, f_pbh_LN, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
     
     ax1.set_xlabel(r"$M_{c}$ [g]")
     ax2.set_xlabel(r"$M_{p}~[\mathrm{g}]$")
@@ -217,12 +218,9 @@ for i in range(len(Deltas)):
         ax.set_yscale("log")
         ax.set_xlim(1e14, 1e29)
         ax.set_ylim(1e-3, 1)
-        ax.plot(m_pbh_values, envelope_evap_mono, color=colors[3], linestyle="dotted", label="Monochromatic")
-        ax.plot(m_subaru_mono, f_max_subaru_mono, color=colors[3], linestyle="dotted")
+        ax.plot(m_mono, f_mono, color=colors[3], linestyle="dotted", label="Monochromatic")
     
     ax1.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]), fontsize="small")
 
     fig.tight_layout()
-    
-    #fig1.savefig("./Figures/Combined_constraints/SLN_LN_delta_Delta={:.1f}.png".format(Deltas[i]))
-    #fig2.savefig("./Figures/Combined_constraints/CC3_LN_delta_Delta={:.1f}.png".format(Deltas[i]))
+    fig1.savefig("./Figures/Combined_constraints/constraints_Delta={:.1f}.png".format(Deltas[i]))
