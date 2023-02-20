@@ -138,7 +138,6 @@ for i in range(len(Deltas)):
     mp_HSC, f_pbh_CC3_HSC = np.loadtxt(data_filename_CC3_HSC, delimiter="\t")
     mc_HSC, f_pbh_LN_HSC = np.loadtxt(data_filename_LN_HSC, delimiter="\t")
     
-    
     # Constraints for extended MF from evaporation.    
     envelope_filename_SLN_evap = filepath + "/SLN_GC_envelope_Carr_Delta={:.1f}".format(Deltas[i])
     envelope_filename_CC3_evap = filepath + "/CC3_GC_envelope_Carr_Delta={:.1f}".format(Deltas[i])
@@ -147,6 +146,12 @@ for i in range(len(Deltas)):
     mc_evap, f_pbh_SLN_evap_envelope = np.loadtxt(envelope_filename_SLN_evap, delimiter="\t")
     mp_evap, f_pbh_CC3_evap_envelope = np.loadtxt(envelope_filename_CC3_evap, delimiter="\t")
     mc_evap, f_pbh_LN_evap_envelope = np.loadtxt(envelope_filename_LN_evap, delimiter="\t")
+
+    mc_values = np.concatenate((mc_evap, mc_HSC))
+    mp_values = np.concatenate((mp_evap, mp_HSC))
+    f_pbh_SLN = np.concatenate((f_pbh_SLN_evap_envelope, f_pbh_SLN_HSC))
+    f_pbh_CC3 = np.concatenate((f_pbh_CC3_evap_envelope, f_pbh_CC3_HSC))
+    f_pbh_LN = np.concatenate((f_pbh_LN_evap_envelope, f_pbh_LN_HSC))
 
     params_SLN = [sigmas_SLN[i], alphas_SL[i]]
     params_CC3 = [alphas_CC[i], betas[i]]
@@ -159,57 +164,36 @@ for i in range(len(Deltas)):
     ax4 = axes[1][1]
     
     # Estimate mass at which the SLN MF peaks.
-    mp_SLN_evap = []
-    mp_SLN_HSC = []
+    mp_SLN = []
     
     # Mass at which the LN MF peaks
-    mp_LN_evap = mc_evap * np.exp(-sigmas_LN[i]**2)
-    mp_LN_HSC = mc_HSC * np.exp(-sigmas_LN[i]**2)
+    mp_LN = mc_values * np.exp(-sigmas_LN[i]**2)
     
     # Estimate mean mass of the SLN MF.
-    m_mean_SLN_evap = []
-    m_mean_SLN_HSC = []
+    m_mean_SLN = []
     
     # Estimate mean mass of the CC3 MF.
-    m_mean_CC3_evap = []
-    m_mean_CC3_HSC = []
+    m_mean_CC3 = []
     
     # Mean mass of the lognormal MF.
-    m_mean_LN_evap = mc_evap * np.exp(sigmas_LN[i]**2/2)
-    m_mean_LN_HSC = mc_HSC * np.exp(sigmas_LN[i]**2/2)
+    m_mean_LN = mc_values * np.exp(sigmas_LN[i]**2/2)
 
 
-    for m_c in mc_evap:
+    for m_c in mc_values:
         m_pbh_values_temp = np.logspace(np.log10(m_c)-4, np.log10(m_c)+4, 10000)
         psi_SLN_values = skew_LN(m_pbh_values_temp, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
         psi_CC3_values = CC3(m_pbh_values_temp, m_c, alpha=alphas_CC[i], beta=betas[i])
         
-        mp_SLN_evap.append(m_pbh_values_temp[np.argmax(psi_SLN_values)])
+        mp_SLN.append(m_pbh_values_temp[np.argmax(psi_SLN_values)])
         
-        m_mean_SLN_evap.append(np.trapz(psi_SLN_values*m_pbh_values_temp, m_pbh_values_temp))
-        m_mean_CC3_evap.append(np.trapz(psi_CC3_values*m_pbh_values_temp, m_pbh_values_temp))
+        m_mean_SLN.append(np.trapz(psi_SLN_values*m_pbh_values_temp, m_pbh_values_temp))
+        m_mean_CC3.append(np.trapz(psi_CC3_values*m_pbh_values_temp, m_pbh_values_temp))
 
-    for m_c in mc_HSC:
-        m_pbh_values_temp = np.logspace(np.log10(m_c)-4, np.log10(m_c)+4, 10000)
-        psi_SLN_values = skew_LN(m_pbh_values_temp, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
-        psi_CC3_values = CC3(m_pbh_values_temp, m_c, alpha=alphas_CC[i], beta=betas[i])
-        
-        mp_SLN_HSC.append(m_pbh_values_temp[np.argmax(psi_SLN_values)])
-        
-        m_mean_SLN_HSC.append(np.trapz(psi_SLN_values*m_pbh_values_temp, m_pbh_values_temp))
-        m_mean_CC3_HSC.append(np.trapz(psi_CC3_values*m_pbh_values_temp, m_pbh_values_temp))
 
-    ax1.plot(mp_SLN_HSC, f_pbh_SLN_HSC, label="SLN", color=colors[0])
-    ax1.plot(mp_SLN_evap, f_pbh_SLN_evap_envelope, color=colors[0])
-    
-    ax2.plot(mp_HSC, f_pbh_CC3_HSC, label="CC3", color=colors[1])
-    ax2.plot(mp_evap, f_pbh_CC3_evap_envelope, color=colors[1])
-    
-    ax3.plot(m_mean_SLN_HSC, f_pbh_SLN_HSC, label="SLN", color=colors[0])
-    ax3.plot(m_mean_SLN_evap, f_pbh_SLN_evap_envelope, color=colors[0])
-
-    ax4.plot(m_mean_CC3_HSC, f_pbh_CC3_HSC, label="CC3", color=colors[1])
-    ax4.plot(m_mean_CC3_evap, f_pbh_CC3_evap_envelope, color=colors[1])
+    ax1.plot(mp_SLN, f_pbh_SLN, label="SLN", color=colors[0])
+    ax2.plot(mp_values, f_pbh_CC3, label="CC3", color=colors[1])
+    ax3.plot(m_mean_SLN, f_pbh_SLN, label="SLN", color=colors[0])
+    ax4.plot(m_mean_CC3, f_pbh_CC3, label="CC3", color=colors[1])
     
     # Plot a single point of the CC3 MF so that it appears in the legend
     # for the first axis.
@@ -217,17 +201,10 @@ for i in range(len(Deltas)):
 
     # Don't plot lognormal results for Delta=5.0
     if Deltas[i] < 5.0:
-        ax1.plot(mc_evap, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
-        ax1.plot(mc_HSC, f_pbh_LN_HSC, color=colors[2], linestyle="dashed", linewidth=3)
-        
-        ax2.plot(mc_evap*np.exp(-sigmas_LN[i]**2), f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
-        ax2.plot(mc_HSC*np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[2], linestyle="dashed", linewidth=2)    
-
-        ax3.plot(m_mean_LN_evap, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
-        ax3.plot(m_mean_LN_HSC*np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[2], linestyle="dashed", linewidth=2)    
-
-        ax4.plot(m_mean_LN_evap, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
-        ax4.plot(m_mean_LN_HSC*np.exp(-sigmas_LN[i]**2), f_pbh_LN_HSC, color=colors[2], linestyle="dashed", linewidth=2)    
+        ax1.plot(mc_values, f_pbh_LN, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax2.plot(mp_LN, f_pbh_LN, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax3.plot(m_mean_LN, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
+        ax4.plot(m_mean_LN, f_pbh_LN_evap_envelope, color=colors[2], label="LN", linestyle="dashed", linewidth=2)
     
     ax1.set_xlabel(r"$M_{c}$ [g]")
     ax2.set_xlabel(r"$M_{p}~[\mathrm{g}]$")
