@@ -193,6 +193,7 @@ for i in range(len(Deltas)):
 
     ax1.plot(mc_values, f_pbh_SLN, label="SLN", color=colors[0])
     ax2.plot(mp_values, f_pbh_CC3, label="CC3", color=colors[1])
+    ax2.plot(mp_SLN, f_pbh_SLN, label="SLN", color=colors[0], linestyle="dashdot")
     ax3.plot(m_mean_SLN, f_pbh_SLN, label="SLN", color=colors[0])
     ax4.plot(m_mean_CC3, f_pbh_CC3, label="CC3", color=colors[1])
     
