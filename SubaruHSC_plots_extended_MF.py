@@ -334,7 +334,7 @@ for i in range(len(deltas)):
 
 masses_subaru = 10**np.linspace(17, 29, 1000)
 
-# Load data files
+# Constraints for monochromatic MF.
 m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
 
 # Mass function parameter values, from 2009.03204.
@@ -361,6 +361,8 @@ for i in range(len(Deltas)):
     params_LN = [sigmas_LN[i]]
     params_SLN_test = [sigmas_LN[i], 0.]
     
+    # Extended MF constraints calculation
+    # Loop through characteristic PBH masses
     for m in masses_subaru:
         integral_SLN_peak = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m, params_SLN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
         integral_CC3 = np.trapz(integrand_general_mf(m_subaru_mono, CC3, m, params_CC3, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
@@ -396,26 +398,68 @@ for i in range(len(Deltas)):
     np.savetxt(data_filename_CC3, [masses_subaru, f_pbh_CC3], delimiter="\t")
     np.savetxt(data_filename_LN, [masses_subaru, f_pbh_LN], delimiter="\t")
 
-    if Deltas[i] < 5.0:
-        
-        # Estimate mass at which the SLN MF peaks.
-        mp_SLN_evap = []
-        mp_SLN_HSC = []
-        
-        for m_c in masses_subaru:
-            m_pbh_values = np.logspace(np.log10(m_c)-2, np.log10(m_c)+2, 1000)
-            psi_values = skew_LN(m_pbh_values, m_c, sigma=sigmas[i], alpha=alphas_SL[i])
-            mp_SLN_evap.append(m_pbh_values[np.argmax(psi_values)])
+    # Plots to understand which quantity to plot the extended MF results 
+    # against.
+    if 1.0 < Deltas[i] < 5.0:
         
         m_min, m_max = min(masses_subaru), max(masses_subaru)
         
-        # Plot data to check
-        fig, ax = plt.subplots()
-        ax.plot(mp_SLN_evap, f_pbh_skew_LN, label="SLN")
+        # Estimate mass at which the SLN MF peaks, and the mean value.
+        mp_SLN = []
+        m_mean_SLN = []
+        m_mean_CC3 = []
+        m_mean_LN_estimate = []
+        
+        for m_c in masses_subaru:
+            # Estimate mode of SLN MF
+            m_pbh_values = np.logspace(np.log10(m_c)-4, np.log10(m_c)+4, 10000)
+            psi_SLN = skew_LN(m_pbh_values, m_c, sigma=sigmas[i], alpha=alphas_SL[i])
+            mp_SLN.append(m_pbh_values[np.argmax(psi_SLN)])
+            
+            # Estimate mean of SLN MF
+            m_mean_SLN.append(np.trapz(psi_SLN*m_pbh_values, m_pbh_values))
+            
+            # Esteimate mean of CC3 MF
+            psi_CC3 = CC3(m_pbh_values, m_c, alpha=alphas_CC[i], beta=betas[i])
+            m_mean_CC3.append(np.trapz(psi_CC3*m_pbh_values, m_pbh_values))
+                
+            # Estimate mean of LN MF
+            psi_LN = lognormal_number_density(m_pbh_values, m_c, sigma=sigmas_LN[i])
+            m_mean_LN_estimate.append(np.trapz(psi_LN*m_pbh_values, m_pbh_values))
+            
+        # Peak mass of the lognormal MF
+        mp_LN = masses_subaru * np.exp(-sigmas_LN[i]**2)
+        # Mean of the lognormal MF
+        m_mean_LN = masses_subaru * np.exp(sigmas_LN[i]**2/2)
+       
+        # Check estimated mean matches closely with the true mean for a log-
+        # normal MF.
+        print(m_mean_LN / m_mean_LN_estimate)
+        
+        
+        # Plot SLN and LN against M_c
+        fig, ax = plt.subplots(figsize=(4.5, 4.5))
+        ax.plot(masses_subaru, f_pbh_skew_LN, label="SLN")
         ax.plot(masses_subaru, f_pbh_LN, linestyle="dashed", label="LN")
         ax.plot(masses_subaru, f_pbh_LN, linestyle="dotted", label="LN (test)")   
         ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")
-        ax.set_xlabel(r"$M_c$ or $M_p$ [g]")
+        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-3, 1)
+        ax.set_xlim(m_min, m_max)
+        ax.legend(fontsize="small", title="$\Delta={:.1f}$".format(Deltas[i]))
+        fig.tight_layout()
+        
+        
+        # Plot SLN and LN against M_p
+        fig, ax = plt.subplots(figsize=(4.5, 4.5))
+        ax.plot(mp_SLN, f_pbh_skew_LN, label="SLN")
+        ax.plot(mp_LN, f_pbh_LN, linestyle="dashed", label="LN")
+        ax.plot(mp_LN, f_pbh_LN, linestyle="dotted", label="LN (test)")   
+        ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")
+        ax.set_xlabel(r"$M_p$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
         ax.set_yscale('log')
@@ -424,12 +468,46 @@ for i in range(len(Deltas)):
         ax.legend(fontsize="small", title="$\Delta={:.1f}$".format(Deltas[i]))
         fig.tight_layout()
 
-        fig, ax = plt.subplots()
+
+        # Plot CC3 and LN against M_p
+        fig, ax = plt.subplots(figsize=(4.5, 4.5))
         ax.plot(masses_subaru, f_pbh_CC3, label="CC3")
-        ax.plot(masses_subaru, f_pbh_LN, linestyle="dashed", label="LN")   
-        ax.plot(masses_subaru, f_pbh_LN, linestyle="dotted", label="LN (test)")   
+        ax.plot(mp_LN, f_pbh_LN, linestyle="dashed", label="LN")   
+        ax.plot(mp_LN, f_pbh_LN, linestyle="dotted", label="LN (test)")   
         ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")
         ax.set_xlabel(r"$M_p$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-3, 1)
+        ax.set_xlim(m_min, m_max)
+        ax.legend(fontsize="small", title="$\Delta={:.1f}$".format(Deltas[i]))
+        fig.tight_layout()
+        
+
+        # Plot SLN and LN against mean mass
+        fig, ax = plt.subplots(figsize=(4.5, 4.5))
+        ax.plot(m_mean_SLN, f_pbh_skew_LN, label="SLN")
+        ax.plot(m_mean_LN, f_pbh_LN, linestyle="dashed", label="LN")
+        ax.plot(m_mean_LN, f_pbh_LN, linestyle="dotted", label="LN (test)")   
+        ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")
+        ax.set_xlabel(r"$\langle M \rangle$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-3, 1)
+        ax.set_xlim(m_min, m_max)
+        ax.legend(fontsize="small", title="$\Delta={:.1f}$".format(Deltas[i]))
+        fig.tight_layout()
+
+
+        # Plot CC3 and LN against mean mass
+        fig, ax = plt.subplots(figsize=(4.5, 4.5))
+        ax.plot(m_mean_CC3, f_pbh_CC3, label="CC3")
+        ax.plot(m_mean_LN, f_pbh_LN, linestyle="dashed", label="LN")   
+        ax.plot(m_mean_LN, f_pbh_LN, linestyle="dotted", label="LN (test)")   
+        ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")
+        ax.set_xlabel(r"$\langle M \rangle$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
         ax.set_yscale('log')
