@@ -212,7 +212,7 @@ def integrand_general_mf(m, mf, m_c, params, m_mono, f_max_mono):
     return mf(m, m_c, *params) / f_max(m, m_mono, f_max_mono)
 
 
-def isatis_constraints_general(mf, Delta_index):
+def isatis_constraints_general(mf, Delta_index=0, sigma=0.5):
     """Output constraints for a general extended mass function, calculated 
     directly using Isatis.
 
@@ -222,17 +222,17 @@ def isatis_constraints_general(mf, Delta_index):
         PBH mass function.
     Delta_index : Integer
         Index corresponding to the value of the power spectrum width Delta.
+        The default is 0.
+    sigma : Float
+        Standard deviation of the lognormal distribution. The default is 0.5.
 
     Returns
     -------
     constraints_extended_plotting : Array-like
         Constraints on f_PBH.
-    constraints_names : Array-like
-        Names of the constraints used.
-
     """
     if mf == lognormal_number_density:
-        filename_append = "_lognormal_sigma={:.2f}".format(sigmas_LN[Delta_index])
+        filename_append = "_lognormal_sigma={:.1f}".format(sigma)
     elif mf == skew_LN:
         filename_append = "_SLN_Delta={:.1f}".format(Deltas[Delta_index])
     elif mf == CC3:
@@ -418,11 +418,7 @@ if "__main__" == __name__:
 # input skew LN MF with alpha=0
 
 if "__main__" == __name__:
-    # Calculate constraints for extended MF from gamma-rays.
-
     fig, ax = plt.subplots(figsize=(12,6))
-    f_pbh_skew_LN = []
-    f_pbh_CC3 = []
     
     sigma = 0.5
     params_SLN = [sigma, 0.]
@@ -449,3 +445,35 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     fig.tight_layout()
     plt.savefig("./Figures/GC_constraints/test_LN_SLN.png")
+
+
+#%% Test case: compare results obtained using a LN MF with sigma=0.5 using
+# the Carr et al. method to the result obtained directly using Isatis.
+if "__main__" == __name__:
+
+    fig, ax = plt.subplots(figsize=(12,6))
+    
+    sigma = 0.5    
+    
+    constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, [sigma])
+    constraints_extended_Isatis_LN = isatis_constraints_general(lognormal_number_density, sigma=sigma)
+    
+    mc_values = masses
+    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
+    
+    for i in range(len(constraints_names)):
+        ax.plot(mc_values, constraints_extended_Isatis_LN[i], label=(constraints_names[i]), color=colors[i])
+        ax.plot(mc_values, constraints_extended_Carr_LN[i], marker='x', color=colors[i])
+    
+    ax.plot(0, 5, color='k', label=r"Direct Isatis calculation")
+    ax.plot(0, 5, color='k', marker='x', linestyle="None", label="Carr et al. method")
+    ax.set_xlabel(r"$M_c$ [g]")
+    ax.set_ylabel(r"$f_\mathrm{PBH}$")
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_ylim(1e-10, 1)
+    ax.set_xlim(m_min, m_max)
+    ax.legend(fontsize="small", title="LN ($\sigma={:.1f})$".format(sigma))
+    fig.tight_layout()
+    plt.savefig("./Figures/GC_constraints/test_LN_Carr_Isatis.png")
