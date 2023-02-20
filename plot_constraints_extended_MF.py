@@ -163,7 +163,7 @@ for i in range(len(Deltas)):
     ax2 = axes[0][1]
     ax3 = axes[1][0]
     ax4 = axes[1][1]
-    
+        
     # Estimate mass at which the SLN MF peaks.
     mp_SLN = []
     
@@ -191,7 +191,7 @@ for i in range(len(Deltas)):
         m_mean_CC3.append(np.trapz(psi_CC3_values*m_pbh_values_temp, m_pbh_values_temp))
 
 
-    ax1.plot(mp_SLN, f_pbh_SLN, label="SLN", color=colors[0])
+    ax1.plot(mc_values, f_pbh_SLN, label="SLN", color=colors[0])
     ax2.plot(mp_values, f_pbh_CC3, label="CC3", color=colors[1])
     ax3.plot(m_mean_SLN, f_pbh_SLN, label="SLN", color=colors[0])
     ax4.plot(m_mean_CC3, f_pbh_CC3, label="CC3", color=colors[1])
@@ -223,4 +223,4 @@ for i in range(len(Deltas)):
     ax1.legend(title=r"$\Delta = {:.1f}$".format(Deltas[i]), fontsize="small")
 
     fig.tight_layout()
-    fig1.savefig("./Figures/Combined_constraints/constraints_Delta={:.1f}.png".format(Deltas[i]))
+    fig.savefig("./Figures/Combined_constraints/constraints_Delta={:.1f}.png".format(Deltas[i]))
