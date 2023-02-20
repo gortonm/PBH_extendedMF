@@ -621,3 +621,42 @@ for m_c in [np.exp(4.145), np.exp(4.155)]:
             m_max = m_pbh_values[np.argmax(psi)]
             print("\n" + r"sigma={:.3f}, alpha={:.3f}, m_c={:.3f}".format(sigma, alpha, m_c))
             print(r"Mass at which MF peaks (directly calculated) = {:.2e}".format(m_max))
+
+
+#%% Compare mean mass and modal mass for CC3 and SLN MFs
+# Compare how different these are to the mean/mode of the LN MF
+
+from constraints_extended_MF import CC3, skew_LN
+
+# Mass function parameter values, from 2009.03204.
+Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+sigmas_SLN = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
+alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
+
+alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
+betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
+
+# Log-normal parameter values, from 2008.02389
+sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864])
+
+mp_subaru = 10**np.linspace(20, 29, 1000)
+m_pbh_values = 10**np.arange(11, 19.05, 0.1)
+
+for i in ([0, 5]):
+    m_c = 1e20
+    m_pbh_values_temp = np.logspace(np.log10(m_c)-4, np.log10(m_c)+4, 10000)
+    psi_SLN_values = skew_LN(m_pbh_values_temp, m_c, sigma=sigmas_SLN[i], alpha=alphas_SL[i])
+    psi_CC3_values = CC3(m_pbh_values_temp, m_c, alpha=alphas_CC[i], beta=betas[i])
+    
+    mp_SLN = m_pbh_values_temp[np.argmax(psi_SLN_values)]
+    m_mean_SLN = np.trapz(psi_SLN_values*m_pbh_values_temp, m_pbh_values_temp)
+    m_mean_CC3 = np.trapz(psi_CC3_values*m_pbh_values_temp, m_pbh_values_temp)
+        
+    # Peak mass of the lognormal MF
+    mp_LN = m_c * np.exp(-sigmas_LN[i]**2)
+    # Mean of the lognormal MF
+    m_mean_LN = m_c * np.exp(sigmas_LN[i]**2/2)
+    print("\nDelta={:.2f}".format(Deltas[i]))
+    print("M_p / <M> [SLN] = {:.2e}".format(mp_SLN/m_mean_SLN))
+    print("M_p / <M> [CC3] = {:.2e}".format(m_c/m_mean_CC3))
+    print("M_p / <M> [LN] = {:.2e}".format(mp_LN/m_mean_LN))
