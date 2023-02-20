@@ -251,11 +251,11 @@ ax1 = ax.twinx()
 ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), color="tab:blue", label="$\sigma/\delta_c = 0.1$, $\delta_c = 1/3$")
 ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), color="tab:orange", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0.5$")
 ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), gamma=0.36), color="k", linestyle="dashed", label="$\sigma/\delta_c = 0.1$, $\delta_c = 1/3$")
-ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), gamma=0.36), color="k", linestyle="dotted", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0,5$")
-ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:blue')
-ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
-ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:blue')
-ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:orange')
+ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), gamma=0.36), color="k", linestyle="dotted", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0.5$")
+#ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:blue')
+#ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
+#ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:blue')
+#ax.vlines(Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dotted', color='tab:orange')
 
 ax.set_xlabel("$M_\mathrm{PBH} / M_\mathrm{H}$")
 ax.set_ylabel("$\psi(M_\mathrm{PBH})$")
@@ -274,14 +274,14 @@ plt.savefig("./Figures/Critical_collapse/MF_comparison_approx_exact.png")
 
 # Plot mass functions against the horizon mass
 m_H = 1
-m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
+m_pbh_plotting = np.linspace(0.05*m_H, 2*m_H, 100)
 fig, ax = plt.subplots(figsize=(7, 6))
 ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), color="tab:blue", label="Exact ($\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
 ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), color="tab:orange", label="Exact ($\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
 ax.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), color="k", linestyle="dashed", label="Approximate")
-ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:blue')
-ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
-ax.vlines(m_H/m_H, ymin=0.1, ymax=3, linestyle='dotted', color="k")
+#ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:blue')
+#ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
+#ax.vlines(m_H/m_H, ymin=0.1, ymax=3, linestyle='dotted', color="k")
 
 ax.set_xlabel("$M_\mathrm{PBH} / M_\mathrm{H}$")
 ax.set_ylabel("$\psi(M_\mathrm{PBH})$")
@@ -292,6 +292,28 @@ ax.set_ylim(0.1, 3)
 ax.legend(fontsize="small")
 fig.tight_layout()
 plt.savefig("./Figures/Critical_collapse/MF_comparison_NJ_Yokoyama.png")
+
+
+# Plot fractional difference between exact and approximate MFs
+m_H = 1
+m_pbh_plotting = np.linspace(0.05*m_H, 2*m_H, 1000)
+psi_exact_1 = mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)
+psi_exact_2 = mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)
+psi_approx_1 = mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3))
+psi_approx_2 = mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5))
+                           
+fig, ax = plt.subplots(figsize=(7, 6))
+ax.plot(m_pbh_plotting/m_H, abs((psi_exact_1 - psi_approx_1)/psi_exact_1), color="tab:blue", label="$\sigma/\delta_c = 0.1$, $\delta_c = 1/3$")
+ax.plot(m_pbh_plotting/m_H, abs((psi_exact_2 - psi_approx_2)/psi_exact_2), color="tab:orange", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0.5$")
+ax.set_xlabel(r"$M_\mathrm{PBH} / M_\mathrm{H}$")
+ax.set_ylabel(r"$|(\psi_\mathrm{exact} - \psi_\mathrm{approx}) / \psi_\mathrm{exact}|$")
+ax.set_xlim(min(m_pbh_plotting), max(m_pbh_plotting))
+#ax.set_ylim(0., 0.1)
+ax.hlines(0.1, xmin=min(m_pbh_plotting), xmax=max(m_pbh_plotting), color="k", linestyle="dotted", alpha=0.5)
+ax.set_yscale("log")
+ax.legend(fontsize="small")
+fig.tight_layout()
+plt.savefig("./Figures/Critical_collapse/MF_comparison_approx_exact_fracdiff.png")
 
 
 
