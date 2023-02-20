@@ -277,7 +277,6 @@ def constraints_Carr_general(mf, params):
     """
     # Constraints for monochromatic MF, calculated using isatis_reproduction.py.
     masses_mono = 10**np.arange(11, 19.05, 0.1)
-    constraints_mono_calculated = []
 
     constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     constraints_extended_Carr = []
@@ -285,33 +284,24 @@ def constraints_Carr_general(mf, params):
     # Loop through instruments
     for i in range(len(constraints_names)):
 
+        # Monochromatic MF constraints
         constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names[i])))
 
         # Constraint from given instrument
         constraint_extended_Carr = []
-        constraint_mono_Carr = []
 
-        for l in range(len(masses_mono)):
-            constraint_mass_m = []
-            # Cycle over energy bins in each instrument
-            for k in range(len(constraints_mono_file)):
-                constraint_mass_m.append(constraints_mono_file[k][l])
-
-            constraint_mono_Carr.append(min(constraint_mass_m))
-
-        constraints_mono_calculated.append(constraint_mono_Carr)
-
+        # Extended MF constraints calculation
         # Loop through characteristic PBH masses
         for m_c in masses:
 
             # Constraint from each energy bin
             constraints_over_bins_extended = []
 
-            # Loop through energy bins
+            # Loop through energy bins (j = 0, 1,..., n_bins - 1)
             for j in range(len(constraints_mono_file)):
                 f_max_values = constraints_mono_file[j]
 
-                # Only include positive values of f_max.
+                # Only include finite, positive values of f_max.
                 # Exclude f_max > 100, since including these can cause
                 # overflow errors.
                 masses_mono_truncated = masses_mono[f_max_values < 1e2]
