@@ -247,25 +247,15 @@ def isatis_constraints_general(mf, Delta_index):
     for i in range(len(constraints)):
         for j in range(len(constraints[0])):
             constraints[i, j] = float(constraints_file[i+1, j+1])
-
-    # Choose which constraints to plot, and create labels.
-    constraints_names = []
-    constraints_extended_plotting = []
-
-    for i in range(len(constraints_names_bis)):
-        # Only include labels for constraints that Isatis calculated.
-        if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
-            temp = constraints_names_bis[i].split("_")
-            temp2 = ""
             
-            for j in range(len(temp)-1):
-                temp2 = "".join([temp2, temp[j], "\,\,"])
-            temp2 = "".join([temp2, "\,\,[arXiv:",temp[-1], "]"])
-
-            constraints_names.append(temp2)
+    # Choose which constraints to plot.
+    constraints_extended_plotting = []
+            
+    for i in range(len(constraints_names_bis)):
+        if not(np.all(constraints[:, i] == -1.) or np.all(constraints[:, i] == 0.)):
             constraints_extended_plotting.append(constraints[:, i])
 
-    return constraints_extended_plotting, constraints_names
+    return constraints_extended_plotting
 
 
 def constraints_Carr_general(mf, params):
