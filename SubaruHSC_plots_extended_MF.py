@@ -9,7 +9,7 @@ Created on Sun Jan 15 11:38:16 2023
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from constraints_extended_MF import *
+from constraints_extended_MF import load_data, integrand_general_mf, skew_LN, f_max, lognormal_number_density, CC3
 
 # Produce plots of the Subaru-HSC microlensing constraints on PBHs, for
 # extended mass functions, using the method from 1705.05567.
@@ -415,7 +415,7 @@ for i in range(len(Deltas)):
         ax.plot(masses_subaru, f_pbh_LN, linestyle="dashed", label="LN")
         ax.plot(masses_subaru, f_pbh_LN, linestyle="dotted", label="LN (test)")   
         ax.plot(m_subaru_mono, f_max_subaru_mono, label="Monochromatic", color="k", linestyle="dotted")
-        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_xlabel(r"$M_c$ or $M_p$ [g]")
         ax.set_ylabel(r"$f_\mathrm{PBH}$")
         ax.set_xscale('log')
         ax.set_yscale('log')
