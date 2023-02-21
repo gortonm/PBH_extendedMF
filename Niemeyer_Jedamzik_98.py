@@ -272,6 +272,35 @@ fig.tight_layout()
 plt.savefig("./Figures/Critical_collapse/MF_comparison_approx_exact.png")
 
 
+
+# Plot mass functions against the horizon mass (using the relation between
+# the peak mass and horizon mass for the exact MF in both cases).
+m_H = 1
+m_pbh_plotting = np.linspace(0.05*m_H, 2.5*m_H, 100)
+fig, ax = plt.subplots(figsize=(8.5, 6))
+ax1 = ax.twinx()
+ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), linewidth=2, color="tab:blue", label="$\sigma/\delta_c = 0.1$, $\delta_c = 1/3$")
+ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), linewidth=2, color="tab:orange", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0.5$")
+ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), gamma=0.36), color="k", linestyle="dashed", label="Exact $M_\mathrm{peak}$")
+ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), gamma=0.36), color="k", linestyle="dashed")
+ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), gamma=0.36), color="grey", linestyle="dotted", label="$M_\mathrm{peak}$  from Eq. 11 NJ '98")
+ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), gamma=0.36), color="grey", linestyle="dotted")
+ax.set_xlabel("$M_\mathrm{PBH} / M_\mathrm{H}$")
+ax.set_ylabel("$\psi(M_\mathrm{PBH})$")
+ax.set_yscale("log")
+ax1.set_yscale("log")
+ax.set_xlim(0., 2)
+ax1.set_xlim(0., 2)
+ax.set_ylim(0.1, 3)
+ax1.set_ylim(0.1, 3)
+ax.legend(fontsize="small", title="Exact MF")
+ax1.legend(fontsize="small", title="Approximate MF", loc=[0.6, 0.61])
+ax1.get_yaxis().set_visible(False)
+fig.tight_layout()
+plt.savefig("./Figures/Critical_collapse/MF_comparison_exact_Mpeak.png")
+
+
+
 # Plot mass functions against the horizon mass
 m_H = 1
 m_pbh_plotting = np.linspace(0.05*m_H, 2*m_H, 100)
@@ -279,6 +308,7 @@ fig, ax = plt.subplots(figsize=(7, 6))
 ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), color="tab:blue", label="Exact ($\sigma/\delta_c = 0.1$, $\delta_c = 1/3$)")
 ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), color="tab:orange", label="Exact ($\sigma/\delta_c = 0.2$, $\delta_c = 0.5$)")
 ax.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=m_H, gamma=0.36), color="k", linestyle="dashed", label="Approximate")
+
 #ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:blue')
 #ax.vlines(Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)/m_H, ymin=0.1, ymax=3, linestyle='dashed', color='tab:orange')
 #ax.vlines(m_H/m_H, ymin=0.1, ymax=3, linestyle='dotted', color="k")
@@ -301,14 +331,21 @@ psi_exact_1 = mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_
 psi_exact_2 = mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5)
 psi_approx_1 = mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3))
 psi_approx_2 = mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5))
+psi_approx_MF_exact_1 = mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3))
+psi_approx_MF_exact_2 = mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5))
                            
 fig, ax = plt.subplots(figsize=(7, 6))
 ax.plot(m_pbh_plotting/m_H, abs((psi_exact_1 - psi_approx_1)/psi_exact_1), color="tab:blue", label="$\sigma/\delta_c = 0.1$, $\delta_c = 1/3$")
 ax.plot(m_pbh_plotting/m_H, abs((psi_exact_2 - psi_approx_2)/psi_exact_2), color="tab:orange", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0.5$")
+ax.plot(m_pbh_plotting/m_H, abs((psi_exact_1 - psi_approx_MF_exact_1)/psi_exact_1), color="tab:blue", linestyle="dashed")
+ax.plot(m_pbh_plotting/m_H, abs((psi_exact_2 - psi_approx_MF_exact_2)/psi_exact_2), color="tab:orange", linestyle="dashed")
+ax.plot(0, 0, linestyle="dashed", color="grey", label="Exact $M_\mathrm{peak}$")
+ax.plot(0, 0, linestyle="solid", color="grey", label="$M_\mathrm{peak}$  from Eq. 11 NJ '98")
+
 ax.set_xlabel(r"$M_\mathrm{PBH} / M_\mathrm{H}$")
 ax.set_ylabel(r"$|(\psi_\mathrm{exact} - \psi_\mathrm{approx}) / \psi_\mathrm{exact}|$")
 ax.set_xlim(min(m_pbh_plotting), max(m_pbh_plotting))
-#ax.set_ylim(0., 0.1)
+ax.set_ylim(10**(-4.5), 1e3)
 ax.hlines(0.1, xmin=min(m_pbh_plotting), xmax=max(m_pbh_plotting), color="k", linestyle="dotted", alpha=0.5)
 ax.set_yscale("log")
 ax.legend(fontsize="small")
