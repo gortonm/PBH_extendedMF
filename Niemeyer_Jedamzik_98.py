@@ -281,7 +281,7 @@ fig, ax = plt.subplots(figsize=(8.5, 6))
 ax1 = ax.twinx()
 ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), linewidth=2, color="tab:blue", label="$\sigma/\delta_c = 0.1$, $\delta_c = 1/3$")
 ax.plot(m_pbh_plotting/m_H, mf_NJ98(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), linewidth=2, color="tab:orange", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0.5$")
-ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), gamma=0.36), color="k", linestyle="dashed", label="Exact $M_\mathrm{peak}$")
+ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), gamma=0.36), color="k", linestyle="dashed", label="Accurate $M_\mathrm{peak}$")
 ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), gamma=0.36), color="k", linestyle="dashed")
 ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=1/3, sigma_PS=0.1*1/3), gamma=0.36), color="grey", linestyle="dotted", label="$M_\mathrm{peak}$  from Eq. 11 NJ '98")
 ax1.plot(m_pbh_plotting/m_H, mf_Yokoyama(m_pbh_plotting, m_p=Mmax_NJ_approx(m_pbh_plotting, K=3.3*m_H, gamma=0.36, delta_c=0.5, sigma_PS=0.2*0.5), gamma=0.36), color="grey", linestyle="dotted")
@@ -339,7 +339,7 @@ ax.plot(m_pbh_plotting/m_H, abs((psi_exact_1 - psi_approx_1)/psi_exact_1), color
 ax.plot(m_pbh_plotting/m_H, abs((psi_exact_2 - psi_approx_2)/psi_exact_2), color="tab:orange", label="$\sigma/\delta_c = 0.2$, $\delta_c = 0.5$")
 ax.plot(m_pbh_plotting/m_H, abs((psi_exact_1 - psi_approx_MF_exact_1)/psi_exact_1), color="tab:blue", linestyle="dashed")
 ax.plot(m_pbh_plotting/m_H, abs((psi_exact_2 - psi_approx_MF_exact_2)/psi_exact_2), color="tab:orange", linestyle="dashed")
-ax.plot(0, 0, linestyle="dashed", color="grey", label="Exact $M_\mathrm{peak}$")
+ax.plot(0, 0, linestyle="dashed", color="grey", label="Accurate $M_\mathrm{peak}$")
 ax.plot(0, 0, linestyle="solid", color="grey", label="$M_\mathrm{peak}$  from Eq. 11 NJ '98")
 
 ax.set_xlabel(r"$M_\mathrm{PBH} / M_\mathrm{H}$")
@@ -350,7 +350,7 @@ ax.hlines(0.1, xmin=min(m_pbh_plotting), xmax=max(m_pbh_plotting), color="k", li
 ax.set_yscale("log")
 ax.legend(fontsize="small")
 fig.tight_layout()
-plt.savefig("./Figures/Critical_collapse/MF_comparison_approx_exact_fracdiff.png")
+plt.savefig("./Figures/Critical_collapse/MF_comparison_fracdiff.png")
 
 
 
