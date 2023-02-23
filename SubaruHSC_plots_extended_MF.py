@@ -126,6 +126,66 @@ if "__main__" == __name__:
     ax.set_ylim(1e-3, 1)
     ax.set_title(r"Log-normal MF ($\sigma = {:.2f}$)".format(sigma) + ", $R_{90} = 0$")
     fig.tight_layout()
+    
+    
+    #%%
+    # Calculate Subaru-HSC constraint for an extended MF, using the monochromatic
+    # MF constraint from 2007.12697.
+
+    mc_subaru = 10**np.linspace(17, 29, 1000)
+
+    # Load data files
+    m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
+
+    sigma = 0.864
+
+    if "__main__" == __name__:
+        # Calculate constraints for extended MF from microlensing.
+        f_pbh_subaru = []
+        params_LN = [sigma]
+        
+        # Load pre-saved data for comparison
+        filepath = './Data_files/constraints_extended_MF'
+        
+        if sigma==0.374:
+            Delta=0.
+        if sigma==0.864:
+            Delta=2.
+        
+        mc_loaded, f_loaded = np.loadtxt(filepath+"/LN_HSC_Carr_Delta={:.1f}".format(Delta), delimiter="\t")
+
+        for m in mc_subaru:
+            f_pbh_subaru.append(1/np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m, params_LN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+            
+            # Check whether the integral is being calculated consistently:
+            if m > 10**28.99:
+                    print("Not loaded: ", np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m, params_LN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+
+        fig, axes = plt.subplots(figsize=(10, 5.5), nrows=1, ncols=2)
+        ax1, ax2 = axes[0], axes[1]
+        
+        ax1.plot(mc_subaru, f_pbh_subaru, label="Log-normal", linewidth=2.5)
+        ax1.plot(mc_loaded, f_loaded, label="Log-normal (loaded)", linestyle="dashed")
+       
+        ax1.set_xlabel(r'$M_c$ [g]')
+        ax2.plot(mc_subaru * np.exp(sigma**2/2), f_pbh_subaru, label="Log-normal", linewidth=2.5)
+        ax2.plot(mc_loaded * np.exp(sigma**2/2), f_loaded, label="Log-normal (loaded)", linestyle="dashed")
+        ax2.set_xlabel(r'$\langle M \rangle$ [g]')
+
+        for ax in axes:
+            ax.plot(m_subaru_mono, f_max_subaru_mono, linestyle='dotted', linewidth=2, label="Monochromatic \n (Croon et al. (2020))")
+            ax.set_ylabel(r'$f_\mathrm{PBH}$')
+            ax.set_xscale('log')
+            ax.set_yscale('log')
+            ax.set_xlim(1e14, 1e29)
+            ax.set_ylim(1e-3, 1)
+            
+        ax2.legend(fontsize="small")
+        fig.suptitle("$\sigma={:.3f}$".format(sigma))
+        fig.tight_layout()
+        print(f_pbh_subaru[-10:])
+
+        plt.savefig("./Figures/Test_plots/test_2007.12697_LN_sigma={:.3f}.png".format(sigma), dpi=1200)
 
 #%%
 # Calculate Subaru-HSC constraint for an extended MF, using the monochromatic
@@ -369,6 +429,11 @@ for i in range(len(Deltas)):
         integral_LN = np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m, params_LN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
         integral_SLN_test = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m, params_SLN_test, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
 
+        # Check whether the integral is being calculated consistently:
+        if m > 10**28.99 and i==5:
+            print("Loaded: ", np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m, params_LN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
+
+
         if integral_SLN_peak == 0:
             f_pbh_skew_LN.append(10)
         else:
@@ -382,12 +447,12 @@ for i in range(len(Deltas)):
         if integral_LN == 0:
             f_pbh_LN.append(10)
         else:
-            f_pbh_LN.append(1/integral_CC3)
+            f_pbh_LN.append(1/integral_LN)
             
         if integral_SLN_test == 0:
             f_pbh_SLN_test.append(10)
         else:
-            f_pbh_SLN_test.append(1/integral_CC3)
+            f_pbh_SLN_test.append(1/integral_SLN)
 
 
     data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_HSC_Carr_Delta={:.1f}".format(Deltas[i])
@@ -434,7 +499,7 @@ for i in range(len(Deltas)):
        
         # Check estimated mean matches closely with the true mean for a log-
         # normal MF.
-        print(m_mean_LN / m_mean_LN_estimate)
+        #print(m_mean_LN / m_mean_LN_estimate)
         
         
         # Plot SLN and LN against M_c
