@@ -51,6 +51,21 @@ m_subaru_mono_Smyth /= 1.989e33
 
 sigma = 2
 
+def constraint_Carr_HSC(mc_values, m_subaru_mono, mf, params, f_max_subaru_mono):
+    f_pbh_subaru = []
+    for m_c in mc_values:
+        
+        integral = np.trapz(integrand_general_mf(m_subaru_mono, mf, m_c, params, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+        
+        if integral == 0:
+            f_pbh_subaru.append(10)
+        else:
+            f_pbh_subaru.append(1/integral)
+    
+    return f_pbh_subaru
+
+
+        
 if "__main__" == __name__:
     
     # Compare constraints from Subaru-HSC for a monochromatic MF.
@@ -70,10 +85,13 @@ if "__main__" == __name__:
     # Compare to results extracted from RH panel of Fig. 20 of 2002.12778.
     f_pbh_subaru = []
     params = [sigma]
-
+    """
     for m_c in mc_subaru:
         f_pbh_subaru.append(1/np.trapz(integrand_general_mf(m_subaru_mono_Smyth, lognormal_number_density, m_c, params, m_subaru_mono_Smyth, f_max_subaru_mono_Smyth), m_subaru_mono_Smyth))
-
+    """
+    
+    f_pbh_subaru = constraint_Carr_HSC(mc_subaru, m_subaru_mono_Smyth, lognormal_number_density, params, f_max_subaru_mono_Smyth)
+    
     fig, ax = plt.subplots(figsize=(6,6))
     ax.plot(mc_subaru_LN, f_pbh_subaru_LN, label='Extracted (2002.12778)')
     ax.plot(mc_subaru, f_pbh_subaru, label='Calculated', linestyle='dashed')
@@ -424,7 +442,7 @@ for i in range(len(Deltas)):
     # Extended MF constraints calculation
     # Loop through characteristic PBH masses
     for m in masses_subaru:
-        integral_SLN_peak = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m, params_SLN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
+        integral_SLN = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m, params_SLN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
         integral_CC3 = np.trapz(integrand_general_mf(m_subaru_mono, CC3, m, params_CC3, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
         integral_LN = np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m, params_LN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
         integral_SLN_test = np.trapz(integrand_general_mf(m_subaru_mono, skew_LN, m, params_SLN_test, m_subaru_mono, f_max_subaru_mono), m_subaru_mono)
@@ -434,10 +452,10 @@ for i in range(len(Deltas)):
             print("Loaded: ", np.trapz(integrand_general_mf(m_subaru_mono, lognormal_number_density, m, params_LN, m_subaru_mono, f_max_subaru_mono), m_subaru_mono))
 
 
-        if integral_SLN_peak == 0:
+        if integral_SLN == 0:
             f_pbh_skew_LN.append(10)
         else:
-            f_pbh_skew_LN.append(1/integral_SLN_peak)
+            f_pbh_skew_LN.append(1/integral_SLN)
 
         if integral_CC3 == 0:
             f_pbh_CC3.append(10)
@@ -452,7 +470,7 @@ for i in range(len(Deltas)):
         if integral_SLN_test == 0:
             f_pbh_SLN_test.append(10)
         else:
-            f_pbh_SLN_test.append(1/integral_SLN)
+            f_pbh_SLN_test.append(1/integral_SLN_test)
 
 
     data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_HSC_Carr_Delta={:.1f}".format(Deltas[i])
