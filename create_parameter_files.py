@@ -46,10 +46,9 @@ if log_normal:
     if log_normal:
         # width of log-normal mass function
         sigma = 1
-    
             
     if log_normal:
-        append = "LN_sigma={:.1f}".format(sigma)
+        append = "LN_sigma={:.3f}".format(sigma)
             
     # name of runs file
     runs_filename = BlackHawk_path + "scripts/Isatis/BH_launcher/runs_GC_" + append
@@ -69,9 +68,9 @@ if log_normal:
         M_max = 10**(np.log10(mc) + number_of_sd * sigma)  # n standard deviations above log_10 of the median value
         
         if log_normal:
-            destination_folder = "GC_LN_sigma={:.1f}_{:.0f}".format(sigma, i)
+            destination_folder = "GC_LN_sigma={:.3f}_{:.0f}".format(sigma, i)
             # name of parameters file for running BlackHawk
-            filename_BlackHawk = BlackHawk_path + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.1f}_{:.0f}.txt".format(sigma, i)
+            filename_BlackHawk = BlackHawk_path + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.3f}_{:.0f}.txt".format(sigma, i)
             # name parameters name for running Isatis (in results folder)
                         
             
@@ -98,7 +97,7 @@ if log_normal:
         
         # run BlackHawk
         os.chdir(BlackHawk_path)
-        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.1f}_{:.0f}.txt".format(sigma, i)
+        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.3f}_{:.0f}.txt".format(sigma, i)
         os.system(command)
     
     np.savetxt(runs_filename, runs_file_content, fmt="%s")
