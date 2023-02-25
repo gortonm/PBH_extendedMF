@@ -11,8 +11,8 @@ import numpy as np
 import os
 
 log_normal = False
-SLN_bool = True
-GCC_bool = False
+SLN_bool = False
+GCC_bool = True
 
 # minimum and maximum central masses
 mc_min = 1e14
@@ -43,12 +43,9 @@ if log_normal:
     mc_values = 10**np.arange(np.log10(mc_min), np.log10(mc_max), 0.1)
     number_of_sd = 4   # number of standard deviations away from median when calculating minimum and maximum PBH mass
     
-    if log_normal:
-        # width of log-normal mass function
-        sigma = 1
-            
-    if log_normal:
-        append = "LN_sigma={:.3f}".format(sigma)
+    # width of log-normal mass function
+    sigma = 0.377
+    append = "LN_sigma={:.3f}".format(sigma)
             
     # name of runs file
     runs_filename = BlackHawk_path + "scripts/Isatis/BH_launcher/runs_GC_" + append
@@ -84,14 +81,14 @@ if log_normal:
         parameters[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(M_min)
         parameters[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(M_max)
         parameters[15][1] = "1\t\t\t\t\t\t\t\t\t\t"
-        parameters[19][1] = "{:.1f}\t\t\t\t\t\t\t\t\t\t".format(sigma)
+        parameters[19][1] = "{:.3f}\t\t\t\t\t\t\t\t\t\t".format(sigma)
         parameters[20][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(mc)
         parameters[34][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(E_number)
         parameters[35][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_min)
         parameters[36][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_max)
         parameters[-1][1] = "3\t\t\t\t\t\t\t\t\t\t"
     
-        runs_file_content.append("GC_LN_sigma={:.1f}_{:.0f}".format(sigma, i))
+        runs_file_content.append("GC_LN_sigma={:.3f}_{:.0f}".format(sigma, i))
         np.savetxt(filename_BlackHawk, parameters, fmt="%s", delimiter = " = ")
         np.savetxt(filename_Isatis, parameters, fmt="%s", delimiter = " = ")
         
@@ -124,7 +121,7 @@ for i, Delta in enumerate(Deltas):
         append = "GC_SLN_Delta={:.1f}".format(Delta)
 
     elif GCC_bool:
-        append = "GC_GCC_Delta={:.1f}".format(Delta)
+        append = "GC_CC3_Delta={:.1f}".format(Delta)
         
     # name of runs file
     runs_filename = BlackHawk_path + "scripts/Isatis/BH_launcher/runs_" + append
@@ -174,3 +171,4 @@ for i, Delta in enumerate(Deltas):
         os.system(command)
         
     np.savetxt(runs_filename, runs_file_content, fmt="%s")
+    
