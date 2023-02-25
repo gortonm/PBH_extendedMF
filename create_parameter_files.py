@@ -58,6 +58,10 @@ if log_normal:
         print(i, parameters[i])
     
     for i, mc in enumerate(mc_values):
+        
+        runs_file_content = []
+        runs_file_content.append("nb_runs = {:.0f}".format(len(mc_values)))
+        runs_file_content.append("")
     
         print(mc)
     
@@ -70,7 +74,6 @@ if log_normal:
             filename_BlackHawk = BlackHawk_path + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.3f}_{:.0f}.txt".format(sigma, i)
             # name parameters name for running Isatis (in results folder)
                         
-            
         filepath_Isatis = BlackHawk_path + "results/" + destination_folder
         if not os.path.exists(filepath_Isatis):
             os.makedirs(filepath_Isatis)
@@ -102,7 +105,7 @@ if log_normal:
 #%%
 # create table of PBH mass function values to use in BlackHawk
 
-from GC_plots_extended_MF import skew_LN, loc_param_GCC, GCC
+from constraints_extended_MF import skew_LN, CC3
 
 # Mass function parameter values, from 2009.03204.
 Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
@@ -116,6 +119,11 @@ file_initial_line = "mass/spin \t 0.00000e+00"
 os.chdir(BlackHawk_path)
 
 for i, Delta in enumerate(Deltas):
+    
+    runs_file_content = []
+    runs_file_content.append("nb_runs = {:.0f}".format(len(mc_values)))
+    runs_file_content.append("")
+
 
     if SLN_bool:
         append = "GC_SLN_Delta={:.1f}".format(Delta)
@@ -135,7 +143,7 @@ for i, Delta in enumerate(Deltas):
         if SLN_bool:
             spec_values = skew_LN(masses_mono, m_c=m_c, sigma=sigmas[i], alpha=alphas_SL[i])
         elif GCC_bool:
-            spec_values = GCC(masses_mono, m_c, alphas_CC[i], betas[i])
+            spec_values = CC3(masses_mono, m_c, alphas_CC[i], betas[i])
 
         for k in range(len(masses_mono)):
             file.append("{:.5e}\t{:.5e}".format(masses_mono[k], spec_values[k]))
@@ -166,9 +174,9 @@ for i, Delta in enumerate(Deltas):
         np.savetxt(filename_Isatis, parameters, fmt="%s", delimiter = " = ")
                 
         # run BlackHawk
-        os.chdir(BlackHawk_path)
-        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt".format(j)
-        os.system(command)
+        #os.chdir(BlackHawk_path)
+        #command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt".format(j)
+        #os.system(command)
         
     np.savetxt(runs_filename, runs_file_content, fmt="%s")
     
