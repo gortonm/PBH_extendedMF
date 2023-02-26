@@ -485,33 +485,34 @@ plt.savefig("./Figures/Combined_constraints/test_envelope_GC.png")
 Isatis_path = './../Downloads/version_finale/scripts/Isatis/'
 
 if "__main__" == __name__:
+    sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, 0.01])
 
-    fig, ax = plt.subplots(figsize=(12,6))
-    
-    sigma = 0.377    
-    
-    constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, [sigma])
-    constraints_extended_Isatis_LN = isatis_constraints_general(lognormal_number_density, sigma=sigma)
-    
-    mc_values = masses
-    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
-    
-    for i in range(len(constraints_names)):
-        ax.plot(mc_values, constraints_extended_Isatis_LN[i], label=(constraints_names[i]), color=colors[i])
-        ax.plot(mc_values, constraints_extended_Carr_LN[i], linestyle="None", marker='x', color=colors[i])
-    
-    ax.plot(0, 5, color='k', label=r"Direct Isatis calculation")
-    ax.plot(0, 5, color='k', marker='x', linestyle="None", label="Carr et al. method")
-    ax.set_xlabel(r"$M_c$ [g]")
-    ax.set_ylabel(r"$f_\mathrm{PBH}$")
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_ylim(1e-10, 1)
-    ax.set_xlim(m_min, m_max)
-    ax.legend(fontsize="small", title="LN ($\sigma={:.3f})$".format(sigma))
-    fig.tight_layout()
-    plt.savefig("./Figures/GC_constraints/test_LN_Carr_Isatis.png")
+    for sigma in sigmas_LN:
+
+        fig, ax = plt.subplots(figsize=(12,6))
+                
+        constraints_extended_Carr_LN = constraints_Carr_general(lognormal_number_density, [sigma])
+        constraints_extended_Isatis_LN = isatis_constraints_general(lognormal_number_density, sigma=sigma)
+        
+        mc_values = masses
+        constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+        colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
+        
+        for i in range(len(constraints_names)):
+            ax.plot(mc_values, constraints_extended_Isatis_LN[i], label=(constraints_names[i]), color=colors[i])
+            ax.plot(mc_values, constraints_extended_Carr_LN[i], linestyle="None", marker='x', color=colors[i])
+        
+        ax.plot(0, 5, color='k', label=r"Direct Isatis calculation")
+        ax.plot(0, 5, color='k', marker='x', linestyle="None", label="Carr et al. method")
+        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-10, 1)
+        ax.set_xlim(m_min, m_max)
+        ax.legend(fontsize="small", title="LN ($\sigma={:.3f})$".format(sigma))
+        fig.tight_layout()
+        plt.savefig("./Figures/GC_constraints/test_LN_Carr_Isatis.png")
     
 
 #%% Test: compare results obtained using a SLN MF using the method from 
@@ -523,38 +524,39 @@ sigmas_SLN = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
 alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
 
 Isatis_path = './../Downloads/version_finale/scripts/Isatis/'
-k = 0
 
 if "__main__" == __name__:
+    
+    for k in range(len(Deltas)):
 
-    fig, ax = plt.subplots(figsize=(12,6))
-    params_SLN = [sigmas_SLN[k], alphas_SL[k]]
+        fig, ax = plt.subplots(figsize=(12,6))
+        params_SLN = [sigmas_SLN[k], alphas_SL[k]]
+            
+        constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN, params_SLN)
+        constraints_extended_Isatis_SLN = isatis_constraints_general(skew_LN, Delta_index=k)
         
-    constraints_extended_Carr_SLN = constraints_Carr_general(skew_LN, params_SLN)
-    constraints_extended_Isatis_SLN = isatis_constraints_general(skew_LN, Delta_index=k)
-    
-    mc_values = masses
-    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
-    
-    for i in range(len(constraints_names)):
-        ax.plot(mc_values, constraints_extended_Isatis_SLN[i], label=(constraints_names[i]), color=colors[i])
-        ax.plot(mc_values, constraints_extended_Carr_SLN[i], linestyle="None", marker='x', color=colors[i])
-    
-    ax.plot(0, 5, color='k', label=r"Direct Isatis calculation")
-    ax.plot(0, 5, color='k', marker='x', linestyle="None", label="Carr et al. method")
-    ax.set_xlabel(r"$M_c$ [g]")
-    ax.set_ylabel(r"$f_\mathrm{PBH}$")
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_ylim(1e-10, 1)
-    ax.set_xlim(m_min, m_max)
-    ax.legend(fontsize="small", title="SLN ($\Delta={:.1f})$".format(Deltas[k]))
-    fig.tight_layout()
-    plt.savefig("./Figures/GC_constraints/test_SLN_Carr_Isatis.png")
+        mc_values = masses
+        constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+        colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
+        
+        for i in range(len(constraints_names)):
+            ax.plot(mc_values, constraints_extended_Isatis_SLN[i], label=(constraints_names[i]), color=colors[i])
+            ax.plot(mc_values, constraints_extended_Carr_SLN[i], linestyle="None", marker='x', color=colors[i])
+        
+        ax.plot(0, 5, color='k', label=r"Direct Isatis calculation")
+        ax.plot(0, 5, color='k', marker='x', linestyle="None", label="Carr et al. method")
+        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-10, 1)
+        ax.set_xlim(m_min, m_max)
+        ax.legend(fontsize="small", title="SLN ($\Delta={:.1f})$".format(Deltas[k]))
+        fig.tight_layout()
+        plt.savefig("./Figures/GC_constraints/test_SLN_Carr_Isatis.png")
     
     
-#%% Test: compare results obtained using a SLN MF using the method from 
+#%% Test: compare results obtained using the CC3 MF using the method from 
 # 1705.05567 to the result obtained directly using Isatis.
 
 # Mass function parameter values, from 2009.03204.
@@ -563,36 +565,70 @@ alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
 betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
 
 Isatis_path = './../Downloads/version_finale/scripts/Isatis/'
-k = 0
 
 if "__main__" == __name__:
-
-    fig, ax = plt.subplots(figsize=(12,6))
-    params_CC3 = [alphas_CC[k], betas[k]]
+    
+    for k in range(len(Deltas)):
         
-    constraints_extended_Carr_CC3 = constraints_Carr_general(skew_LN, params_SLN)
-    constraints_extended_Isatis_CC3 = isatis_constraints_general(skew_LN, Delta_index=k)
-    
-    mc_values = masses
-    constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
-    
-    for i in range(len(constraints_names)):
-        ax.plot(mc_values, constraints_extended_Isatis_CC3[i], label=(constraints_names[i]), color=colors[i])
-        ax.plot(mc_values, constraints_extended_Carr_CC3[i], linestyle="None", marker='x', color=colors[i])
-    
-    ax.plot(0, 5, color='k', label=r"Direct Isatis calculation")
-    ax.plot(0, 5, color='k', marker='x', linestyle="None", label="Carr et al. method")
-    ax.set_xlabel(r"$M_c$ [g]")
-    ax.set_ylabel(r"$f_\mathrm{PBH}$")
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_ylim(1e-10, 1)
-    ax.set_xlim(m_min, m_max)
-    ax.legend(fontsize="small", title="CC3 ($\Delta={:.1f})$".format(Deltas[k]))
-    fig.tight_layout()
-    plt.savefig("./Figures/GC_constraints/test_CC3_Carr_Isatis.png")
+        fig, ax = plt.subplots(figsize=(12,6))
+        params_CC3 = [alphas_CC[k], betas[k]]
+            
+        constraints_extended_Carr_CC3 = constraints_Carr_general(CC3, params_CC3)
+        constraints_extended_Isatis_CC3 = isatis_constraints_general(CC3, Delta_index=k)
+        
+        mc_values = masses
+        constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+        colors = ["tab:blue", "tab:orange", "tab:green", "tab:red"]
+        
+        for i in range(len(constraints_names)):
+            ax.plot(mc_values, constraints_extended_Isatis_CC3[i], label=(constraints_names[i]), color=colors[i])
+            ax.plot(mc_values, constraints_extended_Carr_CC3[i], linestyle="None", marker='x', color=colors[i])
+        
+        ax.plot(0, 5, color='k', label=r"Direct Isatis calculation")
+        ax.plot(0, 5, color='k', marker='x', linestyle="None", label="Carr et al. method")
+        ax.set_xlabel(r"$M_c$ [g]")
+        ax.set_ylabel(r"$f_\mathrm{PBH}$")
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.set_ylim(1e-10, 1)
+        ax.set_xlim(m_min, m_max)
+        ax.legend(fontsize="small", title="CC3 ($\Delta={:.1f})$".format(Deltas[k]))
+        fig.tight_layout()
+        plt.savefig("./Figures/GC_constraints/test_CC3_Carr_Isatis.png")
 
+
+#%% Test: compare the MFs to those used in BlackHawk.
+if "__main__" == __name__:
+    mf = lognormal_number_density
+    
+    check_index = 45   # corresponds to the value of m_c loaded
+    Delta_index = 4    # corresponds to the value of Delta
+    sigma = 0.864
+    masses_mono = 10**np.arange(11, 19.05, 0.1)
+    
+    if mf == lognormal_number_density:
+        filename_append = "_LN_sigma={:.3f}".format(sigma)
+        mf_values = lognormal_number_density(masses_mono, mc_values[check_index], sigma)
+    elif mf == skew_LN:
+        filename_append = "_SLN_Delta={:.1f}".format(Deltas[Delta_index])
+        mf_values = skew_LN(masses_mono, mc_values[check_index], sigmas_SLN[Delta_index], alphas_SL[Delta_index])
+    elif mf == CC3:
+        filename_append = "_CC3_Delta={:.1f}".format(Deltas[Delta_index])
+        mf_values = CC3(masses_mono, mc_values[check_index], alphas_CC[Delta_index], betas[Delta_index])
+        
+    # Load mass function saved by BlackHawk:
+    filepath = "../Downloads/version_finale/results/GC%s_%i/BH_spectrum.txt" % (filename_append, check_index)
+    data = np.genfromtxt(filepath, skip_header=3).transpose()
+    m_Isatis, mf_Isatis = data[0], data[1]
+            
+    fig, ax = plt.subplots()
+    ax.plot(m_Isatis, mf_Isatis)
+    ax.plot(masses_mono, mf_values)
+    ax.set_xlabel(r"$M_\mathrm{PBH}$ [g]")
+    ax.set_ylabel(r"$\psi(M_\mathrm{PBH})$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    plt.tight_layout()
 
 #%% Test case: compare results obtained using a LN MF with sigma=0.5 to the
 # input skew LN MF with alpha=0

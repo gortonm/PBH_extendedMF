@@ -38,67 +38,70 @@ with open(BlackHawk_path + "input.txt", "w") as f:
     f.write("y\ny")
 
 #%% Log-normal mass function.
-if log_normal:    
-    number_of_sd = 4   # number of standard deviations away from median when calculating minimum and maximum PBH mass
-    
-    # width of log-normal mass function
-    sigma = 0.377
-    append = "LN_sigma={:.3f}".format(sigma)
+if log_normal:
+    sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, 0.01])
+
+    for sigma in sigmas_LN:
+        number_of_sd = 4   # number of standard deviations away from median when calculating minimum and maximum PBH mass
+        
+        # width of log-normal mass function
+        append = "LN_sigma={:.3f}".format(sigma)
+                
+        # name of runs file
+        runs_filename = BlackHawk_path + "scripts/Isatis/BH_launcher/runs_GC_" + append
             
-    # name of runs file
-    runs_filename = BlackHawk_path + "scripts/Isatis/BH_launcher/runs_GC_" + append
+        # choose minimum and maximum energies to cover the range constrained by the
+        # Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-
+        # LAT (see e.g. Fig. 2 of 2201.01265)
         
-    # choose minimum and maximum energies to cover the range constrained by the
-    # Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-
-    # LAT (see e.g. Fig. 2 of 2201.01265)
-    
-    for i in range(len(parameters)):
-        print(i, parameters[i])
-    
-    for i, mc in enumerate(mc_values):
-        
+        for i in range(len(parameters)):
+            print(i, parameters[i])
+            
         runs_file_content = []
         runs_file_content.append("nb_runs = {:.0f}".format(len(mc_values)))
         runs_file_content.append("")
     
-        print(mc)
-    
-        M_min = 10**(np.log10(mc) - number_of_sd * sigma)  # n standard deviations below log_10 of the median value
-        M_max = 10**(np.log10(mc) + number_of_sd * sigma)  # n standard deviations above log_10 of the median value
         
-        if log_normal:
-            destination_folder = "GC_LN_sigma={:.3f}_{:.0f}".format(sigma, i)
-            # name of parameters file for running BlackHawk
-            filename_BlackHawk = BlackHawk_path + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.3f}_{:.0f}.txt".format(sigma, i)
-            # name parameters name for running Isatis (in results folder)
-                        
-        filepath_Isatis = BlackHawk_path + "results/" + destination_folder
-        if not os.path.exists(filepath_Isatis):
-            os.makedirs(filepath_Isatis)
-        filename_Isatis = filepath_Isatis + "/" + destination_folder + ".txt"
-    
-        parameters[0][1] = destination_folder + "\t\t\t\t\t\t\t\t\t\t"
-        parameters[4][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(BH_number)
-        parameters[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(M_min)
-        parameters[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(M_max)
-        parameters[15][1] = "1\t\t\t\t\t\t\t\t\t\t"
-        parameters[19][1] = "{:.3f}\t\t\t\t\t\t\t\t\t\t".format(sigma)
-        parameters[20][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(mc)
-        parameters[34][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(E_number)
-        parameters[35][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_min)
-        parameters[36][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_max)
-        parameters[-1][1] = "3\t\t\t\t\t\t\t\t\t\t"
-    
-        runs_file_content.append("GC_LN_sigma={:.3f}_{:.0f}".format(sigma, i))
-        np.savetxt(filename_BlackHawk, parameters, fmt="%s", delimiter = " = ")
-        np.savetxt(filename_Isatis, parameters, fmt="%s", delimiter = " = ")
+        for i, mc in enumerate(mc_values):
+                
+            print(mc)
         
-        # run BlackHawk
-        os.chdir(BlackHawk_path)
-        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.3f}_{:.0f}.txt<input.txt".format(sigma, i)
-        os.system(command)
-    
-    np.savetxt(runs_filename, runs_file_content, fmt="%s")
+            M_min = 10**(np.log10(mc) - number_of_sd * sigma)  # n standard deviations below log_10 of the median value
+            M_max = 10**(np.log10(mc) + number_of_sd * sigma)  # n standard deviations above log_10 of the median value
+            
+            if log_normal:
+                destination_folder = "GC_LN_sigma={:.3f}_{:.0f}".format(sigma, i)
+                # name of parameters file for running BlackHawk
+                filename_BlackHawk = BlackHawk_path + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.3f}_{:.0f}.txt".format(sigma, i)
+                # name parameters name for running Isatis (in results folder)
+                            
+            filepath_Isatis = BlackHawk_path + "results/" + destination_folder
+            if not os.path.exists(filepath_Isatis):
+                os.makedirs(filepath_Isatis)
+            filename_Isatis = filepath_Isatis + "/" + destination_folder + ".txt"
+        
+            parameters[0][1] = destination_folder + "\t\t\t\t\t\t\t\t\t\t"
+            parameters[4][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(BH_number)
+            parameters[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(M_min)
+            parameters[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(M_max)
+            parameters[15][1] = "1\t\t\t\t\t\t\t\t\t\t"
+            parameters[19][1] = "{:.3f}\t\t\t\t\t\t\t\t\t\t".format(sigma)
+            parameters[20][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(mc)
+            parameters[34][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(E_number)
+            parameters[35][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_min)
+            parameters[36][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_max)
+            parameters[-1][1] = "3\t\t\t\t\t\t\t\t\t\t"
+        
+            runs_file_content.append("GC_LN_sigma={:.3f}_{:.0f}".format(sigma, i))
+            np.savetxt(filename_BlackHawk, parameters, fmt="%s", delimiter = " = ")
+            np.savetxt(filename_Isatis, parameters, fmt="%s", delimiter = " = ")
+            
+            # run BlackHawk
+            os.chdir(BlackHawk_path)
+            command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.3f}_{:.0f}.txt<input.txt".format(sigma, i)
+            os.system(command)
+        
+        np.savetxt(runs_filename, runs_file_content, fmt="%s")
 
 
 #%%  Skew-lognormal and CC3 mass functions.
