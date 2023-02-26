@@ -11,8 +11,8 @@ import numpy as np
 import os
 
 log_normal = False
-SLN_bool = False
-CC3_bool = True
+SLN_bool = True
+CC3_bool = False
 
 # minimum and maximum central masses
 mc_min = 1e14
@@ -24,7 +24,7 @@ BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
 # load default Isatis parameters file
 parameters = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, delimiter=" = ")
 
-masses_mono = 10**np.arange(11, 19.05, 0.1)
+masses_mono = 10**np.linspace(11, 19.05, 10000)
 mc_values = 10**np.arange(np.log10(mc_min), np.log10(mc_max), 0.1)
 
 BH_number = len(masses_mono)
@@ -33,7 +33,11 @@ E_min = 1e-5
 E_max = 5   # maximum energy available in Hazma tables
 
 
-#%%
+# Write your input to a file
+with open(BlackHawk_path + "input.txt", "w") as f:
+    f.write("y\ny")
+
+#%% Log-normal mass function.
 if log_normal:    
     number_of_sd = 4   # number of standard deviations away from median when calculating minimum and maximum PBH mass
     
@@ -96,8 +100,8 @@ if log_normal:
     
     np.savetxt(runs_filename, runs_file_content, fmt="%s")
 
-#%%
-# create table of PBH mass function values to use in BlackHawk
+
+#%%  Skew-lognormal and CC3 mass functions.
 
 from constraints_extended_MF import skew_LN, CC3
 
@@ -112,7 +116,7 @@ betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
 file_initial_line = "mass/spin \t 0.00000e+00"
 os.chdir(BlackHawk_path)
 
-for i, Delta in enumerate(Deltas):
+for i, Delta in enumerate(Deltas[-1:]):
     
     runs_file_content = []
     runs_file_content.append("nb_runs = {:.0f}".format(len(mc_values)))
@@ -168,8 +172,8 @@ for i, Delta in enumerate(Deltas):
                 
         # run BlackHawk
         os.chdir(BlackHawk_path)
-        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt".format(j)
+        #command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt > nohup_inst_{:.0f}.txt &".format(j, j)
+        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt<input.txt".format(j)
         os.system(command)
         
     np.savetxt(runs_filename, runs_file_content, fmt="%s")
-    
