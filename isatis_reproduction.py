@@ -8,9 +8,6 @@ Created on Sun Sep 25 13:54:33 2022
 
 import numpy as np
 import matplotlib as mpl
-import matplotlib.pyplot as plt
-from reproduce_COMPTEL_constraints_v2 import load_data, read_blackhawk_spectra
-from J_factor_A22 import j_avg
 
 # Calculate constraints from Galactic Centre gamma rays, following the method
 # used in the Isatis code by Jérémy Auffinger.
@@ -46,6 +43,75 @@ r_s = 17 * 1000 * pc_to_cm    # scale radius, in cm
 r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
 
 rho_0 = 8.5e-25	    # characteristic halo density in g/cm^3
+
+
+def read_col(fname, first_row=0, col=1, convert=int, sep=None):
+    """
+    Read text files (e.g. from Blackhawk spectrum).
+
+    Parameters
+    ----------
+    fname : String
+        File name.
+    first_row : Integer, optional
+        Controls which row(s) to skip. The default is 0 (skips first row).
+    col : Integer, optional
+        Index of column to read.
+    convert : Function, optional
+        Function to convert column entry with. The default is int.
+    sep : String, optional
+        Column separator. The default is None.
+
+    Returns
+    -------
+    data : Array-like
+        Data from a column of a text file (e.g. BlackHawk spectrum).
+
+    """    
+    data = []
+    
+    with open(fname) as fobj:
+        i=0
+        for line in fobj:
+            i += 1
+            
+            if i >= first_row:
+                data.append(line.split(sep=sep)[col])
+    return data    
+     
+
+def read_blackhawk_spectra(fname, col=1):
+    """
+    
+
+    Parameters
+    ----------
+    fname : String
+        File name.
+    col : Integer, optional
+        Index of column to read (i.e. which particle type to use), e.g.
+        1 for photons, primary and secondary spectra.
+        7 for electrons (primary spectra)
+        The default is 1.
+
+    Returns
+    -------
+    Array-like
+        Energies and spectrum values calculate using BlackHawk.
+
+    """
+    energies_data = read_col(fname, first_row=2, col=0, convert=float)
+    spectrum_data = read_col(fname, first_row=2, col=col, convert=float)
+    
+    energies = []
+    for i in range(2, len(energies_data)):
+        energies.append(float(energies_data[i]))
+
+    spectrum = []
+    for i in range(2, len(spectrum_data)):
+        spectrum.append(float(spectrum_data[i]))
+        
+    return np.array(energies), np.array(spectrum)
 
 
 def find_r(los, b, l):
@@ -246,16 +312,16 @@ sigma = 0.5
 
 if monochromatic_MF:
     filename_append = "_monochromatic"
-    m_pbh_values = 10**np.arange(11, 19, 0.1)
+    m_pbh_values = 10**np.arange(11, 19.05, 0.1)
 
 
 f_PBH_isatis = []
 file_path_data = "./../Downloads/version_finale/scripts/Isatis/constraints/photons/"
 
-COMPTEL = True
+COMPTEL = False
 INTEGRAL = False
 EGRET = False
-FermiLAT = False
+FermiLAT = True
 
 exclude_last_bin = False
 save_each_bin = True
