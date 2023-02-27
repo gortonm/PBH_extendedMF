@@ -10,9 +10,9 @@ Created on Tue Jan 10 15:32:24 2023
 import numpy as np
 import os
 
-log_normal = True
-SLN_bool = False
-CC3_bool = True
+log_normal = False
+SLN_bool = True
+CC3_bool = False
 
 # minimum and maximum central masses
 mc_min = 1e14
@@ -24,7 +24,7 @@ BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
 # load default Isatis parameters file
 parameters = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, delimiter=" = ")
 
-m_pbh_values = 10**np.linspace(11, 19.05, 10000)
+m_pbh_values = 10**np.linspace(11, 21.05, 10000)
 mc_values = 10**np.arange(np.log10(mc_min), np.log10(mc_max), 0.1)
 
 BH_number = len(m_pbh_values)
@@ -100,8 +100,13 @@ if log_normal:
             os.chdir(BlackHawk_path)
             command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/GC_LN_sigma={:.3f}_{:.0f}.txt<input.txt".format(sigma, i)
             os.system(command)
-        
+            
         np.savetxt(runs_filename, runs_file_content, fmt="%s")
+        
+        # run Isatis
+        os.chdir("./scripts/Isatis")
+        command = "./Isatis.x parameters_GC_LN_sigma={:.3f}.txt ./BH_launcher/runs_GC_LN_sigma={:.3f}".format(sigma, sigma)
+        os.system(command)
 
 
 #%%  Skew-lognormal and CC3 mass functions.
@@ -138,8 +143,9 @@ for i, Delta in enumerate(Deltas):
         
         file = []
         file.append(file_initial_line)
-        filename_BH_spec = "src/tables/users_spectra/" + append + "_{:.0f}.txt".format(j)
-    
+        filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + append + "_{:.0f}.txt".format(j)
+        print(filename_BH_spec)
+        
         if SLN_bool:
             spec_values = skew_LN(m_pbh_values, m_c=m_c, sigma=sigmas[i], alpha=alphas_SL[i])
         elif CC3_bool:
@@ -175,8 +181,12 @@ for i, Delta in enumerate(Deltas):
                 
         # run BlackHawk
         os.chdir(BlackHawk_path)
-        #command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt > nohup_inst_{:.0f}.txt &".format(j, j)
         command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + append + "_{:.0f}.txt<input.txt".format(j)
         os.system(command)
         
     np.savetxt(runs_filename, runs_file_content, fmt="%s")
+    
+    # run Isatis
+    os.chdir("./scripts/Isatis")
+    command = "./Isatis.x parameters_%s.txt ./BH_launcher/runs_%s" % (append, append)
+    os.system(command)
