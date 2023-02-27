@@ -302,16 +302,20 @@ def constraints_Carr_general(mf, params):
                 f_max_values = constraints_mono_file[j]
 
                 # Only include finite, positive values of f_max.
-                # Exclude f_max > 100, since including these can cause
-                # overflow errors.
-                masses_mono_truncated = masses_mono[f_max_values < 1e2]
-                f_max_truncated = f_max_values[f_max_values < 1e2]
-
-                masses_mono_truncated = masses_mono_truncated[f_max_truncated > 0]
-                f_max_truncated = f_max_truncated[f_max_truncated > 0]
-
-                masses_mono_truncated = masses_mono_truncated[f_max_truncated != float("inf")]
-                f_max_truncated = f_max_truncated[f_max_truncated != float("inf")]
+               
+                f_max_truncated = []
+                masses_mono_truncated = []
+                
+                for k in range(len(f_max_values)):
+                    f_max = f_max_values[k]
+                    if np.isposinf(f_max) or np.isneginf(f_max) or np.isnan(f_max) or f_max < 0:
+                        pass
+                    else:
+                        f_max_truncated.append(f_max)
+                        masses_mono_truncated.append(masses_mono[k])
+                
+                f_max_truncated = np.array(f_max_truncated)
+                masses_mono_truncated = np.array(masses_mono_truncated)
 
                 # If all values of f_max are excluded, assign a non-
                 # physical value f_PBH = 10 to the constraint at that mass.
@@ -476,7 +480,6 @@ for i in range(len(constraints_names_comp)):
     
     constraints_mono_calculated.append(constraint_mono_Carr)
 
-
 # Plot evaporation constraints loaded from Isatis, to check the envelope
 # works correctly
 colors_evap = ["tab:blue", "tab:orange", "tab:red", "tab:green"]
@@ -504,7 +507,7 @@ plt.tight_layout()
 Isatis_path = './../Downloads/version_finale/scripts/Isatis/'
 
 if "__main__" == __name__:
-    sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, 0.01])
+    sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, 1.0])
 
     for sigma in sigmas_LN:
 
@@ -618,10 +621,10 @@ if "__main__" == __name__:
 
 #%% Test: compare the MFs to those used in BlackHawk.
 if "__main__" == __name__:
-    mf = skew_LN
+    mf = CC3
     
-    check_index = 45   # corresponds to the value of m_c loaded
-    Delta_index = 4    # corresponds to the value of Delta
+    check_index = 49   # corresponds to the value of m_c loaded
+    Delta_index = 6    # corresponds to the value of Delta
     sigma = 0.864    # standard deviation of lognormal mass function
     masses_mono = 10**np.arange(11, 21.05, 0.1)
     
