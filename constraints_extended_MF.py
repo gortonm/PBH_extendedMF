@@ -83,10 +83,6 @@ def lognormal_number_density(m, m_c, sigma):
         Log-normal distribution function (for PBH masses).
 
     """
-    """
-    if m_c > 9.99e28 or m_c <= m_min:
-        print("LN m_c = {:.4e}".format(m_c))
-    """
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
 
@@ -111,10 +107,6 @@ def skew_LN(m, m_c, sigma, alpha):
     Array-like
         Values of the mass function, evaluated at m.
 
-    """
-    """
-    if m_c > 9.99e28 or m_c <= m_min:
-        print("SLN m_c = {:.4e}".format(m_c))
     """
     return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
 
@@ -284,7 +276,7 @@ def constraints_Carr_general(mf, params):
 
     """
     # Constraints for monochromatic MF, calculated using isatis_reproduction.py.
-    masses_mono = 10**np.arange(11, 19.05, 0.1)
+    masses_mono = 10**np.arange(11, 21.05, 0.1)
 
     constraints_names = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     constraints_extended_Carr = []
@@ -345,7 +337,7 @@ def constraints_Carr_general(mf, params):
 #%% Test case: compare Isatis output (for monochromatic MF) [unmodified version]
 # with the constraint shown in Fig. 3 of 2201.01265
 
-m_pbh_values = 10**np.arange(11, 19.05, 0.1)
+m_pbh_values = 10**np.arange(11, 21.05, 0.1)
 Mmin = min(m_pbh_values)  # minimum PBH mass in your runs
 Mmax = max(m_pbh_values)  # maximum PBH mass in your runs
 
@@ -407,14 +399,14 @@ ax.set_xscale("log")
 ax.set_yscale("log")
 ax.legend(fontsize="small")
 plt.tight_layout()
-plt.savefig("./Figures/Combined_constraints/test_envelope_GC_excl_highestE_bin.png")
+#plt.savefig("./Figures/Combined_constraints/test_envelope_GC_excl_highestE_bin.png")
 plt.title("Excluding highest-energy bin")
 plt.tight_layout()
 
 
 #%% Test: Plot Isatis constraints on Galactic centre photons for a monochromatic MF.
 
-m_pbh_values = 10**np.arange(11, 19.05, 0.1)
+m_pbh_values = 10**np.arange(11, 21.05, 0.1)
 Mmin = min(m_pbh_values)  # minimum PBH mass in your runs
 Mmax = max(m_pbh_values)  # maximum PBH mass in your runs
 
@@ -460,6 +452,30 @@ for j in range(len(m_pbh_values)):
     # use absolute value sign to not include unphysical cases with
     # f_PBH = -1 in the envelope
     envelope_evap_mono.append(min(abs(np.array(constraints_mono))))
+    
+    
+# compare to constraints calculated using isatis_reproduction.py
+constraints_names_comp = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+constraints_mono_calculated = []
+
+# Loop through instruments
+for i in range(len(constraints_names_comp)):
+
+    constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_comp[i])))
+
+    # Constraint from given instrument
+    constraint_extended_Carr = []
+    constraint_mono_Carr = []
+
+    for l in range(len(m_pbh_values)):
+        constraint_mass_m = []
+        for k in range(len(constraints_mono_file)):   # cycle over bins
+            constraint_mass_m.append(constraints_mono_file[k][l])
+
+        constraint_mono_Carr.append(min(constraint_mass_m))
+    
+    constraints_mono_calculated.append(constraint_mono_Carr)
+
 
 # Plot evaporation constraints loaded from Isatis, to check the envelope
 # works correctly
@@ -467,7 +483,10 @@ colors_evap = ["tab:blue", "tab:orange", "tab:red", "tab:green"]
 
 for i in range(len(constraints_names)):
     ax.plot(m_pbh_values, constraints_extended_plotting[i], label=constraints_names[i], color=colors_evap[i])
+    ax.plot(m_pbh_values, constraints_mono_calculated[i], color=colors_evap[i], linestyle="None", marker="x")
 ax.plot(m_pbh_values, envelope_evap_mono, label="Envelope", color="k", linestyle="dashed")
+ax.plot(0, 0, color="grey", label="Isatis")
+ax.plot(0, 0, marker="x", linestyle="None", color="grey", label="isatis_reproduction.py")
 ax.set_xlim(1e14, 1e18)
 ax.set_ylim(10**(-10), 1)
 ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
@@ -476,7 +495,7 @@ ax.set_xscale("log")
 ax.set_yscale("log")
 ax.legend(fontsize="small")
 plt.tight_layout()
-plt.savefig("./Figures/Combined_constraints/test_envelope_GC.png")
+#plt.savefig("./Figures/Combined_constraints/test_envelope_GC.png")
 
 
 #%% Test: compare results obtained using a LN MF using the method from 
@@ -512,7 +531,7 @@ if "__main__" == __name__:
         ax.set_xlim(m_min, m_max)
         ax.legend(fontsize="small", title="LN ($\sigma={:.3f})$".format(sigma))
         fig.tight_layout()
-        plt.savefig("./Figures/GC_constraints/test_LN_Carr_Isatis.png")
+        #plt.savefig("./Figures/GC_constraints/test_LN_Carr_Isatis.png")
     
 
 #%% Test: compare results obtained using a SLN MF using the method from 
@@ -553,7 +572,7 @@ if "__main__" == __name__:
         ax.set_xlim(m_min, m_max)
         ax.legend(fontsize="small", title="SLN ($\Delta={:.1f})$".format(Deltas[k]))
         fig.tight_layout()
-        plt.savefig("./Figures/GC_constraints/test_SLN_Carr_Isatis.png")
+        #plt.savefig("./Figures/GC_constraints/test_SLN_Carr_Isatis.png")
     
     
 #%% Test: compare results obtained using the CC3 MF using the method from 
@@ -594,17 +613,17 @@ if "__main__" == __name__:
         ax.set_xlim(m_min, m_max)
         ax.legend(fontsize="small", title="CC3 ($\Delta={:.1f})$".format(Deltas[k]))
         fig.tight_layout()
-        plt.savefig("./Figures/GC_constraints/test_CC3_Carr_Isatis.png")
+        #plt.savefig("./Figures/GC_constraints/test_CC3_Carr_Isatis.png")
 
 
 #%% Test: compare the MFs to those used in BlackHawk.
 if "__main__" == __name__:
-    mf = lognormal_number_density
+    mf = skew_LN
     
     check_index = 45   # corresponds to the value of m_c loaded
     Delta_index = 4    # corresponds to the value of Delta
-    sigma = 0.864
-    masses_mono = 10**np.arange(11, 19.05, 0.1)
+    sigma = 0.864    # standard deviation of lognormal mass function
+    masses_mono = 10**np.arange(11, 21.05, 0.1)
     
     if mf == lognormal_number_density:
         filename_append = "_LN_sigma={:.3f}".format(sigma)
@@ -622,13 +641,15 @@ if "__main__" == __name__:
     m_Isatis, mf_Isatis = data[0], data[1]
             
     fig, ax = plt.subplots()
-    ax.plot(m_Isatis, mf_Isatis)
-    ax.plot(masses_mono, mf_values)
+    ax.plot(m_Isatis, mf_Isatis, label="BlackHawk MF")
+    ax.plot(masses_mono, mf_values, label="Exact MF")
     ax.set_xlabel(r"$M_\mathrm{PBH}$ [g]")
     ax.set_ylabel(r"$\psi(M_\mathrm{PBH})$")
     ax.set_xscale("log")
     ax.set_yscale("log")
+    plt.legend(fontsize="small")
     plt.tight_layout()
+    #plt.savefig("./Figures/Test_plots/test_MF%s_index=%i.png" % (filename_append, check_index))
 
 #%% Test case: compare results obtained using a LN MF with sigma=0.5 to the
 # input skew LN MF with alpha=0
@@ -660,7 +681,7 @@ if "__main__" == __name__:
     ax.set_xlim(m_min, m_max)
     ax.legend(fontsize="small")
     fig.tight_layout()
-    plt.savefig("./Figures/GC_constraints/test_LN_SLN.png")
+    #plt.savefig("./Figures/GC_constraints/test_LN_SLN.png")
 
 
 #%% 
