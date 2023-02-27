@@ -312,7 +312,7 @@ sigma = 0.5
 
 if monochromatic_MF:
     filename_append = "_monochromatic"
-    m_pbh_values = 10**np.arange(11, 19.05, 0.1)
+    m_pbh_mono = 10**np.arange(11, 19.05, 0.1)
 
 
 f_PBH_isatis = []
@@ -354,7 +354,7 @@ if save_each_bin:
 n_refined = 500
 
 
-for i, m_pbh in enumerate(m_pbh_values):
+for i, m_pbh in enumerate(m_pbh_mono):
     # Load photon spectra from BlackHawk outputs
     exponent = np.floor(np.log10(m_pbh))
     coefficient = m_pbh / 10**exponent

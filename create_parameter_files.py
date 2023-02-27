@@ -24,10 +24,10 @@ BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
 # load default Isatis parameters file
 parameters = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, delimiter=" = ")
 
-masses_mono = 10**np.linspace(11, 19.05, 10000)
+m_pbh_values = 10**np.linspace(11, 19.05, 10000)
 mc_values = 10**np.arange(np.log10(mc_min), np.log10(mc_max), 0.1)
 
-BH_number = len(masses_mono)
+BH_number = len(m_pbh_values)
 E_number = 1000
 E_min = 1e-5
 E_max = 5   # maximum energy available in Hazma tables
@@ -141,12 +141,12 @@ for i, Delta in enumerate(Deltas):
         filename_BH_spec = "src/tables/users_spectra/" + append + "_{:.0f}.txt".format(j)
     
         if SLN_bool:
-            spec_values = skew_LN(masses_mono, m_c=m_c, sigma=sigmas[i], alpha=alphas_SL[i])
+            spec_values = skew_LN(m_pbh_values, m_c=m_c, sigma=sigmas[i], alpha=alphas_SL[i])
         elif CC3_bool:
-            spec_values = CC3(masses_mono, m_c, alphas_CC[i], betas[i])
+            spec_values = CC3(m_pbh_values, m_c, alphas_CC[i], betas[i])
 
-        for k in range(len(masses_mono)):
-            file.append("{:.5e}\t{:.5e}".format(masses_mono[k], spec_values[k]))
+        for k in range(len(m_pbh_values)):
+            file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
             
         np.savetxt(filename_BH_spec, file, fmt="%s", delimiter = " = ")
             
@@ -160,8 +160,8 @@ for i, Delta in enumerate(Deltas):
     
         parameters[0][1] = destination_folder + "\t\t\t\t\t\t\t\t\t\t"
         parameters[4][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(BH_number)
-        parameters[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(min(masses_mono))
-        parameters[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(max(masses_mono))
+        parameters[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(min(m_pbh_values))
+        parameters[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(max(m_pbh_values))
         parameters[15][1] = "-1\t\t\t\t\t\t\t\t\t\t"
         parameters[28][1] = append + "_{:.0f}.txt".format(j)
         parameters[34][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(E_number)
