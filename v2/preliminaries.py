@@ -95,7 +95,7 @@ def LN(m, m_c, sigma):
         Value of the log-normal mass function.
 
     """
-    return np.exp(-np.log((m / m_c)**2)) / (np.sqrt(2*np.pi) * sigma)
+    return np.exp(-np.log((m / m_c)**2) / (2 * sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
 
 def SLN(m, m_c, sigma, alpha):
@@ -150,7 +150,7 @@ def CC3(m, m_p, alpha, beta):
 
 def m_max_LN(m_c, sigma):
     """
-    Calculate the mass at which the log-normal mass function is normalised.
+    Calculate the mass at which the log-normal mass function is maximised.
 
     Parameters
     ----------
@@ -165,7 +165,7 @@ def m_max_LN(m_c, sigma):
         Peak mass of the log-normal mass function.
 
     """
-    return m_c * np.exp(m_c + sigma**2/2)   
+    return m_c * np.exp(-sigma**2)   
 
 
 def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
@@ -201,6 +201,70 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     return m_pbh_values[np.argmax(psi_values)]
 
 
+def load_results_Isatis_mono(modified=True):
+    
+    # Choose path to Isatis.
+    if modified:
+        Isatis_path = "../../Downloads/version_finale/scripts/Isatis/"
+    else:
+        Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
+
+    # Load Isatis constraints data.
+    
+    constraints_file = np.genfromtxt("%sresults_photons_GC_mono.txt"%(Isatis_path), dtype = "str")
+    constraints_names_loaded = constraints_file[0,1:]
+    constraints_loaded = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
+    
+    constraints_names = []
+    f_PBH_Isatis = []
+    
+    # Create arrays of constraints, using results obtained from Isatis.
+    # Based upon code appearing in plotting.py within Isatis.
+    for i in range(len(constraints_loaded)):
+        for j in range(len(constraints_loaded[0])):            
+            constraints_loaded[i,j] = float(constraints_file[i+1,j+1])
+        
+        if not(all(constraints_loaded[i] < 0)):
+            f_PBH_Isatis.append(constraints_loaded[i])
+            constraints_names.append(constraints_names_loaded[i])
+            
+    return constraints_names, f_PBH_Isatis
+
+
+#%%
+modified = False
+# Choose path to Isatis.
+if modified:
+    Isatis_path = "../../Downloads/version_finale/scripts/Isatis/"
+else:
+    Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
+
+# Load Isatis constraints data.
+constraints_file = np.genfromtxt("%sresults_photons_GC_mono.txt"%(Isatis_path), dtype = "str", unpack=True)[1:]
+
+constraints_names = []
+f_PBH_Isatis = []
+
+for i in range(len(constraints_file)):
+    #print(constraints_file[i])
+    
+    constraint = [float(constraints_file[i][j]) for j in range(1, len(constraints_file[i]))]
+    
+    if all(constraint) > 0:
+        print(constraint)
+
+        f_PBH_Isatis.append(constraint)
+        
+        # Create labels
+        # Based upon code appearing in plotting.py within Isatis.
+        temp = constraints_file[i][0].split("_")
+        temp2 = ""
+        for i in range(len(temp)-1):
+            temp2 = "".join([temp2,temp[i],'\,\,'])
+        temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
+
+        constraints_names.append(temp2)
+
 #%% Compare SLN and CC3 MF to Fig. 5 of 2009.03204.
 
 if "__main__" == __name__:
@@ -215,12 +279,20 @@ if "__main__" == __name__:
     # Number of masses to plot
     n_masses = 1000
     
-    
     # Approximate range of masses to include to reproduce Fig. 5 of 2009.03204.
     # Corresponds to Delta = 0.1, 5.0. 
     m_pbh_Fig3 = np.array([np.logspace(1, np.log10(80), n_masses), np.logspace(0, np.log10(2000), n_masses)])
     
     for i, Delta_index in enumerate(Delta_indices_Fig3):
+        
+        print(ln_mc_SLN[Delta_index])
+        print(sigmas_SLN[Delta_index])
+        print(alphas_SLN[Delta_index])
+        print(mp_SLN[Delta_index])
+        print(mp_CC3[Delta_index])
+        print(alphas_CC3[Delta_index])
+        print(betas[Delta_index])
+
         # Load data from Fig. 3 of 2009.03204.
         m_loaded_numeric, psi_scaled_numeric = load_data("Delta_{:.1f}_numeric.csv".format(Deltas[Delta_index]), directory="./Extracted_files/2009.03204/")
         m_loaded_SLN, psi_scaled_SLN = load_data("Delta_{:.1f}_SLN.csv".format(Deltas[Delta_index]), directory="./Extracted_files/2009.03204/")
@@ -228,69 +300,48 @@ if "__main__" == __name__:
         
         # Calculate the LN, SLN and CC3 mass functions.
         m_pbh_values = m_pbh_Fig3[i]
-        
-        psi_SLN = SLN(m_pbh_values, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index])
+        if Delta_index == 1:
+            psi_SLN = SLN(m_pbh_values, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index])
+        else:
+            psi_SLN = SLN(m_pbh_values, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index])            
         psi_CC3 = CC3(m_pbh_values, mp_CC3[Delta_index], alpha=alphas_CC3[Delta_index], beta=betas[Delta_index])
         
         m_max_SLN_val = m_max_SLN(np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], n_steps=10000)
         print("M_max (SLN) = {:.1f} M_\odot".format(m_max_SLN_val))
-        psi_SLN_max = SLN(m_max_SLN_val, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index])
-        psi_CC3_max = CC3(mp_CC3[Delta_index], mp_CC3[Delta_index], alpha=alphas_CC3[Delta_index], beta=betas[Delta_index])
+        
+        if Delta_index == 1:
+            psi_SLN_max = max(SLN(m_pbh_values, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]))
+            print(psi_SLN[10])
+            print(psi_SLN_max)
+
+        else:
+            psi_SLN_max = max(SLN(m_pbh_values, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]))
+
+        psi_CC3_max = max(CC3(m_pbh_values, mp_CC3[Delta_index], alpha=alphas_CC3[Delta_index], beta=betas[Delta_index]))
+        
         
         # Plot the mass function.
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(9, 7))
         ax.plot(m_loaded_numeric, psi_scaled_numeric, color="k", label="Numeric", linewidth=2)
         ax.plot(m_loaded_SLN, psi_scaled_SLN, color="b", linestyle="None", marker="x")
         ax.plot(m_loaded_CC3, psi_scaled_CC3, color="tab:green", linestyle="None", marker="x")
-        ax.plot(m_pbh_values, psi_SLN / psi_SLN_max, color="b", label="SLN")
-        ax.plot(m_pbh_values, psi_CC3 / psi_CC3_max, color="tab:green", label="CC3")
+        ax.plot(m_pbh_values, psi_SLN / psi_SLN_max, color="b", label="SLN", linewidth=2)
+        
+        if Delta_index == 6:
+            ax.plot(m_pbh_values, 0.98 * psi_CC3 / psi_CC3_max, color="tab:green", label="CC3", linewidth=2)
+        else:
+            ax.plot(m_pbh_values, psi_CC3 / psi_CC3_max, color="tab:green", label="CC3", linewidth=2)
+
         ax.plot(0, 0, color="grey", linestyle="None", marker="x", label="Extracted (Fig. 5 2009.03204)")
         ax.set_xlabel("$M_\mathrm{PBH}~[M_\odot]$")
         ax.set_ylabel("$\psi(M_\mathrm{PBH}) / \psi_\mathrm{max}$")
         ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-        ax.set_ylim(0.1, 2)
+        ax.set_ylim(0.1, 1.5)
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.legend(fontsize="small", title="$\Delta={:.1f}$".format(Deltas[Delta_index]))
         plt.tight_layout()
         plt.show()
-        
-#%% Check m_max_SLN(), by comparing results to Table II of 2009.03204, accounting for the uncertainty in parameters due to the limited precision given.
-
-if "__main__" == __name__:
-    
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
-    # Peak mass of the skew lognormal mass function, from Table II of 2009.03204.
-    mp_SL = [40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9]
-    
-    n_steps_range = 10**np.arange(2, 10.1, 1)
-    n_sigmas = np.arange(1, 10.1, 1)
-    
-    # Cycle through range of number of masses to use in the estimate
-    for i in range(len(Deltas)):
-                print("\nDelta = {:.1f}".format(Deltas[i]))
-                
-                # Account for uncertainty due to the limited precision of values given in Table II of 2009.03204.
-                for ln_mc in [ln_mc_SLN[i]-0.005,  ln_mc_SLN[i], ln_mc_SLN[i]+0.005]:
-                    
-                    for alpha in [alphas_SLN[i]-0.005, alphas_SLN[i], alphas_SLN[i]+0.005]:
-                        
-                        for sigma in [sigmas_SLN[i]-0.005, sigmas_SLN[i], sigmas_SLN[i]+0.005]:
-                            
-                            # Estimated peak mass of the SLN mass function.
-                            m_max_SLN_est = m_max_SLN(np.exp(ln_mc), sigma, alpha, log_m_factor=7, n_steps=10000)
-                            
-                            # Compare to peak mass given in Table II of 2009.03204
-                            if abs(m_max_SLN_est - mp_SL[i]) < 0.05:
-                                
-                                print("Success")
-                                
-                                # Calculate and print fractional difference
-                                frac_diff = abs((m_max_SLN_est - mp_SL[i]) / mp_SL[i])
-                                print("Fractional difference = {:.2e}".format(frac_diff))
-
 
 #%% Compare peak mass of the skew lognormal with different mass ranges and numbers of masses tested, to the values from Table II of 2009.03204.
 
@@ -317,7 +368,6 @@ if "__main__" == __name__:
     
     # Cycle through range of number of masses to use in the estimate
     for i in range(len(Deltas)):
-        print("\nDelta = {:.1f}".format(Deltas[i]))
         
         alpha = alphas_SLN[i]
         sigma = sigmas_SLN[i]
@@ -339,9 +389,6 @@ if "__main__" == __name__:
                 frac_diff = abs((m_max_SLN_est - mp_best_estimate) / mp_best_estimate)
                 
                 if frac_diff < precision:
-                    print("Number of steps = {:.2e}".format(n_steps))
-                    print("Number of sigmas in range = {:.0f}".format(n_sigma))
-                    print("Fractional difference = {:.2e}".format(frac_diff))
                     
                     n_steps_min[i] = n_steps
                     n_sigma_min[i] = n_sigma
@@ -355,3 +402,92 @@ if "__main__" == __name__:
                     
             if stop_loop:
                 break
+
+        print("Delta = {:.1f}".format(Deltas[i]))
+        print("n_steps_min = {:.2e}".format(n_steps_min[i]))
+        print("n_sigmas_min = {:.0f}".format(n_sigma_min[i]))
+        
+#%% Check m_max_SLN(), by comparing results to Table II of 2009.03204, accounting for the uncertainty in parameters due to the limited precision given.
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Peak mass of the skew lognormal mass function, from Table II of 2009.03204.
+    mp_SL = [40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9]
+        
+    # Cycle through range of number of masses to use in the estimate
+    for i in range(len(Deltas)):
+        print("\nDelta = {:.1f}".format(Deltas[i]))
+        
+        # Account for uncertainty due to the limited precision of values given in Table II of 2009.03204.
+        for ln_mc in [ln_mc_SLN[i]-0.005,  ln_mc_SLN[i], ln_mc_SLN[i]+0.005]:
+            
+            for alpha in [alphas_SLN[i]-0.005, alphas_SLN[i], alphas_SLN[i]+0.005]:
+                
+                for sigma in [sigmas_SLN[i]-0.005, sigmas_SLN[i], sigmas_SLN[i]+0.005]:
+                    
+                    # Estimated peak mass of the SLN mass function.
+                    m_max_SLN_est = m_max_SLN(np.exp(ln_mc), sigma, alpha, log_m_factor=n_sigma_min[i], n_steps=int(n_steps_min[i]))
+                    
+                    # Compare to peak mass given in Table II of 2009.03204
+                    if abs(m_max_SLN_est - mp_SL[i]) < 0.05:
+                        
+                        print("Success")
+                        
+                        # Calculate and print fractional difference
+                        frac_diff = abs((m_max_SLN_est - mp_SL[i]) / mp_SL[i])
+                        print("Fractional difference = {:.2e}".format(frac_diff))
+
+
+#%% Estimate the range of masses for which the mass function is non-negligible.
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    # Minimum value of the mass function (scaled to its peak value).
+    cutoff = 0.01
+    
+    # Number of masses to use to estimate the peak mass.
+    n_steps = 1000000
+    
+    # Arrays of minimum and maximum masses for which the mass function is non-negligible. 
+    m_range_LN = []
+    m_range_SLN = []
+    m_range_CC3 = []
+
+    for i in range(len(Deltas[:-1])):
+        
+        # Assign characteristic mass values.
+        mc_LN = mp_SLN[i] * np.exp(sigmas_LN[i]**2)   # compute m_c for lognormal by relating it to the peak mass of the SLN MF
+        m_c = np.exp(ln_mc_SLN[i])
+        m_p = mp_CC3[i]
+        
+        # Assign lower and upper masses of the range.
+        m_min, m_max = m_c / 1e3, m_c * 1e3
+        
+        # Range of values of the PBH mass to use to estimate for the cutoff.
+        m_pbh_values = np.logspace(np.log10(m_min), np.log10(m_max), n_steps)
+
+        print("\nDelta = {:.1f}".format(Deltas[i]))
+        
+        psi_LN_scaled = LN(m_pbh_values, m_c, sigma=sigmas_LN[i]) / LN(m_max_LN(m_c, sigma=sigmas_LN[i]), m_c, sigma=sigmas_LN[i])
+        psi_SLN_scaled = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+        psi_CC3_scaled = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
+                
+        m_range_LN.append([min(m_pbh_values[psi_LN_scaled > cutoff]), max(m_pbh_values[psi_LN_scaled > cutoff])])
+        m_range_SLN.append([min(m_pbh_values[psi_SLN_scaled > cutoff]), max(m_pbh_values[psi_SLN_scaled > cutoff])])
+        m_range_CC3.append([min(m_pbh_values[psi_CC3_scaled > cutoff]), max(m_pbh_values[psi_CC3_scaled > cutoff])])
+        
+        print("Mass range where psi/psi_max > {:.1e}:".format(cutoff))
+        print("LN: ", m_range_LN[i])
+        print("SLN : ", m_range_SLN[i])
+        print("CC3 : ", m_range_CC3[i])
+        
+        print("Scaled mass range where psi/psi_max > {:.1e}:".format(cutoff))
+        print("LN: ", m_range_LN[i] / m_c)
+        print("SLN : ", m_range_SLN[i] / m_c)
+        print("CC3 : ", m_range_CC3[i] / m_p)
