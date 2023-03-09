@@ -431,25 +431,32 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     # Minimum value of the mass function (scaled to its peak value).
-    cutoff = 0.01
+    cutoff = 0.1
     
     # Number of masses to use to estimate the peak mass.
     n_steps = 1000000
     
     # Number of orders of magnitude around the peak mass or characteristic mass to include in estimate
     log_m_range = 2
+        
+    # For saving to file
+    m_lower_LN = []
+    m_upper_LN = []
+    m_lower_SLN = []
+    m_upper_SLN = []
+    m_lower_CC3 = []
+    m_upper_CC3 = []
     
-    # Arrays of minimum and maximum masses for which the mass function is non-negligible. 
-    m_range_LN = []
-    m_range_SLN = []
-    m_range_CC3 = []
-
-    for i in range(len(Deltas[:-1])):
+    for i in range(len(Deltas)):
         
         # Assign characteristic mass values.
         mc_LN = mp_SLN[i] * np.exp(sigmas_LN[i]**2)   # compute m_c for lognormal by relating it to the peak mass of the SLN MF
         m_c = np.exp(ln_mc_SLN[i])
         m_p = mp_CC3[i]
+        
+        mc_LN = 1e20
+        m_c = 1e20
+        m_p = 1e20
         
         # Assign lower and upper masses of the range.
         m_min_LN, m_max_LN = mc_LN / 10**log_m_range, mc_LN * 10**log_m_range
@@ -466,17 +473,33 @@ if "__main__" == __name__:
         psi_LN_scaled = LN(m_pbh_values_LN, m_c, sigma=sigmas_LN[i]) / LN(m_peak_LN(m_c, sigma=sigmas_LN[i]), m_c, sigma=sigmas_LN[i])
         psi_SLN_scaled = SLN(m_pbh_values_SLN, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values_SLN, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
         psi_CC3_scaled = CC3(m_pbh_values_CC3, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
-                
-        m_range_LN.append([min(m_pbh_values_LN[psi_LN_scaled > cutoff]), max(m_pbh_values_LN[psi_LN_scaled > cutoff])])
-        m_range_SLN.append([min(m_pbh_values_SLN[psi_SLN_scaled > cutoff]), max(m_pbh_values_SLN[psi_SLN_scaled > cutoff])])
-        m_range_CC3.append([min(m_pbh_values_CC3[psi_CC3_scaled > cutoff]), max(m_pbh_values_CC3[psi_CC3_scaled > cutoff])])
-                
+        
+        # Arrays of minimum and maximum masses for which the mass function is non-negligible.
+        if Deltas[i] > 2.0:
+            m_range_LN = [0, 0]
+        else:
+            m_range_LN = [min(m_pbh_values_LN[psi_LN_scaled > cutoff]), max(m_pbh_values_LN[psi_LN_scaled > cutoff])]
+        m_range_SLN = [min(m_pbh_values_SLN[psi_SLN_scaled > cutoff]), max(m_pbh_values_SLN[psi_SLN_scaled > cutoff])]
+        m_range_CC3 = [min(m_pbh_values_CC3[psi_CC3_scaled > cutoff]), max(m_pbh_values_CC3[psi_CC3_scaled > cutoff])]
+                 
         print("Mass range where psi/psi_max > {:.1e}:".format(cutoff))
-        print("LN: ", m_range_LN[i])
-        print("SLN : ", m_range_SLN[i])
-        print("CC3 : ", m_range_CC3[i])
+        print("LN: ", m_range_LN)
+        print("SLN : ", m_range_SLN)
+        print("CC3 : ", m_range_CC3)
         
         print("Scaled mass range where psi/psi_max > {:.1e}:".format(cutoff))
-        print("LN: ", m_range_LN[i] / mc_LN)
-        print("SLN : ", m_range_SLN[i] / m_c)
-        print("CC3 : ", m_range_CC3[i] / m_p)
+        print("LN: ", np.array(m_range_LN) / mc_LN)
+        print("SLN : ", np.array(m_range_SLN) / m_c)
+        print("CC3 : ", np.array(m_range_CC3) / m_p)
+        
+        m_lower_LN.append(m_range_LN[0] / mc_LN)
+        m_upper_LN.append(m_range_LN[1] / mc_LN)
+        m_lower_SLN.append(m_range_SLN[0] / m_c)
+        m_upper_SLN.append(m_range_SLN[1] / m_c)
+        m_lower_CC3.append(m_range_CC3[0] / m_p)
+        m_upper_CC3.append(m_range_CC3[1] / m_p)
+        
+    file_header = "Cutoff={:.1e} \nDelta \t M_min / M_c (LN) \t M_max / M_c (LN) \t M_min / M_c (SLN) \t M_max / M_c (SLN) \t M_min / M_p (CC3) \t M_max / M_p (CC3)".format(cutoff)
+    mass_ranges = [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3]
+    np.savetxt("MF_scaled_mass_ranges.txt", np.column_stack(mass_ranges), delimiter="\t\t ", header=file_header, fmt="%.4f")        
+        
