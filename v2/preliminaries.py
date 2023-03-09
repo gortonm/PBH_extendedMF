@@ -183,12 +183,14 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     return m_pbh_values[np.argmax(psi_values)]
 
 
-def load_results_Isatis_mono(modified=True):
+def load_results_Isatis(mf_string="mono", modified=True):
     """
     Read in constraints on f_PBH, obtained using Isatis, with a monochromatic PBH mass function.
 
     Parameters
     ----------
+    mf_string : String, optional
+        The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and CC3 (critical collapse 3). 
     modified : Boolean, optional
         If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
 
@@ -207,7 +209,7 @@ def load_results_Isatis_mono(modified=True):
         Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
     
     # Load Isatis constraints data.
-    constraints_file = np.genfromtxt("%sresults_photons_GC_mono.txt"%(Isatis_path), dtype = "str", unpack=True)[1:]
+    constraints_file = np.genfromtxt("%sresults_photons_GC_%s.txt"%(Isatis_path, mf_string), dtype = "str", unpack=True)[1:]
     
     constraints_names = []
     f_PBH_Isatis = []
@@ -497,7 +499,7 @@ if "__main__" == __name__:
 # and compare to the results shown in Fig. 3 of 2201.01265.
 
 m_pbh_values = np.logspace(11, 21, 101)
-constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis_mono(modified=False)
+constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(modified=False)
 colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
 
 fig, ax = plt.subplots(figsize=(8, 8))
@@ -513,4 +515,3 @@ ax.set_xscale("log")
 ax.set_yscale("log")
 ax.legend(fontsize="small")
 plt.tight_layout()
-
