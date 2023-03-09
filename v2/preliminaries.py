@@ -190,7 +190,7 @@ def load_results_Isatis(mf_string="mono", modified=True):
     Parameters
     ----------
     mf_string : String, optional
-        The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and CC3 (critical collapse 3). 
+        The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and "CC3" (critical collapse 3), plus the value of the power spectrum width Delta. 
     modified : Boolean, optional
         If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
 
@@ -515,3 +515,52 @@ ax.set_xscale("log")
 ax.set_yscale("log")
 ax.legend(fontsize="small")
 plt.tight_layout()
+
+
+#%% Plot results for a monochromatic mass function, obtained using Isatis,
+# and compare to the results shown in Fig. 3 of 2201.01265.
+# Using the modified version of Isatis.
+
+m_pbh_values = np.logspace(11, 21, 101)
+constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(modified=True)
+colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+
+fig, ax = plt.subplots(figsize=(8, 8))
+
+for i in range(len(constraints_names_unmodified)):
+    ax.plot(m_pbh_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+
+ax.set_xlim(1e14, 1e18)
+ax.set_ylim(10**(-10), 1)
+ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+ax.set_ylabel("$f_\mathrm{PBH}$")
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.legend(fontsize="small")
+plt.tight_layout()
+
+
+
+#%% Plot results for a log-normal mass function, obtained using Isatis,
+# and compare to the results shown in Fig. 3 of 2201.01265.
+# Using the modified version of Isatis.
+
+mc_values = np.logspace(11, 21, 101)
+colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+
+for j in range(len(sigmas_LN[:-1])):
+    constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(mf_string="lognormal_sigma={:.3f}".format(sigmas_LN[j]), modified=True)    
+    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    for i in range(len(constraints_names_unmodified)):
+        ax.plot(m_pbh_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+    
+    ax.set_xlim(1e14, 1e18)
+    ax.set_ylim(10**(-10), 1)
+    ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend(fontsize="small")
+    plt.tight_layout()
+    
