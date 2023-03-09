@@ -89,7 +89,7 @@ def LN(m, m_c, sigma):
     Array-like
         Value of the log-normal mass function.
     """
-    return np.exp(-np.log((m / m_c)**2) / (2 * sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
+    return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) / (np.sqrt(2*np.pi) * sigma * m)
 
 
 def SLN(m, m_c, sigma, alpha):
@@ -110,7 +110,7 @@ def SLN(m, m_c, sigma, alpha):
     Array-like
         Value of the skew-lognormal mass function.
     """
-    return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf(alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
+    return np.exp(-np.log(m/m_c)**2 / (2*sigma**2)) * (1 + erf( alpha * np.log(m/m_c) / (np.sqrt(2) * sigma))) / (np.sqrt(2*np.pi) * sigma * m)
 
 
 def CC3(m, m_p, alpha, beta):
@@ -437,7 +437,7 @@ if "__main__" == __name__:
     n_steps = 1000000
     
     # Number of orders of magnitude around the peak mass or characteristic mass to include in estimate
-    log_m_range = 3
+    log_m_range = 2
     
     # Arrays of minimum and maximum masses for which the mass function is non-negligible. 
     m_range_LN = []
@@ -470,7 +470,7 @@ if "__main__" == __name__:
         m_range_LN.append([min(m_pbh_values_LN[psi_LN_scaled > cutoff]), max(m_pbh_values_LN[psi_LN_scaled > cutoff])])
         m_range_SLN.append([min(m_pbh_values_SLN[psi_SLN_scaled > cutoff]), max(m_pbh_values_SLN[psi_SLN_scaled > cutoff])])
         m_range_CC3.append([min(m_pbh_values_CC3[psi_CC3_scaled > cutoff]), max(m_pbh_values_CC3[psi_CC3_scaled > cutoff])])
-        
+                
         print("Mass range where psi/psi_max > {:.1e}:".format(cutoff))
         print("LN: ", m_range_LN[i])
         print("SLN : ", m_range_SLN[i])
