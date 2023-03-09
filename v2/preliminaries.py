@@ -184,68 +184,57 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
 
 
 def load_results_Isatis_mono(modified=True):
-    
+    """
+    Read in constraints on f_PBH, obtained using Isatis, with a monochromatic PBH mass function.
+
+    Parameters
+    ----------
+    modified : Boolean, optional
+        If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
+
+    Returns
+    -------
+    constraints_names : Array-like
+        Name of instrument and arxiv reference for constraint on PBHs.
+    f_PBH_Isatis : Array-like
+        Constraint on the fraction of dark matter in PBHs, calculated using Isatis.
+
+    """
     # Choose path to Isatis.
     if modified:
         Isatis_path = "../../Downloads/version_finale/scripts/Isatis/"
     else:
         Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
-
-    # Load Isatis constraints data.
     
-    constraints_file = np.genfromtxt("%sresults_photons_GC_mono.txt"%(Isatis_path), dtype = "str")
-    constraints_names_loaded = constraints_file[0,1:]
-    constraints_loaded = np.zeros([len(constraints_file)-1,len(constraints_file[0])-1])
+    # Load Isatis constraints data.
+    constraints_file = np.genfromtxt("%sresults_photons_GC_mono.txt"%(Isatis_path), dtype = "str", unpack=True)[1:]
     
     constraints_names = []
     f_PBH_Isatis = []
     
-    # Create arrays of constraints, using results obtained from Isatis.
-    # Based upon code appearing in plotting.py within Isatis.
-    for i in range(len(constraints_loaded)):
-        for j in range(len(constraints_loaded[0])):            
-            constraints_loaded[i,j] = float(constraints_file[i+1,j+1])
+    # Create array of constraints for which the constraints are physical
+    # (i.e. the constraints are non-zero and positive).
+    for i in range(len(constraints_file)):
         
-        if not(all(constraints_loaded[i] < 0)):
-            f_PBH_Isatis.append(constraints_loaded[i])
-            constraints_names.append(constraints_names_loaded[i])
+        constraint = [float(constraints_file[i][j]) for j in range(1, len(constraints_file[i]))]
+            
+        if not(all(np.array(constraint)<=0)):
+            print(constraint)
+    
+            f_PBH_Isatis.append(constraint)
+            
+            # Create labels
+            # Based upon code appearing in plotting.py within Isatis.
+            temp = constraints_file[i][0].split("_")
+            temp2 = ""
+            for i in range(len(temp)-1):
+                temp2 = "".join([temp2,temp[i],'\,\,'])
+            temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
+    
+            constraints_names.append(temp2)
             
     return constraints_names, f_PBH_Isatis
 
-
-#%% Code outside of method to use for loading Isatis data.
-modified = False
-# Choose path to Isatis.
-if modified:
-    Isatis_path = "../../Downloads/version_finale/scripts/Isatis/"
-else:
-    Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
-
-# Load Isatis constraints data.
-constraints_file = np.genfromtxt("%sresults_photons_GC_mono.txt"%(Isatis_path), dtype = "str", unpack=True)[1:]
-
-constraints_names = []
-f_PBH_Isatis = []
-
-for i in range(len(constraints_file)):
-    #print(constraints_file[i])
-    
-    constraint = [float(constraints_file[i][j]) for j in range(1, len(constraints_file[i]))]
-    
-    if all(constraint) > 0:
-        print(constraint)
-
-        f_PBH_Isatis.append(constraint)
-        
-        # Create labels
-        # Based upon code appearing in plotting.py within Isatis.
-        temp = constraints_file[i][0].split("_")
-        temp2 = ""
-        for i in range(len(temp)-1):
-            temp2 = "".join([temp2,temp[i],'\,\,'])
-        temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
-
-        constraints_names.append(temp2)
 
 #%% Compare SLN and CC3 MF to Fig. 5 of 2009.03204.
 
@@ -431,13 +420,13 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     # Minimum value of the mass function (scaled to its peak value).
-    cutoff = 0.1
+    cutoff = 1e-3
     
     # Number of masses to use to estimate the peak mass.
     n_steps = 1000000
     
     # Number of orders of magnitude around the peak mass or characteristic mass to include in estimate
-    log_m_range = 2
+    log_m_range = 4
         
     # For saving to file
     m_lower_LN = []
