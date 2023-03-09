@@ -136,7 +136,7 @@ def CC3(m, m_p, alpha, beta):
     return np.exp(log_psi)
 
 
-def m_max_LN(m_c, sigma):
+def m_peak_LN(m_c, sigma):
     """
     Calculate the mass at which the log-normal mass function is maximised.
     Parameters
@@ -436,6 +436,9 @@ if "__main__" == __name__:
     # Number of masses to use to estimate the peak mass.
     n_steps = 1000000
     
+    # Number of orders of magnitude around the peak mass or characteristic mass to include in estimate
+    log_m_range = 3
+    
     # Arrays of minimum and maximum masses for which the mass function is non-negligible. 
     m_range_LN = []
     m_range_SLN = []
@@ -449,20 +452,24 @@ if "__main__" == __name__:
         m_p = mp_CC3[i]
         
         # Assign lower and upper masses of the range.
-        m_min, m_max = m_c / 1e3, m_c * 1e3
-        
+        m_min_LN, m_max_LN = m_c / 10**log_m_range, m_c * 10**log_m_range
+        m_min_SLN, m_max_SLN = m_c / 10**log_m_range, m_c * 10**log_m_range
+        m_min_CC3, m_max_CC3 = m_p / 10**log_m_range, m_p * 10**log_m_range
+       
         # Range of values of the PBH mass to use to estimate for the cutoff.
-        m_pbh_values = np.logspace(np.log10(m_min), np.log10(m_max), n_steps)
+        m_pbh_values_LN = np.logspace(np.log10(m_min_LN), np.log10(m_max_LN), n_steps)
+        m_pbh_values_SLN = np.logspace(np.log10(m_min_SLN), np.log10(m_max_SLN), n_steps)
+        m_pbh_values_CC3 = np.logspace(np.log10(m_min_CC3), np.log10(m_max_CC3), n_steps)
 
         print("\nDelta = {:.1f}".format(Deltas[i]))
         
-        psi_LN_scaled = LN(m_pbh_values, m_c, sigma=sigmas_LN[i]) / LN(m_max_LN(m_c, sigma=sigmas_LN[i]), m_c, sigma=sigmas_LN[i])
-        psi_SLN_scaled = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
-        psi_CC3_scaled = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        psi_LN_scaled = LN(m_pbh_values_LN, m_c, sigma=sigmas_LN[i]) / LN(m_peak_LN(m_c, sigma=sigmas_LN[i]), m_c, sigma=sigmas_LN[i])
+        psi_SLN_scaled = SLN(m_pbh_values_SLN, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values_SLN, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+        psi_CC3_scaled = CC3(m_pbh_values_CC3, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
                 
-        m_range_LN.append([min(m_pbh_values[psi_LN_scaled > cutoff]), max(m_pbh_values[psi_LN_scaled > cutoff])])
-        m_range_SLN.append([min(m_pbh_values[psi_SLN_scaled > cutoff]), max(m_pbh_values[psi_SLN_scaled > cutoff])])
-        m_range_CC3.append([min(m_pbh_values[psi_CC3_scaled > cutoff]), max(m_pbh_values[psi_CC3_scaled > cutoff])])
+        m_range_LN.append([min(m_pbh_values_LN[psi_LN_scaled > cutoff]), max(m_pbh_values_LN[psi_LN_scaled > cutoff])])
+        m_range_SLN.append([min(m_pbh_values_SLN[psi_SLN_scaled > cutoff]), max(m_pbh_values_SLN[psi_SLN_scaled > cutoff])])
+        m_range_CC3.append([min(m_pbh_values_CC3[psi_CC3_scaled > cutoff]), max(m_pbh_values_CC3[psi_CC3_scaled > cutoff])])
         
         print("Mass range where psi/psi_max > {:.1e}:".format(cutoff))
         print("LN: ", m_range_LN[i])
