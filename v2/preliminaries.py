@@ -452,7 +452,7 @@ if "__main__" == __name__:
         m_p = mp_CC3[i]
         
         # Assign lower and upper masses of the range.
-        m_min_LN, m_max_LN = m_c / 10**log_m_range, m_c * 10**log_m_range
+        m_min_LN, m_max_LN = mc_LN / 10**log_m_range, mc_LN * 10**log_m_range
         m_min_SLN, m_max_SLN = m_c / 10**log_m_range, m_c * 10**log_m_range
         m_min_CC3, m_max_CC3 = m_p / 10**log_m_range, m_p * 10**log_m_range
        
