@@ -477,6 +477,6 @@ if "__main__" == __name__:
         print("CC3 : ", m_range_CC3[i])
         
         print("Scaled mass range where psi/psi_max > {:.1e}:".format(cutoff))
-        print("LN: ", m_range_LN[i] / m_c)
+        print("LN: ", m_range_LN[i] / mc_LN)
         print("SLN : ", m_range_SLN[i] / m_c)
         print("CC3 : ", m_range_CC3[i] / m_p)
