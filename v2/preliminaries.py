@@ -492,3 +492,25 @@ if "__main__" == __name__:
     mass_ranges = [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3]
     np.savetxt("MF_scaled_mass_ranges.txt", np.column_stack(mass_ranges), delimiter="\t\t ", header=file_header, fmt="%.4f")        
         
+
+#%% Plot results for a monochromatic mass function, obtained using Isatis,
+# and compare to the results shown in Fig. 3 of 2201.01265.
+
+m_pbh_values = np.logspace(11, 21, 101)
+constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis_mono(modified=False)
+colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+
+fig, ax = plt.subplots(figsize=(8, 8))
+
+for i in range(len(constraints_names_unmodified)):
+    ax.plot(m_pbh_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+
+ax.set_xlim(1e14, 1e18)
+ax.set_ylim(10**(-10), 1)
+ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+ax.set_ylabel("$f_\mathrm{PBH}$")
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.legend(fontsize="small")
+plt.tight_layout()
+
