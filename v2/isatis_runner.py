@@ -119,12 +119,12 @@ for i in range(len(Deltas)):
         if SLN_bool:
             parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_SLN[i] * m_c)
             parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_SLN[i] * m_c)
-            parameters_BlackHawk[15][1] = "5\t\t\t\t\t\t\t\t\t\t"
+            parameters_BlackHawk[15][1] = "-1\t\t\t\t\t\t\t\t\t\t"
             parameters_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
         if CC3_bool:
             parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_CC3[i] * m_c)
             parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_CC3[i] * m_c)
-            parameters_BlackHawk[15][1] = "1\t\t\t\t\t\t\t\t\t\t"
+            parameters_BlackHawk[15][1] = "-1\t\t\t\t\t\t\t\t\t\t"
             parameters_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
         parameters_BlackHawk[34][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(E_number)
         parameters_BlackHawk[35][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_min)
