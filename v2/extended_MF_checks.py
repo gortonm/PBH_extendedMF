@@ -74,7 +74,7 @@ if "__main__" == __name__:
     f_max = 1e-3
     
     # Monochromatic MF constraint (constant value of f_max = 1e-3 with PBH mass)
-    m_mono_values = np.logspace(15, 20, n_pbhs)
+    m_mono_values = np.logspace(14, 21, n_pbhs)
     f_max_values = f_max * np.ones(n_pbhs)
     
     # Extended mass function
@@ -101,35 +101,35 @@ if "__main__" == __name__:
     plt.tight_layout()
     
     
-    #%% Test: linearly decreasing constraint from monochromatic MF
-    if "__main__" == __name__:
-        
-        n_pbhs = 1000
-        f_max_0 = 1e-3
-        m_mono_0 = 1e17
-        
-        # Monochromatic MF constraint (constant value of f_max = 1e-3 with PBH mass)
-        m_mono_values = np.logspace(15, 20, n_pbhs)
-        f_max_values = f_max_0 * np.power(m_mono_values / m_mono_0, -1)
-        
-        # Extended mass function
-        n_mc_values = 100
-        mc_values = np.logspace(15, 20, n_mc_values)
-        
-        # Width of log-normal mass function
-        sigma_LN = 0.5
-        
-        # Estimated constraint from extended mass function.
-        f_pbh = constraint_Carr(mc_values, m_mono_values, f_max_values, LN, [sigma_LN])
-        
-        # Exact constraint from extended mass function.
-        f_pbh_exact = np.power(-0.5 * (mc_values / m_mono_0) * (1/f_max_0) * np.exp(sigma_LN**2/2) * ( erf( (sigma_LN**2 - np.log(max(m_mono_values)/mc_values)) / (sigma_LN*np.sqrt(2))) - erf( (sigma_LN**2 - np.log(min(m_mono_values)/mc_values)) / (sigma_LN*np.sqrt(2)))), -1)
+#%% Test: linearly decreasing constraint from monochromatic MF
+if "__main__" == __name__:
+    
+    n_pbhs = 1000
+    f_max_0 = 1e-3
+    m_mono_0 = 1e17
+    
+    # Monochromatic MF constraint (constant value of f_max = 1e-3 with PBH mass)
+    m_mono_values = np.logspace(15, 20, n_pbhs)
+    f_max_values = f_max_0 * np.power(m_mono_values / m_mono_0, -1)
+    
+    # Extended mass function
+    n_mc_values = 100
+    mc_values = np.logspace(15, 20, n_mc_values)
+    
+    # Width of log-normal mass function
+    sigma_LN = 0.5
+    
+    # Estimated constraint from extended mass function.
+    f_pbh = constraint_Carr(mc_values, m_mono_values, f_max_values, LN, [sigma_LN])
+    
+    # Exact constraint from extended mass function.
+    f_pbh_exact = np.power(-0.5 * (mc_values / m_mono_0) * (1/f_max_0) * np.exp(sigma_LN**2/2) * ( erf( (sigma_LN**2 - np.log(max(m_mono_values)/mc_values)) / (sigma_LN*np.sqrt(2))) - erf( (sigma_LN**2 - np.log(min(m_mono_values)/mc_values)) / (sigma_LN*np.sqrt(2)))), -1)
 
-        fig, ax = plt.subplots(figsize=(6, 5))
-        ax.plot(mc_values, f_pbh, marker="x", linestyle="None")
-        ax.plot(mc_values, f_pbh_exact, linestyle="dotted", color="r")
-        ax.set_xlabel("$M_c$")
-        ax.set_ylabel("$f_\mathrm{PBH}$")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        plt.tight_layout()
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(mc_values, f_pbh, marker="x", linestyle="None")
+    ax.plot(mc_values, f_pbh_exact, linestyle="dotted", color="r")
+    ax.set_xlabel("$M_c$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    plt.tight_layout()
