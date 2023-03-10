@@ -72,7 +72,13 @@ for i in range(len(Deltas)):
         append = "GC_SLN_Delta={:.1f}".format(Deltas[i])
     elif CC3_bool:
         append = "GC_CC3_Delta={:.1f}".format(Deltas[i])
-    
+        
+    # Create runs file
+    runs_filename = "runs_%s.txt" % append
+    runs_file_content = []
+    runs_file_content.append("nb_runs = {:.0f}".format(len(mc_values)))
+    runs_file_content.append("")
+
     # Save Isatis parameters file.
     parameters_Isatis[0][1] = append + "\t\t\t\t\t\t\t\t\t\t"
     filename_parameters_Isatis = "parameters_GC_LN_Delta={:.1f}.txt".format(Deltas[i])
@@ -100,10 +106,12 @@ for i in range(len(Deltas)):
                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
             np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")
 
-
         destination_folder = append + "_{:.0f}".format(j)
         filename_BlackHawk = "/BH_launcher/" + destination_folder + ".txt"
         filepath_Isatis = BlackHawk_path + "results/" + destination_folder
+        
+        # Add run name to runs file
+        runs_file_content.append(append + "_{:.0f}".format(j))
                             
         if not os.path.exists(filepath_Isatis):
             os.makedirs(filepath_Isatis)
@@ -139,7 +147,10 @@ for i in range(len(Deltas)):
         command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + destination_folder + ".txt<input.txt"
         os.system(command)
             
+    # Save runs file
+    np.savetxt(BlackHawk_path + "scripts/Isatis/BH_launcher/%s" % runs_filename, runs_file_content, fmt="%s")
+    
     # Run Isatis
     os.chdir("./scripts/Isatis")
-    command = "./Isatis.x %s %s" % (filename_parameters_Isatis, filename_BlackHawk)
+    command = "./Isatis.x %s ./BH_launcher/%s" % (filename_parameters_Isatis, runs_filename)
     os.system(command)
