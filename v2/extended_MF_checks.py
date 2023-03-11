@@ -67,6 +67,23 @@ def constraint_Carr(mc_values, m_mono, f_max, mf, params):
     return f_pbh
 
 
+def envelope(constraints):
+    
+    tightest = np.ones(len(constraints[0]))
+    
+    for i in range(len(constraints[0])):
+        
+        constraints_values = []
+        
+        for j in range(len(constraints)):
+            constraints_values.append(abs(constraints[j][i]))
+        
+        tightest[i] = min(constraints_values)
+    
+    return tightest
+        
+
+
 #%% Test: constant constraint from monochromatic MF
 if "__main__" == __name__:
     
@@ -161,16 +178,23 @@ if "__main__" == __name__:
 #%% Plot results for a monochromatic mass function, obtained using Isatis,
 # and compare to the results shown in Fig. 3 of 2201.01265.
 # Using the modified version of Isatis.
+# Include test of the envelope() function
+
 if "__main__" == __name__:
     
     m_pbh_values = np.logspace(11, 21, 1000)
     constraints_names, f_PBH_Isatis = load_results_Isatis(modified=True)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
     fig, ax = plt.subplots(figsize=(8, 8))
     
     for i in range(len(constraints_names)):
         ax.plot(m_pbh_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
+    
+        constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+        ax.plot(m_pbh_values, envelope(constraints_mono_file), marker="x", color=colors_evap[i])
+    
     
     ax.set_xlim(1e14, 1e18)
     ax.set_ylim(10**(-10), 1)
