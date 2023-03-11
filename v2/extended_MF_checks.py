@@ -166,13 +166,13 @@ if "__main__" == __name__:
 if "__main__" == __name__:
 
     m_pbh_values = np.logspace(11, 21, 101)
-    constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(modified=True)
+    constraints_names, f_PBH_Isatis = load_results_Isatis(modified=True)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     
     fig, ax = plt.subplots(figsize=(8, 8))
     
     for i in range(len(constraints_names_unmodified)):
-        ax.plot(m_pbh_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+        ax.plot(m_pbh_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
     
     ax.set_xlim(1e14, 1e18)
     ax.set_ylim(10**(-10), 1)
@@ -196,11 +196,13 @@ if "__main__" == __name__:
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     
     for j in range(len(sigmas_LN[:-1])):
-        constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    
+        
+        constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    
+        
         fig, ax = plt.subplots(figsize=(8, 8))
         
-        for i in range(len(constraints_names_unmodified)):
-            ax.plot(mc_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+        for i in range(len(constraints_names)):
+            ax.plot(mc_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
         
         ax.set_xlim(1e14, 1e18)
         ax.set_ylim(10**(-10), 1)
