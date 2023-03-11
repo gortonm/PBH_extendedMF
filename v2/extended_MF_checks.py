@@ -133,3 +133,81 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     plt.tight_layout()
+    
+    
+
+
+#%% Plot results for a monochromatic mass function, obtained using Isatis,
+# and compare to the results shown in Fig. 3 of 2201.01265.
+if "__main__" == __name__:
+
+    m_pbh_values = np.logspace(11, 21, 101)
+    constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(modified=False)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    
+    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    for i in range(len(constraints_names_unmodified)):
+        ax.plot(m_pbh_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+    
+    ax.set_xlim(1e14, 1e18)
+    ax.set_ylim(10**(-10), 1)
+    ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend(fontsize="small")
+    plt.tight_layout()
+
+
+#%% Plot results for a monochromatic mass function, obtained using Isatis,
+# and compare to the results shown in Fig. 3 of 2201.01265.
+# Using the modified version of Isatis.
+if "__main__" == __name__:
+
+    m_pbh_values = np.logspace(11, 21, 101)
+    constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(modified=True)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    
+    fig, ax = plt.subplots(figsize=(8, 8))
+    
+    for i in range(len(constraints_names_unmodified)):
+        ax.plot(m_pbh_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+    
+    ax.set_xlim(1e14, 1e18)
+    ax.set_ylim(10**(-10), 1)
+    ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend(fontsize="small")
+    plt.tight_layout()
+
+
+#%% Plot results for a log-normal mass function, obtained using Isatis,
+# and compare to the results shown in Fig. 3 of 2201.01265.
+# Using the modified version of Isatis.
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    mc_values = np.logspace(14, 19, 100)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    
+    for j in range(len(sigmas_LN[:-1])):
+        constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    
+        fig, ax = plt.subplots(figsize=(8, 8))
+        
+        for i in range(len(constraints_names_unmodified)):
+            ax.plot(mc_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+        
+        ax.set_xlim(1e14, 1e18)
+        ax.set_ylim(10**(-10), 1)
+        ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(fontsize="small")
+        plt.tight_layout()
+        
