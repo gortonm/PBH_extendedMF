@@ -135,13 +135,11 @@ if "__main__" == __name__:
     plt.tight_layout()
     
     
-
-
 #%% Plot results for a monochromatic mass function, obtained using Isatis,
 # and compare to the results shown in Fig. 3 of 2201.01265.
 if "__main__" == __name__:
 
-    m_pbh_values = np.logspace(11, 21, 101)
+    m_pbh_values = np.logspace(11, 21, 1000)
     constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(modified=False)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     
@@ -164,14 +162,14 @@ if "__main__" == __name__:
 # and compare to the results shown in Fig. 3 of 2201.01265.
 # Using the modified version of Isatis.
 if "__main__" == __name__:
-
-    m_pbh_values = np.logspace(11, 21, 101)
+    
+    m_pbh_values = np.logspace(11, 21, 1000)
     constraints_names, f_PBH_Isatis = load_results_Isatis(modified=True)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     
     fig, ax = plt.subplots(figsize=(8, 8))
     
-    for i in range(len(constraints_names_unmodified)):
+    for i in range(len(constraints_names)):
         ax.plot(m_pbh_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
     
     ax.set_xlim(1e14, 1e18)
@@ -195,18 +193,29 @@ if "__main__" == __name__:
     mc_values = np.logspace(14, 19, 100)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     
+    m_mono_values = np.logspace(11, 21, 1000)
+    
     for j in range(len(sigmas_LN[:-1])):
         
+        # Constraints calculated using Isatis.
         constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    
+        
+        # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
+        constraints_names, f_max = load_results_Isatis(modified=True)
+        params_LN = [sigmas_LN[j]]
         
         fig, ax = plt.subplots(figsize=(8, 8))
         
         for i in range(len(constraints_names)):
             ax.plot(mc_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
+            
+            # Calculate constraint using method from 1705.05567, and plot.
+            f_PBH_Carr = constraint_Carr(mc_values, m_mono_values, f_max[i], LN, params_LN)
+            ax.plot(mc_values, f_PBH_Carr, marker="x", linestyle="None", color=colors_evap[i])
         
         ax.set_xlim(1e14, 1e18)
         ax.set_ylim(10**(-10), 1)
-        ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+        ax.set_xlabel("$M_c~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
