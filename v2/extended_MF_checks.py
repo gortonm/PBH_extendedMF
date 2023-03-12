@@ -279,7 +279,7 @@ if "__main__" == __name__:
     
     for j in range(len(sigmas_LN[:-1])):
         
-        if j==0 or j==5:
+        if j==5:
         
             # Constraints calculated using Isatis.
             constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    

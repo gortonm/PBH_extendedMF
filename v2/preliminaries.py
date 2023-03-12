@@ -183,7 +183,7 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     return m_pbh_values[np.argmax(psi_values)]
 
 
-def load_results_Isatis(mf_string="mono", modified=True):
+def load_results_Isatis(mf_string="mono", modified=True, test_mass_range=False):
     """
     Read in constraints on f_PBH, obtained using Isatis, with a monochromatic PBH mass function.
 
@@ -193,6 +193,8 @@ def load_results_Isatis(mf_string="mono", modified=True):
         The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and "CC3" (critical collapse 3), plus the value of the power spectrum width Delta. 
     modified : Boolean, optional
         If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
+    test_mass_range : Boolean, optional
+        If True, use data obtained using the same method as for the constraints from 1705.05567.
 
     Returns
     -------
@@ -208,6 +210,9 @@ def load_results_Isatis(mf_string="mono", modified=True):
     else:
         Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
     
+    if test_mass_range:
+        mf_string += "_testmassrange"
+    
     # Load Isatis constraints data.
     constraints_file = np.genfromtxt("%sresults_photons_GC_%s.txt"%(Isatis_path, mf_string), dtype = "str", unpack=True)[1:]
     
@@ -217,7 +222,7 @@ def load_results_Isatis(mf_string="mono", modified=True):
     # Create array of constraints for which the constraints are physical
     # (i.e. the constraints are non-zero and positive).
     for i in range(len(constraints_file)):
-        
+
         constraint = [float(constraints_file[i][j]) for j in range(1, len(constraints_file[i]))]
             
         if not(all(np.array(constraint)<=0)):
@@ -422,7 +427,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     # Minimum value of the mass function (scaled to its peak value).
-    cutoff = 1e-3
+    cutoff = 1e-5
     
     # Number of masses to use to estimate the peak mass.
     n_steps = 1000000
