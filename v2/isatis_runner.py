@@ -82,7 +82,7 @@ for i in range(len(Deltas)):
             append = "GC_CC3_Delta={:.1f}".format(Deltas[i])
         
         if test_mass_range:
-            append += "_test_massrange"
+            append += "_testmassrange"
                     
         # Create runs file
         runs_filename = "runs_%s.txt" % append
