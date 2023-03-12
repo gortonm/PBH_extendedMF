@@ -22,6 +22,13 @@ log_normal = True
 SLN_bool = False
 CC3_bool = False
 
+# Controls whether to use a range of PBH masses that matches those used
+# in isatis_reproduction. Use for comparing to the results obtained using 
+# the method from 1705.05567.
+test_mass_range = True
+if test_mass_range:
+    m_lower_test, m_upper_test = 1e11, 1e21
+
 # Load mass function parameters.
 [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
@@ -65,14 +72,17 @@ parameters_Isatis[9][1] = "{:.2f}\t\t\t\t\t\t\t\t\t\t".format(gamma_halo)
 parameters_Isatis[14][1] = "1\t\t\t\t\t\t\t\t\t\t"   
     
 for i in range(len(Deltas)):
-      
+        
     if log_normal:
         append = "GC_LN_Delta={:.1f}".format(Deltas[i])
     elif SLN_bool:
         append = "GC_SLN_Delta={:.1f}".format(Deltas[i])
     elif CC3_bool:
         append = "GC_CC3_Delta={:.1f}".format(Deltas[i])
-        
+    
+    if test_mass_range:
+        append += "_test_mass_range"
+                
     # Create runs file
     runs_filename = "runs_%s.txt" % append
     runs_file_content = []
@@ -81,7 +91,7 @@ for i in range(len(Deltas)):
 
     # Save Isatis parameters file.
     parameters_Isatis[0][1] = append + "\t\t\t\t\t\t\t\t\t\t"
-    filename_parameters_Isatis = "parameters_GC_LN_Delta={:.1f}.txt".format(Deltas[i])
+    filename_parameters_Isatis = "parameters_%s.txt" % append
     np.savetxt(Isatis_path + filename_parameters_Isatis, parameters_Isatis, fmt="%s", delimiter = " = ")
 
     for j, m_c in enumerate(mc_values):
@@ -138,6 +148,10 @@ for i in range(len(Deltas)):
         parameters_BlackHawk[35][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_min)
         parameters_BlackHawk[36][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_max)
         parameters_BlackHawk[-1][1] = "3\t\t\t\t\t\t\t\t\t\t"
+        
+        if test_mass_range:
+            parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_test)
+            parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_test)
         
         # Save BlackHawk parameters file.
         np.savetxt(Isatis_path + filename_BlackHawk, parameters_BlackHawk, fmt="%s", delimiter = " = ")
