@@ -72,99 +72,103 @@ parameters_Isatis[9][1] = "{:.2f}\t\t\t\t\t\t\t\t\t\t".format(gamma_halo)
 parameters_Isatis[14][1] = "1\t\t\t\t\t\t\t\t\t\t"   
     
 for i in range(len(Deltas)):
-        
-    if log_normal:
-        append = "GC_LN_Delta={:.1f}".format(Deltas[i])
-    elif SLN_bool:
-        append = "GC_SLN_Delta={:.1f}".format(Deltas[i])
-    elif CC3_bool:
-        append = "GC_CC3_Delta={:.1f}".format(Deltas[i])
     
-    if test_mass_range:
-        append += "_test_mass_range"
-                
-    # Create runs file
-    runs_filename = "runs_%s.txt" % append
-    runs_file_content = []
-    runs_file_content.append("nb_runs = {:.0f}".format(len(mc_values)))
-    runs_file_content.append("")
-
-    # Save Isatis parameters file.
-    parameters_Isatis[0][1] = append + "\t\t\t\t\t\t\t\t\t\t"
-    filename_parameters_Isatis = "parameters_%s.txt" % append
-    np.savetxt(Isatis_path + filename_parameters_Isatis, parameters_Isatis, fmt="%s", delimiter = " = ")
-
-    for j, m_c in enumerate(mc_values):
-        
-        spec_file = []
-        spec_file.append(spec_file_initial_line)
-        filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + append + "_{:.0f}.txt".format(j)
-
-        if SLN_bool:
-            # Create and save file for PBH mass and spin distribution
-            m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), m_upper_SLN[i] * m_c, BH_number)
-            spec_values = SLN(m_pbh_values, m_c=m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])         
-            for k in range(len(m_pbh_values)):
-                spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
-            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")
-                
-        if CC3_bool:
-            # Create and save file for PBH mass and spin distribution
-            m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), m_upper_CC3[i] * m_c, BH_number)
-            spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
-            for k in range(len(m_pbh_values)):
-                spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
-            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")
-
-        destination_folder = append + "_{:.0f}".format(j)
-        filename_BlackHawk = "/BH_launcher/" + destination_folder + ".txt"
-        filepath_Isatis = BlackHawk_path + "results/" + destination_folder
-        
-        # Add run name to runs file
-        runs_file_content.append(append + "_{:.0f}".format(j))
-                            
-        if not os.path.exists(filepath_Isatis):
-            os.makedirs(filepath_Isatis)
-    
-        parameters_BlackHawk[0][1] = destination_folder + "\t\t\t\t\t\t\t\t\t\t"
-        parameters_BlackHawk[4][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(BH_number)
+    if i == 5:
         if log_normal:
-            parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_LN[i] * m_c)
-            parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_LN[i] * m_c)
-            parameters_BlackHawk[15][1] = "1\t\t\t\t\t\t\t\t\t\t"
-            parameters_BlackHawk[19][1] = "{:.3f}\t\t\t\t\t\t\t\t\t\t".format(sigmas_LN[i])
-            parameters_BlackHawk[20][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_c)
-        if SLN_bool:
-            parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_SLN[i] * m_c)
-            parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_SLN[i] * m_c)
-            parameters_BlackHawk[15][1] = "-1\t\t\t\t\t\t\t\t\t\t"
-            parameters_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
-        if CC3_bool:
-            parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_CC3[i] * m_c)
-            parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_CC3[i] * m_c)
-            parameters_BlackHawk[15][1] = "-1\t\t\t\t\t\t\t\t\t\t"
-            parameters_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
-        parameters_BlackHawk[34][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(E_number)
-        parameters_BlackHawk[35][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_min)
-        parameters_BlackHawk[36][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_max)
-        parameters_BlackHawk[-1][1] = "3\t\t\t\t\t\t\t\t\t\t"
+            append = "GC_LN_Delta={:.1f}".format(Deltas[i])
+        elif SLN_bool:
+            append = "GC_SLN_Delta={:.1f}".format(Deltas[i])
+        elif CC3_bool:
+            append = "GC_CC3_Delta={:.1f}".format(Deltas[i])
         
         if test_mass_range:
-            parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_test)
-            parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_test)
-        
-        # Save BlackHawk parameters file.
-        np.savetxt(Isatis_path + filename_BlackHawk, parameters_BlackHawk, fmt="%s", delimiter = " = ")
-        
-        # Run BlackHawk
-        os.chdir(BlackHawk_path)
-        command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + destination_folder + ".txt<input.txt"
-        os.system(command)
-            
-    # Save runs file
-    np.savetxt(BlackHawk_path + "scripts/Isatis/BH_launcher/%s" % runs_filename, runs_file_content, fmt="%s")
+            append += "_test_massrange"
+                    
+        # Create runs file
+        runs_filename = "runs_%s.txt" % append
+        runs_file_content = []
+        runs_file_content.append("nb_runs = {:.0f}".format(len(mc_values)))
+        runs_file_content.append("")
     
-    # Run Isatis
-    os.chdir("./scripts/Isatis")
-    command = "./Isatis.x %s ./BH_launcher/%s" % (filename_parameters_Isatis, runs_filename)
-    os.system(command)
+        # Save Isatis parameters file.
+        parameters_Isatis[0][1] = append + "\t\t\t\t\t\t\t\t\t\t"
+        filename_parameters_Isatis = "parameters_%s.txt" % append
+        np.savetxt(Isatis_path + filename_parameters_Isatis, parameters_Isatis, fmt="%s", delimiter = " = ")
+    
+        for j, m_c in enumerate(mc_values):
+            
+            spec_file = []
+            spec_file.append(spec_file_initial_line)
+            filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + append + "_{:.0f}.txt".format(j)
+    
+            if SLN_bool:
+                # Create and save file for PBH mass and spin distribution
+                m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), m_upper_SLN[i] * m_c, BH_number)
+                spec_values = SLN(m_pbh_values, m_c=m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])         
+                for k in range(len(m_pbh_values)):
+                    spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
+                np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")
+                    
+            if CC3_bool:
+                # Create and save file for PBH mass and spin distribution
+                m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), m_upper_CC3[i] * m_c, BH_number)
+                spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
+                for k in range(len(m_pbh_values)):
+                    spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
+                np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")
+    
+            destination_folder = append + "_{:.0f}".format(j)
+            filename_BlackHawk = "/BH_launcher/" + destination_folder + ".txt"
+            filepath_Isatis = BlackHawk_path + "results/" + destination_folder
+            # Add run name to runs file
+            runs_file_content.append(append + "_{:.0f}".format(j))
+                                
+            if not os.path.exists(filepath_Isatis):
+                os.makedirs(filepath_Isatis)
+        
+            parameters_BlackHawk[0][1] = destination_folder + "\t\t\t\t\t\t\t\t\t\t"
+            parameters_BlackHawk[4][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(BH_number)
+            if log_normal:
+                parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_LN[i] * m_c)
+                parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_LN[i] * m_c)
+                parameters_BlackHawk[15][1] = "1\t\t\t\t\t\t\t\t\t\t"
+                parameters_BlackHawk[19][1] = "{:.3f}\t\t\t\t\t\t\t\t\t\t".format(sigmas_LN[i])
+                parameters_BlackHawk[20][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_c)
+            if SLN_bool:
+                parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_SLN[i] * m_c)
+                parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_SLN[i] * m_c)
+                parameters_BlackHawk[15][1] = "-1\t\t\t\t\t\t\t\t\t\t"
+                parameters_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
+            if CC3_bool:
+                parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_CC3[i] * m_c)
+                parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_CC3[i] * m_c)
+                parameters_BlackHawk[15][1] = "-1\t\t\t\t\t\t\t\t\t\t"
+                parameters_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
+            parameters_BlackHawk[34][1] = "{:.0f}\t\t\t\t\t\t\t\t\t\t".format(E_number)
+            parameters_BlackHawk[35][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_min)
+            parameters_BlackHawk[36][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(E_max)
+            parameters_BlackHawk[-1][1] = "3\t\t\t\t\t\t\t\t\t\t"
+            
+            if test_mass_range:
+                parameters_BlackHawk[5][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_lower_test)
+                parameters_BlackHawk[6][1] = "{:.5e}\t\t\t\t\t\t\t\t\t\t".format(m_upper_test)
+                
+                print(destination_folder + "\t\t\t\t\t\t\t\t\t\t")
+                print(len(destination_folder + "\t\t\t\t\t\t\t\t\t\t"))
+                print(parameters_BlackHawk[0][1])
+            
+            # Save BlackHawk parameters file.
+            np.savetxt(Isatis_path + filename_BlackHawk, parameters_BlackHawk, fmt="%s", delimiter = " = ")
+            
+            # Run BlackHawk
+            os.chdir(BlackHawk_path)
+            command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + destination_folder + ".txt<input.txt"
+            os.system(command)
+                
+        # Save runs file
+        np.savetxt(BlackHawk_path + "scripts/Isatis/BH_launcher/%s" % runs_filename, runs_file_content, fmt="%s")
+        
+        # Run Isatis
+        os.chdir("./scripts/Isatis")
+        command = "./Isatis.x %s ./BH_launcher/%s" % (filename_parameters_Isatis, runs_filename)
+        os.system(command)
