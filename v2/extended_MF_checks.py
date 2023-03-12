@@ -68,7 +68,22 @@ def constraint_Carr(mc_values, m_mono, f_max, mf, params):
 
 
 def envelope(constraints):
-    
+    """
+    Calculate the tightest constraint at a given mass, from a set of 
+    constraints.
+
+    Parameters
+    ----------
+    constraints : Array-like
+        Constraints on PBH abundance. All should have the same length and be
+        evaluated at the same PBH mass.
+
+    Returns
+    -------
+    tightest : Array-like
+        Tightest constraint at mass, from the constraints given in the input.
+
+    """
     tightest = np.ones(len(constraints[0]))
     
     for i in range(len(constraints[0])):
