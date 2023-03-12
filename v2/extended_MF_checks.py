@@ -81,7 +81,7 @@ def envelope(constraints):
     Returns
     -------
     tightest : Array-like
-        Tightest constraint at mass, from the constraints given in the input.
+        Tightest constraint, from the constraints given in the input.
 
     """
     tightest = np.ones(len(constraints[0]))
@@ -171,7 +171,7 @@ if "__main__" == __name__:
 # and compare to the results shown in Fig. 3 of 2201.01265.
 if "__main__" == __name__:
 
-    m_pbh_values = np.logspace(11, 21, 1000)
+    m_pbh_values = np.logspace(11, 21, 101)
     constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(modified=False)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     
@@ -193,7 +193,7 @@ if "__main__" == __name__:
 #%% Plot results for a monochromatic mass function, obtained using Isatis,
 # and compare to the results shown in Fig. 3 of 2201.01265.
 # Using the modified version of Isatis.
-# Include test of the envelope() function
+# Includes test of the envelope() function.
 
 if "__main__" == __name__:
     
@@ -207,9 +207,9 @@ if "__main__" == __name__:
     for i in range(len(constraints_names)):
         ax.plot(m_pbh_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
     
+        # Constraints data for each energy bin of each instrument.
         constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
         ax.plot(m_pbh_values, envelope(constraints_mono_file), marker="x", color=colors_evap[i])
-    
     
     ax.set_xlim(1e14, 1e18)
     ax.set_ylim(10**(-10), 1)
@@ -240,6 +240,7 @@ if "__main__" == __name__:
         constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    
         
         # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
+        # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
         constraints_names, f_max = load_results_Isatis(modified=True)
         params_LN = [sigmas_LN[j]]
         
@@ -260,4 +261,65 @@ if "__main__" == __name__:
         ax.set_yscale("log")
         ax.legend(fontsize="small")
         plt.tight_layout()
+
+
+#%% Plot results for a log-normal mass function, obtained using Isatis,
+# and compare to the results shown in Fig. 3 of 2201.01265.
+# Using the modified version of Isatis.
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    mc_values = np.logspace(14, 19, 100)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    
+    m_mono_values = np.logspace(11, 21, 1000)
+    
+    for j in range(len(sigmas_LN[:-1])):
         
+        if j==0 or j==5:
+        
+            # Constraints calculated using Isatis.
+            constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    
+            
+            # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
+            # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
+            constraints_names, f_max = load_results_Isatis(modified=True)
+            params_LN = [sigmas_LN[j]]
+            
+            fig, ax = plt.subplots(figsize=(8, 8))
+            
+            for i in range(len(constraints_names)):
+                ax.plot(mc_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
+                
+                # Calculate constraint using method from 1705.05567.
+                
+                # Constraints data for each energy bin of each instrument.
+                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+                # Constraints for an extended MF, from each instrument.
+                energy_bin_constraints = []
+                
+                for k in range(len(constraints_mono_file)):
+                    
+                    # Constraint from a particular energy bin
+                    constraint_energy_bin = constraints_mono_file[k]
+                    
+                    # Calculate constraint on f_PBH from each bin
+                    f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin, mf=LN, params=params_LN)
+                    energy_bin_constraints.append(f_PBH_k)
+                    
+                # Calculate constraint using method from 1705.05567, and plot.
+                f_PBH_Carr = envelope(energy_bin_constraints)
+                ax.plot(mc_values, f_PBH_Carr, marker="x", linestyle="None", color=colors_evap[i])
+            
+            ax.set_xlim(1e14, 1e18)
+            ax.set_ylim(10**(-10), 1)
+            ax.set_xlabel("$M_c~[\mathrm{g}]$")
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.legend(fontsize="small")
+            plt.tight_layout()
+            
