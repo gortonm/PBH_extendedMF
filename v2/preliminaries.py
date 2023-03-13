@@ -211,7 +211,7 @@ def load_results_Isatis(mf_string="mono", modified=True, test_mass_range=False):
         Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
     
     if test_mass_range:
-        mf_string += "_testmassrange"
+        mf_string += "_test_range"
     
     # Load Isatis constraints data.
     constraints_file = np.genfromtxt("%sresults_photons_GC_%s.txt"%(Isatis_path, mf_string), dtype = "str", unpack=True)[1:]
