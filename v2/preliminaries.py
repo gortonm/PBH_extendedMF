@@ -226,7 +226,6 @@ def load_results_Isatis(mf_string="mono", modified=True, test_mass_range=False):
         constraint = [float(constraints_file[i][j]) for j in range(1, len(constraints_file[i]))]
             
         if not(all(np.array(constraint)<=0)):
-            print(constraint)
     
             f_PBH_Isatis.append(constraint)
             

@@ -282,7 +282,7 @@ if "__main__" == __name__:
         if j==5:
         
             # Constraints calculated using Isatis.
-            constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    
+            constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)    
             
             # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
             # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
