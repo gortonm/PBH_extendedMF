@@ -18,9 +18,14 @@ rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
-log_normal = True
+log_normal = False
 SLN_bool = False
-CC3_bool = False
+CC3_bool = True
+
+
+# Load mass function parameters.
+[Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
 
 # Controls whether to use a range of PBH masses that matches those used
 # in isatis_reproduction. Use for comparing to the results obtained using 
@@ -29,11 +34,28 @@ test_mass_range = False
 if test_mass_range:
     m_lower_test, m_upper_test = 1e11, 1e21
 
-# Load mass function parameters.
-[Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
-# Load minimum and maximum scaled masses for which the MF is above a cutoff. 
-[Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt("MF_scaled_mass_ranges.txt", delimiter="\t\t ", skip_header=2, unpack=True)
+# Load minimum and maximum scaled masses for which the MF is above a cutoff.
+# Select which range of masses to use (for convergence tests).
+
+# If True, use cutoff in terms of the mass function scaled to its peak value.
+MF_cutoff = True
+# If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints.
+integrand_cutoff = False
+# If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
+integrand_cutoff_present = False
+
+cutoff = 1e-3
+
+if MF_cutoff:
+    scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+elif integrand_cutoff:
+    scaled_masses_filename = "integrand_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+elif integrand_cutoff:
+    scaled_masses_filename = "integrand2_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+
+[Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
+
 
 # Minimum and maximum central masses.
 mc_min = 1e14
@@ -72,6 +94,7 @@ params_Isatis[9][1] = "{:.0f}".format(gamma_halo)
 params_Isatis[14][1] = "1"   
     
 for i in range(len(Deltas)):
+    
     if log_normal:
         append = "GC_LN_Delta={:.1f}".format(Deltas[i])
     elif SLN_bool:
@@ -79,8 +102,15 @@ for i in range(len(Deltas)):
     elif CC3_bool:
         append = "GC_CC3_Delta={:.1f}".format(Deltas[i])
     
+    # Indicates which range of masses are being used (for convergence tests).
     if test_mass_range:
         append += "_test_range"
+    elif MF_cutoff:
+        append += "_MF_cut"
+    elif integrand_cutoff:
+        append += "_integrand_cut"
+    elif integrand_cutoff_present:
+        append += "_integrand2_cut"
                 
     # Create runs file
     runs_filename = "runs_%s.txt" % append

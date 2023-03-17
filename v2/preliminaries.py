@@ -426,13 +426,14 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     # Minimum value of the mass function (scaled to its peak value).
-    cutoff = 1e-5
+    # Set to 0.1 when comparing to Fig. 5 of 2009.03204.
+    cutoff = 1e-7
     
     # Number of masses to use to estimate the peak mass.
-    n_steps = 1000000
+    n_steps = 10000000
     
     # Number of orders of magnitude around the peak mass or characteristic mass to include in estimate
-    log_m_range = 4
+    log_m_range = 5
         
     # For saving to file
     m_lower_LN = []
@@ -445,13 +446,14 @@ if "__main__" == __name__:
     for i in range(len(Deltas)):
         
         # Assign characteristic mass values.
-        mc_LN = mp_SLN[i] * np.exp(sigmas_LN[i]**2)   # compute m_c for lognormal by relating it to the peak mass of the SLN MF
-        m_c = np.exp(ln_mc_SLN[i])
-        m_p = mp_CC3[i]
+        mc_LN = 1
+        m_c = 1
+        m_p = 1
         
-        mc_LN = 1e20
-        m_c = 1e20
-        m_p = 1e20
+        # Uncomment when comparing to Fig. 5 of 2009.03204.
+        #mc_LN = mp_SLN[i] * np.exp(sigmas_LN[i]**2)   # compute m_c for lognormal by relating it to the peak mass of the SLN MF
+        #m_c = np.exp(ln_mc_SLN[i])
+        #m_p = mp_CC3[i]
         
         # Assign lower and upper masses of the range.
         m_min_LN, m_max_LN = mc_LN / 10**log_m_range, mc_LN * 10**log_m_range
@@ -496,5 +498,5 @@ if "__main__" == __name__:
         
     file_header = "Cutoff={:.1e} \nDelta \t M_min / M_c (LN) \t M_max / M_c (LN) \t M_min / M_c (SLN) \t M_max / M_c (SLN) \t M_min / M_p (CC3) \t M_max / M_p (CC3)".format(cutoff)
     mass_ranges = [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3]
-    np.savetxt("MF_scaled_mass_ranges.txt", np.column_stack(mass_ranges), delimiter="\t\t ", header=file_header, fmt="%.4f")        
+    np.savetxt("MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff)), np.column_stack(mass_ranges), delimiter="\t\t ", header=file_header, fmt="%.4e")        
         
