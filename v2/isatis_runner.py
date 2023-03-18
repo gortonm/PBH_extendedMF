@@ -71,7 +71,8 @@ params_Isatis = np.genfromtxt(Isatis_path + "parameters.txt", dtype=str, delimit
 # Load default BlackHawk parameters file
 params_BlackHawk = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, delimiter=" = ")
 
-BH_number = 10000
+# PBH mass spacing, in log10(PBH mass / grams)
+delta_log_m = 10**(-4)
 
 # Choose minimum energy as the lower range constrained by the Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-LAT (see e.g. Fig. 2 of 2201.01265)
 E_min = 1e-5
@@ -96,11 +97,11 @@ params_Isatis[14][1] = "1"
 for i in range(len(Deltas)):
     
     if log_normal:
-        append = "GC_LN_Delta={:.1f}".format(Deltas[i])
+        append = "GC_LN_Delta={:.1f}_dlogm={:.0f}".format(Deltas[i], np.log10(delta_log_m))
     elif SLN_bool:
-        append = "GC_SLN_Delta={:.1f}".format(Deltas[i])
+        append = "GC_SLN_Delta={:.1f}_dlogm={:.0f}".format(Deltas[i], np.log10(delta_log_m))
     elif CC3_bool:
-        append = "GC_CC3_Delta={:.1f}".format(Deltas[i])
+        append = "GC_CC3_Delta={:.1f}_dlogm={:.0f}".format(Deltas[i], np.log10(delta_log_m))
     
     # Indicates which range of masses are being used (for convergence tests).
     if test_mass_range:
@@ -122,28 +123,12 @@ for i in range(len(Deltas)):
     params_Isatis[0][1] = append
     filename_params_Isatis = "params_%s.txt" % append
     np.savetxt(Isatis_path + filename_params_Isatis, params_Isatis, fmt="%s", delimiter = " = ")
-
+    
     for j, m_c in enumerate(mc_values):
         
         spec_file = []
         spec_file.append(spec_file_initial_line)
         filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + append + "_{:.0f}.txt".format(j)
-
-        if SLN_bool:
-            # Create and save file for PBH mass and spin distribution
-            m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), m_upper_SLN[i] * m_c, BH_number)
-            spec_values = SLN(m_pbh_values, m_c=m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])         
-            for k in range(len(m_pbh_values)):
-                spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
-            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")
-                
-        if CC3_bool:
-            # Create and save file for PBH mass and spin distribution
-            m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), m_upper_CC3[i] * m_c, BH_number)
-            spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
-            for k in range(len(m_pbh_values)):
-                spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
-            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")
 
         destination_folder = append + "_{:.0f}".format(j)
         filename_BlackHawk = "/BH_launcher/" + destination_folder + ".txt"
@@ -155,23 +140,44 @@ for i in range(len(Deltas)):
             os.makedirs(filepath_Isatis)
     
         params_BlackHawk[0][1] = destination_folder
-        params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
         if log_normal:
+            BH_number = int((np.log10(m_upper_LN[i])-np.log10(m_lower_LN[i])) / delta_log_m)
+            params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_LN[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_LN[i] * m_c)
             params_BlackHawk[15][1] = "1"
             params_BlackHawk[19][1] = "{:.3f}".format(sigmas_LN[i])
             params_BlackHawk[20][1] = "{:.5e}".format(m_c)
         if SLN_bool:
+            BH_number = int((np.log10(m_upper_LN[i])-np.log10(m_lower_LN[i])) / delta_log_m)
+            params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_SLN[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_SLN[i] * m_c)
             params_BlackHawk[15][1] = "-1"
             params_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
+            
+            # Create and save file for PBH mass and spin distribution
+            m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), m_upper_SLN[i] * m_c, BH_number)
+            spec_values = SLN(m_pbh_values, m_c=m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])         
+            for k in range(len(m_pbh_values)):
+                spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
+            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
+            
         if CC3_bool:
+            BH_number = int((np.log10(m_upper_LN[i])-np.log10(m_lower_LN[i])) / delta_log_m)
+            params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_CC3[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_CC3[i] * m_c)
             params_BlackHawk[15][1] = "-1"
             params_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
+            
+            # Create and save file for PBH mass and spin distribution
+            m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), m_upper_CC3[i] * m_c, BH_number)
+            spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
+            for k in range(len(m_pbh_values)):
+                spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
+            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
+            
         params_BlackHawk[34][1] = "{:.0f}".format(E_number)
         params_BlackHawk[35][1] = "{:.5e}".format(E_min)
         params_BlackHawk[36][1] = "{:.5e}".format(E_max)
