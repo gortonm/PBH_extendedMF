@@ -91,8 +91,8 @@ ax.set_ylabel("$\mathrm{d} N_\gamma/\mathrm{d}t~[\mathrm{cm}^{-2} \cdot \mathrm{
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.legend(fontsize="small")
-ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-ax.set_ylim(1e10, 5e23)
+ax.set_xlim(1e16, 1e19)
+ax.set_ylim(2e15, 1e19)
 
 
 # Plot the integral of energy * primary and total photon spectrum over energy.
@@ -117,6 +117,6 @@ ax.set_ylabel("$\int E \mathrm{d}^2 N_\gamma/(\mathrm{d}t\mathrm{d}E) \mathrm{d}
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.legend(fontsize="small")
-ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-ax.set_ylim(1e6, 1e27)
+ax.set_xlim(2e13, 1e19)
+ax.set_ylim(1e10, 1e23)
 
