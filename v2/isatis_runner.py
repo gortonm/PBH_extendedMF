@@ -72,7 +72,7 @@ params_Isatis = np.genfromtxt(Isatis_path + "parameters.txt", dtype=str, delimit
 params_BlackHawk = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, delimiter=" = ")
 
 # PBH mass spacing, in log10(PBH mass / grams)
-delta_log_m = 10**(-4)
+delta_log_m = 10**(-3)
 
 # Choose minimum energy as the lower range constrained by the Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-LAT (see e.g. Fig. 2 of 2201.01265)
 E_min = 1e-5
@@ -107,11 +107,11 @@ for i in range(len(Deltas)):
     if test_mass_range:
         append += "_test_range"
     elif MF_cutoff:
-        append += "_MF_cut"
+        append += "_MF_c={:.0f}".format(-np.log10(cutoff))
     elif integrand_cutoff:
-        append += "_integrand_cut"
+        append += "_integrand_c={:.0f}".format(-np.log10(cutoff))
     elif integrand_cutoff_present:
-        append += "_integrand2_cut"
+        append += "_integrand2_c={:.0f}".format(-np.log10(cutoff))
                 
     # Create runs file
     runs_filename = "runs_%s.txt" % append
