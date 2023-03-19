@@ -455,25 +455,52 @@ if "__main__" == __name__:
         
         m_x = 40
         
-        m_pbh_values = np.logspace(np.log10(m_x)-6, np.log10(m_x)+4, 1000)
+        m_pbh_values = np.logspace(np.log10(m_x)-7, np.log10(m_x)+2, 1000)
         
         params_LN = [sigmas_LN[i]]
         params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
         params_CC3 = [alphas_CC3[i], betas[i]]
         
-        fig, ax = plt.subplots()
-        ax.plot(m_pbh_values, integrand_measure(m_pbh_values, mp_SLN[i] * np.exp(sigmas_LN[i]**2), LN, params_LN), color="r")
-        ax.plot(m_pbh_values, integrand_measure(m_pbh_values, np.exp(ln_mc_SLN[i]), SLN, params_SLN), color="b")
-        ax.plot(m_pbh_values, integrand_measure(m_pbh_values, mp_CC3[i], CC3, params_CC3), color="g")
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax.plot(m_pbh_values, integrand_measure(m_pbh_values, mp_SLN[i] * np.exp(-sigmas_LN[i]**2), LN, params_LN), color="r", label="LN")
+        ax.plot(m_pbh_values, integrand_measure(m_pbh_values, np.exp(ln_mc_SLN[i]), SLN, params_SLN), color="b", label="SLN")
+        ax.plot(m_pbh_values, integrand_measure(m_pbh_values, mp_CC3[i], CC3, params_CC3), color="g", label="CC3")
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.grid()
+        ax.legend(fontsize="small")
         #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
         ax.set_xlabel("$M_\mathrm{PBH}$")
         ax.set_ylabel("$(\psi / M_\mathrm{PBH}^3) / \mathrm{max}(\psi / M_\mathrm{PBH}^3)$")
+        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
         ax.set_ylim(1e-8, 10)
         plt.title("$\Delta={:.1f}$".format(Deltas[i]))
         plt.tight_layout()
+        
+        fig, ax = plt.subplots(figsize=(7, 5))
+        
+        mc_LN =  mp_SLN[i] * np.exp(sigmas_LN[i]**2)
+        m_c = np.exp(ln_mc_SLN[i])
+        m_p = mp_CC3[i]
+        measure_LN = LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i]) / LN(m_peak_LN(mc_LN, sigma=sigmas_LN[i]), mc_LN, sigma=sigmas_LN[i])
+        measure_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+        measure_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
+
+        ax.plot(m_pbh_values, measure_LN, color="r", label="LN")
+        ax.plot(m_pbh_values, measure_SLN, color="b", label="SLN")
+        ax.plot(m_pbh_values, measure_CC3, color="g", label="CC3")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.grid()
+        ax.legend(fontsize="small")
+        #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
+        ax.set_xlabel("$M_\mathrm{PBH}$")
+        ax.set_ylabel("$\psi / \psi_\mathrm{max}$")
+        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+        ax.set_ylim(1e-8, 10)
+        plt.title("$\Delta={:.1f}$".format(Deltas[i]))
+        plt.tight_layout()
+
 
 #%% Estimate the range of masses for which the mass function is non-negligible.
 

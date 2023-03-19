@@ -81,7 +81,7 @@ def read_col(fname, first_row=0, col=1, convert=int, sep=None):
 
 def read_blackhawk_spectra(fname, col=1):
     """
-    
+    Read spectra files for a particular particle species, calculated using BlackHawk.
 
     Parameters
     ----------
@@ -305,119 +305,121 @@ def galactic(spectrum, b_max, l_max):
 
     return np.array(galactic)
 
-monochromatic_MF = True
+if "__main__" == __name__:
 
-if monochromatic_MF:
-    filename_append = "_monochromatic"
-    m_pbh_mono = np.logspace(11, 21, 1000)
-
-f_PBH_isatis = []
-file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
-
-COMPTEL = False
-INTEGRAL = False
-EGRET = False
-FermiLAT = True
-
-exclude_last_bin = False
-save_each_bin = True
-
-if COMPTEL:
-    append = "COMPTEL_1107.0200"
-    b_max, l_max = np.radians(15), np.radians(30)
-
-elif INTEGRAL:
-    append = "INTEGRAL_1107.0200"
-    b_max, l_max = np.radians(15), np.radians(30)
-
-elif EGRET:
-    append = "EGRET_9811211"
-    b_max, l_max = np.radians(5), np.radians(30)
-
-elif FermiLAT:
-    append = "Fermi-LAT_1101.1381"
-    b_max, l_max = np.radians(10), np.radians(30)
-
-energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
-
-if not exclude_last_bin:
-    append = "all_bins_%s"%(append)
+    monochromatic_MF = True
     
-if save_each_bin:
-    append = "full_%s"%(append)
-
-# Number of interpolation points
-n_refined = 500
-
-
-for i, m_pbh in enumerate(m_pbh_mono):
-    # Load photon spectra from BlackHawk outputs
-    exponent = np.floor(np.log10(m_pbh))
-    coefficient = m_pbh / 10**exponent
-
     if monochromatic_MF:
-        file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_{:.0f}/".format(i+1)
-
-    print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
-
-    ener_spec, spectrum = read_blackhawk_spectra(file_path_BlackHawk_data + "instantaneous_secondary_spectra.txt", col=1)
-
-    flux_galactic = galactic(spectrum, b_max, l_max)
-    ener_refined = refined_energies(energies, n_refined)
-    flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
-
-    def binned_flux(flux_refined, ener_refined, ener_inst, ener_inst_minus, ener_inst_plus):
-        """
-        Calculate theoretical flux from PBHs in each bin of an instrument.
-
-        Parameters
-        ----------
-        flux_refined : Array-like
-            Flux, evaluated at energies evenly-spaced in log-space.
-        ener_refined : Array-like
-            DESCRIPTION.
-        ener_inst : Array-like
-            Energies measured by instrument (middle values).
-        ener_inst_minus : Array-like
-            Energies measured by instrument (upper error bar).
-        ener_inst_plus : Array-like
-            Energies measured by instrument (lower error bar).
-
-        Returns
-        -------
-        Array-like
-            Flux from a population of PBHs, sorted into energy bins measured by an instrument.
-
-        """
-        flux_binned = []
-        nb_refined = len(flux_refined)
-        nb_inst = len(ener_inst)
-
-        if exclude_last_bin:
-            nb_inst = nb_inst - 1
-
-        for i in range(nb_inst):
-            val_binned = 0
-            c = 0
-            while c < nb_refined and ener_refined[c] < ener_inst[i] - ener_inst_minus[i]:
-                c += 1
-            if c > 0 and c+1 < nb_refined:
-                while c < nb_refined and ener_refined[c] < ener_inst[i] + ener_inst_plus[i]:
-                    val_binned += (ener_refined[c+1] - ener_refined[c]) * (flux_refined[c+1] + flux_refined[c]) / 2
-                    c += 1
-            flux_binned.append(val_binned)
-        return np.array(flux_binned)
-
-    # Calculate constraint on f_PBH
-    if exclude_last_bin:
-        f_PBH = min(flux[:-1] * (energies_plus[:-1] + energies_minus[:-1]) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
-
-    else:
-        f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
-        if save_each_bin:
-            f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
+        filename_append = "_monochromatic"
+        m_pbh_mono = np.logspace(11, 21, 1000)
+    
+    f_PBH_isatis = []
+    file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
+    
+    COMPTEL = False
+    INTEGRAL = False
+    EGRET = False
+    FermiLAT = True
+    
+    exclude_last_bin = False
+    save_each_bin = True
+    
+    if COMPTEL:
+        append = "COMPTEL_1107.0200"
+        b_max, l_max = np.radians(15), np.radians(30)
+    
+    elif INTEGRAL:
+        append = "INTEGRAL_1107.0200"
+        b_max, l_max = np.radians(15), np.radians(30)
+    
+    elif EGRET:
+        append = "EGRET_9811211"
+        b_max, l_max = np.radians(5), np.radians(30)
+    
+    elif FermiLAT:
+        append = "Fermi-LAT_1101.1381"
+        b_max, l_max = np.radians(10), np.radians(30)
+    
+    energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
+    
+    if not exclude_last_bin:
+        append = "all_bins_%s"%(append)
         
-    f_PBH_isatis.append(f_PBH)
-
-# Save calculated results for f_PBH
-np.savetxt("./Data/fPBH_GC_%s.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
+    if save_each_bin:
+        append = "full_%s"%(append)
+    
+    # Number of interpolation points
+    n_refined = 500
+    
+    
+    for i, m_pbh in enumerate(m_pbh_mono):
+        # Load photon spectra from BlackHawk outputs
+        exponent = np.floor(np.log10(m_pbh))
+        coefficient = m_pbh / 10**exponent
+    
+        if monochromatic_MF:
+            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_{:.0f}/".format(i+1)
+    
+        print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
+    
+        ener_spec, spectrum = read_blackhawk_spectra(file_path_BlackHawk_data + "instantaneous_secondary_spectra.txt", col=1)
+    
+        flux_galactic = galactic(spectrum, b_max, l_max)
+        ener_refined = refined_energies(energies, n_refined)
+        flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
+    
+        def binned_flux(flux_refined, ener_refined, ener_inst, ener_inst_minus, ener_inst_plus):
+            """
+            Calculate theoretical flux from PBHs in each bin of an instrument.
+    
+            Parameters
+            ----------
+            flux_refined : Array-like
+                Flux, evaluated at energies evenly-spaced in log-space.
+            ener_refined : Array-like
+                DESCRIPTION.
+            ener_inst : Array-like
+                Energies measured by instrument (middle values).
+            ener_inst_minus : Array-like
+                Energies measured by instrument (upper error bar).
+            ener_inst_plus : Array-like
+                Energies measured by instrument (lower error bar).
+    
+            Returns
+            -------
+            Array-like
+                Flux from a population of PBHs, sorted into energy bins measured by an instrument.
+    
+            """
+            flux_binned = []
+            nb_refined = len(flux_refined)
+            nb_inst = len(ener_inst)
+    
+            if exclude_last_bin:
+                nb_inst = nb_inst - 1
+    
+            for i in range(nb_inst):
+                val_binned = 0
+                c = 0
+                while c < nb_refined and ener_refined[c] < ener_inst[i] - ener_inst_minus[i]:
+                    c += 1
+                if c > 0 and c+1 < nb_refined:
+                    while c < nb_refined and ener_refined[c] < ener_inst[i] + ener_inst_plus[i]:
+                        val_binned += (ener_refined[c+1] - ener_refined[c]) * (flux_refined[c+1] + flux_refined[c]) / 2
+                        c += 1
+                flux_binned.append(val_binned)
+            return np.array(flux_binned)
+    
+        # Calculate constraint on f_PBH
+        if exclude_last_bin:
+            f_PBH = min(flux[:-1] * (energies_plus[:-1] + energies_minus[:-1]) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+    
+        else:
+            f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+            if save_each_bin:
+                f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
+            
+        f_PBH_isatis.append(f_PBH)
+    
+    # Save calculated results for f_PBH
+    np.savetxt("./Data/fPBH_GC_%s.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
