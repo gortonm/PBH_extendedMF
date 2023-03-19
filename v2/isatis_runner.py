@@ -18,9 +18,9 @@ rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
-log_normal = False
+log_normal = True
 SLN_bool = False
-CC3_bool = True
+CC3_bool = False
 
 
 # Load mass function parameters.
@@ -72,7 +72,7 @@ params_Isatis = np.genfromtxt(Isatis_path + "parameters.txt", dtype=str, delimit
 params_BlackHawk = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, delimiter=" = ")
 
 # PBH mass spacing, in log10(PBH mass / grams)
-delta_log_m = 10**(-3)
+delta_log_m = 10**(-4)
 
 # Choose minimum energy as the lower range constrained by the Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-LAT (see e.g. Fig. 2 of 2201.01265)
 E_min = 1e-5
@@ -141,7 +141,8 @@ for i in range(len(Deltas)):
     
         params_BlackHawk[0][1] = destination_folder
         if log_normal:
-            BH_number = int((np.log10(m_upper_LN[i])-np.log10(m_lower_LN[i])) / delta_log_m)
+            BH_number = int((np.log10(m_c*m_upper_LN[i])-np.log10(m_c*m_lower_LN[i])) / delta_log_m)
+            print((np.log10(m_c*m_upper_LN[i])-np.log10(m_c*m_lower_LN[i])) / delta_log_m)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_LN[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_LN[i] * m_c)
@@ -149,7 +150,7 @@ for i in range(len(Deltas)):
             params_BlackHawk[19][1] = "{:.3f}".format(sigmas_LN[i])
             params_BlackHawk[20][1] = "{:.5e}".format(m_c)
         if SLN_bool:
-            BH_number = int((np.log10(m_upper_LN[i])-np.log10(m_lower_LN[i])) / delta_log_m)
+            BH_number = int((np.log10(m_c*m_upper_LN[i])-np.log10(m_c*m_lower_LN[i])) / delta_log_m)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_SLN[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_SLN[i] * m_c)
@@ -164,7 +165,7 @@ for i in range(len(Deltas)):
             np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
             
         if CC3_bool:
-            BH_number = int((np.log10(m_upper_LN[i])-np.log10(m_lower_LN[i])) / delta_log_m)
+            BH_number = int((np.log10(m_c*m_upper_LN[i])-np.log10(m_c*m_lower_LN[i])) / delta_log_m)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_CC3[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_CC3[i] * m_c)
