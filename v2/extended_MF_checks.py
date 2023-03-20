@@ -64,7 +64,7 @@ def constraint_Carr(mc_values, m_mono, f_max, mf, params):
         else:
             f_pbh.append(1/integral)
             
-    return f_pbh
+    return np.array(f_pbh)
 
 
 def envelope(constraints):
@@ -421,4 +421,10 @@ if "__main__" == __name__:
                     ax1.legend(fontsize="small")
                     plt.tight_layout()
 
-            
+                ax.set_ylim(1e-3, 2)
+                ax.set_xlim(1e14, 1e18)
+                ax.set_xlabel("$M_c~[\mathrm{g}]$")
+                ax.set_ylabel("Fractional difference in $f_\mathrm{PBH}$")
+                ax.legend(fontsize="small")
+                plt.tight_layout()
+         
