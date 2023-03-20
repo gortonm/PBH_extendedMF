@@ -199,6 +199,39 @@ if "__main__" == __name__:
     fig.tight_layout()
     #plt.savefig("./Figures/HSC_constraints/test_1910.01285_LN_SLN.png", dpi=1200)
 
+#%% Test how methods for comparing how many values in two arrays agree to 2 significant figures.
+
+def percent_agree(a, b):
+    
+    agreement_array = []
+    
+    for i in range(len(a)):
+        #print("{:.1e}".format(a[i]))
+        #print("{:.1e}".format(b[i]))
+        if "{:.1e}".format(a[i]) == "{:.1e}".format(b[i]):
+            agreement_array.append(1)
+        else:
+            agreement_array.append(0)
+            
+    return np.mean(agreement_array)
+
+a = np.array([1.2, 5.754e41, 5.754e41, 1.8e-5, 1.76e-5])
+b = np.array([1.2, 5.744e41, 5.754e41, 1.8e-5, 1.8e-5])
+c = np.array([1.1501, 5.744e41, 5.754e41, 1.7e-5, 1.84e-5])
+
+print(percent_agree(a,b))
+print(percent_agree(a,c))
+
+
+def percent_agree_fPBH(fPBH, baseline):
+    fPBH_physical = fPBH[baseline <= 1.]
+    baseline_physical = baseline[baseline <= 1.]
+    return percent_agree(fPBH_physical, baseline_physical)
+
+print(percent_agree_fPBH(a, b))
+print(percent_agree_fPBH(a, c))
+
+
 #%% Convergence tests
 
 if "__main__" == __name__:
@@ -211,15 +244,18 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
+        print("\n\nDelta={:.1f}".format(Deltas[i]))
+        
         params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
         params_CC3 = [alphas_CC3[i], betas[i]]
         params_LN = [sigmas_LN[i]]
     
-        dx_values = [5, 10, 20]
+        dx_values = [2, 5, 10, 20]
+        """
         fig_LN, ax_LN = plt.subplots(figsize=(8,8))
         fig_SLN, ax_SLN = plt.subplots(figsize=(8,8))
         fig_CC3, ax_CC3 = plt.subplots(figsize=(8,8))
-        
+        """
         m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(min(dx_values)))
         f_PBH_benchmark_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
         f_PBH_benchmark_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
@@ -229,22 +265,28 @@ if "__main__" == __name__:
         mc_min_LN, mc_max_LN = min(mc_subaru[f_PBH_benchmark_LN < 1]),  max(mc_subaru[f_PBH_benchmark_LN < 1])
         mc_min_SLN, mc_max_SLN = min(mc_subaru[f_PBH_benchmark_SLN < 1]),  max(mc_subaru[f_PBH_benchmark_SLN < 1])
         mc_min_CC3, mc_max_CC3 = min(mc_subaru[f_PBH_benchmark_CC3 < 1]),  max(mc_subaru[f_PBH_benchmark_CC3 < 1])
-       
-        for dx in dx_values:
+               
+        for dx in dx_values[1:]:
             m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(dx))
 
             f_PBH_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
             f_PBH_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
             f_PBH_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
             
-            np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/LN_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_LN)
+            np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/LN_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_LN, fmt="%2.1e")
             np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/SLN_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_SLN)
             np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/CC3_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_CC3)
                         
             fracdiff_LN = abs(f_PBH_LN/f_PBH_benchmark_LN - 1)
             fracdiff_SLN = abs(f_PBH_SLN/f_PBH_benchmark_SLN - 1)
             fracdiff_CC3 = abs(f_PBH_CC3/f_PBH_benchmark_CC3 - 1)
-    
+            
+            print("\ndx = {:.0f}:".format(dx))
+            print("LN : {:.2f}".format(percent_agree_fPBH(f_PBH_LN, f_PBH_benchmark_LN)))
+            print("SLN : {:.2f}".format(percent_agree_fPBH(f_PBH_SLN, f_PBH_benchmark_SLN)))
+            print("CC3 : {:.2f}".format(percent_agree_fPBH(f_PBH_CC3, f_PBH_benchmark_CC3)))
+           
+        """
             ax_LN.plot(mc_subaru, fracdiff_LN, label="{:.0f}".format(dx), marker="x", linestyle="None")
             ax_SLN.plot(mc_subaru, fracdiff_SLN, label="{:.0f}".format(dx), marker="x", linestyle="None")
             ax_CC3.plot(mc_subaru, fracdiff_CC3, label="{:.0f}".format(dx), marker="x", linestyle="None")
@@ -265,7 +307,7 @@ if "__main__" == __name__:
         ax_LN.set_title("LN, $\Delta={:.1f}$".format(Deltas[i]))
         ax_SLN.set_title("SLN, $\Delta={:.1f}$".format(Deltas[i]))
         ax_CC3.set_title("CC3, $\Delta={:.1f}$".format(Deltas[i]))
-        
+        """
 
 """
 #%% Calculate constraints for extended MFs from 2009.03204.
