@@ -94,14 +94,14 @@ params_Isatis[8][1] = "{:.0f}".format(r_c_halo)
 params_Isatis[9][1] = "{:.0f}".format(gamma_halo)     
 params_Isatis[14][1] = "1"   
     
-for i in range(len(Deltas)):
+for i in range(len(Deltas[0:1])):
     
     if log_normal:
-        append = "GC_LN_Delta={:.1f}_dlogm={:.0f}".format(Deltas[i], np.log10(delta_log_m))
+        append = "GC_LN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     elif SLN_bool:
-        append = "GC_SLN_Delta={:.1f}_dlogm={:.0f}".format(Deltas[i], np.log10(delta_log_m))
+        append = "GC_SLN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     elif CC3_bool:
-        append = "GC_CC3_Delta={:.1f}_dlogm={:.0f}".format(Deltas[i], np.log10(delta_log_m))
+        append = "GC_CC3_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     
     # Indicates which range of masses are being used (for convergence tests).
     if test_mass_range:
