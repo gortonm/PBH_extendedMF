@@ -45,7 +45,7 @@ def constraint_Carr(mc_values, m_mono, f_max, mf, params):
     f_max : Array-like
         Constraints obtained for a monochromatic mass function..
     mf : Function
-        PBH mass function..
+        PBH mass function.
     params : Array-like
         Parameters of the PBH mass function.
 
@@ -266,6 +266,7 @@ if "__main__" == __name__:
 #%% Plot results for a log-normal mass function, obtained using Isatis,
 # and compare to the results shown in Fig. 3 of 2201.01265.
 # Using the modified version of Isatis.
+# Uses Isatis constraints calculated using the same range of PBH masses as those from 1705.05567.
 if "__main__" == __name__:
     
     # Load mass function parameters.
@@ -322,4 +323,102 @@ if "__main__" == __name__:
             ax.set_yscale("log")
             ax.legend(fontsize="small")
             plt.tight_layout()
+            
+#%% Convergence tests: compare results for f_PBH obtained using different numbers of
+# PBHs and mass ranges.
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    mc_values = np.logspace(14, 19, 100)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+
+    # Cutoff in the PBH mass function, compared to the peak mass
+    cutoffs = [1e-3, 1e-5]
+    # PBH mass spacing, in log10(PBH mass / grams)
+    dm_values = [1e-4]
+    
+    log_normal = True
+    SLN_bool = False
+    CC3_bool = False
+    
+    plot_constraint = True
+
+    # If True, use cutoff in terms of the mass function scaled to its peak value.
+    MF_cutoff = True
+    # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints.
+    integrand_cutoff = False
+    # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
+    integrand_cutoff_present = False
+
+    for i in range(len(Deltas[0:2])):
+        
+        # Find the most accurate constraint:
+        if log_normal:
+            mf_string = "LN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(min(dm_values)))
+        elif SLN_bool:
+            mf_string = "SLN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(min(dm_values)))
+        elif CC3_bool:
+            mf_string = "CC3_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(min(dm_values)))
+        
+        if MF_cutoff:
+            mf_string += "_MF_c={:.0f}".format(-np.log10(min(cutoffs)))
+        elif integrand_cutoff:
+            mf_string += "_integrand_c={:.0f}".format(-np.log10(min(cutoffs)))
+        elif integrand_cutoff_present:
+            mf_string += "_integrand2_c={:.0f}".format(-np.log10(min(cutoffs)))
+
+        # Constraints calculated using Isatis.
+        constraints_names, f_PBH_Isatis_benchmark = load_results_Isatis(mf_string, modified=True, test_mass_range=False)    
+        f_PBH_benchmark_envelope = envelope(f_PBH_Isatis_benchmark)
+        
+        fig, ax = plt.subplots(figsize=(8, 8))
+
+        for cutoff in cutoffs:
+                                                 
+            for delta_log_m in dm_values:
+                
+                if log_normal:
+                    mf_string = "LN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+                elif SLN_bool:
+                    mf_string = "SLN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+                elif CC3_bool:
+                    mf_string = "CC3_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+                    
+                # Indicates which range of masses are being used (for convergence tests).
+                if MF_cutoff:
+                    mf_string += "_MF_c={:.0f}".format(-np.log10(cutoff))
+                elif integrand_cutoff:
+                    mf_string += "_integrand_c={:.0f}".format(-np.log10(cutoff))
+                elif integrand_cutoff_present:
+                    mf_string += "_integrand2_c={:.0f}".format(-np.log10(cutoff))
+    
+                # Constraints calculated using Isatis.
+                constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string, modified=True, test_mass_range=False)  
+                # Envelope of constraints.
+                f_PBH_envelope = envelope(f_PBH_Isatis)
+                # Fractional difference from benchmark constraint.
+                frac_diff = abs(f_PBH_envelope/f_PBH_benchmark_envelope - 1)
+                
+                ax.plot(mc_values, frac_diff, marker="x", label="Cutoff={:.0e}, Spacing $\delta \log_{10} m$={:.0e}".format(cutoff, delta_log_m))
+                
+                if plot_constraint:
+                    fig1, ax1 = plt.subplots(figsize=(8, 8))
+            
+                    for j in range(len(constraints_names)):
+                        ax1.plot(mc_values, f_PBH_Isatis[j], label=constraints_names[j], color=colors_evap[j])
+                    
+                    ax1.plot(mc_values, f_PBH_envelope, color="k")
+                    ax1.set_xlim(1e14, 1e18)
+                    ax1.set_ylim(10**(-10), 1)
+                    ax1.set_xlabel("$M_c~[\mathrm{g}]$")
+                    ax1.set_ylabel("$f_\mathrm{PBH}$")
+                    ax1.set_xscale("log")
+                    ax1.set_yscale("log")
+                    ax1.legend(fontsize="small")
+                    plt.tight_layout()
+
             
