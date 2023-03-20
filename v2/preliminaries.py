@@ -268,6 +268,33 @@ def integrand_measure(m, m_c, mf, params):
     return integrand / max(integrand)
 
 
+def integrand_measure_v2(m, m_c, mf, params):
+    """
+    Approximate form of the integrand appearing in Eq. 11 of 2201.01265,
+    scaled to its maximum value.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses.
+    m_c : Float
+        Characteristic PBH mass (m_c for a (skew-)lognormal, m_p for CC3).
+    mf : Function
+        PBH mass function.
+    params : Array-like
+        Parameters of the PBH mass function.
+
+    Returns
+    -------
+    Array-like.
+        PBH mass function divided by mass cubed, scaled so that the maximum value is one.
+
+    """
+    integrand = mf(m, m_c, *params) / m**2
+    return integrand / max(integrand)
+
+
+
 #%% Compare SLN and CC3 MF to Fig. 5 of 2009.03204.
 
 if "__main__" == __name__:
@@ -462,7 +489,7 @@ if "__main__" == __name__:
         params_CC3 = [alphas_CC3[i], betas[i]]
         
         fig, ax = plt.subplots(figsize=(7, 5))
-        ax.plot(m_pbh_values, integrand_measure(m_pbh_values, mp_SLN[i] * np.exp(-sigmas_LN[i]**2), LN, params_LN), color="r", label="LN")
+        ax.plot(m_pbh_values, integrand_measure(m_pbh_values, mp_SLN[i] * np.exp(sigmas_LN[i]**2), LN, params_LN), color="r", label="LN")
         ax.plot(m_pbh_values, integrand_measure(m_pbh_values, np.exp(ln_mc_SLN[i]), SLN, params_SLN), color="b", label="SLN")
         ax.plot(m_pbh_values, integrand_measure(m_pbh_values, mp_CC3[i], CC3, params_CC3), color="g", label="CC3")
         ax.set_xscale("log")
@@ -470,7 +497,7 @@ if "__main__" == __name__:
         ax.grid()
         ax.legend(fontsize="small")
         #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
-        ax.set_xlabel("$M_\mathrm{PBH}$")
+        ax.set_xlabel("$M_\mathrm{PBH}~[M_\odot]$")
         ax.set_ylabel("$(\psi / M_\mathrm{PBH}^3) / \mathrm{max}(\psi / M_\mathrm{PBH}^3)$")
         ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
         ax.set_ylim(1e-8, 10)
@@ -494,13 +521,47 @@ if "__main__" == __name__:
         ax.grid()
         ax.legend(fontsize="small")
         #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
-        ax.set_xlabel("$M_\mathrm{PBH}$")
+        ax.set_xlabel("$M_\mathrm{PBH}~[M_\odot]$")
         ax.set_ylabel("$\psi / \psi_\mathrm{max}$")
         ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
         ax.set_ylim(1e-8, 10)
         plt.title("$\Delta={:.1f}$".format(Deltas[i]))
         plt.tight_layout()
 
+
+#%% Plot the approximate form of the integrand appearing in Eq. 11 of 2201.01265, given by integrand_measure_v2()
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    for i in range(len(Deltas)):
+        
+        m_x = 40
+        
+        m_pbh_values = np.logspace(np.log10(m_x)-7, np.log10(m_x)+2, 1000)
+        
+        params_LN = [sigmas_LN[i]]
+        params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
+        params_CC3 = [alphas_CC3[i], betas[i]]
+        
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax.plot(m_pbh_values, integrand_measure_v2(m_pbh_values, mp_SLN[i] * np.exp(sigmas_LN[i]**2), LN, params_LN), color="r", label="LN")
+        ax.plot(m_pbh_values, integrand_measure_v2(m_pbh_values, np.exp(ln_mc_SLN[i]), SLN, params_SLN), color="b", label="SLN")
+        ax.plot(m_pbh_values, integrand_measure_v2(m_pbh_values, mp_CC3[i], CC3, params_CC3), color="g", label="CC3")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.grid()
+        ax.legend(fontsize="small")
+        #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
+        ax.set_xlabel("$M_\mathrm{PBH}~[M_\odot]$")
+        ax.set_ylabel("$(\psi / M_\mathrm{PBH}^3) / \mathrm{max}(\psi / M_\mathrm{PBH}^3)$")
+        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+        ax.set_ylim(1e-8, 10)
+        plt.title("$\Delta={:.1f}$".format(Deltas[i]))
+        plt.tight_layout()
+        
 
 #%% Estimate the range of masses for which the mass function is non-negligible.
 
