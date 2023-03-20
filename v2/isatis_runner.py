@@ -128,7 +128,7 @@ for i in range(len(Deltas)):
         
         spec_file = []
         spec_file.append(spec_file_initial_line)
-        filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + append + "_{:.0f}.txt".format(j)
+        filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + append + "_{:.0f}".format(j)
 
         destination_folder = append + "_{:.0f}".format(j)
         filename_BlackHawk = "/BH_launcher/" + destination_folder + ".txt"
