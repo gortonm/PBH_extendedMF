@@ -18,9 +18,9 @@ rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
-log_normal = True
+log_normal = False
 SLN_bool = False
-CC3_bool = False
+CC3_bool = True
 
 
 # Load mass function parameters.
@@ -45,7 +45,7 @@ integrand_cutoff = False
 # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
 integrand_cutoff_present = False
 
-cutoff = 1e-3
+cutoff = 1e-7
 
 if MF_cutoff:
     scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
@@ -94,14 +94,14 @@ params_Isatis[8][1] = "{:.0f}".format(r_c_halo)
 params_Isatis[9][1] = "{:.0f}".format(gamma_halo)     
 params_Isatis[14][1] = "1"   
     
-for i in range(len(Deltas[0:1])):
+for i in range(len(Deltas)):
     
     if log_normal:
         append = "GC_LN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     elif SLN_bool:
-        append = "GC_SLN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+        append = "GC_SL_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     elif CC3_bool:
-        append = "GC_CC3_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+        append = "GC_CC_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     
     # Indicates which range of masses are being used (for convergence tests).
     if test_mass_range:
@@ -158,7 +158,7 @@ for i in range(len(Deltas[0:1])):
             params_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
             
             # Create and save file for PBH mass and spin distribution
-            m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), m_upper_SLN[i] * m_c, BH_number)
+            m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), np.log10(m_upper_SLN[i] * m_c), BH_number)
             spec_values = SLN(m_pbh_values, m_c=m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])         
             for k in range(len(m_pbh_values)):
                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
@@ -166,6 +166,7 @@ for i in range(len(Deltas[0:1])):
             
         if CC3_bool:
             BH_number = int((np.log10(m_c*m_upper_LN[i])-np.log10(m_c*m_lower_LN[i])) / delta_log_m)
+            print(BH_number)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_CC3[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_CC3[i] * m_c)
@@ -173,7 +174,7 @@ for i in range(len(Deltas[0:1])):
             params_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
             
             # Create and save file for PBH mass and spin distribution
-            m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), m_upper_CC3[i] * m_c, BH_number)
+            m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), np.log10(m_upper_CC3[i] * m_c), BH_number)
             spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
             for k in range(len(m_pbh_values)):
                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
