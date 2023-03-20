@@ -96,7 +96,7 @@ if "__main__" == __name__:
 mc_subaru = 10**np.linspace(20, 29, 1000)
 
 # Load data files
-m_subaru_mono_Croon, f_max_mono_Croon = load_data("2007.12697/Subaru-HSC_2007.12697.csv")
+m_subaru_mono_Croon, f_max_mono_Croon = load_data("2007.12697/Subaru-HSC_2007.12697_dx=10.csv")
 
 # Load comparison constraint from PBHbounds
 PBHbounds = np.transpose(np.genfromtxt("./../../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
@@ -131,9 +131,9 @@ if "__main__" == __name__:
 # normal mass function. Monochromatic MF constraints from 2007.12697.
 
 # Load data files
-m_subaru_mono_Croon, f_max_mono_Croon = load_data("2007.12697/Subaru-HSC_2007.12697.csv")
+m_subaru_mono_Croon, f_max_mono_Croon = load_data("2007.12697/Subaru-HSC_2007.12697_dx=10.csv")
 
-# Range of central masses
+# Range of characteristic masses
 mc_subaru = 10**np.linspace(20, 29, 100)
 
 if "__main__" == __name__:
@@ -156,7 +156,7 @@ if "__main__" == __name__:
     ax.set_ylim(1e-3, 1)
     ax.set_title("Croon et al. (2020) [2007.12697]")
     fig.tight_layout()
-    #plt.savefig("./Figures/HSC_constraints/test_2007.12697_LN_SLN.pdf")
+    plt.savefig("./Figures/HSC_constraints/test_2007.12697_LN_SLN.pdf")
 
 
 #%%
@@ -172,7 +172,7 @@ mc_subaru_LN, f_pbh_subaru_LN = load_data("2002.12778/Subaru-HSC_2002.12778_LN.c
 m_subaru_mono *= 1.989e33
 mc_subaru_LN *= 1.989e33
 
-# Range of central masses
+# Range of characteristic masses
 mc_subaru = 10**np.linspace(20, 29, 100)
 
 if "__main__" == __name__:
@@ -201,14 +201,78 @@ if "__main__" == __name__:
 
 #%% Convergence tests
 
+if "__main__" == __name__:
+    
+    # Range of characteristic masses
+    mc_subaru = 10**np.linspace(20, 29, 100)
 
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    for i in range(len(Deltas)):
+        
+        params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
+        params_CC3 = [alphas_CC3[i], betas[i]]
+        params_LN = [sigmas_LN[i]]
+    
+        dx_values = [5, 10, 20]
+        fig_LN, ax_LN = plt.subplots(figsize=(8,8))
+        fig_SLN, ax_SLN = plt.subplots(figsize=(8,8))
+        fig_CC3, ax_CC3 = plt.subplots(figsize=(8,8))
+        
+        m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(min(dx_values)))
+        f_PBH_benchmark_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
+        f_PBH_benchmark_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
+        f_PBH_benchmark_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
+        
+        # Range of characteristic PBH masses for which f_PBH <=1 in the most accurate calculation.
+        mc_min_LN, mc_max_LN = min(mc_subaru[f_PBH_benchmark_LN < 1]),  max(mc_subaru[f_PBH_benchmark_LN < 1])
+        mc_min_SLN, mc_max_SLN = min(mc_subaru[f_PBH_benchmark_SLN < 1]),  max(mc_subaru[f_PBH_benchmark_SLN < 1])
+        mc_min_CC3, mc_max_CC3 = min(mc_subaru[f_PBH_benchmark_CC3 < 1]),  max(mc_subaru[f_PBH_benchmark_CC3 < 1])
+       
+        for dx in dx_values:
+            m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(dx))
+
+            f_PBH_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
+            f_PBH_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
+            f_PBH_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
+            
+            np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/LN_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_LN)
+            np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/SLN_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_SLN)
+            np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/CC3_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_CC3)
+                        
+            fracdiff_LN = abs(f_PBH_LN/f_PBH_benchmark_LN - 1)
+            fracdiff_SLN = abs(f_PBH_SLN/f_PBH_benchmark_SLN - 1)
+            fracdiff_CC3 = abs(f_PBH_CC3/f_PBH_benchmark_CC3 - 1)
+    
+            ax_LN.plot(mc_subaru, fracdiff_LN, label="{:.0f}".format(dx), marker="x", linestyle="None")
+            ax_SLN.plot(mc_subaru, fracdiff_SLN, label="{:.0f}".format(dx), marker="x", linestyle="None")
+            ax_CC3.plot(mc_subaru, fracdiff_CC3, label="{:.0f}".format(dx), marker="x", linestyle="None")
+        
+        for ax in [ax_LN, ax_SLN, ax_CC3]:
+            ax.set_xlim(1e21, 1e29)
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_ylabel("Fractional difference")
+            ax.legend(fontsize="small", title="$\Delta$ X = $\Delta$ Y [px]")
+            
+        ax_LN.set_xlim(mc_min_LN, mc_max_LN)
+        ax_SLN.set_xlim(mc_min_SLN, mc_max_SLN)
+        ax_CC3.set_xlim(mc_min_CC3, mc_max_CC3)
+        ax_LN.set_xlabel("$M_c~[\mathrm{g}]$")
+        ax_SLN.set_xlabel("$M_c~[\mathrm{g}]$")
+        ax_CC3.set_xlabel("$M_p~[\mathrm{g}]$")
+        ax_LN.set_title("LN, $\Delta={:.1f}$".format(Deltas[i]))
+        ax_SLN.set_title("SLN, $\Delta={:.1f}$".format(Deltas[i]))
+        ax_CC3.set_title("CC3, $\Delta={:.1f}$".format(Deltas[i]))
+        
 
 """
 #%% Calculate constraints for extended MFs from 2009.03204.
 mc_subaru = 10**np.linspace(17, 29, 1000)
 
 # Constraints for monochromatic MF.
-m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697_dx=10.csv")
 
 # Mass function parameter values, from 2009.03204.
 Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
