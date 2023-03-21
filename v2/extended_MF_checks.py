@@ -337,7 +337,7 @@ if "__main__" == __name__:
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
     # Cutoff in the PBH mass function, compared to the peak mass
-    cutoffs = [1e-3, 1e-5]
+    cutoffs = [1e-3, 1e-5, 1e-7]
     # PBH mass spacing, in log10(PBH mass / grams)
     dm_values = [1e-4]
     
@@ -354,7 +354,7 @@ if "__main__" == __name__:
     # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
     integrand_cutoff_present = False
 
-    for i in range(len(Deltas[0:2])):
+    for i in range(len(Deltas[0:6])):
         
         # Find the most accurate constraint:
         if log_normal:
@@ -375,7 +375,10 @@ if "__main__" == __name__:
         constraints_names, f_PBH_Isatis_benchmark = load_results_Isatis(mf_string, modified=True, test_mass_range=False)    
         f_PBH_benchmark_envelope = envelope(f_PBH_Isatis_benchmark)
         
-        fig, ax = plt.subplots(figsize=(8, 8))
+        #fig, ax = plt.subplots(figsize=(8, 8))
+
+        print("\n\nDelta={:.1f}".format(Deltas[i]))
+
 
         for cutoff in cutoffs:
                                                  
@@ -403,7 +406,11 @@ if "__main__" == __name__:
                 # Fractional difference from benchmark constraint.
                 frac_diff = abs(f_PBH_envelope/f_PBH_benchmark_envelope - 1)
                 
-                ax.plot(mc_values, frac_diff, marker="x", label="Cutoff={:.0e}, Spacing $\delta \log_{10} m$={:.0e}".format(cutoff, delta_log_m))
+                print("\ncutoff = {:.0e}:".format(cutoff))
+                print("\dm = {:.0e}:".format(delta_log_m))
+                print("LN : {:.2f}".format(percent_agree_fPBH(f_PBH_envelope, f_PBH_benchmark_envelope)))
+                """
+                ax.plot(mc_values, frac_diff, marker="x", label="Cutoff={:.0e}".format(cutoff) + ", Spacing $\delta \log_{10} " + "m$={:.0e}".format(delta_log_m), linestyle="None")
                 
                 if plot_constraint:
                     fig1, ax1 = plt.subplots(figsize=(8, 8))
@@ -423,8 +430,9 @@ if "__main__" == __name__:
 
                 ax.set_ylim(1e-3, 2)
                 ax.set_xlim(1e14, 1e18)
+                ax.set_xscale("log")
                 ax.set_xlabel("$M_c~[\mathrm{g}]$")
                 ax.set_ylabel("Fractional difference in $f_\mathrm{PBH}$")
                 ax.legend(fontsize="small")
                 plt.tight_layout()
-         
+                """
