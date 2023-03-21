@@ -34,6 +34,7 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
+plt.style.use('tableau-colorblind10')
 filepath = './Extracted_files/'
 
 #%%
@@ -198,6 +199,31 @@ if "__main__" == __name__:
     ax.set_title("Smyth et al. (2019) [1910.01285]")
     fig.tight_layout()
     #plt.savefig("./Figures/HSC_constraints/test_1910.01285_LN_SLN.png", dpi=1200)
+    
+    
+#%% Plot data extracted from Fig. 4 of 2007.12697, for different numbers of 
+# data points.
+if "__main__" == __name__:
+
+    dx_values = [2, 5, 10, 20]
+    fig, ax = plt.subplots(figsize=(5.5, 5.5))
+    
+    for dx in dx_values:
+        m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(dx))
+        
+        if dx == 2:
+            ax.plot(m_subaru_mono, f_max_subaru_mono, label=r"$\Delta X={:.0f}".format(dx) + "\mathrm{px}, \Delta Y = 15\mathrm{px}$", linestyle="None", marker="x")
+        else:
+            ax.plot(m_subaru_mono, f_max_subaru_mono, label=r"$\Delta X = \Delta Y = {:.0f}$ px".format(dx), linestyle="None", marker="x")
+        
+    ax.set_xlabel('$M_\mathrm{PBH}~[\mathrm{g}]$')
+    ax.set_ylabel('$f_\mathrm{PBH}$')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_title("Monochromatic MF")
+    ax.legend(fontsize="small")
+    fig.tight_layout()
+
 
 #%% Test how methods for comparing how many values in two arrays agree to 2 significant figures.
 
@@ -208,7 +234,7 @@ def percent_agree(a, b):
     for i in range(len(a)):
         #print("{:.1e}".format(a[i]))
         #print("{:.1e}".format(b[i]))
-        if "{:.1e}".format(a[i]) == "{:.1e}".format(b[i]):
+        if "{:.0e}".format(a[i]) == "{:.0e}".format(b[i]):
             agreement_array.append(1)
         else:
             agreement_array.append(0)
