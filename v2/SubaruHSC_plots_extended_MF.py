@@ -205,17 +205,19 @@ if "__main__" == __name__:
 # data points.
 if "__main__" == __name__:
 
-    dx_values = [2, 5, 10, 20]
+    dx_values = [2, 3, 4, 5, 10, 20]
     fig, ax = plt.subplots(figsize=(5.5, 5.5))
     
     for dx in dx_values:
         m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(dx))
-        
+        ax.plot(m_subaru_mono, f_max_subaru_mono, label=r"$\Delta X = \Delta Y = {:.0f}$ px".format(dx), linestyle="None", marker="x")
+
+        """
         if dx == 2:
             ax.plot(m_subaru_mono, f_max_subaru_mono, label=r"$\Delta X={:.0f}".format(dx) + "\mathrm{px}, \Delta Y = 15\mathrm{px}$", linestyle="None", marker="x")
         else:
             ax.plot(m_subaru_mono, f_max_subaru_mono, label=r"$\Delta X = \Delta Y = {:.0f}$ px".format(dx), linestyle="None", marker="x")
-        
+        """
     ax.set_xlabel('$M_\mathrm{PBH}~[\mathrm{g}]$')
     ax.set_ylabel('$f_\mathrm{PBH}$')
     ax.set_xscale('log')
