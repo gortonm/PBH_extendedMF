@@ -40,12 +40,12 @@ if test_mass_range:
 
 # If True, use cutoff in terms of the mass function scaled to its peak value.
 MF_cutoff = True
-# If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints.
+# If True, use cutoff in te\wrms of the integrand appearing in Galactic Centre photon constraints.
 integrand_cutoff = False
 # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
 integrand_cutoff_present = False
 
-cutoff = 1e-7
+cutoff = 1e-3
 
 if MF_cutoff:
     scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
@@ -60,7 +60,7 @@ elif integrand_cutoff:
 # Minimum and maximum central masses.
 mc_min = 1e14
 mc_max = 1e19
-mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
+mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 10)
 
 # Path to BlackHawk and Isatis
 BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
@@ -97,17 +97,17 @@ params_Isatis[14][1] = "1"
 for i in range(len(Deltas)):
     
     if log_normal:
-        append = "GC_LN_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+        append = "LN_D={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     elif SLN_bool:
-        append = "GC_SL_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+        append = "SL_D={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     elif CC3_bool:
-        append = "GC_CC_Delta={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+        append = "CC_D={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
     
     # Indicates which range of masses are being used (for convergence tests).
     if test_mass_range:
         append += "_test_range"
     elif MF_cutoff:
-        append += "_MF_c={:.0f}".format(-np.log10(cutoff))
+        append += "_c={:.0f}".format(-np.log10(cutoff))
     elif integrand_cutoff:
         append += "_integrand_c={:.0f}".format(-np.log10(cutoff))
     elif integrand_cutoff_present:
@@ -150,12 +150,12 @@ for i in range(len(Deltas)):
             params_BlackHawk[19][1] = "{:.3f}".format(sigmas_LN[i])
             params_BlackHawk[20][1] = "{:.5e}".format(m_c)
         if SLN_bool:
-            BH_number = int((np.log10(m_c*m_upper_LN[i])-np.log10(m_c*m_lower_LN[i])) / delta_log_m)
+            BH_number = int((np.log10(m_c*m_upper_SLN[i])-np.log10(m_c*m_lower_SLN[i])) / delta_log_m)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_SLN[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_SLN[i] * m_c)
             params_BlackHawk[15][1] = "-1"
-            params_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
+            params_BlackHawk[28][1] = append + "_{:.0f}".format(j)
             
             # Create and save file for PBH mass and spin distribution
             m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), np.log10(m_upper_SLN[i] * m_c), BH_number)
@@ -165,13 +165,13 @@ for i in range(len(Deltas)):
             np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
             
         if CC3_bool:
-            BH_number = int((np.log10(m_c*m_upper_LN[i])-np.log10(m_c*m_lower_LN[i])) / delta_log_m)
+            BH_number = int((np.log10(m_c*m_upper_CC3[i])-np.log10(m_c*m_lower_CC3[i])) / delta_log_m)
             print(BH_number)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_CC3[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_CC3[i] * m_c)
             params_BlackHawk[15][1] = "-1"
-            params_BlackHawk[28][1] = append + "_{:.0f}.txt".format(j)
+            params_BlackHawk[28][1] = append + "_{:.0f}".format(j)
             
             # Create and save file for PBH mass and spin distribution
             m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), np.log10(m_upper_CC3[i] * m_c), BH_number)
