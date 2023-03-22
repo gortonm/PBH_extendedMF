@@ -59,11 +59,11 @@ single_mass = True
 mc_min = 1e14
 mc_max = 1e19
 if single_mass:
-    mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
-else:
     mc_values = [mc_max]
+else:
+    mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
 
-
+print(mc_values)
 # PBH mass spacing, in log10(PBH mass / grams)
 delta_log_m = 10**(-4)
 
@@ -110,6 +110,9 @@ for i in range(len(Deltas)):
         fname_base += "_test_range"
     elif MF_cutoff:
         fname_base += "_c={:.0f}".format(-np.log10(cutoff))
+        
+    if single_mass:
+        fname_base += "_mc={:.0f}".format(np.log10(mc_max))
                 
     # Create runs file
     runs_filename = "runs_%s.txt" % fname_base
@@ -124,11 +127,15 @@ for i in range(len(Deltas)):
     
     for j, m_c in enumerate(mc_values):
         
-        destination_folder = fname_base + "_{:.0f}".format(j)
+        if single_mass:
+            destination_folder = fname_base
+        else:
+            destination_folder = fname_base + "_{:.0f}".format(j)
+            
         filename_BlackHawk = "/BH_launcher/" + destination_folder + ".txt"
         filepath_Isatis = BlackHawk_path + "results/" + destination_folder
         # Add run name to runs file
-        runs_file_content.append(fname_base + "_{:.0f}".format(j))
+        runs_file_content.append(destination_folder)
                             
         if not os.path.exists(filepath_Isatis):
             os.makedirs(filepath_Isatis)
@@ -155,7 +162,7 @@ for i in range(len(Deltas)):
             # Create and save file for PBH mass and spin distribution
             spec_file = []
             spec_file.append(spec_file_initial_line)
-            filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + fname_base + "_{:.0f}".format(j)
+            filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + destination_folder
 
             m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), np.log10(m_upper_SLN[i] * m_c), BH_number)
             spec_values = SLN(m_pbh_values, m_c=m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])         
@@ -174,7 +181,7 @@ for i in range(len(Deltas)):
             # Create and save file for PBH mass and spin distribution
             spec_file = []
             spec_file.append(spec_file_initial_line)
-            filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + fname_base + "_{:.0f}".format(j)
+            filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + destination_folder
 
             m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), np.log10(m_upper_CC3[i] * m_c), BH_number)
             spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
