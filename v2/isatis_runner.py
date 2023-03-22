@@ -90,7 +90,6 @@ with open(BlackHawk_path + "input.txt", "w") as f:
     
 # Update astrophysical parameter values used in Isatis
 params_Isatis[2][1] = "0"        
-params_Isatis[3][1] = "{:.4f}".format(local_DM_GeV)     
 params_Isatis[5][1] = "{:.1f}".format(r_0)     
 params_Isatis[7][1] = "{:.1e}".format(rho_c_halo)     
 params_Isatis[8][1] = "{:.0f}".format(r_c_halo)
