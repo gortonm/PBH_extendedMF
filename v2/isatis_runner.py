@@ -12,7 +12,6 @@ import os
 from preliminaries import SLN, CC3
 
 # Astrophysical parameter values
-local_DM_GeV = 0.47685              # DM local density in GeV/cm^3
 r_0 = 8.5                           # distance Sun-GC in kpc
 rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
