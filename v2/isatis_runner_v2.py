@@ -39,7 +39,7 @@ if test_mass_range:
 
 # If True, use cutoff in terms of the mass function scaled to its peak value.
 MF_cutoff = True
-# If True, use cutoff in te\wrms of the integrand appearing in Galactic Centre photon constraints.
+# If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints.
 integrand_cutoff = False
 # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
 integrand_cutoff_present = False
@@ -50,7 +50,7 @@ cutoff_values = [1e-3, 1e-5, 1e-7]
 dm_values = [1e-3, 1e-4, 1e-5]
 
 # Minimum and maximum central masses.
-mc_max_values = [1e17, 1e15, 1e14]
+mc_max_values = [1e19]
 
 # If True, use a single characteristic PBH mass. 
 single_mass = True
@@ -58,13 +58,13 @@ mc_min = 1e14
 
 
 # Number of energies to use
-E_number_values = [2000]
+E_number_values = [10000]
 
 for E_number in E_number_values:
     
     for cutoff in cutoff_values:
         
-        for dm in dm_values:
+        for delta_log_m in dm_values:
         
             for mc_max in mc_max_values:
                 
@@ -75,10 +75,6 @@ for E_number in E_number_values:
         
                 scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
                 [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
-                
-                
-                # PBH mass spacing, in log10(PBH mass / grams)
-                delta_log_m = 10**(-5)
                 
                 
                 # Path to BlackHawk and Isatis
