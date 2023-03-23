@@ -44,7 +44,7 @@ integrand_cutoff = False
 # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
 integrand_cutoff_present = False
 
-cutoff_values = [1e-3, 1e-5, 1e-7]
+cutoff_values = [1e-3]
 
 # PBH mass spacing, in log10(PBH mass / grams)
 dm_values = [1e-3, 1e-4, 1e-5]
@@ -56,13 +56,37 @@ mc_max_values = [1e19]
 single_mass = True
 mc_min = 1e14
 
+# Choose minimum energy as the lower range constrained by the Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-LAT (see e.g. Fig. 2 of 2201.01265)
+E_min = 1e-5
+E_max = 5   # maximum energy available in Hazma tables
 
 # Number of energies to use
 E_number_values = [10000]
 
+
+# Path to BlackHawk and Isatis
+BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
+Isatis_path = BlackHawk_path + "scripts/Isatis/"
+
+# Load default Isatis parameters file
+params_Isatis = np.genfromtxt(Isatis_path + "parameters.txt", dtype=str, delimiter=" = ")
+# Load default BlackHawk parameters file
+params_BlackHawk = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, delimiter=" = ")
+                
+# Write your input when running BlackHawk to a file
+with open(BlackHawk_path + "input.txt", "w") as f:
+    f.write("y\ny")
+
+# Initial line of each PBH mass spectrum file.
+spec_file_initial_line = "mass/spin \t 0.00000e+00"
+
 for E_number in E_number_values:
     
     for cutoff in cutoff_values:
+        
+        scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+        [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
+
         
         for delta_log_m in dm_values:
         
@@ -72,33 +96,7 @@ for E_number in E_number_values:
                     mc_values = [mc_max]
                 else:
                     mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
-        
-                scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
-                [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
-                
-                
-                # Path to BlackHawk and Isatis
-                BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
-                Isatis_path = BlackHawk_path + "scripts/Isatis/"
-                
-                
-                # Load default Isatis parameters file
-                params_Isatis = np.genfromtxt(Isatis_path + "parameters.txt", dtype=str, delimiter=" = ")
-                # Load default BlackHawk parameters file
-                params_BlackHawk = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, delimiter=" = ")
-                
-                
-                # Choose minimum energy as the lower range constrained by the Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-LAT (see e.g. Fig. 2 of 2201.01265)
-                E_min = 1e-5
-                E_max = 5   # maximum energy available in Hazma tables
-                
-                
-                spec_file_initial_line = "mass/spin \t 0.00000e+00"
-                
-                # Write your input when running BlackHawk to a file
-                with open(BlackHawk_path + "input.txt", "w") as f:
-                    f.write("y\ny")
-                    
+                                    
                 # Update astrophysical parameter values used in Isatis
                 params_Isatis[2][1] = "0"        
                 params_Isatis[5][1] = "{:.1f}".format(r_0)     
@@ -107,7 +105,7 @@ for E_number in E_number_values:
                 params_Isatis[9][1] = "{:.0f}".format(gamma_halo)     
                 params_Isatis[14][1] = "1"   
                     
-                for i in range(len(Deltas[-1:])):
+                for i in range(len(Deltas)):
                     
                     if LN_bool:
                         fname_base = "LN_D={:.1f}_dm={:.0f}_E={:.0f}".format(Deltas[i], -np.log10(delta_log_m), np.log10(E_number))
