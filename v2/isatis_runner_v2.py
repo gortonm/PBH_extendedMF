@@ -44,7 +44,7 @@ integrand_cutoff = False
 # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
 integrand_cutoff_present = False
 
-cutoff_values = [1e-3, 1e-5, 1e-7]
+cutoff_values = [1e-2, 1e-3, 1e-5, 1e-7]
 
 # PBH mass spacing, in log10(PBH mass / grams)
 dm_values = [1e-3, 1e-4, 1e-5]
@@ -90,34 +90,32 @@ params_Isatis[14][1] = "1"
 
 for i in range(len(Deltas)):
     
+    if Deltas[i] > 2:
+        dm_values = [1e-3, 1e-4, 1e-5]
+        cutoff_values = [1e-3, 1e-5, 1e-7]
+
     for E_number in E_number_values:
+        if E_number < 1e3:
+            energies_string = "E{:.0f}".format(E_number)
+        else:
+            energies_string = "E{:.0f}".format(np.log10(E_number))
         
         for cutoff in cutoff_values:
             
             scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
             [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
     
-            
             for delta_log_m in dm_values:
-                
-                if Deltas[i] > 2:
-                    dm_values = [1e-3, 1e-4, 1e-5]
-                    
-                else:
-                    dm_values = [5e-2, 1e-3, 1e-4, 1e-5]
-            
+
                 for mc_max in mc_max_values:
+                    
+                    os.chdir(os.path.expanduser('~') + "/Asteroid_mass_gap/v2")
                     
                     if single_mass:
                         mc_values = [mc_max]
                     else:
                         mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
-                        
-                    if E_number < 1e3:
-                        energies_string = "E{:.0f}".format(E_number)
-                    else:
-                        energies_string = "E{:.0f}".format(np.log10(E_number))
-                        
+                                                
                     if LN_bool:
                         fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string
                     elif SLN_bool:
