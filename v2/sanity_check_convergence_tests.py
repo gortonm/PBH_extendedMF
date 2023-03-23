@@ -14,6 +14,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from preliminaries import SLN, CC3
+from isatis_reproduction import read_blackhawk_spectra
 import os
 
 # Specify the plot style
@@ -38,14 +39,14 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 plt.style.use('tableau-colorblind10')
 
 
-#%%
+#%% Compare mass functions used by BlackHawk calculations to that expected.
 
 # Path to BlackHawk
 BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
 
 cutoff = 1e-7
 m_c = 1e19
-delta_log_m = 1e-5
+delta_log_m = 1e-4
 
 scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
 [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
@@ -53,8 +54,8 @@ scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(c
 # Load mass function parameters.
 [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
-SLN_bool = False
-CC3_bool = True
+SLN_bool = True
+CC3_bool = False
 
 for i in range(len(Deltas)):
     
@@ -98,3 +99,35 @@ for i in range(len(Deltas)):
     ax.set_title(title)
     ax.legend(fontsize="small")
     fig.tight_layout()
+    
+#%% Compare photon spectrum for cases where the constraint is calculated
+# to be zero to cases where it has a finite value.
+
+Delta = 5.0
+cutoff = 1e-3
+m_c = 1e19
+dm_values = [1e-3, 1e-4]
+
+colors = ['#006BA4', '#FF800E', '#ABABAB', '#595959', '#5F9ED1', '#C85200']
+
+# Path to BlackHawk
+BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
+file_path_BlackHawk_data = BlackHawk_path + "results/"
+
+fig, ax = plt.subplots(figsize=(7, 6))
+
+for i, delta_log_m in enumerate(dm_values):
+    energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "SL_D={:.1f}_dm={:.0f}_c={:.0f}_mc={:.0f}/".format(Delta, -np.log10(delta_log_m), -np.log10(cutoff), np.log10(m_c)) + "instantaneous_primary_spectra.txt", col=1)
+    energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "SL_D={:.1f}_dm={:.0f}_c={:.0f}_mc={:.0f}/".format(Delta, -np.log10(delta_log_m), -np.log10(cutoff), np.log10(m_c)) + "instantaneous_secondary_spectra.txt", col=1)
+    ax.plot(energies_primary, spectrum_primary, linestyle="dotted", color=colors[i])
+    ax.plot(energies_tot, spectrum_tot, color=colors[i], label="{:.0e}".format(delta_log_m))
+    
+ax.legend(title="$\delta \log_{10}(m / \mathrm{g})$", fontsize="small")
+ax.set_xlabel("$E~[\mathrm{GeV}]$")
+ax.set_ylabel(r"$\tilde{Q}_\gamma(E)~[\mathrm{GeV^{-1} \cdot \mathrm{cm}^{-2} \cdot \mathrm{s}^{-1} \cdot \mathrm{sr}^{-1}}]$")
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.set_title("$m_c = {:.0e}".format(m_c) + "~\mathrm{g}$" + ", cutoff={:.0e}".format(cutoff))
+ax.set_xlim(1e-5, 5)
+ax.legend(title="$\delta \log_{10}(m / \mathrm{g})$", fontsize="small")
+fig.tight_layout()
