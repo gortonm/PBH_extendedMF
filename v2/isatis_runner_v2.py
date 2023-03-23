@@ -108,20 +108,20 @@ for E_number in E_number_values:
                 for i in range(len(Deltas)):
                     
                     if LN_bool:
-                        fname_base = "LN_D={:.1f}_dm={:.0f}_E={:.0f}".format(Deltas[i], -np.log10(delta_log_m), np.log10(E_number))
+                        fname_base = "LN_D={:.1f}_dm{:.0f}_E{:.0f}".format(Deltas[i], -np.log10(delta_log_m), np.log10(E_number))
                     elif SLN_bool:
-                        fname_base = "SL_D={:.1f}_dm={:.0f}_E={:.0f}".format(Deltas[i], -np.log10(delta_log_m), np.log10(E_number))
+                        fname_base = "SL_D={:.1f}_dm{:.0f}_E{:.0f}".format(Deltas[i], -np.log10(delta_log_m), np.log10(E_number))
                     elif CC3_bool:
-                        fname_base = "CC_D={:.1f}_dm={:.0f}_E={:.0f}".format(Deltas[i], -np.log10(delta_log_m), np.log10(E_number))
+                        fname_base = "CC_D={:.1f}_dm{:.0f}_E{:.0f}".format(Deltas[i], -np.log10(delta_log_m), np.log10(E_number))
                     
                     # Indicates which range of masses are being used (for convergence tests).
                     if test_mass_range:
                         fname_base += "_test_range"
                     elif MF_cutoff:
-                        fname_base += "_c={:.0f}".format(-np.log10(cutoff))
+                        fname_base += "_c{:.0f}".format(-np.log10(cutoff))
                         
                     if single_mass:
-                        fname_base += "_mc={:.0f}".format(np.log10(mc_max))
+                        fname_base += "_mc{:.0f}".format(np.log10(mc_max))
                                 
                     # Create runs file
                     runs_filename = "runs_%s.txt" % fname_base
