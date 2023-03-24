@@ -676,3 +676,32 @@ if "__main__" == __name__:
 
     np.savetxt(scaled_masses_filename, np.column_stack(mass_ranges), delimiter="\t\t ", header=file_header, fmt="%.4e")        
         
+#%% Proportion of values in the energy range constrained by the instruments shown in Fig. 2 of 2201.01265 above 5 GeV (which Hazma cannot calculate secondary spectra for
+    
+if "__main__" == __name__:
+    E_min, E_max = 1e-6, 105.874
+    E_number = 10000000
+    energies = np.logspace(np.log10(E_min), np.log10(E_max), E_number)
+    print(len(energies[energies < 5]) / len(energies))
+    
+    
+#%% Find characteristic mass for which the minimum mass to include in a calculation is smaller than ~1e14g, when emission of photons with E < 5 GeV becomes significant.
+if "__main__" == __name__:
+    
+    m_sig = 1e14  # PBH mass below which emission of photons becomes significant.
+    cutoff_values = [1e-2, 1e-3, 1e-5, 1e-7]
+    
+    for cutoff in cutoff_values:
+        print("\nCutoff = {:.0e}".format(cutoff))
+        
+        scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+        [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
+        
+        for i in range(len(Deltas)):
+            print("\nDelta = {:.1f}".format(Deltas[i]))
+            mc_sig_LN = m_sig / m_lower_LN[i]
+            mc_sig_SLN = m_sig / m_lower_SLN[i]
+            mc_sig_CC3 = m_sig / m_lower_CC3[i]
+            print("LN: mc_sig = {:.1e}g".format(mc_sig_LN))
+            print("SLN: mc_sig = {:.1e}g".format(mc_sig_SLN))
+            print("CC3: mc_sig = {:.1e}g".format(mc_sig_CC3))
