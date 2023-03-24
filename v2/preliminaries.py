@@ -571,9 +571,9 @@ if "__main__" == __name__:
     # Select which range of masses to use (for convergence tests).
 
     # If True, use cutoff in terms of the mass function scaled to its peak value.
-    MF_cutoff = False
+    MF_cutoff = True
     # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints.
-    integrand_cutoff = True
+    integrand_cutoff = False
     # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
     #integrand_cutoff_present = False
     
@@ -582,7 +582,7 @@ if "__main__" == __name__:
 
     # Minimum value of the mass function (scaled to its peak value).
     # Set to 0.1 when comparing to Fig. 5 of 2009.03204.
-    cutoff = 1e-3
+    cutoff = 1e-2
     
     # Name of the filename to save with mass range.
     if MF_cutoff:
