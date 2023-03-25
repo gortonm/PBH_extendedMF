@@ -33,7 +33,7 @@ E_number = 1000
 BH_number = 1
 
 # Range of PBH masses
-m_pbh_values = np.logspace(11, 21, 5)
+m_pbh_values = np.logspace(11, 21, 1000)
 
 # Path to BlackHawk and Isatis
 BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
@@ -70,7 +70,7 @@ E_number_PYTHIA = len(E_PYTHIA)
 E_min_PYTHIA = min(E_PYTHIA)
 
 # Boolean controls whether to use PYTHIA or Hazma tables
-PYTHIA = True
+PYTHIA = False
 Hazma = not PYTHIA
 
 fname_base = "GC_mono"
@@ -122,6 +122,7 @@ for j, m in enumerate(m_pbh_values):
     # Run BlackHawk
     os.chdir(BlackHawk_path)
     command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + destination_folder + ".txt<input.txt"
+    print(command)
     os.system(command) 
    
 # Save runs file
@@ -131,13 +132,13 @@ np.savetxt(BlackHawk_path + "scripts/Isatis/BH_launcher/%s" % runs_filename, run
 
 if "__main__" == __name__:
 
-    run_isatis = False
+    run_isatis = True
     
     if run_isatis:
     
-        header = "Hawking secondary spectra for each particle type. \n energy/particle         photon       electron"
+        header = "Hawking secondary spectra for each particle type. \nenergy/particle\tphoton"
         
-        for j, m in enumerate(m_pbh_values):
+        for j in range(len(m_pbh_values)):
             
             # Create file combining data from PYTHIA and Hazma runs
             destination_folder = fname_base + "_{:.0f}".format(j)
@@ -145,24 +146,30 @@ if "__main__" == __name__:
             if not os.path.exists(filepath_Isatis):
                 os.makedirs(filepath_Isatis)
     
+            energies_tot_PYTHIA, spectrum_tot_PYTHIA = read_blackhawk_spectra("%s_PYTHIA/instantaneous_secondary_spectra.txt" % filepath_Isatis, col=1)
+            energies_tot_Hazma, spectrum_tot_Hazma = read_blackhawk_spectra("%s_Hazma/instantaneous_secondary_spectra.txt" % filepath_Isatis, col=1)
             
-            os.chdir(filepath_Isatis)
+            energies_truncated_Hazma = energies_tot_Hazma[energies_tot_Hazma<E_c]
+            spectrum_truncated_Hazma = spectrum_tot_Hazma[energies_tot_Hazma<E_c]
             
-            energies_tot_PYTHIA, spectrum_tot_PYTHIA = read_blackhawk_spectra("../%s_PYTHIA/instantaneous_secondary_spectra.txt".format(filepath_Isatis), col=1)
-            energies_tot_Hazma, spectrum_tot_Hazma = read_blackhawk_spectra("../%s_Hazma/instantaneous_secondary_spectra_Hazma.txt".format(filepath_Isatis), col=1)
+            energies_truncated_PYTHIA = energies_tot_PYTHIA[energies_tot_PYTHIA>=E_c]
+            spectrum_truncated_PYTHIA = spectrum_tot_PYTHIA[energies_tot_PYTHIA>=E_c]
+
+            print(energies_truncated_Hazma)            
+            print(energies_truncated_PYTHIA)           
             
             # Check energies do not overlap
-            print(min(energies_tot_PYTHIA))
+            print(min(energies_truncated_PYTHIA))
             print(E_min_PYTHIA)
         
-            print(max(energies_tot_Hazma))
+            print(max(energies_truncated_Hazma))
             print(E_max_Hazma)
             
             # Concatenate arrays
-            energies_tot = np.concatenate(energies_tot_PYTHIA, energies_tot_Hazma)
-            spectrum_tot = np.concatenate(spectrum_tot_PYTHIA, spectrum_tot_Hazma)
+            energies_tot = np.concatenate((energies_truncated_Hazma, energies_truncated_PYTHIA))
+            spectrum_tot = np.concatenate((spectrum_truncated_Hazma, spectrum_truncated_PYTHIA))
             
-            np.savetxt("instantaneous_secondary_spectra.txt", np.column_stack(energies_tot, spectrum_tot), header=header)
+            np.savetxt("%s/instantaneous_secondary_spectra.txt" % filepath_Isatis, np.column_stack((energies_tot, spectrum_tot)), header=header, delimiter="\t", fmt="%.5e")
         
         # Run Isatis
         os.chdir(BlackHawk_path + "./scripts/Isatis")
@@ -176,18 +183,18 @@ import matplotlib.pyplot as plt
 
 if "__main__" == __name__:
     
-    plot_constraints_mono = False
+    os.chdir(os.path.expanduser('~') + "/Asteroid_mass_gap/v2")
+    plot_constraints_mono = True
     
     if plot_constraints_mono:
         
-        m_pbh_values = np.logspace(11, 21, 101)
-        constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(modified=False)
+        constraints_names, f_PBH_Isatis = load_results_Isatis()
         colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
         
         fig, ax = plt.subplots(figsize=(8, 8))
         
-        for i in range(len(constraints_names_unmodified)):
-            ax.plot(m_pbh_values, f_PBH_Isatis_unmodified[i], label=constraints_names_unmodified[i], color=colors_evap[i])
+        for i in range(len(constraints_names)):
+            ax.plot(m_pbh_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
         
         ax.set_xlim(1e14, 1e18)
         ax.set_ylim(10**(-10), 1)
