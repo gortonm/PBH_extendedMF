@@ -88,7 +88,6 @@ def load_results_Isatis(mf_string="mono", modified=True, test_mass_range=False):
     return constraints_names, f_PBH_Isatis
 
 
-
 LN_bool = False
 SLN_bool = False
 CC3_bool = True
@@ -105,8 +104,6 @@ mc_max_values = [1e19, 1e17]
 # Number of energies to use
 E_number_values = [500, 1000]
 
-#delta_log_m = 1e-2
-
 E_number_color = ["tab:blue", "tab:orange"]
 E_number_marker = ["x", "+"]
 
@@ -120,55 +117,24 @@ if LN_bool:
 for mc_max in mc_max_values:
 
     for i in range(len(Deltas)):
+                
+        E_number_most_precise = 10000
+        cutoff_value_most_precise = 1e-7
+        dm_value_most_precise = 1e-4
         
-        """
-        if i == 0:
-            
-            if CC3_bool:
-                #E_number_values = [1000, 10000]
-                E_number_values = [1000]
-                cutoff_values = [1e-5, 1e-7]
-                               
-            elif LN_bool:
-                cutoff_values = [1e-3, 1e-5, 1e-7]
-                
-            if mc_max < 1e17:
-                
-                if SLN_bool:
-                    cutoff_values = [1e-3, 1e-5, 1e-7]
-                    
-                elif LN_bool:
-                    E_number_values = [10000, 100000]
-                    
-        if i == 6:
-            
-            if SLN_bool:
-                cutoff_values = [1e-5, 1e-7]
-            
-            elif CC3_bool:
-                cutoff_values = [1e-3, 1e-5, 1e-7]
-               
-            if mc_max < 1e19:
-                
-                if CC3_bool:
-                    cutoff_values = [1e-7, 1e-8]
-        """
-        
-        E_number_most_precise = max(E_number_values)
-        cutoff_value_most_precise = min(cutoff_values)
         if E_number_most_precise < 1e3:
             energies_string_most_precise = "E{:.0f}".format(E_number_most_precise)
         else:
-            energies_string = "E{:.0f}".format(np.log10(E_number_values[-1]))
+            energies_string = "E{:.0f}".format(np.log10(E_number_most_precise))
         
         if LN_bool:
-            fname_base_most_precise = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string
+            fname_base_most_precise = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(dm_value_most_precise)) + energies_string
             fig_name =  "LN_D={:.1f}_mc=1e{:.0f}".format(Deltas[i], np.log10(mc_max))
         elif SLN_bool:
-            fname_base_most_precise = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string
+            fname_base_most_precise = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(dm_value_most_precise)) + energies_string
             fig_name = "SL_D={:.1f}_mc=1e{:.0f}".format(Deltas[i], np.log10(mc_max))
         elif CC3_bool:
-            fname_base_most_precise = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string
+            fname_base_most_precise = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(dm_value_most_precise)) + energies_string
             fig_name = "CC_D={:.1f}_mp=1e{:.0f}g".format(Deltas[i], np.log10(mc_max))
         
         fname_base_most_precise += "_c{:.0f}_mc{:.0f}".format(-np.log10(cutoff_value_most_precise), np.log10(mc_max))
