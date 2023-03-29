@@ -200,149 +200,12 @@ if "__main__" == __name__:
     fig.tight_layout()
     #plt.savefig("./Figures/HSC_constraints/test_1910.01285_LN_SLN.png", dpi=1200)
     
-    
-#%% Plot data extracted from Fig. 4 of 2007.12697, for different numbers of 
-# data points.
-if "__main__" == __name__:
 
-    dx_values = [2, 3, 4, 5, 10, 20]
-    fig, ax = plt.subplots(figsize=(5.5, 5.5))
-    
-    for dx in dx_values:
-        m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(dx))
-        ax.plot(m_subaru_mono, f_max_subaru_mono, label=r"$\Delta X = \Delta Y = {:.0f}$ px".format(dx), linestyle="None", marker="x")
-
-        """
-        if dx == 2:
-            ax.plot(m_subaru_mono, f_max_subaru_mono, label=r"$\Delta X={:.0f}".format(dx) + "\mathrm{px}, \Delta Y = 15\mathrm{px}$", linestyle="None", marker="x")
-        else:
-            ax.plot(m_subaru_mono, f_max_subaru_mono, label=r"$\Delta X = \Delta Y = {:.0f}$ px".format(dx), linestyle="None", marker="x")
-        """
-    ax.set_xlabel('$M_\mathrm{PBH}~[\mathrm{g}]$')
-    ax.set_ylabel('$f_\mathrm{PBH}$')
-    ax.set_xscale('log')
-    ax.set_yscale('log')
-    ax.set_title("Monochromatic MF")
-    ax.legend(fontsize="small")
-    fig.tight_layout()
-
-
-#%% Test how methods for comparing how many values in two arrays agree to 2 significant figures.
-
-def percent_agree(a, b):
-    
-    agreement_array = []
-    
-    for i in range(len(a)):
-        #print("{:.1e}".format(a[i]))
-        #print("{:.1e}".format(b[i]))
-        if "{:.0e}".format(a[i]) == "{:.0e}".format(b[i]):
-            agreement_array.append(1)
-        else:
-            agreement_array.append(0)
-            
-    return np.mean(agreement_array)
-
-a = np.array([1.2, 5.754e41, 5.754e41, 1.8e-5, 1.76e-5])
-b = np.array([1.2, 5.744e41, 5.754e41, 1.8e-5, 1.8e-5])
-c = np.array([1.1501, 5.744e41, 5.754e41, 1.7e-5, 1.84e-5])
-
-print(percent_agree(a,b))
-print(percent_agree(a,c))
-
-
-def percent_agree_fPBH(fPBH, baseline):
-    fPBH_physical = fPBH[baseline <= 1.]
-    baseline_physical = baseline[baseline <= 1.]
-    return percent_agree(fPBH_physical, baseline_physical)
-
-print(percent_agree_fPBH(a, b))
-print(percent_agree_fPBH(a, c))
-
-
-#%% Convergence tests
-
-if "__main__" == __name__:
-    
-    # Range of characteristic masses
-    mc_subaru = 10**np.linspace(20, 29, 100)
-
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
-    for i in range(len(Deltas)):
-        
-        print("\n\nDelta={:.1f}".format(Deltas[i]))
-        
-        params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
-        params_CC3 = [alphas_CC3[i], betas[i]]
-        params_LN = [sigmas_LN[i]]
-    
-        dx_values = [2, 5, 10, 20]
-        """
-        fig_LN, ax_LN = plt.subplots(figsize=(8,8))
-        fig_SLN, ax_SLN = plt.subplots(figsize=(8,8))
-        fig_CC3, ax_CC3 = plt.subplots(figsize=(8,8))
-        """
-        m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(min(dx_values)))
-        f_PBH_benchmark_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
-        f_PBH_benchmark_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
-        f_PBH_benchmark_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
-        
-        # Range of characteristic PBH masses for which f_PBH <=1 in the most accurate calculation.
-        mc_min_LN, mc_max_LN = min(mc_subaru[f_PBH_benchmark_LN < 1]),  max(mc_subaru[f_PBH_benchmark_LN < 1])
-        mc_min_SLN, mc_max_SLN = min(mc_subaru[f_PBH_benchmark_SLN < 1]),  max(mc_subaru[f_PBH_benchmark_SLN < 1])
-        mc_min_CC3, mc_max_CC3 = min(mc_subaru[f_PBH_benchmark_CC3 < 1]),  max(mc_subaru[f_PBH_benchmark_CC3 < 1])
-               
-        for dx in dx_values[1:]:
-            m_subaru_mono, f_max_subaru_mono = load_data("2007.12697/Subaru-HSC_2007.12697_dx={:.0f}.csv".format(dx))
-
-            f_PBH_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
-            f_PBH_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
-            f_PBH_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
-            
-            np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/LN_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_LN, fmt="%2.1e")
-            np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/SLN_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_SLN)
-            np.savetxt("./Convergence_tests/fPBH_Subaru_HSC/CC3_Delta={:.1f}_dx={:.0f}".format(Deltas[i], dx), f_PBH_CC3)
-                        
-            fracdiff_LN = abs(f_PBH_LN/f_PBH_benchmark_LN - 1)
-            fracdiff_SLN = abs(f_PBH_SLN/f_PBH_benchmark_SLN - 1)
-            fracdiff_CC3 = abs(f_PBH_CC3/f_PBH_benchmark_CC3 - 1)
-            
-            print("\ndx = {:.0f}:".format(dx))
-            print("LN : {:.2f}".format(percent_agree_fPBH(f_PBH_LN, f_PBH_benchmark_LN)))
-            print("SLN : {:.2f}".format(percent_agree_fPBH(f_PBH_SLN, f_PBH_benchmark_SLN)))
-            print("CC3 : {:.2f}".format(percent_agree_fPBH(f_PBH_CC3, f_PBH_benchmark_CC3)))
-           
-        """
-            ax_LN.plot(mc_subaru, fracdiff_LN, label="{:.0f}".format(dx), marker="x", linestyle="None")
-            ax_SLN.plot(mc_subaru, fracdiff_SLN, label="{:.0f}".format(dx), marker="x", linestyle="None")
-            ax_CC3.plot(mc_subaru, fracdiff_CC3, label="{:.0f}".format(dx), marker="x", linestyle="None")
-        
-        for ax in [ax_LN, ax_SLN, ax_CC3]:
-            ax.set_xlim(1e21, 1e29)
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-            ax.set_ylabel("Fractional difference")
-            ax.legend(fontsize="small", title="$\Delta$ X = $\Delta$ Y [px]")
-            
-        ax_LN.set_xlim(mc_min_LN, mc_max_LN)
-        ax_SLN.set_xlim(mc_min_SLN, mc_max_SLN)
-        ax_CC3.set_xlim(mc_min_CC3, mc_max_CC3)
-        ax_LN.set_xlabel("$M_c~[\mathrm{g}]$")
-        ax_SLN.set_xlabel("$M_c~[\mathrm{g}]$")
-        ax_CC3.set_xlabel("$M_p~[\mathrm{g}]$")
-        ax_LN.set_title("LN, $\Delta={:.1f}$".format(Deltas[i]))
-        ax_SLN.set_title("SLN, $\Delta={:.1f}$".format(Deltas[i]))
-        ax_CC3.set_title("CC3, $\Delta={:.1f}$".format(Deltas[i]))
-        """
-
-"""
 #%% Calculate constraints for extended MFs from 2009.03204.
 mc_subaru = 10**np.linspace(17, 29, 1000)
 
 # Constraints for monochromatic MF.
-m_subaru_mono, f_max_subaru_mono = load_data("Subaru-HSC_2007.12697_dx=10.csv")
+m_subaru_mono, f_max_subaru_mono = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
 # Mass function parameter values, from 2009.03204.
 Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
@@ -362,16 +225,14 @@ for i in range(len(Deltas)):
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
     
-    f_pbh_skew_LN = constraint_Carr_HSC(mc_subaru, m_subaru_mono, skew_LN, params_SLN, f_max_subaru_mono)
-    f_pbh_CC3 = constraint_Carr_HSC(mc_subaru, m_subaru_mono, CC3, params_CC3, f_max_subaru_mono)
-    f_pbh_LN = constraint_Carr_HSC(mc_subaru, m_subaru_mono, lognormal_number_density, params_LN, f_max_subaru_mono)
-
-    data_filename_SLN = "./Data_files/constraints_extended_MF/SLN_HSC_Carr_Delta={:.1f}".format(Deltas[i])
-    data_filename_CC3 = "./Data_files/constraints_extended_MF/CC3_HSC_Carr_Delta={:.1f}".format(Deltas[i])
-    data_filename_LN = "./Data_files/constraints_extended_MF/LN_HSC_Carr_Delta={:.1f}".format(Deltas[i])
+    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
+    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
+    f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
     
-    np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_skew_LN], delimiter="\t")
+    data_filename_SLN = "./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
+    data_filename_CC3 = "./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
+    data_filename_LN = "./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
+    
+    np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
     np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
     np.savetxt(data_filename_LN, [mc_subaru, f_pbh_LN], delimiter="\t")
-    
-"""

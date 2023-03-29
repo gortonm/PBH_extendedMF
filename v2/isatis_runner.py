@@ -17,9 +17,9 @@ rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
-LN_bool = False
+LN_bool = True
 SLN_bool = False
-CC3_bool = True
+CC3_bool = False
 
 
 # Load mass function parameters.
@@ -47,10 +47,12 @@ integrand_cutoff_present = False
 
 # Mass range
 
-cutoff = 1e-3
+cutoff = 1e-4
 scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
 [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
 
+if LN_bool:
+    Deltas = Deltas[:-1]
 
 # Minimum and maximum central masses.
 
@@ -63,10 +65,8 @@ if single_mass:
 else:
     mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
 
-print(mc_values)
 # PBH mass spacing, in log10(PBH mass / grams)
-delta_log_m = 10**(-4)
-
+delta_log_m = 1e-2
 
 # Path to BlackHawk and Isatis
 BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
@@ -80,7 +80,7 @@ params_BlackHawk = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, d
 # Choose minimum energy as the lower range constrained by the Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-LAT (see e.g. Fig. 2 of 2201.01265)
 E_min = 1e-5
 E_max = 5   # maximum energy available in Hazma tables
-E_number = 1000
+E_number = 500
 
 spec_file_initial_line = "mass/spin \t 0.00000e+00"
 
@@ -187,7 +187,9 @@ for i in range(len(Deltas)):
             spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
             for k in range(len(m_pbh_values)):
                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
-            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
+            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")    
+            
+        print("BH_number = {:.0f}".format(BH_number))
             
         params_BlackHawk[34][1] = "{:.0f}".format(E_number)
         params_BlackHawk[35][1] = "{:.5e}".format(E_min)
