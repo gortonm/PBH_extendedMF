@@ -39,6 +39,7 @@ plt.style.use('tableau-colorblind10')
 
 if "__main__" == __name__:
     
+    # First six colours from matplotlib style 'tableau-colorblind10'.
     colors = ['#006BA4', '#FF800E', '#ABABAB', '#595959', '#5F9ED1', '#C85200']
     
     # Parameters used for convergence tests in Galactic Centre constraints.
@@ -61,58 +62,61 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
-    mc_values = np.logspace(14, 19, 100)
+    mc_values_GC = np.logspace(14, 19, 100)
         
     for i in range(len(Deltas)):
         
-        fig1, ax1 = plt.subplots(figsize=(8, 8))
-        fig2, ax2 = plt.subplots(figsize=(8, 8))
+        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+        ax1, ax2 = axes[0], axes[1]
         
         # Load cosntraints from Galactic Centre photons.
         if i < 5:
             fname_base_LN = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            constraints_names, f_PBHs_LN = load_results_Isatis(mf_string=fname_base_LN, modified=True)
-            f_PBH_LN = envelope(f_PBHs_LN)
+            constraints_names, f_PBHs_GC_LN = load_results_Isatis(mf_string=fname_base_LN, modified=True)
+            f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
 
         fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
 
-        constraints_names, f_PBHs_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
-        constraints_names, f_PBHs_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
+        constraints_names_GC, f_PBHs_GC_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
+        constraints_names_GC, f_PBHs_GC_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
 
-        f_PBH_SLN = envelope(f_PBHs_SLN)
-        f_PBH_CC3 = envelope(f_PBHs_CC3)
-
+        f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
+        f_PBH_GC_SLN = envelope(f_PBHs_GC_SLN)
+        f_PBH_GC_CC3 = envelope(f_PBHs_GC_CC3)
         
         # Loading constraints from Subaru-HSC.
         mc_Carr_SLN, f_PBH_Carr_SLN = np.genfromtxt("./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         mp_Carr_CC3, f_PBH_Carr_CC3 = np.genfromtxt("./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-        if i < 5:
+        
+        if i < 6:
             mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-        ax1.plot(mc_values, f_PBH_LN[i], color=colors[1])
-        ax1.plot(mc_values, f_PBH_SLN[i], color=colors[2])
-        ax2.plot(mc_values, f_PBH_LN[i], color=colors[1])
-        ax2.plot(mc_values, f_PBH_CC3[i], color=colors[3])
+            ax1.plot(mc_values_GC, f_PBH_GC_LN, color=colors[1])
+            ax2.plot(mc_values_GC, f_PBH_GC_LN, color=colors[1])
+
+        ax1.plot(mc_values_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashed")
+        ax2.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
 
         # Plot constraints
-        if i < 5:
+        if i < 6:
             ax1.plot(mc_Carr_LN, f_PBH_Carr_LN, color=colors[1], label="LN")
             ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN")
 
-        ax1.plot(mc_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN")
-        ax2.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3")
+        ax1.plot(mc_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashed")
+        ax2.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
         
         ax1.set_xlabel("$m_c~[\mathrm{g}]$")
         ax2.set_xlabel("$m_p~[\mathrm{g}]$")
         
         for ax in [ax1, ax2]:
-            ax.plot(m_mono_GC, f_PBH_mono_GC, color=colors[0], label="Monochromatic", linestyle="dotted")
-            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linestyle="dotted")
+            ax.plot(m_mono_GC, f_PBH_mono_GC, color=colors[0], label="Monochromatic", linestyle="dotted", linewidth=2)
+            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linestyle="dotted", linewidth=2)
             ax.set_xlim(1e14, 1e29)
             ax.set_ylim(10**(-10), 1)
             ax.set_ylabel("$f_\mathrm{PBH}$")
             ax.set_xscale("log")
             ax.set_yscale("log")
-            ax.legend(fontsize="small", title="$\Delta={:.1f}$".format(Deltas[i]))
-        fig1.tight_layout()
-        fig2.tight_layout()
+            ax.legend(fontsize="small")
+        fig.tight_layout()
+        fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
+        fig.savefig("./Results/Figures/fPBH_Delta={:.1f}.pdf".format(Deltas[i]))
