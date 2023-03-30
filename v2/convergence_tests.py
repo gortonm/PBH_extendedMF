@@ -7,7 +7,7 @@ Created on Tue Mar 28 17:38:40 2023
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from extended_MF_checks import envelope
+from extended_MF_checks import envelope, load_results_Isatis
 import os
 
 # Specify the plot style
@@ -32,65 +32,9 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 #%%
 
-def load_results_Isatis(mf_string="mono", modified=True, test_mass_range=False):
-    """
-    Read in constraints on f_PBH, obtained using Isatis, with a monochromatic PBH mass function.
-    Parameters
-    ----------
-    mf_string : String, optional
-        The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and "CC3" (critical collapse 3), plus the value of the power spectrum width Delta. 
-    modified : Boolean, optional
-        If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
-    test_mass_range : Boolean, optional
-        If True, use data obtained using the same method as for the constraints from 1705.05567.
-    Returns
-    -------
-    constraints_names : Array-like
-        Name of instrument and arxiv reference for constraint on PBHs.
-    f_PBH_Isatis : Array-like
-        Constraint on the fraction of dark matter in PBHs, calculated using Isatis.
-    """
-    # Choose path to Isatis.
-    if modified:
-        Isatis_path = "../../Downloads/version_finale/scripts/Isatis/"
-    else:
-        Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
-    
-    if test_mass_range:
-        mf_string += "_test_range"
-    
-    # Load Isatis constraints data.
-    constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path, mf_string), dtype = "str", unpack=True)[1:]
-    
-    constraints_names = []
-    f_PBH_Isatis = []
-    
-    # Create array of constraints for which the constraints are physical
-    # (i.e. the constraints are non-zero and positive).
-    for i in range(len(constraints_file)):
-
-        constraint = [float(constraints_file[i][j]) for j in range(1, len(constraints_file[i]))]
-            
-        if not(all(np.array(constraint)<=0)):
-    
-            f_PBH_Isatis.append(constraint)
-            
-            # Create labels
-            # Based upon code appearing in plotting.py within Isatis.
-            temp = constraints_file[i][0].split("_")
-            temp2 = ""
-            for i in range(len(temp)-1):
-                temp2 = "".join([temp2,temp[i],'\,\,'])
-            temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
-    
-            constraints_names.append(temp2)
-            
-    return constraints_names, f_PBH_Isatis
-
-
-LN_bool = False
+LN_bool = True
 SLN_bool = False
-CC3_bool = True
+CC3_bool = False
 
 Deltas = [0.0, 0.1, 0.3, 0.5, 1.0, 2.0, 5.0]
 cutoff_values = [1e-2, 1e-3, 1e-4, 1e-5, 1e-7]
@@ -107,21 +51,29 @@ E_number_values = [500, 1000]
 E_number_color = ["tab:blue", "tab:orange"]
 E_number_marker = ["x", "+"]
 
+# If True, compare results to an especially accurate calculation of the 
+# constraint, which does not return results for all Delta (due to Isatis crashing).
+most_precise_tot = True
+
 BlackHawk_path = "../../Downloads/version_finale/scripts/Isatis/"
 Isatis_path = BlackHawk_path + "scripts/Isatis/"
 
 if LN_bool:
     Deltas = Deltas[:-1]
 
-
 for mc_max in mc_max_values:
 
     for i in range(len(Deltas)):
-                
-        E_number_most_precise = 10000
-        cutoff_value_most_precise = 1e-7
-        dm_value_most_precise = 1e-4
         
+        if most_precise_tot:
+            E_number_most_precise = 10000
+            cutoff_value_most_precise = 1e-7
+            dm_value_most_precise = 1e-4
+        else:
+            E_number_most_precise = 1000
+            cutoff_value_most_precise = 1e-7
+            dm_value_most_precise = 1e-3
+       
         if E_number_most_precise < 1e3:
             energies_string_most_precise = "E{:.0f}".format(E_number_most_precise)
         else:
@@ -139,10 +91,13 @@ for mc_max in mc_max_values:
         
         fname_base_most_precise += "_c{:.0f}_mc{:.0f}".format(-np.log10(cutoff_value_most_precise), np.log10(mc_max))
         
+        if most_precise_tot:
+            fig_name += "_most_precise_tot"
+        
         constraints_names, f_PBHs_most_precise = load_results_Isatis(mf_string=fname_base_most_precise)
         f_PBH_most_precise = envelope(f_PBHs_most_precise)[0]        
         
-        fig, ax = plt.subplots(figsize=(9, 7))
+        fig, ax = plt.subplots(figsize=(8.5, 6))
         ax.hlines(f_PBH_most_precise, min(cutoff_values), max(cutoff_values), color="k", linestyle="dashed")
         ax.hlines(0.95 * f_PBH_most_precise, min(cutoff_values), max(cutoff_values), color="grey", linestyle="dashed")
         ax.hlines(1.05 * f_PBH_most_precise, min(cutoff_values), max(cutoff_values), color="grey", linestyle="dashed")
