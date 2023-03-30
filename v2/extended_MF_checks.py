@@ -292,7 +292,7 @@ if "__main__" == __name__:
     else:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
-    fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+    fname_base = "LN_D={:.1f}".format(Deltas[i]) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -351,7 +351,7 @@ if "__main__" == __name__:
         if j==5:
         
             # Constraints calculated using Isatis.
-            constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)    
+            constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_D={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)    
             
             # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
             # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().

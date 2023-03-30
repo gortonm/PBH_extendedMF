@@ -29,7 +29,7 @@ CC3_bool = False
 # Controls whether to use a range of PBH masses that matches those used
 # in isatis_reproduction.py. Use for comparing to the results obtained using 
 # the method from 1705.05567.
-test_mass_range = False
+test_mass_range = True
 if test_mass_range:
     m_lower_test, m_upper_test = 1e11, 1e21
 
@@ -57,7 +57,7 @@ if LN_bool:
 # Minimum and maximum central masses.
 
 # If True, use a single characteristic PBH mass. 
-single_mass = True
+single_mass = False
 mc_min = 1e14
 mc_max = 1e19
 if single_mass:
@@ -95,22 +95,27 @@ params_Isatis[7][1] = "{:.1e}".format(rho_c_halo)
 params_Isatis[8][1] = "{:.0f}".format(r_c_halo)
 params_Isatis[9][1] = "{:.0f}".format(gamma_halo)     
 params_Isatis[14][1] = "1"   
+
+if E_number < 1e3:
+    energies_string = "E{:.0f}".format(E_number)
+else:
+    energies_string = "E{:.0f}".format(np.log10(E_number))
     
 for i in range(len(Deltas)):
     
     if LN_bool:
-        fname_base = "LN_D={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+        fname_base = "LN_D={:.1f}".format(Deltas[i])
     elif SLN_bool:
-        fname_base = "SL_D={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+        fname_base = "SL_D={:.1f}".format(Deltas[i])
     elif CC3_bool:
-        fname_base = "CC_D={:.1f}_dm={:.0f}".format(Deltas[i], -np.log10(delta_log_m))
+        fname_base = "CC_D={:.1f}".format(Deltas[i])
     
     # Indicates which range of masses are being used (for convergence tests).
     if test_mass_range:
         fname_base += "_test_range"
     elif MF_cutoff:
-        fname_base += "_c={:.0f}".format(-np.log10(cutoff))
-        
+        fname_base += "_dm{:.0f}_".format(-np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+    
     if single_mass:
         fname_base += "_mc={:.0f}".format(np.log10(mc_max))
                 
@@ -143,7 +148,10 @@ for i in range(len(Deltas)):
         params_BlackHawk[0][1] = destination_folder
         
         if LN_bool:
-            BH_number = int((np.log10(m_c*m_upper_LN[i])-np.log10(m_c*m_lower_LN[i])) / delta_log_m)
+            if test_mass_range:
+                BH_number = 1000
+            else:
+                BH_number = int((np.log10(m_c*m_upper_SLN[i])-np.log10(m_c*m_lower_SLN[i])) / delta_log_m)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_LN[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_LN[i] * m_c)
@@ -152,7 +160,10 @@ for i in range(len(Deltas)):
             params_BlackHawk[20][1] = "{:.5e}".format(m_c)
             
         if SLN_bool:
-            BH_number = int((np.log10(m_c*m_upper_SLN[i])-np.log10(m_c*m_lower_SLN[i])) / delta_log_m)
+            if test_mass_range:
+                BH_number = 1000
+            else:
+                BH_number = int((np.log10(m_c*m_upper_SLN[i])-np.log10(m_c*m_lower_SLN[i])) / delta_log_m)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_SLN[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_SLN[i] * m_c)
@@ -171,7 +182,10 @@ for i in range(len(Deltas)):
             np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
             
         if CC3_bool:
-            BH_number = int((np.log10(m_c*m_upper_CC3[i])-np.log10(m_c*m_lower_CC3[i])) / delta_log_m)
+            if test_mass_range:
+                BH_number = 1000
+            else:
+                BH_number = int((np.log10(m_c*m_upper_SLN[i])-np.log10(m_c*m_lower_SLN[i])) / delta_log_m)
             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_CC3[i] * m_c)
             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_CC3[i] * m_c)

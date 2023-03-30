@@ -18,7 +18,7 @@ r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
 LN_bool = False
-SLN_bool = False
+SLN_bool = False 
 CC3_bool = True
 
 
@@ -44,13 +44,13 @@ integrand_cutoff = False
 # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
 integrand_cutoff_present = False
 
-cutoff_values = [1e-2, 1e-3, 1e-5, 1e-7]
+cutoff_values = [1e-7]
 
 # PBH mass spacing, in log10(PBH mass / grams)
-dm_values = [1e-3, 1e-4, 1e-5]
+dm_values = [1e-4]
 
 # Minimum and maximum central masses.
-mc_max_values = [1e19]
+mc_max_values = [1e19, 1e17, 1e15]
 
 # If True, use a single characteristic PBH mass. 
 single_mass = True
@@ -61,7 +61,7 @@ E_min = 1e-5
 E_max = 5   # maximum energy available in Hazma tables
 
 # Number of energies to use
-E_number_values = [500, 1000]
+E_number_values = [10000]
 
 
 # Path to BlackHawk and Isatis
@@ -88,46 +88,49 @@ params_Isatis[8][1] = "{:.0f}".format(r_c_halo)
 params_Isatis[9][1] = "{:.0f}".format(gamma_halo)     
 params_Isatis[14][1] = "1"   
 
-for i in range(len(Deltas)):
-    
-    if Deltas[i] > 2:
-        dm_values = [1e-3, 1e-4, 1e-5]
-        cutoff_values = [1e-3, 1e-5, 1e-7]
-
-    for E_number in E_number_values:
-        if E_number < 1e3:
-            energies_string = "E{:.0f}".format(E_number)
-        else:
-            energies_string = "E{:.0f}".format(np.log10(E_number))
+for mc_max in mc_max_values:
+                        
+    if single_mass:
+        mc_values = [mc_max]
+    else:
+        mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
         
-        for cutoff in cutoff_values:
-            
-            scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
-            [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
-    
-            for delta_log_m in dm_values:
+    if LN_bool:
+        Deltas = Deltas[:-1]
 
-                for mc_max in mc_max_values:
-                    
-                    os.chdir(os.path.expanduser('~') + "/Asteroid_mass_gap/v2")
-                    
-                    if single_mass:
-                        mc_values = [mc_max]
-                    else:
-                        mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
-                                                
+    for i in range(len(Deltas)):
+                
+        # The following calculations are intended to restrict the convergence
+        # tests that are performed, in cases that I know parameters are
+        # insufficient for producing f_PBH to 2 SF.
+        # For reference, see variable_ranges.ods.
+                
+        for E_number in E_number_values:
+            if E_number < 1e3:
+                energies_string = "E{:.0f}".format(E_number)
+            else:
+                energies_string = "E{:.0f}".format(np.log10(E_number))
+            
+            for cutoff in cutoff_values:
+                
+                os.chdir(os.path.expanduser('~') + "/Asteroid_mass_gap/v2")
+                scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+                [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
+        
+                for delta_log_m in dm_values:
+                                                    
                     if LN_bool:
-                        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string
+                        fname_base = "LN_D={:.1f}".format(Deltas[i])
                     elif SLN_bool:
-                        fname_base = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string
+                        fname_base = "SL_D={:.1f}".format(Deltas[i])
                     elif CC3_bool:
-                        fname_base = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string
+                        fname_base = "CC_D={:.1f}".format(Deltas[i])
                     
                     # Indicates which range of masses are being used (for convergence tests).
                     if test_mass_range:
                         fname_base += "_test_range"
                     elif MF_cutoff:
-                        fname_base += "_c{:.0f}".format(-np.log10(cutoff))
+                        fname_base += "_dm{:.0f}_".format(-np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
                         
                     if single_mass:
                         fname_base += "_mc{:.0f}".format(np.log10(mc_max))
