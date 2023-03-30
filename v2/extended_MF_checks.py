@@ -98,6 +98,62 @@ def envelope(constraints):
     return tightest
         
 
+def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=False):
+    """
+    Read in constraints on f_PBH, obtained using Isatis, with a monochromatic PBH mass function.
+    Parameters
+    ----------
+    mf_string : String, optional
+        The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and "CC3" (critical collapse 3), plus the value of the power spectrum width Delta. 
+    modified : Boolean, optional
+        If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
+    test_mass_range : Boolean, optional
+        If True, use data obtained using the same method as for the constraints from 1705.05567.
+    Returns
+    -------
+    constraints_names : Array-like
+        Name of instrument and arxiv reference for constraint on PBHs.
+    f_PBH_Isatis : Array-like
+        Constraint on the fraction of dark matter in PBHs, calculated using Isatis.
+    """
+    # Choose path to Isatis.
+    if modified:
+        Isatis_path = "../../Downloads/version_finale/scripts/Isatis/"
+    else:
+        mf_string = "GC_mono"
+        Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
+    
+    if test_mass_range:
+        mf_string += "_test_range"
+    
+    # Load Isatis constraints data.
+    constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path, mf_string), dtype = "str", unpack=True)[1:]
+    
+    constraints_names = []
+    f_PBH_Isatis = []
+    
+    # Create array of constraints for which the constraints are physical
+    # (i.e. the constraints are non-zero and positive).
+    for i in range(len(constraints_file)):
+
+        constraint = [float(constraints_file[i][j]) for j in range(1, len(constraints_file[i]))]
+            
+        if not(all(np.array(constraint)<=0)):
+    
+            f_PBH_Isatis.append(constraint)
+            
+            # Create labels
+            # Based upon code appearing in plotting.py within Isatis.
+            temp = constraints_file[i][0].split("_")
+            temp2 = ""
+            for i in range(len(temp)-1):
+                temp2 = "".join([temp2,temp[i],'\,\,'])
+            temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
+    
+            constraints_names.append(temp2)
+            
+    return constraints_names, f_PBH_Isatis
+
 
 #%% Test: constant constraint from monochromatic MF
 if "__main__" == __name__:
@@ -226,6 +282,18 @@ if "__main__" == __name__:
 # Using the modified version of Isatis.
 if "__main__" == __name__:
     
+    # Parameters used for convergence tests in Galactic Centre constraints.
+    cutoff = 1e-4
+    delta_log_m = 1e-2
+    E_number = 500
+    
+    if E_number < 1e3:
+        energies_string = "E{:.0f}".format(E_number)
+    else:
+        energies_string = "E{:.0f}".format(np.log10(E_number))
+    
+    fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
@@ -237,7 +305,7 @@ if "__main__" == __name__:
     for j in range(len(sigmas_LN[:-1])):
         
         # Constraints calculated using Isatis.
-        constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_Delta={:.1f}".format(Deltas[j]), modified=True)    
+        constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string=fname_base, modified=True)    
         
         # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
         # Using the envelope of constraints for each instrument for the monochromatic MF constraint.

@@ -214,6 +214,7 @@ def load_results_Isatis(mf_string="mono", modified=True, test_mass_range=False):
         mf_string += "_test_range"
     
     # Load Isatis constraints data.
+    print("%sresults_photons_GC_%s.txt"%(Isatis_path, mf_string))
     constraints_file = np.genfromtxt("%sresults_photons_GC_%s.txt"%(Isatis_path, mf_string), dtype = "str", unpack=True)[1:]
     
     constraints_names = []
@@ -582,7 +583,7 @@ if "__main__" == __name__:
 
     # Minimum value of the mass function (scaled to its peak value).
     # Set to 0.1 when comparing to Fig. 5 of 2009.03204.
-    cutoff = 1e-2
+    cutoff = 1e-4
     
     # Name of the filename to save with mass range.
     if MF_cutoff:
@@ -686,10 +687,11 @@ if "__main__" == __name__:
     
     
 #%% Find characteristic mass for which the minimum mass to include in a calculation is smaller than ~1e14g, when emission of photons with E < 5 GeV becomes significant.
+
 if "__main__" == __name__:
     
-    m_sig = 1e14  # PBH mass below which emission of photons becomes significant.
-    cutoff_values = [1e-2, 1e-3, 1e-5, 1e-7]
+    m_sig = 5e14  # PBH mass below which emission of photons becomes significant.
+    cutoff_values = [1e-4, 1e-5, 1e-7]
     
     for cutoff in cutoff_values:
         print("\nCutoff = {:.0e}".format(cutoff))
@@ -702,6 +704,7 @@ if "__main__" == __name__:
             mc_sig_LN = m_sig / m_lower_LN[i]
             mc_sig_SLN = m_sig / m_lower_SLN[i]
             mc_sig_CC3 = m_sig / m_lower_CC3[i]
-            print("LN: mc_sig = {:.1e}g".format(mc_sig_LN))
             print("SLN: mc_sig = {:.1e}g".format(mc_sig_SLN))
             print("CC3: mc_sig = {:.1e}g".format(mc_sig_CC3))
+            print("LN: mc_sig = {:.1e}g".format(mc_sig_LN))
+            
