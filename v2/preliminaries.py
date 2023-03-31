@@ -183,66 +183,6 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     return m_pbh_values[np.argmax(psi_values)]
 
 
-def load_results_Isatis(mf_string="mono", modified=True, test_mass_range=False):
-    """
-    Read in constraints on f_PBH, obtained using Isatis, with a monochromatic PBH mass function.
-
-    Parameters
-    ----------
-    mf_string : String, optional
-        The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and "CC3" (critical collapse 3), plus the value of the power spectrum width Delta. 
-    modified : Boolean, optional
-        If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
-    test_mass_range : Boolean, optional
-        If True, use data obtained using the same method as for the constraints from 1705.05567.
-
-    Returns
-    -------
-    constraints_names : Array-like
-        Name of instrument and arxiv reference for constraint on PBHs.
-    f_PBH_Isatis : Array-like
-        Constraint on the fraction of dark matter in PBHs, calculated using Isatis.
-
-    """
-    # Choose path to Isatis.
-    if modified:
-        Isatis_path = "../../Downloads/version_finale/scripts/Isatis/"
-    else:
-        Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
-    
-    if test_mass_range:
-        mf_string += "_test_range"
-    
-    # Load Isatis constraints data.
-    print("%sresults_photons_GC_%s.txt"%(Isatis_path, mf_string))
-    constraints_file = np.genfromtxt("%sresults_photons_GC_%s.txt"%(Isatis_path, mf_string), dtype = "str", unpack=True)[1:]
-    
-    constraints_names = []
-    f_PBH_Isatis = []
-    
-    # Create array of constraints for which the constraints are physical
-    # (i.e. the constraints are non-zero and positive).
-    for i in range(len(constraints_file)):
-
-        constraint = [float(constraints_file[i][j]) for j in range(1, len(constraints_file[i]))]
-            
-        if not(all(np.array(constraint)<=0)):
-    
-            f_PBH_Isatis.append(constraint)
-            
-            # Create labels
-            # Based upon code appearing in plotting.py within Isatis.
-            temp = constraints_file[i][0].split("_")
-            temp2 = ""
-            for i in range(len(temp)-1):
-                temp2 = "".join([temp2,temp[i],'\,\,'])
-            temp2 = "".join([temp2,'\,\,[arXiv:',temp[-1],']'])
-    
-            constraints_names.append(temp2)
-            
-    return constraints_names, f_PBH_Isatis
-
-
 def integrand_measure(m, m_c, mf, params):
     """
     Approximate form of the integrand appearing in Eq. 11 of 2201.01265,
@@ -691,7 +631,7 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     m_sig = 5e14  # PBH mass below which emission of photons becomes significant.
-    cutoff_values = [1e-4, 1e-5, 1e-7]
+    cutoff_values = [1e-4]
     
     for cutoff in cutoff_values:
         print("\nCutoff = {:.0e}".format(cutoff))
