@@ -91,7 +91,10 @@ def envelope(constraints):
         constraints_values = []
         
         for j in range(len(constraints)):
-            constraints_values.append(abs(constraints[j][i]))
+            if constraints[j][i] <= 0:
+                constraints_values.append(10)
+            else:
+                constraints_values.append(abs(constraints[j][i]))
         
         tightest[i] = min(constraints_values)
     
