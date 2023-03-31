@@ -447,16 +447,24 @@ if "__main__" == __name__:
         
         
         fig, ax = plt.subplots(figsize=(7, 5))
+        ymin, ymax = 1e-8, 10
         
-        mc_LN =  mp_SLN[i] * np.exp(sigmas_LN[i]**2)
+        mc_LN = 1e17*mp_SLN[i] * np.exp(sigmas_LN[i]**2)
         m_c = 1e17*np.exp(ln_mc_SLN[i])
         m_p = 1e17*mp_CC3[i]
         measure_LN = LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i]) / LN(m_peak_LN(mc_LN, sigma=sigmas_LN[i]), mc_LN, sigma=sigmas_LN[i])
         measure_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
         measure_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
-
-        #ax.plot(m_pbh_values, measure_LN, color="r", label="LN")
+        
+        if i < 6:
+            ax.plot(m_pbh_values, measure_LN, color="r", label="LN")
+            # Indicate value of m_c with vertical dotted line
+            ax.vlines(mc_LN, ymin, ymax, color="r", linestyle="dotted")
+            #ax.annotate("$m_c$ (LN)", xy=(0.1*mc_LN, 5*ymin), fontsize="small", color="r")
         ax.plot(m_pbh_values, measure_SLN, color="b", label="SLN")
+        # Indicate value of m_c with vertical dotted line
+        ax.vlines(m_c, ymin, ymax, color="b", linestyle="dotted")
+        #ax.annotate("$m_c$ (SLN)", xy=(2*m_c, 0.8*ymax), fontsize="small", color="b")
         ax.plot(m_pbh_values, measure_CC3, color="g", label="CC3")
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -466,7 +474,7 @@ if "__main__" == __name__:
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$\psi / \psi_\mathrm{max}$")
         ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-        ax.set_ylim(1e-8, 10)
+        ax.set_ylim(ymin, ymax)
         plt.title("$\Delta={:.1f}$".format(Deltas[i]))
         plt.tight_layout()
         
