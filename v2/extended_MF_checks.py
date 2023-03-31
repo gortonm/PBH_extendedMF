@@ -278,8 +278,10 @@ if "__main__" == __name__:
 
 
 #%% Plot results for a log-normal mass function, obtained using Isatis,
-# and compare to the results shown in Fig. 3 of 2201.01265.
+# and compare to the results obtained using the method from 1705.05567, from
+# the envelope of constraints from each energy bin.
 # Using the modified version of Isatis.
+# Both forms of the constraint calculated using the same range and number of PBH masses.
 if "__main__" == __name__:
     
     # Parameters used for convergence tests in Galactic Centre constraints.
@@ -305,8 +307,8 @@ if "__main__" == __name__:
         # Filename of constraints obtained using Isatis.
         fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         
-        # Constraints calculated using Isatis.
-        constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string=fname_base, modified=True)    
+        # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
+        constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_D={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)    
         
         # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
         # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
@@ -329,13 +331,15 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.legend(fontsize="small")
+        ax.set_title("$\Delta={:.1f}$".format(Deltas[j]))
         plt.tight_layout()
 
 
 #%% Plot results for a log-normal mass function, obtained using Isatis,
-# and compare to the results shown in Fig. 3 of 2201.01265.
+# and compare to the results obtained using the method from 1705.05567, using
+# the constraint from each energy bin separately.
 # Using the modified version of Isatis.
-# Uses Isatis constraints calculated using the same range of PBH masses as those from 1705.05567.
+# Both forms of the constraint calculated using the same range and number of PBH masses.
 if "__main__" == __name__:
     
     # Parameters used for convergence tests in Galactic Centre constraints.
@@ -364,7 +368,7 @@ if "__main__" == __name__:
         
         if j==5:
         
-            # Constraints calculated using Isatis.
+            # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
             constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_D={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)    
             
             # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
@@ -404,4 +408,6 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.legend(fontsize="small")
+            ax.set_title("$\Delta={:.1f}$".format(Deltas[j]))
             plt.tight_layout()
+            
