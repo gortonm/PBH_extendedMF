@@ -92,7 +92,7 @@ if "__main__" == __name__:
         if i < 6:
             mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
             ax1.plot(mc_values_GC, f_PBH_GC_LN, color=colors[1])
-            ax2.plot(mc_values_GC, f_PBH_GC_LN, color=colors[1])
+            ax2.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1])
 
         ax1.plot(mc_values_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashed")
         ax2.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
