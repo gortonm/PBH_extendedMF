@@ -284,7 +284,7 @@ if "__main__" == __name__:
     
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
-    delta_log_m = 1e-2
+    delta_log_m = 1e-3
     E_number = 500
     
     if E_number < 1e3:
@@ -292,8 +292,6 @@ if "__main__" == __name__:
     else:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
-    fname_base = "LN_D={:.1f}".format(Deltas[i]) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
@@ -303,6 +301,9 @@ if "__main__" == __name__:
     m_mono_values = np.logspace(11, 21, 1000)
     
     for j in range(len(sigmas_LN[:-1])):
+        
+        # Filename of constraints obtained using Isatis.
+        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         
         # Constraints calculated using Isatis.
         constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string=fname_base, modified=True)    
@@ -337,6 +338,16 @@ if "__main__" == __name__:
 # Uses Isatis constraints calculated using the same range of PBH masses as those from 1705.05567.
 if "__main__" == __name__:
     
+    # Parameters used for convergence tests in Galactic Centre constraints.
+    cutoff = 1e-4
+    delta_log_m = 1e-3
+    E_number = 500
+    
+    if E_number < 1e3:
+        energies_string = "E{:.0f}".format(E_number)
+    else:
+        energies_string = "E{:.0f}".format(np.log10(E_number))
+    
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
@@ -347,6 +358,9 @@ if "__main__" == __name__:
     m_mono_values = np.logspace(11, 21, 1000)
     
     for j in range(len(sigmas_LN[:-1])):
+        
+        # Filename of constraints obtained using Isatis.
+        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         
         if j==5:
         
