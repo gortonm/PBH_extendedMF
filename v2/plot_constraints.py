@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from extended_MF_checks import envelope, load_results_Isatis
-from preliminaries import load_data
+from preliminaries import load_data, m_max_SLN
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24, 'font.family':'serif'})
@@ -65,7 +65,7 @@ if "__main__" == __name__:
     mc_values_GC = np.logspace(14, 19, 100)
         
     for i in range(len(Deltas)):
-        
+                
         fig, axes = plt.subplots(1, 2, figsize=(14, 7))
         ax1, ax2 = axes[0], axes[1]
         
@@ -83,7 +83,12 @@ if "__main__" == __name__:
         mc_Carr_SLN, f_PBH_Carr_SLN = np.genfromtxt("./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         mp_Carr_CC3, f_PBH_Carr_CC3 = np.genfromtxt("./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         
+        # Estimate peak mass of skew-lognormal MF
+        mp_SLN_GC = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
+        mp_Carr_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
+        
         ax1.plot(mc_values_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashed")
+        ax2.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashdot")
         ax2.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
 
         # When defined, load and plot constraints for log-normal mass function
@@ -93,6 +98,9 @@ if "__main__" == __name__:
             constraints_names, f_PBHs_GC_LN = load_results_Isatis(mf_string=fname_base_LN, modified=True)
             f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
             
+            #print(f_PBH_GC_LN[10:20])
+            print(np.mean(f_PBH_GC_SLN[f_PBH_GC_LN<1] / f_PBH_GC_LN[f_PBH_GC_LN<1]))
+                        
             mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
             ax1.plot(mc_values_GC, f_PBH_GC_LN, color=colors[1])
             ax2.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1])
@@ -101,6 +109,7 @@ if "__main__" == __name__:
             ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN")
 
         ax1.plot(mc_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashed")
+        ax2.plot(mp_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashdot")
         ax2.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
         
         ax1.set_xlabel("$m_c~[\mathrm{g}]$")
