@@ -66,8 +66,10 @@ if "__main__" == __name__:
         
     for i in range(len(Deltas)):
                 
-        fig, axes = plt.subplots(1, 2, figsize=(14, 7))
-        ax1, ax2 = axes[0], axes[1]
+        fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+        ax0 = axes[0]
+        ax1 = axes[1]
+        ax2 = axes[2]
         
         # Load constraints from Galactic Centre photons.
         fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
@@ -87,9 +89,11 @@ if "__main__" == __name__:
         mp_SLN_GC = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
         mp_Carr_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
         
+        ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashdot")
+        ax0.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
         ax1.plot(mc_values_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashed")
-        ax2.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashdot")
-        ax2.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
+        ax1.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
+
 
         # When defined, load and plot constraints for log-normal mass function
         if Deltas[i] < 5:
@@ -102,28 +106,35 @@ if "__main__" == __name__:
             print(np.mean(f_PBH_GC_SLN[f_PBH_GC_LN<1] / f_PBH_GC_LN[f_PBH_GC_LN<1]))
                         
             mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            ax1.plot(mc_values_GC, f_PBH_GC_LN, color=colors[1])
-            ax2.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1])
+            ax0.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1])
+            ax1.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1])
 
-            ax1.plot(mc_Carr_LN, f_PBH_Carr_LN, color=colors[1], label="LN")
+            #ax1.plot(mc_Carr_LN, f_PBH_Carr_LN, color=colors[1], label="LN")
+            ax0.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN")
             ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN")
 
-        ax1.plot(mc_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashed")
+        #ax1.plot(mc_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashed")
+        ax0.plot(mp_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashdot")
+        ax0.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
         ax2.plot(mp_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashdot")
         ax2.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
         
-        ax1.set_xlabel("$m_c~[\mathrm{g}]$")
-        ax2.set_xlabel("$m_p~[\mathrm{g}]$")
-        
-        for ax in [ax1, ax2]:
+        ax0.set_xlim(1e14, 1e29)
+        ax0.set_ylim(1e-10, 1)
+        ax1.set_xlim(1e14, 2e18)
+        ax1.set_ylim(1e-10, 1)
+        ax2.set_xlim(1e19, 1e29)
+        ax2.set_ylim(1e-3, 1)
+       
+        for ax in [ax0, ax1, ax2]:
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
             ax.plot(m_mono_GC, f_PBH_mono_GC, color=colors[0], label="Monochromatic", linestyle="dotted", linewidth=2)
             ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linestyle="dotted", linewidth=2)
-            ax.set_xlim(1e14, 1e29)
-            ax.set_ylim(10**(-10), 1)
             ax.set_ylabel("$f_\mathrm{PBH}$")
             ax.set_xscale("log")
             ax.set_yscale("log")
-            ax.legend(fontsize="small")
+            
+        ax0.legend(fontsize="small")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}.pdf".format(Deltas[i]))
