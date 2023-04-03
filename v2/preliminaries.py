@@ -173,10 +173,11 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     Float
         Estimate for the peak mass of the skew-lognormal mass function..
     """
-    log_m_min = np.log(m_c) - log_m_factor*sigma
-    log_m_max = np.log(m_c) + log_m_factor*sigma
+    log_m_min = np.log10(m_c) - log_m_factor*sigma
+    log_m_max = np.log10(m_c) + log_m_factor*sigma
+
     m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
-    
+
     # Calculate mass function at each PBH mass.
     psi_values = SLN(m_pbh_values, m_c, sigma, alpha)
     
@@ -322,10 +323,10 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Set required fractional precision
-    precision = 1e-5
+    precision = 1e-2
     print("Fractional precision =", precision)
     
-    m_c = 1
+    m_c = 1e15
 
     # Number of steps to use when estimating the peak mass.
     n_steps_range = 10**np.arange(2, 6.1, 1)
@@ -348,6 +349,7 @@ if "__main__" == __name__:
         
         # Calculate the most precise estimate for the peak mass
         mp_best_estimate = m_max_SLN(m_c, sigma, alpha, log_m_factor=max(n_sigmas_range), n_steps=int(max(n_steps_range)))
+        print("Best estimate = {:.4e}".format(mp_best_estimate))
         
         stop_loop = False
         
@@ -357,6 +359,7 @@ if "__main__" == __name__:
                 
                 # Estimated peak mass of the SLN mass function.
                 m_max_SLN_est = m_max_SLN(m_c, sigma, alpha, log_m_factor=n_sigma, n_steps=int(n_steps))
+                print("Estimate = {:.4e}".format(m_max_SLN_est))
                 frac_diff = abs((m_max_SLN_est - mp_best_estimate) / mp_best_estimate)
                 
                 if frac_diff < precision:
@@ -452,6 +455,7 @@ if "__main__" == __name__:
         mc_LN = 1e17*mp_SLN[i] * np.exp(sigmas_LN[i]**2)
         m_c = 1e17*np.exp(ln_mc_SLN[i])
         m_p = 1e17*mp_CC3[i]
+        mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
         measure_LN = LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i]) / LN(m_peak_LN(mc_LN, sigma=sigmas_LN[i]), mc_LN, sigma=sigmas_LN[i])
         measure_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
         measure_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
@@ -464,6 +468,7 @@ if "__main__" == __name__:
         ax.plot(m_pbh_values, measure_SLN, color="b", label="SLN")
         # Indicate value of m_c with vertical dotted line
         ax.vlines(m_c, ymin, ymax, color="b", linestyle="dotted")
+        ax.vlines(mp_SLN_est, ymin, ymax, color="b", linestyle="dashed")
         #ax.annotate("$m_c$ (SLN)", xy=(2*m_c, 0.8*ymax), fontsize="small", color="b")
         ax.plot(m_pbh_values, measure_CC3, color="g", label="CC3")
         ax.set_xscale("log")
