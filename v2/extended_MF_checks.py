@@ -249,9 +249,9 @@ if "__main__" == __name__:
     plt.tight_layout()
 
 
-#%% Plot results for a monochromatic mass function, obtained using Isatis,
+#%% Plot results for a monochromatic mass function, obtained using isatis_reproduction.py,
 # and compare to the results shown in Fig. 3 of 2201.01265.
-# Using the modified version of Isatis.
+# Includes highest-energy bin.
 # Includes test of the envelope() function.
 
 if "__main__" == __name__:
