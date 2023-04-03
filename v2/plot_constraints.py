@@ -66,22 +66,16 @@ if "__main__" == __name__:
         
     for i in range(len(Deltas)):
         
-        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+        fig, axes = plt.subplots(1, 2, figsize=(14, 7))
         ax1, ax2 = axes[0], axes[1]
         
-        # Load cosntraints from Galactic Centre photons.
-        if i < 5:
-            fname_base_LN = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            constraints_names, f_PBHs_GC_LN = load_results_Isatis(mf_string=fname_base_LN, modified=True)
-            f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
-
+        # Load constraints from Galactic Centre photons.
         fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
 
         constraints_names_GC, f_PBHs_GC_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
         constraints_names_GC, f_PBHs_GC_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
 
-        f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
         f_PBH_GC_SLN = envelope(f_PBHs_GC_SLN)
         f_PBH_GC_CC3 = envelope(f_PBHs_GC_CC3)
         
@@ -89,16 +83,20 @@ if "__main__" == __name__:
         mc_Carr_SLN, f_PBH_Carr_SLN = np.genfromtxt("./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         mp_Carr_CC3, f_PBH_Carr_CC3 = np.genfromtxt("./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         
-        if i < 6:
+        ax1.plot(mc_values_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashed")
+        ax2.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
+
+        # When defined, load and plot constraints for log-normal mass function
+        if Deltas[i] < 5:
+            
+            fname_base_LN = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            constraints_names, f_PBHs_GC_LN = load_results_Isatis(mf_string=fname_base_LN, modified=True)
+            f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
+            
             mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
             ax1.plot(mc_values_GC, f_PBH_GC_LN, color=colors[1])
             ax2.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1])
 
-        ax1.plot(mc_values_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashed")
-        ax2.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-
-        # Plot constraints
-        if i < 6:
             ax1.plot(mc_Carr_LN, f_PBH_Carr_LN, color=colors[1], label="LN")
             ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN")
 
