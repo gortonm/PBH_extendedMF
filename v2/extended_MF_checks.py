@@ -547,7 +547,7 @@ if "__main__" == __name__:
         constraints_names, f_max = load_results_Isatis(modified=True)
         
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
-        m_mono_min = 1e11
+        m_mono_min = 5e14
         m_mono_max = 1e21
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
@@ -595,15 +595,17 @@ if "__main__" == __name__:
         for ax in ax1, ax2:
             ax.set_xlim(1e14, 1e18)
             ax.set_ylim(10**(-10), 1)
-            ax.set_xlabel("$M_c~[\mathrm{g}]$")
             ax.set_ylabel("$f_\mathrm{PBH}$")
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.legend(fontsize="small")
+        ax1.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax1.set_xlabel("$m_c~[\mathrm{g}]$")
         ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]))
         ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]))
-        plt.tight_layout()
-        fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}_mmax={:.0e}_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
-        fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}_mmax={:.0e}_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
+        fig1.set_tight_layout(True)
+        fig2.set_tight_layout(True)
+        fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
+        fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
 
             
