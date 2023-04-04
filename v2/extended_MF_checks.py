@@ -548,7 +548,7 @@ if "__main__" == __name__:
         
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
         m_mono_min = 5e14
-        m_mono_max = 1e21
+        m_mono_max = 2e17
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
        
@@ -599,8 +599,8 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.legend(fontsize="small")
-        ax1.set_xlabel("$m_p~[\mathrm{g}]$")
         ax1.set_xlabel("$m_c~[\mathrm{g}]$")
+        ax2.set_xlabel("$m_p~[\mathrm{g}]$")
         ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]))
         ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]))
         fig1.set_tight_layout(True)
