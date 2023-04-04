@@ -536,7 +536,7 @@ if "__main__" == __name__:
 
     # Minimum value of the mass function (scaled to its peak value).
     # Set to 0.1 when comparing to Fig. 5 of 2009.03204.
-    cutoff = 1e-4
+    cutoff = 1e-1
     
     # Name of the filename to save with mass range.
     if MF_cutoff:
@@ -639,7 +639,7 @@ if "__main__" == __name__:
     print(len(energies[energies < 5]) / len(energies))
     
     
-#%% Find characteristic mass for which the minimum mass to include in a calculation is smaller than ~1e14g, when emission of photons with E < 5 GeV becomes significant.
+#%% Find characteristic mass for which the minimum mass to include in a calculation is smaller than 5e14g, when emission of photons with E < 5 GeV becomes significant.
 
 if "__main__" == __name__:
     
@@ -658,6 +658,27 @@ if "__main__" == __name__:
             mc_sig_SLN = m_sig / m_lower_SLN[i]
             mc_sig_CC3 = m_sig / m_lower_CC3[i]
             print("SLN: mc_sig = {:.1e}g".format(mc_sig_SLN))
-            print("CC3: mc_sig = {:.1e}g".format(mc_sig_CC3))
+            print("CC3: mp_sig = {:.1e}g".format(mc_sig_CC3))
             print("LN: mc_sig = {:.1e}g".format(mc_sig_LN))
+
+    
+#%% Find characteristic mass for which the minimum mass to include in a calculation is larger than 1e21g, the maximum mass for which I have calculated using isatis_reproduction.py.
+
+if "__main__" == __name__:
+    
+    m_sig = 1e22  # PBH mass above which results have not been calculated using isatis_reproduction.py
+    cutoff_values = [1e-4]
+    
+    for cutoff in cutoff_values:
+        print("\nCutoff = {:.0e}".format(cutoff))
+        
+        scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+        [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
+        
+        for i in range(len(Deltas)):
+            print("\nDelta = {:.1f}".format(Deltas[i]))
+            mc_sig_SLN = m_sig / m_upper_SLN[i]
+            mc_sig_CC3 = m_sig / m_upper_CC3[i]
+            print("SLN: mc_sig = {:.1e}g".format(mc_sig_SLN))
+            print("CC3: mp_sig = {:.1e}g".format(mc_sig_CC3))
             

@@ -311,15 +311,15 @@ if "__main__" == __name__:
     
     if monochromatic_MF:
         filename_append = "_monochromatic"
-        m_pbh_mono = np.logspace(11, 21, 1000)
+        m_pbh_mono = np.logspace(11, 22, 1000)
     
     f_PBH_isatis = []
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
     
-    COMPTEL = False
+    COMPTEL = True
     INTEGRAL = False
     EGRET = False
-    FermiLAT = True
+    FermiLAT = False
     
     exclude_last_bin = False
     save_each_bin = True
