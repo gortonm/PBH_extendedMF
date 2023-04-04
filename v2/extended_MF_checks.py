@@ -523,7 +523,9 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
-    mc_values = np.logspace(14, 19, 100)
+    mp_CC3_values = np.logspace(14, 19, 100)
+    mc_SLN_values = np.logspace(14, 19, 100)
+    
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
@@ -533,6 +535,8 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     for j in range(len(Deltas)):
+        
+        mp_SLN_values = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_values]
         
         # Filename of constraints obtained using Isatis.
         fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
@@ -559,8 +563,8 @@ if "__main__" == __name__:
         fig2, ax2 = plt.subplots(figsize=(8, 8))
         
         for i in range(len(constraints_names)):
-            ax1.plot(mc_values, f_PBH_Isatis_SLN[i], label=constraints_names[i], color=colors_evap[i])
-            ax2.plot(mc_values, f_PBH_Isatis_CC3[i], label=constraints_names[i], color=colors_evap[i])
+            ax1.plot(mp_SLN_values, f_PBH_Isatis_SLN[i], label=constraints_names[i], color=colors_evap[i])
+            ax2.plot(mp_CC3_values, f_PBH_Isatis_CC3[i], label=constraints_names[i], color=colors_evap[i])
             
             # Calculate constraint using method from 1705.05567.
             
@@ -589,8 +593,8 @@ if "__main__" == __name__:
             f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
             f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
 
-            ax1.plot(mc_values, f_PBH_Carr_SLN, marker="x", linestyle="None", color=colors_evap[i])
-            ax2.plot(mc_values, f_PBH_Carr_CC3, marker="x", linestyle="None", color=colors_evap[i])
+            ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x", linestyle="None", color=colors_evap[i])
+            ax2.plot(mp_CC3_values, f_PBH_Carr_CC3, marker="x", linestyle="None", color=colors_evap[i])
         
         for ax in ax1, ax2:
             ax.set_xlim(1e14, 1e18)
@@ -599,7 +603,7 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.legend(fontsize="small")
-        ax1.set_xlabel("$m_c~[\mathrm{g}]$")
+        ax1.set_xlabel("$m_p~[\mathrm{g}]$")
         ax2.set_xlabel("$m_p~[\mathrm{g}]$")
         ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]))
         ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]))
@@ -608,4 +612,233 @@ if "__main__" == __name__:
         fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
         fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
 
+#%% Plot results for a skew-lognormal mass function, obtained using Isatis,
+# and compare to the results obtained using the method from 1705.05567, using
+# the constraint from each energy bin separately.
+# For the monochromatic MF constraints, set constraint to the constraint at 
+# at m = 5e14g when m < 5e14g.
+# Using the modified version of Isatis.
+# Both forms of the constraint calculated using the same range and number of PBH masses.
+if "__main__" == __name__:
+    
+    # Parameters used for convergence tests in Galactic Centre constraints.
+    cutoff = 1e-4
+    delta_log_m = 1e-3
+    E_number = 500
+    
+    if E_number < 1e3:
+        energies_string = "E{:.0f}".format(E_number)
+    else:
+        energies_string = "E{:.0f}".format(np.log10(E_number))
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    mp_CC3_values = np.logspace(14, 19, 100)
+    mc_SLN_values = np.logspace(14, 19, 100)
+    
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    
+    m_star = 5e14    # mass below which to set constraint to large values
+    m_mono_values = np.logspace(11, 21, 1000)
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    for j in range(len(Deltas)):
+        
+        if j >= 5:
             
+            mp_SLN_values = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_values]
+        
+            # Filename of constraints obtained using Isatis.
+            fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            
+            # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
+            constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
+            constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
+            
+            # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
+            # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
+            constraints_names, f_max_values = load_results_Isatis(modified=True)
+            
+            params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+            params_CC3 = [alphas_CC3[j], betas[j]]
+            
+            fig1, ax1 = plt.subplots(figsize=(8, 8))
+            fig2, ax2 = plt.subplots(figsize=(8, 8))
+            
+            for i in range(len(constraints_names)):
+                ax1.plot(mp_SLN_values, f_PBH_Isatis_SLN[i], label=constraints_names[i], color=colors_evap[i])
+                ax2.plot(mp_CC3_values, f_PBH_Isatis_CC3[i], label=constraints_names[i], color=colors_evap[i])
+                
+                # Calculate constraint using method from 1705.05567.
+                
+                # Constraints data for each energy bin of each instrument.
+                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+                # Constraints for an extended MF, from each instrument.
+                energy_bin_constraints_SLN = []
+                energy_bin_constraints_CC3 = []
+                
+                for k in range(len(constraints_mono_file)):
+                    
+                    # Constraint from a particular energy bin
+                    constraint_energy_bin = constraints_mono_file[k]
+                    
+                    min_constraint = constraint_energy_bin[np.argmax(m_mono_values > m_star)]
+                    constraint_energy_bin_modified = []
+                    
+                    for l, f_max in enumerate(constraint_energy_bin):
+                        if m_mono_values[l] < m_star:
+                            constraint_energy_bin_modified.append(min_constraint)
+                        else:
+                            constraint_energy_bin_modified.append(constraint_energy_bin[l])
+                    
+                    
+                    print(constraint_energy_bin_modified)
+                    
+                    # Calculate constraint on f_PBH from each bin
+                    f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin_modified, mf=SLN, params=params_SLN)
+                    energy_bin_constraints_SLN.append(f_PBH_k)
+                    
+                    f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin_modified, mf=CC3, params=params_CC3)
+                    energy_bin_constraints_CC3.append(f_PBH_k)
+    
+                # Calculate constraint using method from 1705.05567, and plot.
+                f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
+                f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
+    
+                ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x", linestyle="None", color=colors_evap[i])
+                ax2.plot(mp_CC3_values, f_PBH_Carr_CC3, marker="x", linestyle="None", color=colors_evap[i])
+            
+            for ax in ax1, ax2:
+                ax.set_xlim(1e16, 1e18)
+                ax.set_ylim(10**(-7), 1)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                ax.legend(fontsize="small")
+            ax1.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]))
+            ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]))
+            fig1.set_tight_layout(True)
+            fig2.set_tight_layout(True)
+            fig1.savefig("./Tests/Figures/SLN_MF_cutoff_mstar={:.1e}g_Delta={:.1f}.png".format(m_star, Deltas[j]))
+            fig2.savefig("./Tests/Figures/CC3_MF_cutoff_mstar={:.1e}g_Delta={:.1f}.png".format(m_star, Deltas[j]))
+
+#%% Plot results for a skew-lognormal mass function, obtained using Isatis,
+# and compare to the results obtained using the method from 1705.05567, using
+# the constraint from each energy bin separately.
+# For the monochromatic MF constraints, set constraint to the constraint to a 
+# very small / large value m < 5e14g.
+# Using the modified version of Isatis.
+# Both forms of the constraint calculated using the same range and number of PBH masses.
+if "__main__" == __name__:
+    
+    # Parameters used for convergence tests in Galactic Centre constraints.
+    cutoff = 1e-4
+    delta_log_m = 1e-3
+    E_number = 500
+    
+    if E_number < 1e3:
+        energies_string = "E{:.0f}".format(E_number)
+    else:
+        energies_string = "E{:.0f}".format(np.log10(E_number))
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    mp_CC3_values = np.logspace(14, 19, 100)
+    mc_SLN_values = np.logspace(14, 19, 100)
+    
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    
+    m_star = 5e14    # mass below which to set constraint to large values
+    min_constraint = 1e100   # constraint to set f_max for m < m_star
+    m_mono_values = np.logspace(11, 21, 1000)
+        
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    for j in range(len(Deltas)):
+        
+        if j >= 5:
+            
+            mp_SLN_values = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_values]
+        
+            # Filename of constraints obtained using Isatis.
+            fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            
+            # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
+            constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
+            constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
+            
+            # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
+            # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
+            constraints_names, f_max_values = load_results_Isatis(modified=True)
+            
+            params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+            params_CC3 = [alphas_CC3[j], betas[j]]
+            
+            fig1, ax1 = plt.subplots(figsize=(8, 8))
+            fig2, ax2 = plt.subplots(figsize=(8, 8))
+            
+            for i in range(len(constraints_names)):
+                ax1.plot(mp_SLN_values, f_PBH_Isatis_SLN[i], label=constraints_names[i], color=colors_evap[i])
+                ax2.plot(mp_CC3_values, f_PBH_Isatis_CC3[i], label=constraints_names[i], color=colors_evap[i])
+                
+                # Calculate constraint using method from 1705.05567.
+                
+                # Constraints data for each energy bin of each instrument.
+                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+                # Constraints for an extended MF, from each instrument.
+                energy_bin_constraints_SLN = []
+                energy_bin_constraints_CC3 = []
+                
+                for k in range(len(constraints_mono_file)):
+                    
+                    # Constraint from a particular energy bin
+                    constraint_energy_bin = constraints_mono_file[k]
+                    constraint_energy_bin_modified = []
+                    
+                    for l, f_max in enumerate(constraint_energy_bin):
+                        if m_mono_values[l] < m_star:
+                            constraint_energy_bin_modified.append(min_constraint)
+                        else:
+                            constraint_energy_bin_modified.append(constraint_energy_bin[l])
+                                                                    
+                    # Calculate constraint on f_PBH from each bin
+                    f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin_modified, mf=SLN, params=params_SLN)
+                    energy_bin_constraints_SLN.append(f_PBH_k)
+                    
+                    f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin_modified, mf=CC3, params=params_CC3)
+                    energy_bin_constraints_CC3.append(f_PBH_k)
+    
+                # Calculate constraint using method from 1705.05567, and plot.
+                f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
+                f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
+    
+                ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x", linestyle="None", color=colors_evap[i])
+                ax2.plot(mp_CC3_values, f_PBH_Carr_CC3, marker="x", linestyle="None", color=colors_evap[i])
+            
+            for ax in ax1, ax2:
+                ax.set_xlim(1e16, 1e18)
+                ax.set_ylim(10**(-7), 1)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                ax.legend(fontsize="small")
+            ax1.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]))
+            ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]))
+            fig1.set_tight_layout(True)
+            fig2.set_tight_layout(True)
+            fig1.savefig("./Tests/Figures/SLN_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.png".format(min_constraint, m_star, Deltas[j]))
+            fig2.savefig("./Tests/Figures/CC3_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.png".format(min_constraint, m_star, Deltas[j]))
+
