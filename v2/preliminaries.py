@@ -426,7 +426,7 @@ if "__main__" == __name__:
         
         m_x = mp_SLN[i] * 1e17
         
-        m_pbh_values = np.logspace(np.log10(m_x)-7, np.log10(m_x)+2, 1000)
+        m_pbh_values = np.logspace(np.log10(m_x)-7, np.log10(m_x)+5, 1000)
         
         params_LN = [sigmas_LN[i]]
         params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
