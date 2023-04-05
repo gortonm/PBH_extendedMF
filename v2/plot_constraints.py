@@ -39,8 +39,8 @@ plt.style.use('tableau-colorblind10')
 
 if "__main__" == __name__:
     
-    # First six colours from matplotlib style 'tableau-colorblind10'.
-    colors = ['#006BA4', '#FF800E', '#ABABAB', '#595959', '#5F9ED1', '#C85200']
+    # Choose colors to match those from Fig. 5 of 2009.03204
+    colors = ['tab:grey', 'r', 'b', 'g']
     
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
@@ -89,9 +89,9 @@ if "__main__" == __name__:
         mp_SLN_GC = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
         mp_Carr_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
         
-        ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashdot")
+        ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7))
         ax0.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-        ax1.plot(mc_values_GC, f_PBH_GC_SLN, color=colors[2], linestyle="dashed")
+        ax1.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7))
         ax1.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
 
 
@@ -106,25 +106,34 @@ if "__main__" == __name__:
             print(np.mean(f_PBH_GC_SLN[f_PBH_GC_LN<1] / f_PBH_GC_LN[f_PBH_GC_LN<1]))
                         
             mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            ax0.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1])
-            ax1.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1])
+            ax0.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
+            ax1.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
 
             #ax1.plot(mc_Carr_LN, f_PBH_Carr_LN, color=colors[1], label="LN")
-            ax0.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN")
-            ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN")
+            ax0.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], dashes=[6, 2], label="LN")
+            ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], dashes=[6, 2], label="LN")
+            
+            xmin_GC, xmax_GC = 1e16, 2.5e17
+            xmin_HSC, xmax_HSC = 1e21, 1e29
+            ymin, ymax = 1e-4, 1
+        
+        else:
+            xmin_GC, xmax_GC = 1e16, 7e17
+            xmin_HSC, xmax_HSC = 9e18, 1e29
+            ymin, ymax = 3e-6, 1
 
         #ax1.plot(mc_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashed")
-        ax0.plot(mp_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashdot")
+        ax0.plot(mp_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
         ax0.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
-        ax2.plot(mp_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle="dashdot")
+        ax2.plot(mp_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
         ax2.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
         
-        ax0.set_xlim(1e14, 1e29)
-        ax0.set_ylim(1e-10, 1)
-        ax1.set_xlim(1e14, 2e18)
-        ax1.set_ylim(1e-10, 1)
-        ax2.set_xlim(1e19, 1e29)
-        ax2.set_ylim(1e-3, 1)
+        ax0.set_xlim(xmin_GC, xmax_HSC)
+        ax0.set_ylim(ymin, ymax)
+        ax1.set_xlim(xmin_GC, xmax_GC)
+        ax1.set_ylim(ymin, ymax)
+        ax2.set_xlim(xmin_HSC, xmax_HSC)
+        ax2.set_ylim(4e-3, 1)
        
         for ax in [ax0, ax1, ax2]:
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -134,7 +143,7 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
             
-        ax0.legend(fontsize="small")
+        ax0.legend(fontsize="x-small")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}.pdf".format(Deltas[i]))
