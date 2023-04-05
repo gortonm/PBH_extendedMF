@@ -89,9 +89,9 @@ if "__main__" == __name__:
         mp_SLN_GC = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
         mp_Carr_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
         
-        ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7))
+        ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
         ax0.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-        ax1.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7))
+        ax1.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
         ax1.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
 
 
@@ -137,13 +137,13 @@ if "__main__" == __name__:
        
         for ax in [ax0, ax1, ax2]:
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.plot(m_mono_GC, f_PBH_mono_GC, color=colors[0], label="Monochromatic", linestyle="dotted", linewidth=2)
+            ax.plot(m_mono_GC, f_PBH_mono_GC, color=colors[0], label="Delta function", linestyle="dotted", linewidth=2)
             ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linestyle="dotted", linewidth=2)
             ax.set_ylabel("$f_\mathrm{PBH}$")
             ax.set_xscale("log")
             ax.set_yscale("log")
             
-        ax0.legend(fontsize="x-small")
+        ax0.legend(fontsize="xx-small")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}.pdf".format(Deltas[i]))
