@@ -31,7 +31,7 @@ E_number = 500
 BH_number = 1
 
 # Range of PBH masses
-m_pbh_values = np.logspace(11, 21, 1000)
+m_pbh_values = np.logspace(11, 22, 1000)
 
 # Path to BlackHawk and Isatis
 BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
@@ -58,7 +58,7 @@ E_min_full_range, E_max_full_range = 1e-6, 105.874
                 
 energies = np.logspace(np.log10(E_min), np.log10(E_max), E_number)
 
-fname_base = "mono_E500"
+fname_base = "mono_E500_wide"
 os.chdir(os.path.expanduser('~') + "/Asteroid_mass_gap/v2")
 # Save Isatis parameters file.
 params_Isatis[0][1] = fname_base

@@ -316,8 +316,8 @@ if "__main__" == __name__:
     f_PBH_isatis = []
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
     
-    COMPTEL = True
-    INTEGRAL = False
+    COMPTEL = False
+    INTEGRAL = True
     EGRET = False
     FermiLAT = False
     
@@ -358,7 +358,7 @@ if "__main__" == __name__:
         coefficient = m_pbh / 10**exponent
     
         if monochromatic_MF:
-            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_{:.0f}/".format(i+1)
+            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/mono_E500_wide_{:.0f}/".format(i+1)
     
         print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
     
@@ -418,8 +418,7 @@ if "__main__" == __name__:
             f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
             if save_each_bin:
                 f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
-            
         f_PBH_isatis.append(f_PBH)
     
     # Save calculated results for f_PBH
-    np.savetxt("./Data/fPBH_GC_%s.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
+    np.savetxt("./Data/fPBH_GC_%s_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
