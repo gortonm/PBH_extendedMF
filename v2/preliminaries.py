@@ -184,6 +184,40 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     return m_pbh_values[np.argmax(psi_values)]
 
 
+def mf_numeric(m, m_p, Delta):
+    """
+    Estimate the numerical mass function shown in Fig. 5 of 2009.03204 evaluated
+    at an arbitrary mass m, with peak mass m_p, using linear interpolation.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH mass.
+    m_p : Float
+        Peak mass.
+    Delta : Float
+        Power spectrum peak width.
+
+    Returns
+    -------
+    Array-like
+        Estimate for the numerical PBH mass function, evaluated at m.
+
+    """
+    m_data, mf_data = load_data(filename="Delta_{:.1f}_numeric.csv".format(Delta), directory="./Extracted_files/2009.03204/")
+    
+    # Find peak mass of the mass function extracted from Fig. 5 of 2009.03204,
+    # and scale the masses so that the peak mass corresponds to m_p.
+    mp_data = m_data[np.argmax(mf_data)]
+    print(mp_data)
+    m_scaled = m_data * m_p / mp_data
+    
+    # Estimate normalisation factor for the MF
+    mf_integrated = np.trapz(mf_data, m_scaled)
+    
+    return np.interp(m, m_scaled, mf_data, 0, 0) / mf_integrated
+
+
 def integrand_measure(m, m_c, mf, params):
     """
     Approximate form of the integrand appearing in Eq. 11 of 2201.01265,
@@ -426,18 +460,27 @@ if "__main__" == __name__:
         
         if i == 6:
            
-            m_pbh_values = np.logspace(17, 24, 100)
+            #m_pbh_values = np.logspace(17, 24, 100)
+            m_pbh_values = np.logspace(20, 26, 100)
             fig1, ax1 = plt.subplots(figsize=(6, 6))
             fig2, ax2 = plt.subplots(figsize=(6, 6))
 
             ymin_scaled, ymax_scaled = 1e-4, 5
             
-            m_c = 3.1e18*np.exp(ln_mc_SLN[i])
-            m_p = 2.9e18*mp_CC3[i]
+            # Choose factors so that peak masses of the CC3 and SLN MF match
+            # closely, at 1e20g (consider this range since constraints plots)
+            # indicate the constraints from the SLN and CC3 MFs are quite
+            # different at this peak mass.
+            #m_c = 3.1e18*np.exp(ln_mc_SLN[i])
+            #m_p = 2.9e18*mp_CC3[i]
+            
+            m_c = 5.6e20*np.exp(ln_mc_SLN[i])
+            m_p = 5.25e20*mp_CC3[i]
+
             mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
             print("m_p (CC3) = {:.2e}".format(m_p))
             print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
-            
+         
             mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
             mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
 
@@ -461,7 +504,7 @@ if "__main__" == __name__:
                 #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
                 ax.set_xlabel("$m~[\mathrm{g}]$")
                 ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-                ax.set_title("$\Delta={:.1f}$".format(Deltas[i]))
+                ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
 
             ax1.vlines(9.9e21, ymin_scaled, ymax_scaled, color="k", linestyle="dashed")
             ax1.set_ylabel("$\psi / \psi_\mathrm{max}$")
@@ -474,6 +517,80 @@ if "__main__" == __name__:
             fig1.set_tight_layout(True)
             fig2.set_tight_layout(True)
             
+#%% Plot the mass function for Delta = 5.0, showing the mass range relevant
+# for the Subaru-HSC microlensing constraints.
+ 
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Indices of Delta to plot the numerical MF for.
+    Delta_indices = [1, 5, 6]
+    
+    for i in Delta_indices:
+                   
+        #m_pbh_values = np.logspace(17, 24, 100)
+        m_pbh_values = np.logspace(20, 26, 100)
+        fig1, ax1 = plt.subplots(figsize=(6, 6))
+        fig2, ax2 = plt.subplots(figsize=(6, 6))
+
+        ymin_scaled, ymax_scaled = 1e-4, 5
+        
+        # Choose factors so that peak masses of the CC3 and SLN MF match
+        # closely, at 1e20g (consider this range since constraints plots)
+        # indicate the constraints from the SLN and CC3 MFs are quite
+        # different at this peak mass.
+        #m_c = 3.1e18*np.exp(ln_mc_SLN[i])
+        #m_p = 2.9e18*mp_CC3[i]
+        
+        m_c = 5.6e20*np.exp(ln_mc_SLN[i])
+        m_p = 5.25e20*mp_CC3[i]
+
+        mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+        print("m_p (CC3) = {:.2e}".format(m_p))
+        print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
+     
+        mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+        mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        mf_numeric_test = mf_numeric(m_pbh_values, m_p, Delta=Deltas[i])
+        
+        mf_scaled_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+        mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        mf_scaled_numeric = mf_numeric(m_pbh_values, m_p, Delta=Deltas[i]) / mf_numeric(m_p, m_p, Delta=Deltas[i])
+        
+        ymin, ymax = CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymin_scaled, CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymax_scaled
+
+        ax1.plot(m_pbh_values, mf_scaled_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
+        ax1.plot(m_pbh_values, mf_scaled_CC3, color="g", label="CC3", linestyle="dashed")
+        ax1.plot(m_pbh_values, mf_scaled_numeric, color="k", label="Numeric")
+        
+        ax2.plot(m_pbh_values, mf_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
+        ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
+        ax2.plot(m_pbh_values, mf_numeric_test, color="k", label="CC3")
+        
+        for ax in [ax1, ax2]:
+            # Show smallest PBH mass constrained by microlensing.
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.grid()
+            ax.legend(fontsize="small")
+            #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
+            ax.set_xlabel("$m~[\mathrm{g}]$")
+            ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+            ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+
+        ax1.vlines(9.9e21, ymin_scaled, ymax_scaled, color="k", linestyle="dashed")
+        ax1.set_ylabel("$\psi / \psi_\mathrm{max}$")
+        ax1.set_ylim(ymin_scaled, ymax_scaled)
+        
+        ax2.vlines(9.9e21, ymin, ymax, color="k", linestyle="dashed")
+        ax2.set_ylabel("$\psi$")
+        ax2.set_ylim(ymin, ymax)
+
+        fig1.set_tight_layout(True)
+        fig2.set_tight_layout(True)
+
                         
 #%% Plot the approximate form of the integrand appearing in Eq. 11 of 2201.01265, given by integrand_measure()
 
@@ -706,4 +823,3 @@ if "__main__" == __name__:
             mc_sig_CC3 = m_sig / m_upper_CC3[i]
             print("SLN: mc_sig = {:.1e}g".format(mc_sig_SLN))
             print("CC3: mp_sig = {:.1e}g".format(mc_sig_CC3))
-            
