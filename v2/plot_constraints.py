@@ -40,7 +40,7 @@ plt.style.use('tableau-colorblind10')
 if "__main__" == __name__:
     
     # Choose colors to match those from Fig. 5 of 2009.03204
-    colors = ['tab:grey', 'r', 'b', 'g']
+    colors = ['tab:grey', 'r', 'b', 'g', 'k']
     
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
@@ -127,6 +127,14 @@ if "__main__" == __name__:
         ax0.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
         ax2.plot(mp_Carr_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
         ax2.plot(mp_Carr_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
+        
+        
+        if i in [0, 1, 4, 5, 6]:
+            # Loading constraints from numeric mass function (Subaru-HSC).
+            mp_Carr_numeric, f_PBH_Carr_numeric = np.genfromtxt("./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+            ax0.plot(mp_Carr_numeric, f_PBH_Carr_numeric, color=colors[4], label="numeric")
+            ax2.plot(mp_Carr_numeric, f_PBH_Carr_numeric, color=colors[4], label="SLN")
+           
         
         ax0.set_xlim(xmin_GC, xmax_HSC)
         ax0.set_ylim(ymin, ymax)
