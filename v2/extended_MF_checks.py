@@ -256,7 +256,8 @@ if "__main__" == __name__:
 
 if "__main__" == __name__:
     
-    m_pbh_values = np.logspace(11, 21, 1000)
+    m_pbh_values_Isatis = np.logspace(11, 21, 1000)
+    m_pbh_values_reproduction = np.logspace(11, 22, 1000)
     constraints_names, f_PBH_Isatis = load_results_Isatis(modified=True)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
@@ -264,11 +265,11 @@ if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(8, 8))
     
     for i in range(len(constraints_names)):
-        ax.plot(m_pbh_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
+        ax.plot(m_pbh_values_Isatis, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
     
         # Constraints data for each energy bin of each instrument.
-        constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
-        ax.plot(m_pbh_values, envelope(constraints_mono_file), marker="x", color=colors_evap[i])
+        constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt"%(constraints_names_short[i])))
+        ax.plot(m_pbh_values_reproduction, envelope(constraints_mono_file), marker="x", color=colors_evap[i])
     
     ax.set_xlim(1e14, 1e18)
     ax.set_ylim(10**(-10), 1)
@@ -308,7 +309,8 @@ if "__main__" == __name__:
     for j in range(len(sigmas_LN[:-1])):
         
         # Filename of constraints obtained using Isatis.
-        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+        #fname_base = "LN_D={:.1f}_test_range"
         
         # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
         constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_D={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)    
@@ -412,8 +414,7 @@ if "__main__" == __name__:
             ax.set_yscale("log")
             ax.legend(fontsize="small")
             ax.set_title("$\Delta={:.1f}$".format(Deltas[j]))
-            plt.tight_layout()
-            
+            plt.tight_layout()            
 
 #%% Plot results for a log-normal mass function, obtained using Isatis,
 # and compare to the results obtained using the method from 1705.05567, using
@@ -456,8 +457,8 @@ if "__main__" == __name__:
         constraints_names, f_max = load_results_Isatis(modified=True)
         
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
-        m_mono_min = 1e14
-        m_mono_max = 2e17
+        m_mono_min = 1e11
+        m_mono_max = 1e21
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
        
@@ -498,7 +499,7 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.legend(fontsize="small")
-        ax.set_title("$\Delta={:.1f}$".format(Deltas[j]))
+        ax.set_title("LN, $\Delta={:.1f}".format(Deltas[j]) + "~(m_\mathrm{min}" + "={:.0e}".format(m_mono_min) + "~\mathrm{g}, " + "m_\mathrm{max}" + "={:.0e}".format(m_mono_max) + "~\mathrm{g})$", fontsize="small")
         plt.tight_layout()
         
 #%% Plot results for a skew-lognormal mass function, obtained using Isatis,
@@ -507,7 +508,6 @@ if "__main__" == __name__:
 # For the monochromatic MF constraints, only include the range where f_PBH > 1.
 # and m_c > 1e16g.
 # Using the modified version of Isatis.
-# Both forms of the constraint calculated using the same range and number of PBH masses.
 if "__main__" == __name__:
     
     # Parameters used for convergence tests in Galactic Centre constraints.
@@ -551,8 +551,8 @@ if "__main__" == __name__:
         constraints_names, f_max = load_results_Isatis(modified=True)
         
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
-        m_mono_min = 5e14
-        m_mono_max = 2e17
+        m_mono_min = 1e11
+        m_mono_max = 1e21
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
        
@@ -575,7 +575,7 @@ if "__main__" == __name__:
             energy_bin_constraints_CC3 = []
             
             for k in range(len(constraints_mono_file)):
-                
+                                
                 # Constraint from a particular energy bin
                 constraint_energy_bin = constraints_mono_file[k]
                 
@@ -588,7 +588,7 @@ if "__main__" == __name__:
                 
                 f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=f_max_values, mf=CC3, params=params_CC3)
                 energy_bin_constraints_CC3.append(f_PBH_k)
-
+                
             # Calculate constraint using method from 1705.05567, and plot.
             f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
             f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
@@ -603,10 +603,9 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.legend(fontsize="small")
-        ax1.set_xlabel("$m_p~[\mathrm{g}]$")
-        ax2.set_xlabel("$m_p~[\mathrm{g}]$")
-        ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]))
-        ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]))
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax1.set_title("SLN, $\Delta={:.1f}".format(Deltas[j]) + "~(m_\mathrm{min}" + "={:.0e}".format(m_mono_min) + "~\mathrm{g}, " + "m_\mathrm{max}" + "={:.0e}".format(m_mono_max) + "~\mathrm{g})$", fontsize="small")
+        ax2.set_title("CC3, $\Delta={:.1f}".format(Deltas[j]) + "~(m_\mathrm{min}" + "={:.0e}".format(m_mono_min) + "~\mathrm{g}, " + "m_\mathrm{max}" + "={:.0e}".format(m_mono_max) + "~\mathrm{g})$", fontsize="small")
         fig1.set_tight_layout(True)
         fig2.set_tight_layout(True)
         fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
@@ -618,7 +617,6 @@ if "__main__" == __name__:
 # For the monochromatic MF constraints, set constraint to the constraint at 
 # at m = 5e14g when m < 5e14g.
 # Using the modified version of Isatis.
-# Both forms of the constraint calculated using the same range and number of PBH masses.
 if "__main__" == __name__:
     
     # Parameters used for convergence tests in Galactic Centre constraints.
@@ -696,8 +694,8 @@ if "__main__" == __name__:
                         else:
                             constraint_energy_bin_modified.append(constraint_energy_bin[l])
                     
-                    
-                    print(constraint_energy_bin_modified)
+                    if k==0:
+                        print(constraint_energy_bin_modified)
                     
                     # Calculate constraint on f_PBH from each bin
                     f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin_modified, mf=SLN, params=params_SLN)
@@ -715,15 +713,15 @@ if "__main__" == __name__:
             
             for ax in ax1, ax2:
                 ax.set_xlim(1e16, 1e18)
-                ax.set_ylim(10**(-7), 1)
+                ax.set_ylim(10**(-5), 1)
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
                 ax.legend(fontsize="small")
             ax1.set_xlabel("$m_p~[\mathrm{g}]$")
             ax2.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]))
-            ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]))
+            ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]) + "$, f_\mathrm{max}=\mathrm{const.}~(m < M_*)$", fontsize="small")
+            ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]) + "$, f_\mathrm{max}=\mathrm{const.}~(m < M_*)$", fontsize="small")
             fig1.set_tight_layout(True)
             fig2.set_tight_layout(True)
             fig1.savefig("./Tests/Figures/SLN_MF_cutoff_mstar={:.1e}g_Delta={:.1f}.png".format(m_star, Deltas[j]))
@@ -735,7 +733,6 @@ if "__main__" == __name__:
 # For the monochromatic MF constraints, set constraint to the constraint to a 
 # very small / large value m < 5e14g.
 # Using the modified version of Isatis.
-# Both forms of the constraint calculated using the same range and number of PBH masses.
 if "__main__" == __name__:
     
     # Parameters used for convergence tests in Galactic Centre constraints.
@@ -828,15 +825,15 @@ if "__main__" == __name__:
             
             for ax in ax1, ax2:
                 ax.set_xlim(1e16, 1e18)
-                ax.set_ylim(10**(-7), 1)
+                ax.set_ylim(10**(-5), 1)
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
                 ax.legend(fontsize="small")
             ax1.set_xlabel("$m_p~[\mathrm{g}]$")
             ax2.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]))
-            ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]))
+            ax1.set_title("SLN, $\Delta={:.1f}$".format(Deltas[j]) + ", no constraint at $m < M_*$", fontsize="small")
+            ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]) + ", no constraint at $m < M_*$", fontsize="small")
             fig1.set_tight_layout(True)
             fig2.set_tight_layout(True)
             fig1.savefig("./Tests/Figures/SLN_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.png".format(min_constraint, m_star, Deltas[j]))
