@@ -364,7 +364,7 @@ if "__main__" == __name__:
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
-    m_mono_values = np.logspace(11, 21, 1000)
+    m_mono_values = np.logspace(11, 22, 1000)
     
     for j in range(len(sigmas_LN[:-1])):
         
@@ -389,7 +389,7 @@ if "__main__" == __name__:
                 # Calculate constraint using method from 1705.05567.
                 
                 # Constraints data for each energy bin of each instrument.
-                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt"%(constraints_names_short[i])))
                 # Constraints for an extended MF, from each instrument.
                 energy_bin_constraints = []
                 
@@ -442,7 +442,7 @@ if "__main__" == __name__:
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
-    m_mono_values_init = np.logspace(11, 21, 1000)
+    m_mono_values_init = np.logspace(11, 22, 1000)
     
     for j in range(len(sigmas_LN)):
         
@@ -458,7 +458,7 @@ if "__main__" == __name__:
         
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
         m_mono_min = 1e11
-        m_mono_max = 1e21
+        m_mono_max = 1e22
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
        
@@ -472,7 +472,7 @@ if "__main__" == __name__:
             # Calculate constraint using method from 1705.05567.
             
             # Constraints data for each energy bin of each instrument.
-            constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+            constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt"%(constraints_names_short[i])))
             # Constraints for an extended MF, from each instrument.
             energy_bin_constraints = []
             
@@ -529,7 +529,7 @@ if "__main__" == __name__:
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
-    m_mono_values_init = np.logspace(11, 21, 1000)
+    m_mono_values_init = np.logspace(11, 22, 1000)
         
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -552,7 +552,7 @@ if "__main__" == __name__:
         
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
         m_mono_min = 1e11
-        m_mono_max = 1e21
+        m_mono_max = 1e22
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
        
@@ -569,7 +569,7 @@ if "__main__" == __name__:
             # Calculate constraint using method from 1705.05567.
             
             # Constraints data for each energy bin of each instrument.
-            constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+            constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt"%(constraints_names_short[i])))
             # Constraints for an extended MF, from each instrument.
             energy_bin_constraints_SLN = []
             energy_bin_constraints_CC3 = []
@@ -608,8 +608,8 @@ if "__main__" == __name__:
         ax2.set_title("CC3, $\Delta={:.1f}".format(Deltas[j]) + "~(m_\mathrm{min}" + "={:.0e}".format(m_mono_min) + "~\mathrm{g}, " + "m_\mathrm{max}" + "={:.0e}".format(m_mono_max) + "~\mathrm{g})$", fontsize="small")
         fig1.set_tight_layout(True)
         fig2.set_tight_layout(True)
-        fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
-        fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
+        #fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
+        #fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
 
 #%% Plot results for a skew-lognormal mass function, obtained using Isatis,
 # and compare to the results obtained using the method from 1705.05567, using
@@ -639,7 +639,7 @@ if "__main__" == __name__:
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
     m_star = 5e14    # mass below which to set constraint to large values
-    m_mono_values = np.logspace(11, 21, 1000)
+    m_mono_values = np.logspace(11, 22, 1000)
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -675,7 +675,7 @@ if "__main__" == __name__:
                 # Calculate constraint using method from 1705.05567.
                 
                 # Constraints data for each energy bin of each instrument.
-                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt"%(constraints_names_short[i])))
                 # Constraints for an extended MF, from each instrument.
                 energy_bin_constraints_SLN = []
                 energy_bin_constraints_CC3 = []
@@ -724,8 +724,8 @@ if "__main__" == __name__:
             ax2.set_title("CC3, $\Delta={:.1f}$".format(Deltas[j]) + "$, f_\mathrm{max}=\mathrm{const.}~(m < M_*)$", fontsize="small")
             fig1.set_tight_layout(True)
             fig2.set_tight_layout(True)
-            fig1.savefig("./Tests/Figures/SLN_MF_cutoff_mstar={:.1e}g_Delta={:.1f}.png".format(m_star, Deltas[j]))
-            fig2.savefig("./Tests/Figures/CC3_MF_cutoff_mstar={:.1e}g_Delta={:.1f}.png".format(m_star, Deltas[j]))
+            #fig1.savefig("./Tests/Figures/SLN_MF_cutoff_mstar={:.1e}g_Delta={:.1f}.png".format(m_star, Deltas[j]))
+            #fig2.savefig("./Tests/Figures/CC3_MF_cutoff_mstar={:.1e}g_Delta={:.1f}.png".format(m_star, Deltas[j]))
 
 #%% Plot results for a skew-lognormal mass function, obtained using Isatis,
 # and compare to the results obtained using the method from 1705.05567, using
@@ -756,7 +756,7 @@ if "__main__" == __name__:
     
     m_star = 5e14    # mass below which to set constraint to large values
     min_constraint = 1e100   # constraint to set f_max for m < m_star
-    m_mono_values = np.logspace(11, 21, 1000)
+    m_mono_values = np.logspace(11, 22, 1000)
         
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -792,7 +792,7 @@ if "__main__" == __name__:
                 # Calculate constraint using method from 1705.05567.
                 
                 # Constraints data for each energy bin of each instrument.
-                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic.txt"%(constraints_names_short[i])))
+                constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt"%(constraints_names_short[i])))
                 # Constraints for an extended MF, from each instrument.
                 energy_bin_constraints_SLN = []
                 energy_bin_constraints_CC3 = []
