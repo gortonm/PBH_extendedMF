@@ -316,8 +316,8 @@ if "__main__" == __name__:
     f_PBH_isatis = []
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
     
-    COMPTEL = False
-    INTEGRAL = True
+    COMPTEL = True
+    INTEGRAL = False
     EGRET = False
     FermiLAT = False
     
@@ -353,12 +353,13 @@ if "__main__" == __name__:
     
     
     for i, m_pbh in enumerate(m_pbh_mono):
+        
         # Load photon spectra from BlackHawk outputs
         exponent = np.floor(np.log10(m_pbh))
         coefficient = m_pbh / 10**exponent
     
         if monochromatic_MF:
-            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/mono_E500_wide_{:.0f}/".format(i+1)
+            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
     
         print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
     
@@ -394,7 +395,7 @@ if "__main__" == __name__:
             flux_binned = []
             nb_refined = len(flux_refined)
             nb_inst = len(ener_inst)
-    
+        
             if exclude_last_bin:
                 nb_inst = nb_inst - 1
     
@@ -418,6 +419,7 @@ if "__main__" == __name__:
             f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
             if save_each_bin:
                 f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
+                print(f_PBH)
         f_PBH_isatis.append(f_PBH)
     
     # Save calculated results for f_PBH
