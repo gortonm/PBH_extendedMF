@@ -671,7 +671,61 @@ if "__main__" == __name__:
         fig1.set_tight_layout(True)
         fig2.set_tight_layout(True)
 
-                        
+
+#%% Plot the integrand appearing in Eq. 12 of 1705.05567, for the microlensing constraint from Subaru-HSC
+ 
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    
+    i = 6        
+    # Constraints for monochromatic MF.
+    m_pbh_values, f_max_subaru = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+               
+    fig, ax = plt.subplots(figsize=(6, 6))
+    
+    # Choose factors so that peak masses of the CC3 and SLN MF match
+    # closely, at 1e20g (consider this range since constraints plots)
+    # indicate the constraints from the SLN and CC3 MFs are quite
+    # different at this peak mass.
+    m_c = 3.1e18*np.exp(ln_mc_SLN[i])
+    m_p = 2.9e18*mp_CC3[i]
+    
+    #m_c = 5.6e20*np.exp(ln_mc_SLN[i])
+    #m_p = 5.25e20*mp_CC3[i]
+
+    mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+    print("m_p (CC3) = {:.2e}".format(m_p))
+    print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
+ 
+    mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+    mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
+    #mf_numeric_test = mf_numeric(m_pbh_values, m_p, Delta=Deltas[i])
+    
+    ymin, ymax = 1e-26, 2.5e-23
+    xmin, xmax = 9e21, 1e25
+
+    ax.plot(m_pbh_values, mf_SLN / f_max_subaru, color="b", label="SLN", linestyle=(0, (5, 7)))
+    ax.plot(m_pbh_values, mf_CC3 / f_max_subaru, color="g", label="CC3", linestyle="dashed")
+    #ax.plot(m_pbh_values, mf_numeric_test / f_max_subaru, color="k", label="Numeric")
+            
+    # Show smallest PBH mass constrained by microlensing.
+    #ax.set_xscale("log")
+    #ax.set_yscale("log")
+    ax.grid()
+    ax.legend(fontsize="small")
+    #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
+    ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_xlim(xmin, xmax)
+    ax.set_title("$\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+
+    ax.set_ylabel("$\psi / f_\mathrm{max}$")
+    ax.set_ylim(ymin, ymax)
+    
+    fig.set_tight_layout(True)
+                      
 #%% Plot the approximate form of the integrand appearing in Eq. 11 of 2201.01265, given by integrand_measure()
 
 if "__main__" == __name__:
