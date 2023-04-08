@@ -214,7 +214,6 @@ def mf_numeric(m, m_p, Delta, custom_mp=True):
         # Find peak mass of the mass function extracted from Fig. 5 of 2009.03204,
         # and scale the masses so that the peak mass corresponds to m_p.
         mp_data = m_data[np.argmax(mf_data)]
-        print(mp_data)
         m_scaled = m_data * m_p / mp_data
         
         # Estimate normalisation factor for the MF
@@ -537,13 +536,13 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Indices of Delta to plot the numerical MF for.
-    Delta_indices = [0, 4, 5, 6]
+    Delta_indices = [0, 1, 4, 5, 6]
     
     for i in Delta_indices:
         
         m_pbh_values = np.logspace(18, 22, 1000)
                   
-        fig1, ax1 = plt.subplots(figsize=(6, 6))
+        fig1, ax1 = plt.subplots(figsize=(7, 5))
         #fig2, ax2 = plt.subplots(figsize=(6, 6))
 
         ymin_scaled, ymax_scaled = 1e-1, 1.1
@@ -581,7 +580,7 @@ if "__main__" == __name__:
         #ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
         #ax2.plot(m_pbh_values, mf_numeric_test, color="k", label="CC3")
         
-        for ax in [ax1, ax2]:
+        for ax in [ax1]:
             # Show smallest PBH mass constrained by microlensing.
             ax.set_xscale("log")
             ax.set_yscale("log")
