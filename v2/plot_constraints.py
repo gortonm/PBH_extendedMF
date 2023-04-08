@@ -101,10 +101,7 @@ if "__main__" == __name__:
             fname_base_LN = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
             constraints_names, f_PBHs_GC_LN = load_results_Isatis(mf_string=fname_base_LN, modified=True)
             f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
-            
-            #print(f_PBH_GC_LN[10:20])
-            print(np.mean(f_PBH_GC_SLN[f_PBH_GC_LN<1] / f_PBH_GC_LN[f_PBH_GC_LN<1]))
-                        
+                                    
             mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
             ax0.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
             ax1.plot(mc_values_GC * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
@@ -131,10 +128,15 @@ if "__main__" == __name__:
         
         if i in [0, 1, 4, 5, 6]:
             # Loading constraints from numeric mass function (Subaru-HSC).
-            mp_Carr_numeric, f_PBH_Carr_numeric = np.genfromtxt("./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            ax0.plot(mp_Carr_numeric, f_PBH_Carr_numeric, color=colors[4], label="numeric")
-            ax2.plot(mp_Carr_numeric, f_PBH_Carr_numeric, color=colors[4], label="SLN")
-           
+            mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC = np.genfromtxt("./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+            ax0.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4], label="numeric")
+            ax2.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4])
+            
+            # Loading constraints from numeric mass function (Galactic Centre photons).
+            mp_Carr_numeric_GC, f_PBH_Carr_numeric_GC = np.genfromtxt("./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+            ax0.plot(mp_Carr_numeric_GC, f_PBH_Carr_numeric_GC, color=colors[4], label="numeric")
+            ax1.plot(mp_Carr_numeric_GC, f_PBH_Carr_numeric_GC, color=colors[4])
+          
         
         ax0.set_xlim(xmin_GC, xmax_HSC)
         ax0.set_ylim(ymin, ymax)
