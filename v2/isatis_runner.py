@@ -174,8 +174,12 @@ for i in range(len(Deltas)):
             spec_file = []
             spec_file.append(spec_file_initial_line)
             filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + destination_folder
-
-            m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), np.log10(m_upper_SLN[i] * m_c), BH_number)
+            
+            if not test_mass_range:
+                m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), np.log10(m_upper_SLN[i] * m_c), BH_number)
+            else:
+                m_pbh_values = np.logspace(np.log10(m_lower_test), np.log10(m_upper_test), BH_number)
+                
             spec_values = SLN(m_pbh_values, m_c=m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])         
             for k in range(len(m_pbh_values)):
                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
@@ -196,8 +200,12 @@ for i in range(len(Deltas)):
             spec_file = []
             spec_file.append(spec_file_initial_line)
             filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + destination_folder
-
-            m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), np.log10(m_upper_CC3[i] * m_c), BH_number)
+            
+            if not test_mass_range:
+                m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), np.log10(m_upper_CC3[i] * m_c), BH_number)
+            else:
+                m_pbh_values = np.logspace(np.log10(m_lower_test), np.log10(m_upper_test), BH_number)
+                
             spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
             for k in range(len(m_pbh_values)):
                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))

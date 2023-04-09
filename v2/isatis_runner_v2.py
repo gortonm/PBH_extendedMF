@@ -17,9 +17,9 @@ rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
-LN_bool = False
+LN_bool = True
 SLN_bool = False 
-CC3_bool = True
+CC3_bool = False
 
 
 # Load mass function parameters.
@@ -29,9 +29,9 @@ CC3_bool = True
 # Controls whether to use a range of PBH masses that matches those used
 # in isatis_reproduction.py. Use for comparing to the results obtained using 
 # the method from 1705.05567.
-test_mass_range = False
+test_mass_range = True
 if test_mass_range:
-    m_lower_test, m_upper_test = 1e11, 1e21
+    m_lower_test, m_upper_test = 1e11, 1e22
 
 
 # Load minimum and maximum scaled masses for which the MF is above a cutoff.
@@ -44,16 +44,16 @@ integrand_cutoff = False
 # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
 integrand_cutoff_present = False
 
-cutoff_values = [1e-7]
+cutoff_values = [1e-4]
 
 # PBH mass spacing, in log10(PBH mass / grams)
-dm_values = [1e-4]
+dm_values = [1e-3]
 
 # Minimum and maximum central masses.
 mc_max_values = [1e19, 1e17, 1e15]
 
 # If True, use a single characteristic PBH mass. 
-single_mass = True
+single_mass = False
 mc_min = 1e14
 
 # Choose minimum energy as the lower range constrained by the Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-LAT (see e.g. Fig. 2 of 2201.01265)
@@ -61,7 +61,7 @@ E_min = 1e-5
 E_max = 5   # maximum energy available in Hazma tables
 
 # Number of energies to use
-E_number_values = [10000]
+E_number_values = [500, 1000]
 
 
 # Path to BlackHawk and Isatis
@@ -185,7 +185,11 @@ for mc_max in mc_max_values:
                             spec_file.append(spec_file_initial_line)
                             filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + destination_folder
                 
-                            m_pbh_values = np.logspace(np.log10(m_lower_SLN[i] * m_c), np.log10(m_upper_SLN[i] * m_c), BH_number)
+                            if not test_mass_range:
+                                m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), np.log10(m_upper_CC3[i] * m_c), BH_number)
+                            else:
+                                m_pbh_values = np.logspace(np.log10(m_lower_test), np.log10(m_upper_test), BH_number)
+                                
                             spec_values = SLN(m_pbh_values, m_c=m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])         
                             for k in range(len(m_pbh_values)):
                                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
@@ -204,7 +208,11 @@ for mc_max in mc_max_values:
                             spec_file.append(spec_file_initial_line)
                             filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + destination_folder
                 
-                            m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), np.log10(m_upper_CC3[i] * m_c), BH_number)
+                            if not test_mass_range:
+                                m_pbh_values = np.logspace(np.log10(m_lower_CC3[i] * m_c), np.log10(m_upper_CC3[i] * m_c), BH_number)
+                            else:
+                                m_pbh_values = np.logspace(np.log10(m_lower_test), np.log10(m_upper_test), BH_number)
+                                
                             spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
                             for k in range(len(m_pbh_values)):
                                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
