@@ -101,7 +101,7 @@ def envelope(constraints):
     return tightest
         
 
-def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=False):
+def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=False, wide=False):
     """
     Read in constraints on f_PBH, obtained using Isatis, with a monochromatic PBH mass function.
     Parameters
@@ -111,7 +111,9 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
     modified : Boolean, optional
         If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
     test_mass_range : Boolean, optional
-        If True, use data obtained using the same method as for the constraints from 1705.05567.
+        If True, use data obtained using the same PBH mass range for all Delta (1000 BHs evenly spaced in log space between 1e11-1e21g, if wide=False).
+    wide : Boolean, optional
+        If True, use the 'wider' PBH mass range for all Delta (1000 BHs evenly spaced in log space between 1e11-1e22g).
     Returns
     -------
     constraints_names : Array-like
@@ -128,6 +130,9 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
     
     if test_mass_range:
         mf_string += "_test_range"
+        
+    if wide:
+        mf_string += "_wide"
     
     # Load Isatis constraints data.
     constraints_file = np.genfromtxt("%sresults_photons_%s.txt"%(Isatis_path, mf_string), dtype = "str", unpack=True)[1:]
@@ -510,6 +515,8 @@ if "__main__" == __name__:
 # Using the modified version of Isatis.
 if "__main__" == __name__:
     
+    mc_values = np.logspace(14, 19, 100)
+    
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
     delta_log_m = 1e-3
@@ -530,21 +537,22 @@ if "__main__" == __name__:
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
     m_mono_values_init = np.logspace(11, 22, 1000)
-        
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
+            
     for j in range(len(Deltas)):
         
         mp_SLN_values = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_values]
         
         # Filename of constraints obtained using Isatis.
-        fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-        fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-        
+        #fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+        #fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+        fname_base_SLN = "SL_D={:.1f}_"
+        fname_base_CC3 = "CC_D={:.1f}_"
+       
         # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
-        constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
-        constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
+        #constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
+        #constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
+        constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=True, wide=True)    
+        constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=True, wide=True)    
         
         # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
         # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
@@ -595,7 +603,9 @@ if "__main__" == __name__:
 
             ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x", linestyle="None", color=colors_evap[i])
             ax2.plot(mp_CC3_values, f_PBH_Carr_CC3, marker="x", linestyle="None", color=colors_evap[i])
-        
+            ax2.plot(mp_CC3_values, np.power(mp_CC3_values, 4) / np.power(1e16, 4), color="k", marker="x")
+            ax2.plot(mp_CC3_values, np.power(mp_CC3_values, 5.27) / np.power(1e16, 5.27), color="grey", marker="x")
+       
         for ax in ax1, ax2:
             ax.set_xlim(1e14, 1e18)
             ax.set_ylim(10**(-10), 1)
@@ -651,12 +661,16 @@ if "__main__" == __name__:
             mp_SLN_values = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_values]
         
             # Filename of constraints obtained using Isatis.
-            fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            
+            #fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            #fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            fname_base_SLN = "SL_D={:.1f}_"
+            fname_base_CC3 = "CC_D={:.1f}_"
+           
             # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
-            constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
-            constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
+            #constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
+            #constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
+            constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=True, wide=True)    
+            constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=True, wide=True)    
             
             # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
             # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
@@ -768,12 +782,16 @@ if "__main__" == __name__:
             mp_SLN_values = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_values]
         
             # Filename of constraints obtained using Isatis.
-            fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            
+            #fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            #fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            fname_base_SLN = "SL_D={:.1f}_"
+            fname_base_CC3 = "CC_D={:.1f}_"
+           
             # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
-            constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
-            constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
+            #constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
+            #constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
+            constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=True, wide=True)    
+            constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=True, wide=True)    
             
             # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
             # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
