@@ -383,7 +383,7 @@ if "__main__" == __name__:
             
             # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
             # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
-            constraints_names, f_max = load_results_Isatis(modified=True)
+            constraints_names, f_max = load_results_Isatis(mf_string="GC_mono_wide", modified=True)
             params_LN = [sigmas_LN[j]]
             
             fig, ax = plt.subplots(figsize=(8, 8))
@@ -545,21 +545,21 @@ if "__main__" == __name__:
         # Filename of constraints obtained using Isatis.
         #fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         #fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-        fname_base_SLN = "SL_D={:.1f}_"
-        fname_base_CC3 = "CC_D={:.1f}_"
+        fname_base_SLN = "SL_D={:.1f}".format(Deltas[j])
+        fname_base_CC3 = "CC_D={:.1f}".format(Deltas[j])
        
         # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
         #constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
         #constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=False)    
         constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=True, wide=True)    
         constraints_names, f_PBH_Isatis_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True, test_mass_range=True, wide=True)    
-        
+
         # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
         # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
-        constraints_names, f_max = load_results_Isatis(modified=True)
-        
+        constraints_names, f_max = load_results_Isatis(mf_string="GC_mono_wide", modified=True)
+
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
-        m_mono_min = 1e11
+        m_mono_min = 5e14
         m_mono_max = 1e22
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
@@ -603,12 +603,19 @@ if "__main__" == __name__:
 
             ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x", linestyle="None", color=colors_evap[i])
             ax2.plot(mp_CC3_values, f_PBH_Carr_CC3, marker="x", linestyle="None", color=colors_evap[i])
-            ax2.plot(mp_CC3_values, np.power(mp_CC3_values, 4) / np.power(1e16, 4), color="k", marker="x")
-            ax2.plot(mp_CC3_values, np.power(mp_CC3_values, 5.27) / np.power(1e16, 5.27), color="grey", marker="x")
+            
+            
+        if Deltas[j] < 5:
+            xmin, xmax = 1e16, 2.5e17
+            ymin, ymax = 1e-4, 1
+        else:
+            xmin, xmax = 1e16, 7e17
+            ymin, ymax = 3e-6, 10
+
        
         for ax in ax1, ax2:
-            ax.set_xlim(1e14, 1e18)
-            ax.set_ylim(10**(-10), 1)
+            ax.set_xlim(xmin, xmax)
+            ax.set_ylim(ymin, ymax)
             ax.set_ylabel("$f_\mathrm{PBH}$")
             ax.set_xscale("log")
             ax.set_yscale("log")
@@ -618,8 +625,8 @@ if "__main__" == __name__:
         ax2.set_title("CC3, $\Delta={:.1f}".format(Deltas[j]) + "~(m_\mathrm{min}" + "={:.0e}".format(m_mono_min) + "~\mathrm{g}, " + "m_\mathrm{max}" + "={:.0e}".format(m_mono_max) + "~\mathrm{g})$", fontsize="small")
         fig1.set_tight_layout(True)
         fig2.set_tight_layout(True)
-        #fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
-        #fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
+        fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
+        fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(m_mono_min, m_mono_max, Deltas[j]))
 
 #%% Plot results for a skew-lognormal mass function, obtained using Isatis,
 # and compare to the results obtained using the method from 1705.05567, using
