@@ -17,9 +17,9 @@ rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
-LN_bool = True
+LN_bool = False
 SLN_bool = False
-CC3_bool = False
+CC3_bool = True
 
 
 # Load mass function parameters.
@@ -31,7 +31,7 @@ CC3_bool = False
 # the method from 1705.05567.
 test_mass_range = True
 if test_mass_range:
-    m_lower_test, m_upper_test = 1e11, 1e21
+    m_lower_test, m_upper_test = 1e11, 1e22
 
 
 # Load minimum and maximum scaled masses for which the MF is above a cutoff.
@@ -66,7 +66,7 @@ else:
     mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
 
 # PBH mass spacing, in log10(PBH mass / grams)
-delta_log_m = 1e-2
+delta_log_m = 1e-3
 
 # Path to BlackHawk and Isatis
 BlackHawk_path = os.path.expanduser('~') + "/Downloads/version_finale/"
@@ -80,7 +80,7 @@ params_BlackHawk = np.genfromtxt(BlackHawk_path + "parameters.txt", dtype=str, d
 # Choose minimum energy as the lower range constrained by the Galactic Centre photon flux measured by INTEGRAL, COMPTEL, EGRET and Fermi-LAT (see e.g. Fig. 2 of 2201.01265)
 E_min = 1e-5
 E_max = 5   # maximum energy available in Hazma tables
-E_number = 500
+E_number = 1000
 
 spec_file_initial_line = "mass/spin \t 0.00000e+00"
 
@@ -112,12 +112,12 @@ for i in range(len(Deltas)):
     
     # Indicates which range of masses are being used (for convergence tests).
     if test_mass_range:
-        fname_base += "_test_range"
+        fname_base += "_test_range_wide"
     elif MF_cutoff:
         fname_base += "_dm{:.0f}_".format(-np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-    
+        
     if single_mass:
-        fname_base += "_mc={:.0f}".format(np.log10(mc_max))
+        fname_base += "_mc{:.0f}".format(np.log10(mc_max))
                 
     # Create runs file
     runs_filename = "runs_%s.txt" % fname_base
