@@ -654,9 +654,9 @@ if "__main__" == __name__:
     
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    
-    m_star = 5e14    # mass below which to set constraint to large values
-    m_mono_values = np.logspace(11, 22, 1000)
+
+    m_mono_values = np.logspace(11, 22, 1000)    
+    m_star = m_mono_values[9]    # mass below which to set constraint to large values
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -670,8 +670,8 @@ if "__main__" == __name__:
             # Filename of constraints obtained using Isatis.
             #fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
             #fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_SLN = "SL_D={:.1f}_"
-            fname_base_CC3 = "CC_D={:.1f}_"
+            fname_base_SLN = "SL_D={:.1f}".format(Deltas[j])
+            fname_base_CC3 = "CC_D={:.1f}".format(Deltas[j])
            
             # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
             #constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
@@ -706,7 +706,7 @@ if "__main__" == __name__:
                     # Constraint from a particular energy bin
                     constraint_energy_bin = constraints_mono_file[k]
                     
-                    min_constraint = constraint_energy_bin[np.argmax(m_mono_values > m_star)]
+                    min_constraint = constraint_energy_bin[np.argmax(m_mono_values >= m_star)]
                     constraint_energy_bin_modified = []
                     
                     for l, f_max in enumerate(constraint_energy_bin):
@@ -715,8 +715,8 @@ if "__main__" == __name__:
                         else:
                             constraint_energy_bin_modified.append(constraint_energy_bin[l])
                     
-                    if k==0:
-                        print(constraint_energy_bin_modified)
+                    if i==0 and k==0:
+                        print(constraint_energy_bin_modified[0:20])
                     
                     # Calculate constraint on f_PBH from each bin
                     f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin_modified, mf=SLN, params=params_SLN)
@@ -732,9 +732,16 @@ if "__main__" == __name__:
                 ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x", linestyle="None", color=colors_evap[i])
                 ax2.plot(mp_CC3_values, f_PBH_Carr_CC3, marker="x", linestyle="None", color=colors_evap[i])
             
+            if Deltas[j] < 5:
+                xmin, xmax = 1e16, 2.5e17
+                ymin, ymax = 1e-4, 1
+            else:
+                xmin, xmax = 1e16, 7e17
+                ymin, ymax = 3e-6, 10
+            
             for ax in ax1, ax2:
-                ax.set_xlim(1e16, 1e18)
-                ax.set_ylim(10**(-5), 1)
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
@@ -791,8 +798,8 @@ if "__main__" == __name__:
             # Filename of constraints obtained using Isatis.
             #fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
             #fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_SLN = "SL_D={:.1f}_"
-            fname_base_CC3 = "CC_D={:.1f}_"
+            fname_base_SLN = "SL_D={:.1f}".format(Deltas[j])
+            fname_base_CC3 = "CC_D={:.1f}".format(Deltas[j])
            
             # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
             #constraints_names, f_PBH_Isatis_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True, test_mass_range=False)    
@@ -848,9 +855,16 @@ if "__main__" == __name__:
                 ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x", linestyle="None", color=colors_evap[i])
                 ax2.plot(mp_CC3_values, f_PBH_Carr_CC3, marker="x", linestyle="None", color=colors_evap[i])
             
+            if Deltas[j] < 5:
+                xmin, xmax = 1e16, 2.5e17
+                ymin, ymax = 1e-4, 1
+            else:
+                xmin, xmax = 1e16, 7e17
+                ymin, ymax = 3e-6, 10
+            
             for ax in ax1, ax2:
-                ax.set_xlim(1e16, 1e18)
-                ax.set_ylim(10**(-5), 1)
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
