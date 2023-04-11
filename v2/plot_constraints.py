@@ -134,7 +134,7 @@ if "__main__" == __name__:
             
             # Loading constraints from numeric mass function (Galactic Centre photons).
             mp_Carr_numeric_GC, f_PBH_Carr_numeric_GC = np.genfromtxt("./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            ax0.plot(mp_Carr_numeric_GC, f_PBH_Carr_numeric_GC, color=colors[4], label="numeric")
+            ax0.plot(mp_Carr_numeric_GC, f_PBH_Carr_numeric_GC, color=colors[4])
             ax1.plot(mp_Carr_numeric_GC, f_PBH_Carr_numeric_GC, color=colors[4])
           
         
@@ -157,3 +157,4 @@ if "__main__" == __name__:
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}.pdf".format(Deltas[i]))
+        fig.savefig("./Results/Figures/fPBH_Delta={:.1f}.png".format(Deltas[i]))

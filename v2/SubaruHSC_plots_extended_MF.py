@@ -233,8 +233,9 @@ for i in range(len(Deltas)):
     data_filename_CC3 = "./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     data_filename_LN = "./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     
-    if i in [0, 1, 4, 5, 6]:
-        params_numeric = [Deltas[i]]
+    for i in [0, 1, 4, 5, 6]:
+        print(i)
+        params_numeric = [Deltas[i], params_CC3]
         f_pbh_numeric = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, mf_numeric, params_numeric)
         data_filename_numeric = "./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
         np.savetxt(data_filename_numeric, [mc_subaru, f_pbh_numeric], delimiter="\t")

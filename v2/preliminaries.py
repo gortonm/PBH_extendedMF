@@ -184,7 +184,7 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     return m_pbh_values[np.argmax(psi_values)]
 
 
-def mf_numeric(m, m_p, Delta, custom_mp=True):
+def mf_numeric(m, m_p, Delta, params_CC3, custom_mp=True, normalise_to_CC3=True):
     """
     Estimate the numerical mass function shown in Fig. 5 of 2009.03204 evaluated
     at an arbitrary mass m, with peak mass m_p, using linear interpolation.
@@ -215,11 +215,17 @@ def mf_numeric(m, m_p, Delta, custom_mp=True):
         # and scale the masses so that the peak mass corresponds to m_p.
         mp_data = m_data[np.argmax(mf_data)]
         m_scaled = m_data * m_p / mp_data
-        
+ 
         # Estimate normalisation factor for the MF
-        mf_integrated = np.trapz(mf_data, m_scaled)
         
-        return np.interp(m, m_scaled, mf_data, 0, 0) / mf_integrated
+        # Match maximum value of the numerical MF to the maximum value of the CC3 MF.
+        if normalise_to_CC3:
+            psi_max_CC3 = CC3(m_p, m_p, *params_CC3)
+            normalisation_factor = psi_max_CC3 / max(mf_data)
+        else:
+            normalisation_factor = 1 / np.trapz(mf_data, m_scaled)
+        
+        return np.interp(m, m_scaled, mf_data, 0, 0) * normalisation_factor
     
     else:
         # Estimate normalisation factor for the MF
@@ -538,12 +544,15 @@ if "__main__" == __name__:
     # Indices of Delta to plot the numerical MF for.
     Delta_indices = [0, 1, 4, 5, 6]
     
-    for i in Delta_indices:
+    # Peak masses from Fig. 5 of 2009.03204, in solar masses.
+    mp_numeric_Fig5 = [42.8, 40.9, 41.0, 40.9, 32.2]
+    
+    for j, i in enumerate(Delta_indices):
         
         m_pbh_values = np.logspace(18, 22, 1000)
                   
         fig1, ax1 = plt.subplots(figsize=(7, 5))
-        #fig2, ax2 = plt.subplots(figsize=(6, 6))
+        fig2, ax2 = plt.subplots(figsize=(7, 5))
 
         ymin_scaled, ymax_scaled = 1e-1, 1.1
         
@@ -551,36 +560,53 @@ if "__main__" == __name__:
         # closely, at 1e20g (consider this range since constraints plots)
         # indicate the constraints from the SLN and CC3 MFs are quite
         # different at this peak mass.
-        m_c = 2.5e18*np.exp(ln_mc_SLN[i])
-        m_p = 2.5e18*mp_CC3[i]
         
+        if Deltas[i] < 5:
+            m_c = 2.5e18*np.exp(ln_mc_SLN[i])
+            m_p = 2.5e18*mp_CC3[i]
+            mp_numeric = m_p
+        else:
+            m_c = 3.1e18*np.exp(ln_mc_SLN[i])
+            m_p = 2.9e18*mp_CC3[i]
+            mp_numeric = m_p
+
         #m_c = 5.6e20*np.exp(ln_mc_SLN[i])
         #m_p = 5.25e20*mp_CC3[i]
 
         mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
         print("m_p (CC3) = {:.2e}".format(m_p))
         print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
-     
-        #mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-        #mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
-        #mf_numeric_test = mf_numeric(m_pbh_values, m_p, Delta=Deltas[i])
+        print("m_p (numeric) = {:.2e}".format(mp_numeric))
+
+        params_CC3 = [alphas_CC3[i], betas[i]]
+      
+        mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+        mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        mf_numeric_test = mf_numeric(m_pbh_values, mp_numeric, Deltas[i], params_CC3)
+        
         
         mf_scaled_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
         mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
         numeric_mp_factor = 1
-        mf_scaled_numeric = mf_numeric(m_pbh_values, numeric_mp_factor*m_p, Delta=Deltas[i]) / mf_numeric(numeric_mp_factor*m_p, numeric_mp_factor*m_p, Delta=Deltas[i])
+        #mf_scaled_numeric = mf_numeric(m_pbh_values, numeric_mp_factor*m_p, Delta=Deltas[i]) / mf_numeric(numeric_mp_factor*m_p, numeric_mp_factor*m_p, Delta=Deltas[i])
+        mf_scaled_numeric = mf_numeric(m_pbh_values, mp_numeric, Deltas[i], params_CC3) / mf_numeric(mp_numeric, mp_numeric, Deltas[i], params_CC3)
         
-        #ymin, ymax = CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymin_scaled, CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymax_scaled
+        ymin, ymax = max(mf_numeric_test) * ymin_scaled, max(mf_numeric_test) * ymax_scaled
+        xmin, xmax = min(m_pbh_values[mf_numeric_test > 0]), max(m_pbh_values[mf_numeric_test > 0])
 
         ax1.plot(m_pbh_values, mf_scaled_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
         ax1.plot(m_pbh_values, mf_scaled_CC3, color="g", label="CC3", linestyle="dashed")
         ax1.plot(m_pbh_values, mf_scaled_numeric, color="k", label="Numeric")
         
-        #ax2.plot(m_pbh_values, mf_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
-        #ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
-        #ax2.plot(m_pbh_values, mf_numeric_test, color="k", label="CC3")
+        if Deltas[i] < 5:
+            mf_scaled_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]) / max(LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]))
+            ax1.plot(m_pbh_values, mf_scaled_LN, color="r", label="LN", dashes=[8, 5])
         
-        for ax in [ax1]:
+        ax2.plot(m_pbh_values, mf_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
+        ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
+        ax2.plot(m_pbh_values, mf_numeric_test, color="k", label="Numeric")
+        
+        for ax in [ax1, ax2]:
             # Show smallest PBH mass constrained by microlensing.
             ax.set_xscale("log")
             ax.set_yscale("log")
@@ -588,18 +614,21 @@ if "__main__" == __name__:
             ax.legend(fontsize="small")
             #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
             ax.set_xlabel("$m~[\mathrm{g}]$")
-            ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
             ax.set_title("$\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
 
         ax1.vlines(9.9e21, ymin_scaled, ymax_scaled, color="k", linestyle="dashed")
         ax1.set_ylabel("$\psi / \psi_\mathrm{max}$")
         ax1.set_ylim(ymin_scaled, ymax_scaled)
         
-        #ax2.vlines(9.9e21, ymin, ymax, color="k", linestyle="dashed")
-        #ax2.set_ylabel("$\psi$")
-        #ax2.set_ylim(ymin, ymax)
+        ax2.vlines(9.9e21, ymin, ymax, color="k", linestyle="dashed")
+        ax2.set_ylabel("$\psi$")
+        ax2.set_xlim(xmin, xmax)
+        ax2.set_ylim(ymin, ymax)
 
         fig1.set_tight_layout(True)
+        fig2.set_tight_layout(True)
+        
+        fig2.savefig("Tests/Figures/MF_numeric_extracted_Delta={:.1f}.png".format(Deltas[i]))
             
 #%% Plot the mass function for Delta = 5.0, showing the mass range relevant
 # for the Subaru-HSC microlensing constraints.

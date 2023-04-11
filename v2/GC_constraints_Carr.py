@@ -14,8 +14,8 @@ from extended_MF_checks import constraint_Carr, load_results_Isatis, envelope
 
 if "__main__" == __name__:
 
-    # Mass function parameter values, from 2009.03204.
-    Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     mc_values = np.logspace(14, 19, 100)
     m_mono_values = np.logspace(11, 21, 1000)
@@ -27,7 +27,8 @@ if "__main__" == __name__:
 
     for j in range(len(Deltas)):
         for j in [0, 1, 4, 5, 6]:
-            params_numerical = [Deltas[j]]
+            params_CC3 = [alphas_CC3[j], betas[j]]
+            params_numerical = [Deltas[j], params_CC3]
             f_pbh_numeric = []
                     
             for i in range(len(constraints_names)):            
