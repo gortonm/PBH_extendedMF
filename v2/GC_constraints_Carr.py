@@ -38,4 +38,4 @@ if "__main__" == __name__:
             f_pbh_numeric_envelope = envelope(f_pbh_numeric) 
     
             data_filename_numeric = "./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric_envelope], delimiter="\t")
+            #np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric_envelope], delimiter="\t")

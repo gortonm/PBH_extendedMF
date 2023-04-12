@@ -57,6 +57,8 @@ def constraint_Carr(mc_values, m_mono, f_max, mf, params):
 
     """
     f_pbh = []
+    
+    print(params)
 
     for m_c in mc_values:
         integral = np.trapz(mf(m_mono, m_c, *params) / f_max, m_mono)
@@ -578,6 +580,9 @@ if "__main__" == __name__:
     m_mono_values_init = np.logspace(11, 22, 1000)
 
     for j in range(len(Deltas)):
+        
+        f_PBHs_Carr_SLN = []
+        f_PBHs_Carr_CC3 = []
 
         mp_SLN_values = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j],
                                    log_m_factor=3, n_steps=1000) for m_c in mc_SLN_values]
@@ -603,7 +608,7 @@ if "__main__" == __name__:
 
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
         m_mono_min = 1e16
-        m_mono_max = 2e17
+        m_mono_max = 3e17
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
 
@@ -649,6 +654,9 @@ if "__main__" == __name__:
             # Calculate constraint using method from 1705.05567, and plot.
             f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
             f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
+            
+            f_PBHs_Carr_SLN.append(f_PBH_Carr_SLN)
+            f_PBHs_Carr_CC3.append(f_PBH_Carr_CC3)
 
             ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x",
                      linestyle="None", color=colors_evap[i])
@@ -660,7 +668,7 @@ if "__main__" == __name__:
             ymin, ymax = 1e-4, 1
         else:
             xmin, xmax = 1e16, 7e17
-            ymin, ymax = 3e-6, 10
+            ymin, ymax = 3e-6, 1
 
         for ax in ax1, ax2:
             ax.set_xlim(xmin, xmax)
@@ -680,6 +688,13 @@ if "__main__" == __name__:
             m_mono_min, m_mono_max, Deltas[j]))
         fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(
             m_mono_min, m_mono_max, Deltas[j]))
+        
+        
+        filename_data_SLN ="./Tests/Data/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.txt".format(m_mono_min, m_mono_max, Deltas[j])
+        np.savetxt(filename_data_SLN, f_PBHs_Carr_SLN)
+        filename_data_CC3 ="./Tests/Data/CC3_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.txt".format(m_mono_min, m_mono_max, Deltas[j])
+        np.savetxt(filename_data_CC3, f_PBHs_Carr_CC3)
+
 
 # %% Plot results for a skew-lognormal mass function, obtained using Isatis,
 # and compare to the results obtained using the method from 1705.05567, using
@@ -711,9 +726,10 @@ if "__main__" == __name__:
         "COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
     m_mono_values = np.logspace(11, 22, 1000)
+
     # mass below which to set constraint to large values
     #m_star = m_mono_values[9]
-    m_star = 5e14
+    m_star = 1e11
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
@@ -722,7 +738,7 @@ if "__main__" == __name__:
     for j in range(len(Deltas)):
 
         if j >= 5:
-
+            
             mp_SLN_values = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j],
                                        log_m_factor=3, n_steps=1000) for m_c in mc_SLN_values]
 
@@ -798,6 +814,9 @@ if "__main__" == __name__:
                 # Calculate constraint using method from 1705.05567, and plot.
                 f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
                 f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
+                
+                f_PBHs_Carr_SLN.append(f_PBH_Carr_SLN)
+                f_PBHs_Carr_CC3.append(f_PBH_Carr_CC3)
 
                 ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x",
                          linestyle="None", color=colors_evap[i])
@@ -809,7 +828,7 @@ if "__main__" == __name__:
                 ymin, ymax = 1e-4, 1
             else:
                 xmin, xmax = 1e16, 7e17
-                ymin, ymax = 3e-6, 10
+                ymin, ymax = 3e-6, 1
 
             for ax in ax1, ax2:
                 ax.set_xlim(xmin, xmax)
@@ -853,6 +872,7 @@ if "__main__" == __name__:
 
     mp_CC3_values = np.logspace(14, 19, 100)
     mc_SLN_values = np.logspace(14, 19, 100)
+    mc_values = np.logspace(14, 19, 100)
 
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = [
@@ -867,6 +887,10 @@ if "__main__" == __name__:
         betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     for j in range(len(Deltas)):
+
+        f_PBHs_Carr_SLN = []
+        f_PBHs_Carr_CC3 = []
+
 
         if j >= 5:
 
@@ -897,7 +921,7 @@ if "__main__" == __name__:
 
             fig1, ax1 = plt.subplots(figsize=(8, 8))
             fig2, ax2 = plt.subplots(figsize=(8, 8))
-
+            
             for i in range(len(constraints_names)):
                 ax1.plot(
                     mp_SLN_values, f_PBH_Isatis_SLN[i], label=constraints_names[i], color=colors_evap[i])
@@ -939,6 +963,9 @@ if "__main__" == __name__:
                 # Calculate constraint using method from 1705.05567, and plot.
                 f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
                 f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
+                
+                f_PBHs_Carr_SLN.append(f_PBH_Carr_SLN)
+                f_PBHs_Carr_CC3.append(f_PBH_Carr_CC3)
 
                 ax1.plot(mp_SLN_values, f_PBH_Carr_SLN, marker="x",
                          linestyle="None", color=colors_evap[i])
@@ -971,3 +998,88 @@ if "__main__" == __name__:
                 min_constraint, m_star, Deltas[j]))
             fig2.savefig("./Tests/Figures/CC3_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.png".format(
                 min_constraint, m_star, Deltas[j]))
+            
+            filename_data_SLN ="./Tests/Data/SLN_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.txt".format(min_constraint, m_star, Deltas[j])
+            np.savetxt(filename_data_SLN, f_PBHs_Carr_SLN)
+            filename_data_CC3 ="./Tests/Data/CC3_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.txt".format(min_constraint, m_star, Deltas[j])
+            np.savetxt(filename_data_CC3, f_PBHs_Carr_CC3)
+
+#%%
+if "__main__" == __name__:
+
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
+        betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    mp_CC3_values = np.logspace(14, 19, 100)
+    mc_SLN_values = np.logspace(14, 19, 100)
+    mc_values = np.logspace(14, 19, 100)
+
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = [
+        "COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+
+    m_star = 5e14    # mass below which to set constraint to large values
+    
+    # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
+    m_mono_min = 1e16
+    m_mono_max = 3e17
+
+
+    for j in range(len(Deltas)):
+        
+        if j >= 5:
+            
+            fig1, ax1 = plt.subplots(figsize=(8, 8))
+            fig2, ax2 = plt.subplots(figsize=(8, 8))
+
+            filename_data_SLN ="./Tests/Data/SLN_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.txt".format(min_constraint, m_star, Deltas[j])
+            filename_data_CC3 ="./Tests/Data/CC3_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.txt".format(min_constraint, m_star, Deltas[j])
+
+            f_PBHs_evap_SLN = np.genfromtxt(filename_data_SLN)
+            f_PBHs_evap_CC3 = np.genfromtxt(filename_data_CC3)
+            
+            filename_data_SLN ="./Tests/Data/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.txt".format(m_mono_min, m_mono_max, Deltas[j])
+            filename_data_CC3 ="./Tests/Data/CC3_MF_f={:.1e}_mstar={:.1e}g_Delta={:.1f}.txt".format(m_mono_min, m_mono_max, Deltas[j])
+
+            f_PBHs_KP23_test_SLN = np.genfromtxt(filename_data_SLN)
+            f_PBHs_KP23_test_CC3 = np.genfromtxt(filename_data_CC3)
+
+            for i in range(len(constraints_names)):
+                ax1.plot(
+                    mp_SLN_values, f_PBHs_evap_SLN[i], label=constraints_names[i], color=colors_evap[i], linestyle="dashed")
+                ax1.plot(
+                    mp_SLN_values, f_PBHs_KP23_test_SLN[i], color=colors_evap[i], linestyle="None", marker="+")
+                
+                ax2.plot(
+                    mp_CC3_values, f_PBHs_evap_CC3[i], label=constraints_names[i], color=colors_evap[i], linestyle="dashed")
+                ax2.plot(
+                    mp_CC3_values, f_PBHs_KP23_test_CC3[i], color=colors_evap[i], linestyle="None", marker="+")
+                
+            if Deltas[j] < 5:
+                xmin, xmax = 1e16, 2.5e17
+                ymin, ymax = 1e-3, 1
+            else:
+                xmin, xmax = 1e16, 7e17
+                ymin, ymax = 1e-4, 1
+
+            for ax in ax1, ax2:
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                ax.legend(fontsize="small")
+            ax1.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax1.set_title("SLN, $\Delta={:.1f}".format(Deltas[j]) + "~(m_\mathrm{min}" + "={:.0e}".format(
+                m_mono_min) + "~\mathrm{g}, " + "m_\mathrm{max}" + "={:.0e}".format(m_mono_max) + "~\mathrm{g})$", fontsize="small")
+            ax2.set_title("CC3, $\Delta={:.1f}".format(Deltas[j]) + "~(m_\mathrm{min}" + "={:.0e}".format(
+                m_mono_min) + "~\mathrm{g}, " + "m_\mathrm{max}" + "={:.0e}".format(m_mono_max) + "~\mathrm{g})$", fontsize="small")
+            fig1.set_tight_layout(True)
+            fig2.set_tight_layout(True)
+            
+            fig1.savefig("./Tests/Figures/SLN_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(
+                m_mono_min, m_mono_max, Deltas[j]))
+            fig2.savefig("./Tests/Figures/CC3_mmin={:.0e}g_mmax={:.0e}g_Delta={:.1f}.png".format(
+                m_mono_min, m_mono_max, Deltas[j]))

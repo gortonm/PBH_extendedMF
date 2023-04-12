@@ -238,8 +238,8 @@ for i in range(len(Deltas)):
         params_numeric = [Deltas[i], params_CC3]
         f_pbh_numeric = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, mf_numeric, params_numeric)
         data_filename_numeric = "./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
-        np.savetxt(data_filename_numeric, [mc_subaru, f_pbh_numeric], delimiter="\t")
+        #np.savetxt(data_filename_numeric, [mc_subaru, f_pbh_numeric], delimiter="\t")
 
-    np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
-    np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
-    np.savetxt(data_filename_LN, [mc_subaru, f_pbh_LN], delimiter="\t")
+    #np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
+    #np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
+    #np.savetxt(data_filename_LN, [mc_subaru, f_pbh_LN], delimiter="\t")
