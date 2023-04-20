@@ -70,7 +70,7 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     plot_extrapolate = False
-    include_extrapolated = False
+    include_extrapolated = True
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -145,8 +145,6 @@ if "__main__" == __name__:
         f_pbh_CC3 = constraint_Carr(mc_values, m_mono_total, f_max_total, CC3, params_CC3)
         #f_pbh_numeric = constraint_Carr(mc_values, m_mono_total, f_max_total, mf_numeric, params_numerical)
                           
-        data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-        data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
         #np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric], delimiter="\t")
