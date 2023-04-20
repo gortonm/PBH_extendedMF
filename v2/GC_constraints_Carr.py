@@ -69,7 +69,9 @@ if "__main__" == __name__:
 
 if "__main__" == __name__:
     
+    # If True, plot extrapolated monochromatic MF constraints down to 5e14g
     plot_extrapolate = False
+    # If True, use extrapolated monochromatic MF constraints down to 5e14g (using a power law fit) to calculate extended MF constraint
     include_extrapolated = True
 
     # Load mass function parameters.
@@ -77,11 +79,11 @@ if "__main__" == __name__:
     
     mc_values = np.logspace(14, 19, 100)
 
-    # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
+    # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
     m_mono_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
 
-    # Plot extrapolated monochromatic MF constraints down to 5e14g
+    # Plot extrapolated delta function MF constraints down to 5e14g
 
     if plot_extrapolate:
         
