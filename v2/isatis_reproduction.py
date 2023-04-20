@@ -38,11 +38,19 @@ file_path_extracted = './Extracted_files/'
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
 pc_to_cm = 3.0857e18    # conversion factor from pc to cm
 
-r_s = 17 * 1000 * pc_to_cm    # scale radius, in cm
-r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
+Auffinger = True
+Korwar_Profumo = False
 
-rho_0 = 8.5e-25	    # characteristic halo density in g/cm^3
+if Auffinger:
+    r_s = 17 * 1000 * pc_to_cm    # scale radius, in cm
+    r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
+    rho_0 = 8.5e-25	    # characteristic halo density in g/cm^3
 
+elif Korwar_Profumo:
+    r_s = 9.98 * 1000 * pc_to_cm    # scale radius, in cm
+    r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
+    rho_0 = 2.2e-24	    # characteristic halo density in g/cm^3
+  
 
 def read_col(fname, first_row=0, col=1, convert=int, sep=None):
     """
