@@ -9,7 +9,7 @@ Created on Sat Apr  8 14:45:28 2023
 # function calculated in 2008.03289, using the method from 1705.05567.
 
 import numpy as np
-from preliminaries import mf_numeric, load_data, SLN, CC3
+from preliminaries import mf_numeric, load_data, LN, SLN, CC3
 from extended_MF_checks import constraint_Carr, load_results_Isatis, envelope
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -127,6 +127,7 @@ if "__main__" == __name__:
             f_max_total = np.concatenate((f_max_extrapolated, f_max))
             m_mono_total = np.concatenate((m_mono_extrapolated, m_mono_values))
             
+            data_filename_LN = "./Data/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
             data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
             data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
             #data_filename_numeric = "./Data/numeric_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
@@ -135,18 +136,25 @@ if "__main__" == __name__:
             f_max_total = f_max
             m_mono_total = m_mono_values
             
+            data_filename_LN = "./Data/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             #data_filename_numeric = "./Data/numeric_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             
+        params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
         params_numerical = [Deltas[j], params_CC3]
         
+        f_pbh_LN = constraint_Carr(mc_values, m_mono_total, f_max_total, LN, params_LN)
         f_pbh_SLN = constraint_Carr(mc_values, m_mono_total, f_max_total, SLN, params_SLN)
         f_pbh_CC3 = constraint_Carr(mc_values, m_mono_total, f_max_total, CC3, params_CC3)
         #f_pbh_numeric = constraint_Carr(mc_values, m_mono_total, f_max_total, mf_numeric, params_numerical)
-                          
+        
+        if Deltas[j] > 2:
+            print(f_pbh_SLN[-10:])
+
+        np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
         #np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric], delimiter="\t")
