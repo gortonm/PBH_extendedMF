@@ -49,15 +49,16 @@ fig, ax = plt.subplots(figsize=(7, 6))
 
 # Results from Fig. 1 of 0912.5297
 energies_primary, spectrum_primary = load_data("./0912.5297/0912.5297_Fig1_1GeV_primary.csv")
-energies_tot, spectrum_tot = load_data("./0912.5297/0912.5297_Fig1_1GeV_secondary.csv")
+energies_secondary, spectrum_secondary = load_data("./0912.5297/0912.5297_Fig1_1GeV_secondary.csv")
 ax.plot(energies_primary, spectrum_primary, color="r")
-ax.plot(energies_tot, spectrum_tot, linestyle="dotted", color="orange", linewidth=5)
+ax.plot(energies_secondary, spectrum_secondary, linestyle="dotted", color="orange", linewidth=5)
 
 # Results from BlackHawk
 energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "Carr+10_test/instantaneous_primary_spectra.txt")
 energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "Carr+10_test/instantaneous_secondary_spectra.txt")
+spectrum_secondary = spectrum_tot - np.interp(energies_tot, energies_primary, spectrum_primary)
 ax.plot(energies_primary, spectrum_primary, linestyle="dotted", color="k")
-ax.plot(energies_tot, spectrum_tot, linestyle="dotted", color="k")
+ax.plot(energies_tot, spectrum_secondary, linestyle="dotted", color="k")
 
 ax.set_xlabel("$E~[\mathrm{GeV}]$")
 ax.set_ylabel("$\mathrm{d}^2N_\gamma / (\mathrm{d}t \mathrm{d}E_\gamma)~[\mathrm{GeV}^{-1}\mathrm{s}^{-1}]$")
