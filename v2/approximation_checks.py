@@ -343,7 +343,7 @@ if "__main__" == __name__:
           
 #%% Plot the evolution of a PBH mass
 
-m_pbh_values_formation = np.logspace(np.log10(4e14), np.log10(8.93434e+16), 50)
+m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)
 m_pbh_values_0 = np.ones(len(m_pbh_values_formation))
 fname_base = "mass_evolution"
 
@@ -375,5 +375,19 @@ ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", colo
 ax.plot(m_pbh_values_formation, m_pbh_values_0)
 ax.set_xlabel("Formation mass $m_f$")
 ax.set_ylabel("Present mass $m_0$")
+ax.set_xscale("log")
 ax.set_yscale("log")
+ax.set_xlim(min(m_pbh_values_formation), 1e16)
+ax.set_ylim(1e-1 * min(m_pbh_values_formation), 0.2*max(m_pbh_values_formation))
+fig.tight_layout()
+
+
+fig, ax = plt.subplots(figsize=(6, 6))
+ax.plot(m_pbh_values_formation, m_pbh_values_0/m_pbh_values_formation)
+ax.set_xlabel("Formation mass $m_f$")
+ax.set_ylabel("Present mass $m_0$ / Formation mass $m_f$")
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.set_xlim(min(m_pbh_values_formation), 1e16)
+ax.set_ylim(1e-2, 1.1)
 fig.tight_layout()
