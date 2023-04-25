@@ -95,7 +95,7 @@ def envelope(constraints):
 
         for j in range(len(constraints)):
             if constraints[j][i] <= 0:
-                constraints_values.append(10)
+                constraints_values.append(1e100)
             else:
                 constraints_values.append(abs(constraints[j][i]))
 
@@ -607,7 +607,7 @@ if "__main__" == __name__:
             mf_string="GC_mono_wide", modified=True)
 
         # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
-        m_mono_min = 1e16
+        m_mono_min = 1e13
         m_mono_max = 3e17
         m_mono_values_truncated = m_mono_values_init[m_mono_values_init > m_mono_min]
         m_mono_values = m_mono_values_truncated[m_mono_values_truncated < m_mono_max]
@@ -729,13 +729,16 @@ if "__main__" == __name__:
 
     # mass below which to set constraint to large values
     #m_star = m_mono_values[9]
-    m_star = 1e11
+    m_star = 1e15
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
         betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     for j in range(len(Deltas)):
+        
+        f_PBHs_Carr_SLN = []
+        f_PBHs_Carr_CC3 = []
 
         if j >= 5:
             
@@ -878,7 +881,7 @@ if "__main__" == __name__:
     constraints_names_short = [
         "COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
-    m_star = 5e14    # mass below which to set constraint to large values
+    m_star = 1e15    # mass below which to set constraint to large values
     min_constraint = 1e100   # constraint to set f_max for m < m_star
     m_mono_values = np.logspace(11, 22, 1000)
 
@@ -1022,11 +1025,14 @@ if "__main__" == __name__:
     m_star = 5e14    # mass below which to set constraint to large values
     
     # Minimum and maximum monochromatic MF masses to include constraints from 1705.05567.
-    m_mono_min = 1e16
+    m_mono_min = 1e15
     m_mono_max = 3e17
 
 
     for j in range(len(Deltas)):
+        
+        f_PBHs_Carr_SLN = []
+        f_PBHs_Carr_CC3 = []
         
         if j >= 5:
             
