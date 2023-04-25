@@ -354,6 +354,7 @@ for j in range(len(m_pbh_values_formation)):
     data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
     
     print(j+1)
+    print("Formation mass [g] : {:.2e}".format(m_pbh_values_formation[j]))
     m = []
     t = []
     for m_value in data[2]:
@@ -367,27 +368,29 @@ for j in range(len(m_pbh_values_formation)):
     # PBH masses from formation time to present time
     m_pbh_values_to_present = np.array(m)[np.array(t) < t_0]
     
+    print("Maximum time t < t_0 [s] = {:.2e}".format(max(np.array(t)[np.array(t) < t_0])))
+    
     # PBH mass at present
     m_pbh_values_0[j] = m_pbh_values_to_present[-1]
     
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
 ax.plot(m_pbh_values_formation, m_pbh_values_0)
-ax.set_xlabel("Formation mass $m_f$")
-ax.set_ylabel("Present mass $m_0$")
+ax.set_xlabel("Formation mass $m_f$ [g]")
+ax.set_ylabel("Present mass $m_0$ [g]")
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.set_xlim(min(m_pbh_values_formation), 1e16)
-ax.set_ylim(1e-1 * min(m_pbh_values_formation), 0.2*max(m_pbh_values_formation))
+ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
 fig.tight_layout()
 
 
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.plot(m_pbh_values_formation, m_pbh_values_0/m_pbh_values_formation)
-ax.set_xlabel("Formation mass $m_f$")
+ax.set_xlabel("Formation mass $m_f$ [g]")
 ax.set_ylabel("Present mass $m_0$ / Formation mass $m_f$")
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.set_xlim(min(m_pbh_values_formation), 1e16)
-ax.set_ylim(1e-2, 1.1)
+ax.set_ylim(1e-1, 1.1)
 fig.tight_layout()
