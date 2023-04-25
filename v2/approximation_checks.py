@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from preliminaries import LN, SLN, CC3
 from isatis_reproduction import read_blackhawk_spectra
+import os
 
 # Produce plots of the Subaru-HSC microlensing constraints on PBHs, for
 # extended mass functions, using the method from 1705.05567.
@@ -47,7 +48,8 @@ file_path_BlackHawk_data = "./../../Downloads/version_finale/results/"
 # Plot the primary and total photon spectrum at different BH masses.
 
 # Choose indices to plot
-indices = [401, 501, 601, 701]
+#indices = [401, 501, 601, 701]
+indices = [1, 101, 201, 301]
 colors = ['#006BA4', '#FF800E', '#ABABAB', '#595959', '#5F9ED1', '#C85200']
 
 fig, ax = plt.subplots(figsize=(6.5, 5))
@@ -72,7 +74,7 @@ ax.set_ylim(1e10, 1e25)
 # Plot the primary and total electron/positron spectrum at different BH masses.
 
 # Choose indices to plot
-indices = [301, 371, 401, 501]
+indices = [301, 371, 401, 501, 601]
 colors = ['#006BA4', '#FF800E', '#ABABAB', '#595959', '#5F9ED1', '#C85200']
 
 fig, ax = plt.subplots(figsize=(6.5, 5))
@@ -339,3 +341,39 @@ if "__main__" == __name__:
             ax.set_yscale("log")
             fig.tight_layout()
           
+#%% Plot the evolution of a PBH mass
+
+m_pbh_values_formation = np.logspace(np.log10(4e14), np.log10(8.93434e+16), 50)
+m_pbh_values_0 = np.ones(len(m_pbh_values_formation))
+fname_base = "mass_evolution"
+
+for j in range(len(m_pbh_values_formation)):
+    
+    destination_folder = fname_base + "_{:.0f}".format(j+1)
+    filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
+    data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
+    
+    print(j+1)
+    m = []
+    t = []
+    for m_value in data[2]:
+        m.append(float(m_value))
+    for t_value in data[0]:
+        t.append(float(t_value))
+    
+    # Age of Universe, in seconds
+    t_0 = 13.9e9 * 365.25 * 86400
+    
+    # PBH masses from formation time to present time
+    m_pbh_values_to_present = np.array(m)[np.array(t) < t_0]
+    
+    # PBH mass at present
+    m_pbh_values_0[j] = m_pbh_values_to_present[-1]
+    
+fig, ax = plt.subplots(figsize=(6, 6))
+ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
+ax.plot(m_pbh_values_formation, m_pbh_values_0)
+ax.set_xlabel("Formation mass $m_f$")
+ax.set_ylabel("Present mass $m_0$")
+ax.set_yscale("log")
+fig.tight_layout()
