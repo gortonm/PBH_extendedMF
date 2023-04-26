@@ -208,6 +208,8 @@ def mf_numeric(m, m_p, Delta, params_CC3, custom_mp=True, normalise_to_CC3=True)
         Estimate for the numerical PBH mass function, evaluated at m.
 
     """
+    print("params_CC3 = ", params_CC3)
+    
     m_data, mf_data = load_data(filename="Delta_{:.1f}_numeric.csv".format(Delta), directory="./Extracted_files/2009.03204/")
     
     if custom_mp:
@@ -285,6 +287,38 @@ def integrand_measure_v2(m, m_c, mf, params):
     return integrand / max(integrand)
 
 
+#%% Compare numeric MFs from Fig. 2 of 2008.03289 to those shown in Fig. 5 of 2009.03204
+if "__main__" == __name__:
+    Delta = 0
+    m_data_PS, mf_data_PS = load_data(filename="PS_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_TP, mf_data_TP = load_data(filename="TP_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_second, mf_data_second = load_data(filename="Delta_{:.1f}_numeric.csv".format(Delta), directory="./Extracted_files/2009.03204/")
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(m_data_PS, (mf_data_PS/m_data_PS)/max((mf_data_PS/m_data_PS)), label="PS")
+    ax.plot(m_data_TP, (mf_data_TP/m_data_TP)/max((mf_data_TP/m_data_TP)), label="TP")
+    ax.plot(m_data_second, mf_data_second, label="2009.03204")
+    ax.legend(title="$\Delta={:.0f}$".format(Delta), fontsize="small")
+    ax.set_xscale("log")
+    ax.set_xlabel("$m~[M_\odot]$")
+    ax.set_ylabel("$\psi(m) / \psi_\mathrm{max}$")
+    fig.tight_layout()
+    
+    Delta = 1
+    m_data_PS, mf_data_PS = load_data(filename="PS_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_TP, mf_data_TP = load_data(filename="TP_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_YM, mf_data_YM = load_data(filename="YM_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_second, mf_data_second = load_data(filename="Delta_{:.1f}_numeric.csv".format(Delta), directory="./Extracted_files/2009.03204/")
+    
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(m_data_PS, (mf_data_PS/m_data_PS)/max((mf_data_PS/m_data_PS)), label="PS")
+    ax.plot(m_data_TP, (mf_data_TP/m_data_TP)/max((mf_data_TP/m_data_TP)), label="TP")
+    ax.plot(m_data_second, mf_data_second, label="2009.03204")
+    ax.legend(title="$\Delta={:.0f}$".format(Delta), fontsize="small")
+    ax.set_xscale("log")
+    ax.set_xlabel("$m~[M_\odot]$")
+    ax.set_ylabel("$\psi(m) / \psi_\mathrm{max}$")
+    fig.tight_layout()
 
 #%% Compare SLN and CC3 MF to Fig. 5 of 2009.03204.
 
