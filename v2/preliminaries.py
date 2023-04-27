@@ -210,7 +210,12 @@ def mf_numeric(m, m_p, Delta, params_CC3, custom_mp=True, normalise_to_CC3=True)
     """
     print("params_CC3 = ", params_CC3)
     
-    m_data, mf_data = load_data(filename="Delta_{:.1f}_numeric.csv".format(Delta), directory="./Extracted_files/2009.03204/")
+    # Load data from numerical MFs shown in 2009.03204 provided by Andrew Gow.
+    if Delta < 0.1:
+        log_m_data, mf_data = np.genfromtxt("./Data/psiData/psiData_Delta_k35.txt", unpack=True, skip_header=1)
+    else:
+        log_m_data, mf_data = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
+    m_data = np.exp(log_m_data)
     
     if custom_mp:
         # Find peak mass of the mass function extracted from Fig. 5 of 2009.03204,
@@ -347,9 +352,10 @@ if "__main__" == __name__:
         print(mp_CC3[Delta_index])
         print(alphas_CC3[Delta_index])
         print(betas[Delta_index])
-
-        # Load data from Fig. 3 of 2009.03204.
-        m_loaded_numeric, psi_scaled_numeric = load_data("Delta_{:.1f}_numeric.csv".format(Deltas[Delta_index]), directory="./Extracted_files/2009.03204/")
+        
+        # Load data from 2009.03204 (provided by Andrew Gow)
+        log_m_numeric, psi_numeric = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Deltas[Delta_index]), unpack=True, skip_header=1)
+        # Load data from 2009.03204 (Fig. 5)
         m_loaded_SLN, psi_scaled_SLN = load_data("Delta_{:.1f}_SLN.csv".format(Deltas[Delta_index]), directory="./Extracted_files/2009.03204/")
         m_loaded_CC3, psi_scaled_CC3 = load_data("Delta_{:.1f}_CC3.csv".format(Deltas[Delta_index]), directory="./Extracted_files/2009.03204/")
         
@@ -377,7 +383,7 @@ if "__main__" == __name__:
         
         # Plot the mass function.
         fig, ax = plt.subplots(figsize=(9, 7))
-        ax.plot(m_loaded_numeric, psi_scaled_numeric, color="k", label="Numeric", linewidth=2)
+        ax.plot(np.exp(log_m_numeric), psi_numeric / max(psi_numeric), color="k", label="Numeric", linewidth=2)
         ax.plot(m_loaded_SLN, psi_scaled_SLN, color="b", linestyle="None", marker="x")
         ax.plot(m_loaded_CC3, psi_scaled_CC3, color="tab:green", linestyle="None", marker="x")
         ax.plot(m_pbh_values, psi_SLN / psi_SLN_max, color="b", label="SLN", linewidth=2)
