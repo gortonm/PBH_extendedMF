@@ -36,7 +36,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 if "__main__" == __name__:
     Deltas = [0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0]
-    sigmas_LN = [0.374, 0.377, 0.395, 0.430, 0.553, 0.864, 0.]
+    sigmas_LN = np.array([0.373429, 0.37575, 0.39514, 0.430192, 0.557274, 0.87795, 1.84859])
     ln_mc_SLN = [4.13, 4.13, 4.15, 4.21, 4.40, 4.88, 5.41]
     mp_SLN = [40.9, 40.9, 40.9, 40.8, 40.8, 40.6, 32.9]
     sigmas_SLN = [0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77]
@@ -624,11 +624,9 @@ if "__main__" == __name__:
         mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
         mf_numeric_test = mf_numeric(m_pbh_values, mp_numeric, Deltas[i], params_CC3)
         
-        
         mf_scaled_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
         mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
-        numeric_mp_factor = 1
-        #mf_scaled_numeric = mf_numeric(m_pbh_values, numeric_mp_factor*m_p, Delta=Deltas[i]) / mf_numeric(numeric_mp_factor*m_p, numeric_mp_factor*m_p, Delta=Deltas[i])
+
         mf_scaled_numeric = mf_numeric(m_pbh_values, mp_numeric, Deltas[i], params_CC3) / mf_numeric(mp_numeric, mp_numeric, Deltas[i], params_CC3)
         
         ymin, ymax = max(mf_numeric_test) * ymin_scaled, max(mf_numeric_test) * ymax_scaled
