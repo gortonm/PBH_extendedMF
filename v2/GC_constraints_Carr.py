@@ -50,19 +50,18 @@ if "__main__" == __name__:
 
 
     for j in range(len(Deltas)):
-        for j in [0, 1, 4, 5, 6]:
-            params_CC3 = [alphas_CC3[j], betas[j]]
-            params_numerical = [Deltas[j], params_CC3]
-            f_pbh_numeric = []
-                    
-            for i in range(len(constraints_names)):            
-                # Calculate constraint using method from 1705.05567, and plot.
-                f_pbh_numeric.append(constraint_Carr(mc_values, m_mono_values, f_max[i], mf_numeric, params_numerical))
-            
-            f_pbh_numeric_envelope = envelope(f_pbh_numeric) 
-    
-            data_filename_numeric = "./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            #np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric_envelope], delimiter="\t")
+        params_CC3 = [alphas_CC3[j], betas[j]]
+        params_numerical = [Deltas[j], params_CC3]
+        f_pbh_numeric = []
+                
+        for i in range(len(constraints_names)):            
+            # Calculate constraint using method from 1705.05567, and plot.
+            f_pbh_numeric.append(constraint_Carr(mc_values, m_mono_values, f_max[i], mf_numeric, params_numerical))
+        
+        f_pbh_numeric_envelope = envelope(f_pbh_numeric) 
+
+        data_filename_numeric = "./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+        np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric_envelope], delimiter="\t")
 
 
 #%% Constraints from 2302.04408 (MW diffuse SPI with NFW template)
@@ -130,7 +129,7 @@ if "__main__" == __name__:
             data_filename_LN = "./Data/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
             data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
             data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
-            #data_filename_numeric = "./Data/numeric_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
+            data_filename_numeric = "./Data/numeric_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
                       
         else:
             f_max_total = f_max
@@ -139,7 +138,7 @@ if "__main__" == __name__:
             data_filename_LN = "./Data/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            #data_filename_numeric = "./Data/numeric_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_numeric = "./Data/numeric_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
@@ -149,12 +148,9 @@ if "__main__" == __name__:
         f_pbh_LN = constraint_Carr(mc_values, m_mono_total, f_max_total, LN, params_LN)
         f_pbh_SLN = constraint_Carr(mc_values, m_mono_total, f_max_total, SLN, params_SLN)
         f_pbh_CC3 = constraint_Carr(mc_values, m_mono_total, f_max_total, CC3, params_CC3)
-        #f_pbh_numeric = constraint_Carr(mc_values, m_mono_total, f_max_total, mf_numeric, params_numerical)
+        f_pbh_numeric = constraint_Carr(mc_values, m_mono_total, f_max_total, mf_numeric, params_numerical)
         
-        if Deltas[j] > 2:
-            print(f_pbh_SLN[-10:])
-
         np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-        #np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric], delimiter="\t")
+        np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric], delimiter="\t")

@@ -208,15 +208,7 @@ mc_subaru = 10**np.linspace(17, 29, 1000)
 m_subaru_mono, f_max_subaru_mono = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
 # Mass function parameter values, from 2009.03204.
-Deltas = np.array([0., 0.1, 0.3, 0.5, 1.0, 2.0, 5.0])
-sigmas = np.array([0.55, 0.55, 0.57, 0.60, 0.71, 0.97, 2.77])
-alphas_SL = np.array([-2.27, -2.24, -2.07, -1.82, -1.31, -0.66, 1.39])
-
-alphas_CC = np.array([3.06, 3.09, 3.34, 3.82, 5.76, 18.9, 13.9])
-betas = np.array([2.12, 2.08, 1.72, 1.27, 0.51, 0.0669, 0.0206])
-
-# Log-normal parameter values, from 2008.02389
-sigmas_LN = np.array([0.374, 0.377, 0.395, 0.430, 0.553, 0.864, -1])
+[Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
 for i in range(len(Deltas)):
 
@@ -224,22 +216,19 @@ for i in range(len(Deltas)):
     params_SLN = [sigmas[i], alphas_SL[i]]
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
+    params_numeric = [Deltas[i], params_CC3]
     
     f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
     f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
     f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
+    f_pbh_numeric = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, mf_numeric, params_numeric)
     
     data_filename_SLN = "./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     data_filename_CC3 = "./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     data_filename_LN = "./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
+    data_filename_numeric = "./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     
-    for i in [0, 1, 4, 5, 6]:
-        print(i)
-        params_numeric = [Deltas[i], params_CC3]
-        f_pbh_numeric = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, mf_numeric, params_numeric)
-        data_filename_numeric = "./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
-        #np.savetxt(data_filename_numeric, [mc_subaru, f_pbh_numeric], delimiter="\t")
-
-    #np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
-    #np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
-    #np.savetxt(data_filename_LN, [mc_subaru, f_pbh_LN], delimiter="\t")
+    np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
+    np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
+    np.savetxt(data_filename_LN, [mc_subaru, f_pbh_LN], delimiter="\t")
+    np.savetxt(data_filename_numeric, [mc_subaru, f_pbh_numeric], delimiter="\t")
