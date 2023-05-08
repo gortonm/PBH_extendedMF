@@ -871,7 +871,7 @@ if "__main__" == __name__:
 
     # Minimum value of the mass function (scaled to its peak value).
     # Set to 0.1 when comparing to Fig. 5 of 2009.03204.
-    cutoff = 1e-1
+    cutoff = 1e-2
     
     # Name of the filename to save with mass range.
     if MF_cutoff:
@@ -935,10 +935,7 @@ if "__main__" == __name__:
             measure_CC3 = integrand_measure(m_pbh_values_CC3, m_p, CC3, params_CC3)
 
         # Arrays of minimum and maximum masses for which the measure is non-negligible.
-        if Deltas[i] > 2.0:
-            m_range_LN = [0, 0]
-        else:
-            m_range_LN = [min(m_pbh_values_LN[measure_LN > cutoff]), max(m_pbh_values_LN[measure_LN > cutoff])]
+        m_range_LN = [min(m_pbh_values_LN[measure_LN > cutoff]), max(m_pbh_values_LN[measure_LN > cutoff])]
         m_range_SLN = [min(m_pbh_values_SLN[measure_SLN > cutoff]), max(m_pbh_values_SLN[measure_SLN > cutoff])]
         m_range_CC3 = [min(m_pbh_values_CC3[measure_CC3 > cutoff]), max(m_pbh_values_CC3[measure_CC3 > cutoff])]
                  
