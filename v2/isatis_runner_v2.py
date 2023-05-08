@@ -97,9 +97,6 @@ for mc_max in mc_max_values:
     else:
         mc_values = np.logspace(np.log10(mc_min), np.log10(mc_max), 100)
         
-    if LN_bool:
-        Deltas = Deltas[:-1]
-
     for i in range(len(Deltas)):
                 
         # The following calculations are intended to restrict the convergence
@@ -229,7 +226,7 @@ for mc_max in mc_max_values:
                         if test_mass_range:
                             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_test)
                             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_test)
-                        """            
+                                    
                         # Save BlackHawk parameters file.
                         np.savetxt(Isatis_path + filename_BlackHawk, params_BlackHawk, fmt="%s", delimiter = " = ")
                         
@@ -245,4 +242,3 @@ for mc_max in mc_max_values:
                     os.chdir("./scripts/Isatis")
                     command = "./Isatis.x %s ./BH_launcher/%s" % (filename_params_Isatis, runs_filename)
                     os.system(command)
-"""
