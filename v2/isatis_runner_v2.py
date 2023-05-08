@@ -17,8 +17,8 @@ rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
-LN_bool = True
-SLN_bool = False 
+LN_bool = False
+SLN_bool = True 
 CC3_bool = False
 
 
@@ -50,7 +50,8 @@ cutoff_values = [1e-4]
 dm_values = [1e-3]
 
 # Minimum and maximum central masses.
-mc_max_values = [1e19, 1e17, 1e15]
+#mc_max_values = [1e19, 1e17, 1e15]
+mc_max_values = [1e19]
 
 # If True, use a single characteristic PBH mass. 
 single_mass = False
@@ -61,7 +62,8 @@ E_min = 1e-5
 E_max = 5   # maximum energy available in Hazma tables
 
 # Number of energies to use
-E_number_values = [500, 1000]
+#E_number_values = [500, 1000]
+E_number_values = [500]
 
 
 # Path to BlackHawk and Isatis
@@ -128,7 +130,7 @@ for mc_max in mc_max_values:
                     
                     # Indicates which range of masses are being used (for convergence tests).
                     if test_mass_range:
-                        fname_base += "_test_range"
+                        fname_base += "_test_range_wide"
                     elif MF_cutoff:
                         fname_base += "_dm{:.0f}_".format(-np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
                         
@@ -174,6 +176,7 @@ for mc_max in mc_max_values:
                             
                         if SLN_bool:
                             BH_number = int((np.log10(m_c*m_upper_SLN[i])-np.log10(m_c*m_lower_SLN[i])) / delta_log_m)
+                            print(BH_number)
                             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
                             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_SLN[i] * m_c)
                             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_SLN[i] * m_c)
@@ -226,7 +229,7 @@ for mc_max in mc_max_values:
                         if test_mass_range:
                             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_test)
                             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_test)
-                                    
+                        """            
                         # Save BlackHawk parameters file.
                         np.savetxt(Isatis_path + filename_BlackHawk, params_BlackHawk, fmt="%s", delimiter = " = ")
                         
@@ -234,7 +237,7 @@ for mc_max in mc_max_values:
                         os.chdir(BlackHawk_path)
                         command = "./BlackHawk_inst.x " + "scripts/Isatis/BH_launcher/" + destination_folder + ".txt<input.txt"
                         os.system(command)
-                            
+                          
                     # Save runs file
                     np.savetxt(BlackHawk_path + "scripts/Isatis/BH_launcher/%s" % runs_filename, runs_file_content, fmt="%s")
                     
@@ -242,3 +245,4 @@ for mc_max in mc_max_values:
                     os.chdir("./scripts/Isatis")
                     command = "./Isatis.x %s ./BH_launcher/%s" % (filename_params_Isatis, runs_filename)
                     os.system(command)
+"""
