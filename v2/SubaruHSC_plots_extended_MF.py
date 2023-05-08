@@ -208,12 +208,12 @@ mc_subaru = 10**np.linspace(17, 29, 1000)
 m_subaru_mono, f_max_subaru_mono = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
 # Mass function parameter values, from 2009.03204.
-[Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+[Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SL, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
 for i in range(len(Deltas)):
 
     # Calculate constraints for extended MF from microlensing.
-    params_SLN = [sigmas[i], alphas_SL[i]]
+    params_SLN = [sigmas_SLN[i], alphas_SL[i]]
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
     params_numeric = [Deltas[i], params_CC3]
