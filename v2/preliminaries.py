@@ -580,14 +580,8 @@ if "__main__" == __name__:
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
-    # Indices of Delta to plot the numerical MF for.
-    Delta_indices = [0, 1, 4, 5, 6]
-    
-    # Peak masses from Fig. 5 of 2009.03204, in solar masses.
-    mp_numeric_Fig5 = [42.8, 40.9, 41.0, 40.9, 32.2]
-    
-    for j, i in enumerate(Delta_indices):
+            
+    for i in range(len(Deltas)):
         
         m_pbh_values = np.logspace(18, 22, 1000)
                   
@@ -622,11 +616,12 @@ if "__main__" == __name__:
       
         mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
         mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        mf_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i])
         mf_numeric_test = mf_numeric(m_pbh_values, mp_numeric, Deltas[i], params_CC3)
         
         mf_scaled_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
         mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
-
+        mf_scaled_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]) / max(LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]))
         mf_scaled_numeric = mf_numeric(m_pbh_values, mp_numeric, Deltas[i], params_CC3) / mf_numeric(mp_numeric, mp_numeric, Deltas[i], params_CC3)
         
         ymin, ymax = max(mf_numeric_test) * ymin_scaled, max(mf_numeric_test) * ymax_scaled
@@ -634,14 +629,12 @@ if "__main__" == __name__:
 
         ax1.plot(m_pbh_values, mf_scaled_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
         ax1.plot(m_pbh_values, mf_scaled_CC3, color="g", label="CC3", linestyle="dashed")
+        ax1.plot(m_pbh_values, mf_scaled_LN, color="r", label="LN", dashes=[8, 5])
         ax1.plot(m_pbh_values, mf_scaled_numeric, color="k", label="Numeric")
-        
-        if Deltas[i] < 5:
-            mf_scaled_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]) / max(LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]))
-            ax1.plot(m_pbh_values, mf_scaled_LN, color="r", label="LN", dashes=[8, 5])
         
         ax2.plot(m_pbh_values, mf_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
         ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
+        ax2.plot(m_pbh_values, mf_LN, color="r", label="LN", dashes=[8, 5])
         ax2.plot(m_pbh_values, mf_numeric_test, color="k", label="Numeric")
         
         for ax in [ax1, ax2]:
@@ -665,7 +658,6 @@ if "__main__" == __name__:
 
         fig1.set_tight_layout(True)
         fig2.set_tight_layout(True)
-        
         fig2.savefig("Tests/Figures/MF_numeric_extracted_Delta={:.1f}.png".format(Deltas[i]))
             
 #%% Plot the mass function for Delta = 5.0, showing the mass range relevant
