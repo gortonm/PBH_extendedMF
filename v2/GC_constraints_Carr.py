@@ -42,11 +42,11 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     mc_values = np.logspace(14, 19, 100)
-    m_mono_values = np.logspace(11, 21, 1000)
+    m_mono_values = np.logspace(11, 22, 1000)
 
     # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
-    constraints_names, f_max = load_results_Isatis(modified=True, mf_string="GC_mono")
+    constraints_names, f_max = load_results_Isatis(modified=True, mf_string="GC_mono_wide")
 
 
     for j in range(len(Deltas)):
