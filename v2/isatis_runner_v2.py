@@ -17,10 +17,9 @@ rho_c_halo = 8.5e-25 	            # characteristic halo density in g/cm^3
 r_c_halo = 17						# characteristic halo radius in kpc
 gamma_halo = 1						# density profile inner slope
 
-LN_bool = False
-SLN_bool = True 
+LN_bool = True
+SLN_bool = False 
 CC3_bool = False
-
 
 # Load mass function parameters.
 [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -29,7 +28,7 @@ CC3_bool = False
 # Controls whether to use a range of PBH masses that matches those used
 # in isatis_reproduction.py. Use for comparing to the results obtained using 
 # the method from 1705.05567.
-test_mass_range = True
+test_mass_range = False
 if test_mass_range:
     m_lower_test, m_upper_test = 1e11, 1e22
 
