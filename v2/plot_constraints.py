@@ -40,11 +40,13 @@ plt.style.use('tableau-colorblind10')
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = False
+    plot_GC_Isatis = True
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = True
+    plot_KP23 = not plot_GC_Isatis
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
     include_extrapolated = False
+    if not plot_KP23:
+        include_extrapolated = False
     # If True, plot results obtained using the numerical MF from Fig. 5 of 2009.03204
     plot_numeric = False
     
@@ -118,7 +120,9 @@ if "__main__" == __name__:
             
             if include_extrapolated:
                 fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$ \n $f_".format(Deltas[i]) + "\mathrm{max}(m)$" + " extrapolated below " + "$m=10^{16}" + "~\mathrm{g}$", fontsize="small")
-            
+            else:
+                fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$".format(Deltas[i]))
+           
             # Monochromatic MF constraints
             m_mono_evap, f_PBH_mono_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
             m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
