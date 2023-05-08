@@ -113,7 +113,7 @@ if "__main__" == __name__:
             ax1.plot(mp_SLN_evap, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
             ax1.plot(mc_values_evap, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
                                                                     
-            ax0.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
+            ax0.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2], label="LN")
             ax1.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
         
         elif plot_KP23:
@@ -179,13 +179,13 @@ if "__main__" == __name__:
         ax2.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
         ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], dashes=[6, 2])
         
-        # Loading constraints from numeric mass function (Subaru-HSC).
-        mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC = np.genfromtxt("./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-        ax0.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4], label="numeric")
-        ax2.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4])
-
-        
         if plot_numeric:
+
+            # Loading constraints from numeric mass function (Subaru-HSC).
+            mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC = np.genfromtxt("./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+            ax0.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4], label="numeric")
+            ax2.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4])
+            
             if i in [0, 1, 4, 5, 6]:                
                 # Loading constraints from numeric mass function (Galactic Centre photons).
                 mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap = np.genfromtxt("./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
