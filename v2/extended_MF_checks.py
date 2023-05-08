@@ -400,6 +400,9 @@ if "__main__" == __name__:
             Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
 
         if j == 5:
+            
+            """temporarily include to account for the updated values of sigma. Remove upon re-running the results."""
+            sigmas_LN[j] = 0.864
 
             # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
             constraints_names, f_PBH_Isatis = load_results_Isatis(
@@ -449,6 +452,92 @@ if "__main__" == __name__:
             ax.legend(fontsize="small")
             ax.set_title("$\Delta={:.1f}$".format(Deltas[j]))
             plt.tight_layout()
+
+# %% Plot results for a skew-lognormal mass function, obtained using Isatis,
+# and compare to the results obtained using the method from 1705.05567, using
+# the constraint from each energy bin separately.
+# Using the modified version of Isatis.
+# Both forms of the constraint calculated using the same range and number of PBH masses.
+if "__main__" == __name__:
+
+    # Parameters used for convergence tests in Galactic Centre constraints.
+    cutoff = 1e-4
+    delta_log_m = 1e-3
+    E_number = 500
+
+    if E_number < 1e3:
+        energies_string = "E{:.0f}".format(E_number)
+    else:
+        energies_string = "E{:.0f}".format(np.log10(E_number))
+
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
+        betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    mc_values = np.logspace(14, 19, 100)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = [
+        "COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+
+    m_mono_values = np.logspace(11, 22, 1000)
+
+    for j in range(len(sigmas_LN[:-1])):
+
+        # Filename of constraints obtained using Isatis.
+        fname_base = "SL_D={:.1f}_".format(
+            Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+
+        if j == 5:
+            
+            # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
+            constraints_names, f_PBH_Isatis = load_results_Isatis(
+                mf_string="SL_D={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)
+
+            # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
+            # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
+            constraints_names, f_max = load_results_Isatis(
+                mf_string="GC_mono_wide", modified=True)
+            params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+
+            fig, ax = plt.subplots(figsize=(8, 8))
+
+            for i in range(len(constraints_names)):
+                ax.plot(
+                    mc_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
+
+                # Calculate constraint using method from 1705.05567.
+
+                # Constraints data for each energy bin of each instrument.
+                constraints_mono_file = np.transpose(np.genfromtxt(
+                    "./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % (constraints_names_short[i])))
+                # Constraints for an extended MF, from each instrument.
+                energy_bin_constraints = []
+
+                for k in range(len(constraints_mono_file)):
+
+                    # Constraint from a particular energy bin
+                    constraint_energy_bin = constraints_mono_file[k]
+
+                    # Calculate constraint on f_PBH from each bin
+                    f_PBH_k = constraint_Carr(
+                        mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin, mf=SLN, params=params_SLN)
+                    energy_bin_constraints.append(f_PBH_k)
+
+                # Calculate constraint using method from 1705.05567, and plot.
+                f_PBH_Carr = envelope(energy_bin_constraints)
+                ax.plot(mc_values, f_PBH_Carr, marker="x",
+                        linestyle="None", color=colors_evap[i])
+
+            ax.set_xlim(1e14, 1e18)
+            ax.set_ylim(10**(-10), 1)
+            ax.set_xlabel("$M_c~[\mathrm{g}]$")
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.legend(fontsize="small")
+            ax.set_title("$\Delta={:.1f}$".format(Deltas[j]))
+            plt.tight_layout()
+
 
 # %% Plot results for a log-normal mass function, obtained using Isatis,
 # and compare to the results obtained using the method from 1705.05567, using
@@ -703,6 +792,8 @@ if "__main__" == __name__:
 # at m = 5e14g when m < 5e14g.
 # Using the modified version of Isatis.
 if "__main__" == __name__:
+    
+    mc_values = np.logspace(14, 19, 100)
 
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
@@ -729,7 +820,7 @@ if "__main__" == __name__:
 
     # mass below which to set constraint to large values
     #m_star = m_mono_values[9]
-    m_star = 1e15
+    m_star = 1e11
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
