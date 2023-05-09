@@ -46,7 +46,7 @@ if "__main__" == __name__:
 
     # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
-    constraints_names, f_max = load_results_Isatis(modified=True, mf_string="GC_mono_wide")
+    constraints_names, f_max = load_results_Isatis(modified=True)
 
 
     for j in range(len(Deltas)):
