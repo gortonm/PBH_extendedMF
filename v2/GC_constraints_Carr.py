@@ -41,7 +41,7 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = np.logspace(14, 19, 100)
+    mc_values = np.logspace(14, 20, 120)
     m_mono_values = np.logspace(11, 22, 1000)
 
     # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
@@ -71,12 +71,12 @@ if "__main__" == __name__:
     # If True, plot extrapolated monochromatic MF constraints down to 5e14g
     plot_extrapolate = False
     # If True, use extrapolated monochromatic MF constraints down to 5e14g (using a power law fit) to calculate extended MF constraint
-    include_extrapolated = True
+    include_extrapolated = False
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = np.logspace(14, 19, 100)
+    mc_values = np.logspace(14, 20, 120)
 
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.

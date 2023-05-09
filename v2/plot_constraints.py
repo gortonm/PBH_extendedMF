@@ -40,7 +40,7 @@ plt.style.use('tableau-colorblind10')
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = True
+    plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = not plot_GC_Isatis
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
@@ -48,7 +48,7 @@ if "__main__" == __name__:
     if not plot_KP23:
         include_extrapolated = False
     # If True, plot results obtained using the numerical MF from Fig. 5 of 2009.03204
-    plot_numeric = False
+    plot_numeric = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['tab:grey', 'r', 'b', 'g', 'k']
@@ -186,11 +186,10 @@ if "__main__" == __name__:
             ax0.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4], label="numeric")
             ax2.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4])
             
-            if i in [0, 1, 4, 5, 6]:                
-                # Loading constraints from numeric mass function (Galactic Centre photons).
-                mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap = np.genfromtxt("./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-                ax0.plot(mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap, color=colors[4])
-                ax1.plot(mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap, color=colors[4])
+            # Loading constraints from numeric mass function (Galactic Centre photons).
+            mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap = np.genfromtxt("./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+            ax0.plot(mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap, color=colors[4])
+            ax1.plot(mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap, color=colors[4])
           
         ax0.set_xlim(xmin_evap, xmax_HSC)
         ax0.set_ylim(ymin, ymax)
