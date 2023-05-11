@@ -343,54 +343,135 @@ if "__main__" == __name__:
           
 #%% Plot the evolution of a PBH mass
 
-m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)
-m_pbh_values_0 = np.ones(len(m_pbh_values_formation))
-fname_base = "mass_evolution"
+def mass_evolved(m_pbh_values_formation, m_star=5e14, t_0=13.9e9 * 365.25 * 86400):
+    """
+    Estimate the present-day PBH mass (due to evaporation), given an array of 
+    initial PBH masses.
 
-for j in range(len(m_pbh_values_formation)):
-    
-    destination_folder = fname_base + "_{:.0f}".format(j+1)
-    filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
-    data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
-    
-    print(j+1)
-    print("Formation mass [g] : {:.2e}".format(m_pbh_values_formation[j]))
-    m = []
-    t = []
-    for m_value in data[2]:
-        m.append(float(m_value))
-    for t_value in data[0]:
-        t.append(float(t_value))
-    
-    # Age of Universe, in seconds
-    t_0 = 13.9e9 * 365.25 * 86400
-    
-    # PBH masses from formation time to present time
-    m_pbh_values_to_present = np.array(m)[np.array(t) < t_0]
-    
-    print("Maximum time t < t_0 [s] = {:.2e}".format(max(np.array(t)[np.array(t) < t_0])))
-    
-    # PBH mass at present
-    m_pbh_values_0[j] = m_pbh_values_to_present[-1]
-    
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
-ax.plot(m_pbh_values_formation, m_pbh_values_0)
-ax.set_xlabel("Formation mass $m_f$ [g]")
-ax.set_ylabel("Present mass $m_0$ [g]")
-ax.set_xscale("log")
-ax.set_yscale("log")
-ax.set_xlim(min(m_pbh_values_formation), 1e16)
-ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
-fig.tight_layout()
+    Parameters
+    ----------
+    m_pbh_values_formation : Array-like
+        Initial PBH masses, in grams.
+    m_star : Formation mass of a PBH that is just evaporating today, in grams.
+        The default is 5e14.
+    t_0 : Float, optional
+        Age of the Universe, in seconds. The default is 13.9e9 * 365.25 * 86400.
 
+    Returns
+    -------
+    m_pbh_values_0 : Array-like
+        Present-day values of the PBH mass.
 
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.plot(m_pbh_values_formation, m_pbh_values_0/m_pbh_values_formation)
-ax.set_xlabel("Formation mass $m_f$ [g]")
-ax.set_ylabel("Present mass $m_0$ / Formation mass $m_f$")
-ax.set_xscale("log")
-ax.set_yscale("log")
-ax.set_xlim(min(m_pbh_values_formation), 1e16)
-ax.set_ylim(1e-1, 1.1)
-fig.tight_layout()
+    """
+    m_pbh_values_formation_calculated = np.logspace(np.log10(4e14), 16, 50)
+    fname_base = "mass_evolution"
+    
+    # Find present-day PBH mass in terms of the formation PBH mass, calculated 
+    # using BlackHawk.
+    m_pbh_values_0_calculated = np.ones(len(m_pbh_values_formation_calculated))
+
+    for i in range(len(m_pbh_values_formation_calculated)):
+        
+        # Load data from PBHs evolved to the present time (calculated using BlackHawk)
+        destination_folder = fname_base + "_{:.0f}".format(i+1)
+        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
+        data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
+        
+        m = []
+        t = []
+        for m_value in data[2]:
+            m.append(float(m_value))
+        for t_value in data[0]:
+            t.append(float(t_value))
+        
+        # Age of Universe, in seconds
+        t_0 = 13.9e9 * 365.25 * 86400
+        
+        # PBH masses from formation time to present time
+        m_pbh_values_to_present = np.array(m)[np.array(t) < t_0]
+                 
+        # PBH mass at present
+        m_pbh_values_0_calculated[i] = m_pbh_values_to_present[-1]
+    
+    # Estimate the present-day PBH mass from formation masses given in the
+    # array 'm_pbh_values_formation', using linear interpolation.
+    m_pbh_values_0_interp = np.ones(len(m_pbh_values_formation))
+    
+    for i in range(len(m_pbh_values_formation)):
+        
+        # If a PBH forms with mass less than m_star, it no longer exists.
+        if m_pbh_values_formation[i] < m_star:
+            m_pbh_values_0_interp[i] = 0
+        
+        # If the formation PBH mass is larger than the maximum PBH mass
+        # for which the BlackHawk calculation was performed, set the present
+        # mass to the formation mass
+        elif m_pbh_values_formation[i] > max(m_pbh_values_formation_calculated):
+            m_pbh_values_0_interp[i] = m_pbh_values_formation[i]
+        
+        else:
+            m_pbh_values_0_interp[i] = np.interp(m_pbh_values_formation[i], m_pbh_values_formation_calculated, m_pbh_values_0)
+        
+    return m_pbh_values_0_interp
+
+if "__main__" == __name__:
+
+    m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)
+    m_pbh_values_0 = np.ones(len(m_pbh_values_formation))
+    fname_base = "mass_evolution"
+    
+    
+    for j in range(len(m_pbh_values_formation)):
+        
+        destination_folder = fname_base + "_{:.0f}".format(j+1)
+        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
+        data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
+        
+        print(j+1)
+        print("Formation mass [g] : {:.2e}".format(m_pbh_values_formation[j]))
+        m = []
+        t = []
+        for m_value in data[2]:
+            m.append(float(m_value))
+        for t_value in data[0]:
+            t.append(float(t_value))
+        
+        # Age of Universe, in seconds
+        t_0 = 13.9e9 * 365.25 * 86400
+        
+        # PBH masses from formation time to present time
+        m_pbh_values_to_present = np.array(m)[np.array(t) < t_0]
+        
+        print("Maximum time t < t_0 [s] = {:.2e}".format(max(np.array(t)[np.array(t) < t_0])))
+        
+        # PBH mass at present
+        m_pbh_values_0[j] = m_pbh_values_to_present[-1]
+        
+    
+    # Test the method 'mass_evolution' by plotting the present PBH mass against
+    # the initial PBH mass for initial massees that are not computed exactly using
+    # BlackHawk.
+    m_pbh_values_formation_test = np.logspace(np.log10(3e14), 17, 100)
+    m_pbh_values_0_test = mass_evolved(m_pbh_values_formation_test)
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
+    ax.plot(m_pbh_values_formation, m_pbh_values_0)
+    ax.plot(m_pbh_values_formation_test, m_pbh_values_0_test, marker="x", linestyle="None")
+    ax.set_xlabel("Formation mass $m_f$ [g]")
+    ax.set_ylabel("Present mass $m_0$ [g]")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(min(m_pbh_values_formation), 1e16)
+    ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
+    fig.tight_layout()
+    
+    
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.plot(m_pbh_values_formation, m_pbh_values_0/m_pbh_values_formation)
+    ax.set_xlabel("Formation mass $m_f$ [g]")
+    ax.set_ylabel("Present mass $m_0$ / Formation mass $m_f$")
+    #ax.set_xscale("log")
+    #ax.set_yscale("log")
+    ax.set_xlim(min(m_pbh_values_formation), 1e16)
+    ax.set_ylim(1e-1, 1.1)
+    fig.tight_layout()
