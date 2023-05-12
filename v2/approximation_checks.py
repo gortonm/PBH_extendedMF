@@ -349,22 +349,17 @@ if "__main__" == __name__:
           
 #%% Plot the evolution of a PBH mass
 
-def mass_evolved(m_pbh_values_formation, t_0=13.9e9 * 365.25 * 86400):
+def mass_evolved_BlackHawk():
     """
-    Estimate the present-day PBH mass (due to evaporation), given an array of 
-    initial PBH masses.
-
-    Parameters
-    ----------
-    m_pbh_values_formation : Array-like
-        Initial PBH masses, in grams.
-    t_0 : Float, optional
-        Age of the Universe, in seconds. The default is 13.9e9 * 365.25 * 86400.
+    Calculates the present-day PBH mass for a range of formation masses,
+    using data from BlackHawk_tot.
 
     Returns
     -------
-    m_pbh_values_0 : Array-like
-        Present-day values of the PBH mass.
+    m_pbh_values_formation_calculated : Array-like
+        PBH masses at formation.
+    m_pbh_values_0_calculated : Array-like
+        Present-day PBH masses.
 
     """
     m_pbh_values_formation_calculated = np.logspace(np.log10(4e14), 16, 50)
@@ -396,12 +391,35 @@ def mass_evolved(m_pbh_values_formation, t_0=13.9e9 * 365.25 * 86400):
                  
         # PBH mass at present
         m_pbh_values_0_calculated[i] = m_pbh_values_to_present[-1]
+
+    return m_pbh_values_formation_calculated, m_pbh_values_0_calculated
+
+
+def mass_evolved(m_pbh_values_formation, t_0=13.9e9 * 365.25 * 86400):
+    """
+    Estimate the present-day PBH mass (due to evaporation), given an array of 
+    initial PBH masses.
+
+    Parameters
+    ----------
+    m_pbh_values_formation : Array-like
+        Initial PBH masses, in grams.
+    t_0 : Float, optional
+        Age of the Universe, in seconds. The default is 13.9e9 * 365.25 * 86400.
+
+    Returns
+    -------
+    m_pbh_values_0_interp : Array-like
+        Present-day values of the PBH mass.
+
+    """
+    m_pbh_values_formation_calculated, m_pbh_values_0_calculated = mass_evolved_BlackHawk()
     
     # Estimate the present-day PBH mass from formation masses given in the
     # array 'm_pbh_values_formation', using linear interpolation.
     m_pbh_values_0_interp = np.ones(len(m_pbh_values_formation))
     
-    for i in range(len(m_pbh_values_formation)):
+    for i in range(len(m_pbh_values_0_interp)):
         
         # If a PBH forms with mass less than M_*=5e14g, it no longer exists.
         if m_pbh_values_formation[i] < 5e14:
@@ -417,6 +435,47 @@ def mass_evolved(m_pbh_values_formation, t_0=13.9e9 * 365.25 * 86400):
             m_pbh_values_0_interp[i] = np.interp(m_pbh_values_formation[i], m_pbh_values_formation_calculated, m_pbh_values_0_calculated)
         
     return m_pbh_values_0_interp
+
+
+def mass_formation(m_pbh_values_0):
+    """
+    Estimate the formation PBH mass (due to evaporation), given an array of 
+    present-day PBH masses.
+
+    Parameters
+    ----------
+    m_pbh_values_0 : Array-like
+        Present-day PBH masses, in grams.
+    t_0 : Float, optional
+        Age of the Universe, in seconds. The default is 13.9e9 * 365.25 * 86400.
+
+    Returns
+    -------
+    m_pbh_values_formation_interp : Array-like
+        Formation values of the PBH mass.
+
+    """    
+    m_pbh_values_formation_calculated, m_pbh_values_0_calculated = mass_evolved_BlackHawk()
+
+    # Estimate the formation mass of a PBH from its present mass, using linear
+    # interpolation
+    
+    m_pbh_values_formation_interp = np.ones(len(m_pbh_values_0))
+    
+    for i in range(len(m_pbh_values_formation_interp)):
+                
+        # If the present PBH mass is larger than the maximum PBH mass
+        # for which the BlackHawk calculation was performed, set the present
+        # mass to the formation mass
+        if m_pbh_values_0[i] > max(m_pbh_values_formation_calculated):
+            m_pbh_values_formation_interp[i] = m_pbh_values_0[i]
+        
+        else:
+            m_pbh_values_formation_interp[i] = np.interp(m_pbh_values_formation_interp[i], xp=m_pbh_values_formation, fp=m_pbh_values_0_calculated)
+        
+    return m_pbh_values_formation_interp
+   
+    
 
 if "__main__" == __name__:
 
