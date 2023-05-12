@@ -349,7 +349,7 @@ if "__main__" == __name__:
           
 #%% Plot the evolution of a PBH mass
 
-def mass_evolved(m_pbh_values_formation, m_star=5e14, t_0=13.9e9 * 365.25 * 86400):
+def mass_evolved(m_pbh_values_formation, t_0=13.9e9 * 365.25 * 86400):
     """
     Estimate the present-day PBH mass (due to evaporation), given an array of 
     initial PBH masses.
@@ -358,8 +358,6 @@ def mass_evolved(m_pbh_values_formation, m_star=5e14, t_0=13.9e9 * 365.25 * 8640
     ----------
     m_pbh_values_formation : Array-like
         Initial PBH masses, in grams.
-    m_star : Formation mass of a PBH that is just evaporating today, in grams.
-        The default is 5e14.
     t_0 : Float, optional
         Age of the Universe, in seconds. The default is 13.9e9 * 365.25 * 86400.
 
@@ -405,8 +403,8 @@ def mass_evolved(m_pbh_values_formation, m_star=5e14, t_0=13.9e9 * 365.25 * 8640
     
     for i in range(len(m_pbh_values_formation)):
         
-        # If a PBH forms with mass less than m_star, it no longer exists.
-        if m_pbh_values_formation[i] < m_star:
+        # If a PBH forms with mass less than M_*=5e14g, it no longer exists.
+        if m_pbh_values_formation[i] < 5e14:
             m_pbh_values_0_interp[i] = 0
         
         # If the formation PBH mass is larger than the maximum PBH mass
