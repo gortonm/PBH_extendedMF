@@ -518,14 +518,16 @@ if "__main__" == __name__:
     m_pbh_values_0_test = mass_evolved(m_pbh_values_formation_test)
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
-    ax.plot(m_pbh_values_formation, m_pbh_values_0)
-    ax.plot(m_pbh_values_formation_test, m_pbh_values_0_test, marker="x", linestyle="None")
+    ax.plot(m_pbh_values_formation, m_pbh_values_0, label="BlackHawk_tot calculation")
+    ax.plot(m_pbh_values_formation_test, m_pbh_values_0_test, marker="x", linestyle="None", label="Test of method mass_evolved")
+    ax.plot(m_pbh_values_formation_test, m_0(m_pbh_values_formation_test), marker="+", linestyle="None", label="Analytic")
     ax.set_xlabel("Formation mass $m_f$ [g]")
     ax.set_ylabel("Present mass $m_0$ [g]")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(min(m_pbh_values_formation), 1e16)
     ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
+    ax.legend()
     fig.tight_layout()
     
     
@@ -570,3 +572,99 @@ if "__main__" == __name__:
     ax.set_xlim(min(m_pbh_values_formation), 1e16)
     ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
     fig.tight_layout()
+    
+    
+#%% Calculate the present-day mass function by binning the masses and evolving
+# the masses to the present day using mass_evolved().
+
+from preliminaries import m_max_SLN
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+            
+    for i in range(len(Deltas)):
+        
+        m_pbh_values = np.logspace(14, 18, 1000)
+        m_pbh_values_0 = mass_evolved(m_pbh_values)
+                  
+        fig1, ax1 = plt.subplots(figsize=(7, 5))
+        fig2, ax2 = plt.subplots(figsize=(7, 5))
+
+        ymin_scaled, ymax_scaled = 1e-1, 1.1
+        
+        # Choose factors so that peak masses of the CC3 and SLN MF match
+        # closely, at 1e20g (consider this range since constraints plots)
+        # indicate the constraints from the SLN and CC3 MFs are quite
+        # different at this peak mass.
+        
+        if Deltas[i] < 5:
+            m_c = 2.5e14*np.exp(ln_mc_SLN[i])
+            m_p = 2.5e14*mp_CC3[i]
+            mp_numeric = m_p
+        else:
+            m_c = 3.1e14*np.exp(ln_mc_SLN[i])
+            m_p = 2.9e14*mp_CC3[i]
+            mp_numeric = m_p
+
+        #m_c = 5.6e20*np.exp(ln_mc_SLN[i])
+        #m_p = 5.25e20*mp_CC3[i]
+
+        mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+        print("m_p (CC3) = {:.2e}".format(m_p))
+        print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
+        print("m_p (numeric) = {:.2e}".format(mp_numeric))
+      
+        mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+        mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        mf_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i])
+        
+        mf_scaled_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+        mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        mf_scaled_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]) / max(LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]))
+        
+        # Approximate analytic form of the evolved mass function, from 1604.05349.
+        m_pbh_values_0_analytic = m_0(m_pbh_values)    # Analytic estimate for the present PBH mass, using Eq. (2.18) of 1604.05349.
+        mf_LN_analytic = mf_evap_effects(m_pbh_values_0_analytic, mf=LN, m_c=m_p*np.exp(sigmas_LN[i]**2), params=params_LN)
+        mf_SLN_analytic = mf_evap_effects(m_pbh_values_0_analytic, mf=SLN, m_c=m_c, params=params_SLN)
+        mf_CC3_analytic = mf_evap_effects(m_pbh_values_0_analytic, mf=CC3, m_c=m_p, params=params_CC3)
+
+        ax1.plot(m_pbh_values, mf_scaled_SLN, color="b", label="SLN", linestyle="dotted")
+        ax1.plot(m_pbh_values, mf_scaled_CC3, color="g", label="CC3", linestyle="dotted")
+        ax1.plot(m_pbh_values, mf_scaled_LN, color="r", label="LN", linestyle="dotted")
+        ax1.plot(m_pbh_values_0, mf_scaled_SLN, color="b", marker="x", linestyle="None")
+        ax1.plot(m_pbh_values_0, mf_scaled_CC3, color="g", marker="x", linestyle="None")
+        ax1.plot(m_pbh_values_0, mf_scaled_LN, color="r", marker="x", linestyle="None")
+       
+        ax2.plot(m_pbh_values, mf_SLN, color="b", linestyle="dotted")
+        ax2.plot(m_pbh_values, mf_CC3, color="g", linestyle="dotted")
+        ax2.plot(m_pbh_values, mf_LN, color="r", linestyle="dotted")
+        ax2.plot(m_pbh_values_0, mf_SLN, color="b", marker="x", linestyle="None")
+        ax2.plot(m_pbh_values_0, mf_CC3, color="g", marker="x", linestyle="None")
+        ax2.plot(m_pbh_values_0, mf_LN, color="r", marker="x", linestyle="None")
+        ax2.plot(m_pbh_values_0_analytic, mf_SLN, color="b", marker="+", linestyle="None")
+        ax2.plot(m_pbh_values_0_analytic, mf_CC3, color="g", marker="+", linestyle="None")
+        ax2.plot(m_pbh_values_0_analytic, mf_LN, color="r", marker="+", linestyle="None")
+       
+        xmin, xmax = min(m_pbh_values), max(m_pbh_values)
+        
+        for ax in [ax1, ax2]:
+            # Show smallest PBH mass constrained by microlensing.
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.grid()
+            ax.legend(fontsize="small")
+            ax.set_xlabel("$m~[\mathrm{g}]$")
+            ax.set_title("$\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+            ax.set_xlim(xmin, xmax)
+
+        ax1.set_ylabel("$\psi / \psi_\mathrm{max}$")
+        ax1.set_ylim(ymin_scaled, ymax_scaled)
+        ax2.set_ylabel("$\psi$")
+        #ax2.set_ylim(ymin, ymax)
+
+        fig1.set_tight_layout(True)
+        fig2.set_tight_layout(True)
+
+
