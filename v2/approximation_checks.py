@@ -471,7 +471,7 @@ def mass_formation(m_pbh_values_0):
             m_pbh_values_formation_interp[i] = m_pbh_values_0[i]
         
         else:
-            m_pbh_values_formation_interp[i] = np.interp(m_pbh_values_formation_interp[i], xp=m_pbh_values_formation, fp=m_pbh_values_0_calculated)
+            m_pbh_values_formation_interp[i] = np.interp(m_pbh_values_0[i], m_pbh_values_0_calculated, m_pbh_values_formation_calculated)
         
     return m_pbh_values_formation_interp
    
@@ -537,4 +537,36 @@ if "__main__" == __name__:
     #ax.set_yscale("log")
     ax.set_xlim(min(m_pbh_values_formation), 1e16)
     ax.set_ylim(1e-1, 1.1)
+    fig.tight_layout()
+    
+    m_pbh_values_formation_test = np.logspace(np.log10(3e14), 17, 100)
+    m_pbh_values_0_test = mass_evolved(m_pbh_values_formation_test)
+    m_pbh_values_formation_test_estimated = mass_formation(m_pbh_values_0_test)
+    
+    # Plot formation mass against present mass
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.plot(m_pbh_values_0_test, m_pbh_values_0_test, linestyle="dotted", color="k", label="Formation mass = Present mass")
+    ax.plot(m_pbh_values_0_test, m_pbh_values_formation_test_estimated, marker="x", linestyle="None")    
+    ax.set_ylabel("Formation mass $m_f$ [g]")
+    ax.set_xlabel("Present mass $m_0$ [g]")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e12, 1e16)
+    ax.set_ylim(1e14, max(m_pbh_values_formation))
+    fig.tight_layout()
+
+    # Consistency check of the method 'mass_formation' by checking that the 
+    # values calculated for the formation mass match those used as an input
+    # to 'mass_evolved'.
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
+    ax.plot(m_pbh_values_formation, m_pbh_values_0)
+    ax.plot(m_pbh_values_formation_test, m_pbh_values_0_test, marker="x", linestyle="None")
+    ax.plot(m_pbh_values_formation_test_estimated, m_pbh_values_0_test, marker="+", linestyle="None")
+    ax.set_xlabel("Formation mass $m_f$ [g]")
+    ax.set_ylabel("Present mass $m_0$ [g]")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(min(m_pbh_values_formation), 1e16)
+    ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
     fig.tight_layout()
