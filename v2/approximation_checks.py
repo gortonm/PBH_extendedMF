@@ -213,7 +213,7 @@ M_star = 5e14   # formation mass of PBH evaporating at present, in grams
 m_q = 2e14    # formation mass of PBH with a temperature above the QCD temperature (see Eq. 2.4 of 1604.05349)
 alpha_evap = 4   # related to emitted number of particle degrees of freedom (see Eqs. 2.7-2.8 of 1604.05349)
 
-q = 0.4   # ratio of m_q to m_star
+q = m_q / M_star   # ratio of m_q to m_star
 M_c = np.power(1 + q**3/alpha_evap, 1/3) * M_star   # characteristic mass (see Eq. (2.18) of 1604.05349)
 
 def mf_evap_effects(m, mf, m_c, params):
@@ -253,7 +253,7 @@ def mf_evap_effects(m, mf, m_c, params):
     return mf_values
 
 
-def m_0(M):
+def m_0(M, M_star=5e14, alpha_evap=4):
     """
     Calculate present value of the PBH mass from the PBH mass at formation,
     using Eq. (2.18) of 1604.05349.
@@ -261,14 +261,20 @@ def m_0(M):
     Parameters
     ----------
     M : Array-like
-        PBH masses (at formation).
+        PBH masses (at formation), in grams.
+    M_star : Float, optional
+        Formation mass of a PBH with lifetime equal to the age of the Universe, in grams. The default is 5e14.
+    alpha_evap : Float, optional
+        Factor by which the number of degrees of freedom emitted by the black hole increases when the black hole reaches a temperature equivalent to the QCD confinement scale. The default is 4.
 
     Returns
     -------
-    m0_values : Array-like (at present)
-        PBH masses (at present).
+    m0_values : Array-like
+        PBH masses (at present), in grams.
 
     """
+    q = m_q / M_star   # ratio of m_q to m_star (m_q depends only on the BH temperature)
+    M_c = np.power(1 + q**3/alpha_evap, 1/3) * M_star   # characteristic mass (see Eq. (2.18) of 1604.05349)
     m0_values = []
     
     for i in range(len(M)):
@@ -280,6 +286,51 @@ def m_0(M):
             m0_values.append(np.power(alpha_evap * (M[i]**3 - M_star**3), 1/3))
             
     return np.array(m0_values)
+
+
+def M_formation(m_values, M_star=5e14, alpha_evap=4):
+    """
+    Calculate mass of a PBH at formation, from an array of present-day PBH
+    masses, using the inverse of Eq. (2.18) of 1604.05349.
+
+    Parameters
+    ----------
+    m_values : Array-like
+        PBH masses (at present), in grams.
+    M_star : TYPE, optional
+        Formation mass of a PBH with lifetime equal to the age of the Universe, in grams. The default is 5e14.
+    alpha_evap : Float, optional
+        Factor by which the number of degrees of freedom emitted by the black hole increases when the black hole reaches a temperature equivalent to the QCD confinement scale. The default is 4.
+
+    Returns
+    -------
+    M_values : Array-like
+        PBH masses (at formation), in grams.
+
+    """
+    q = m_q / M_star   # ratio of m_q to m_star (m_q depends only on the BH temperature)
+    M_c = np.power(1 + q**3/alpha_evap, 1/3) * M_star   # characteristic mass (see Eq. (2.18) of 1604.05349)
+    M_values = np.zeros(len(m_values))
+    
+    for i in range(len(M_values)):
+        
+        m = m_values[i]
+        M_1 = np.power(m**3 + M_star**3 - (1-alpha_evap**(-1))*(q*M_star)**3, 1/3)
+        M_2 = np.power(m**3 / alpha_evap + M_star**3, 1/3)
+        
+        if M_1 >= M_c:
+            M_values[i] = M_1
+        
+        elif M_star <= M_2 <= M_c:
+            M_values[i] = M_2
+            
+        elif M_1 < M_star and M_2 < M_star:
+            M_values[i] = 0
+            
+        else:
+            M_values[i] = np.nan
+            
+    return M_values
              
 
 if "__main__" == __name__:
@@ -363,7 +414,6 @@ def mass_evolved_BlackHawk():
 
     """
     m_pbh_values_formation_calculated = np.logspace(np.log10(4e14), 16, 50)
-    fname_base = "mass_evolution"
     
     # Find present-day PBH mass in terms of the formation PBH mass, calculated 
     # using BlackHawk.
@@ -372,8 +422,8 @@ def mass_evolved_BlackHawk():
     for i in range(len(m_pbh_values_formation_calculated)):
         
         # Load data from PBHs evolved to the present time (calculated using BlackHawk)
-        destination_folder = fname_base + "_{:.0f}".format(i+1)
-        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
+        destination_folder = "mass_evolution" + "_{:.0f}".format(i+1)
+        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/mass_evolution/" + destination_folder + "/life_evolutions.txt"
         data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
         
         m = []
@@ -384,7 +434,7 @@ def mass_evolved_BlackHawk():
             t.append(float(t_value))
         
         # Age of Universe, in seconds
-        t_0 = 13.9e9 * 365.25 * 86400
+        t_0 = 13.8e9 * 365.25 * 86400
         
         # PBH masses from formation time to present time
         m_pbh_values_to_present = np.array(m)[np.array(t) < t_0]
@@ -395,7 +445,7 @@ def mass_evolved_BlackHawk():
     return m_pbh_values_formation_calculated, m_pbh_values_0_calculated
 
 
-def mass_evolved(m_pbh_values_formation, t_0=13.9e9 * 365.25 * 86400):
+def mass_evolved(m_pbh_values_formation):
     """
     Estimate the present-day PBH mass (due to evaporation), given an array of 
     initial PBH masses.
@@ -404,8 +454,6 @@ def mass_evolved(m_pbh_values_formation, t_0=13.9e9 * 365.25 * 86400):
     ----------
     m_pbh_values_formation : Array-like
         Initial PBH masses, in grams.
-    t_0 : Float, optional
-        Age of the Universe, in seconds. The default is 13.9e9 * 365.25 * 86400.
 
     Returns
     -------
@@ -446,8 +494,6 @@ def mass_formation(m_pbh_values_0):
     ----------
     m_pbh_values_0 : Array-like
         Present-day PBH masses, in grams.
-    t_0 : Float, optional
-        Age of the Universe, in seconds. The default is 13.9e9 * 365.25 * 86400.
 
     Returns
     -------
@@ -480,14 +526,12 @@ def mass_formation(m_pbh_values_0):
 if "__main__" == __name__:
 
     m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)
-    m_pbh_values_0 = np.ones(len(m_pbh_values_formation))
-    fname_base = "mass_evolution"
-    
+    m_pbh_values_0 = np.ones(len(m_pbh_values_formation))    
     
     for j in range(len(m_pbh_values_formation)):
         
-        destination_folder = fname_base + "_{:.0f}".format(j+1)
-        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
+        destination_folder = "mass_evolution" + "_{:.0f}".format(j+1)
+        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/mass_evolution/" + destination_folder + "/life_evolutions.txt"
         data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
         
         print(j+1)
@@ -500,7 +544,7 @@ if "__main__" == __name__:
             t.append(float(t_value))
         
         # Age of Universe, in seconds
-        t_0 = 13.9e9 * 365.25 * 86400
+        t_0 = 13.8e9 * 365.25 * 86400
         
         # PBH masses from formation time to present time
         m_pbh_values_to_present = np.array(m)[np.array(t) < t_0]
@@ -520,7 +564,7 @@ if "__main__" == __name__:
     ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
     ax.plot(m_pbh_values_formation, m_pbh_values_0, label="BlackHawk_tot calculation")
     ax.plot(m_pbh_values_formation_test, m_pbh_values_0_test, marker="x", linestyle="None", label="Test of method mass_evolved")
-    ax.plot(m_pbh_values_formation_test, m_0(m_pbh_values_formation_test), marker="+", linestyle="None", label="Analytic")
+    ax.plot(m_pbh_values_formation_test, m_0(m_pbh_values_formation_test), marker="+", linestyle="None", label="Analytic (CKSY '16 Eq. 2.18)")
     ax.set_xlabel("Formation mass $m_f$ [g]")
     ax.set_ylabel("Present mass $m_0$ [g]")
     ax.set_xscale("log")
@@ -548,14 +592,32 @@ if "__main__" == __name__:
     # Plot formation mass against present mass
     fig, ax = plt.subplots(figsize=(6, 6))
     ax.plot(m_pbh_values_0_test, m_pbh_values_0_test, linestyle="dotted", color="k", label="Formation mass = Present mass")
-    ax.plot(m_pbh_values_0_test, m_pbh_values_formation_test_estimated, marker="x", linestyle="None")    
+    ax.plot(m_pbh_values_0, m_pbh_values_formation, label="BlackHawk_tot calculation")
+    ax.plot(m_pbh_values_0_test, m_pbh_values_formation_test_estimated, marker="x", linestyle="None", label="Test of method mass_formation")    
+    ax.plot(m_pbh_values_0_test, M_formation(m_pbh_values_0_test), marker="+", linestyle="None", label="Analytic (CKSY '16 Eq. 2.18)")
     ax.set_ylabel("Formation mass $m_f$ [g]")
     ax.set_xlabel("Present mass $m_0$ [g]")
     ax.set_xscale("log")
     ax.set_yscale("log")
+    ax.legend()
     ax.set_xlim(1e12, 1e16)
     ax.set_ylim(1e14, max(m_pbh_values_formation))
     fig.tight_layout()
+    
+    # Plot formation mass against present mass, with M_* = 1e14g
+    fig, ax = plt.subplots(figsize=(6, 6))
+    m_pbh_values_formation = np.logspace(13, 16, 50)
+    ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
+    ax.plot(m_pbh_values_formation, m_0(m_pbh_values_formation, M_star=1e14), marker="+", linestyle="None", label="Analytic (CKSY '16 Eq. 2.18)")
+    ax.set_xlabel("Formation mass $m_f$ [g]")
+    ax.set_ylabel("Present mass $m_0$ [g]")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(min(m_pbh_values_formation), 1e16)
+    ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
+    ax.legend()
+    fig.tight_layout()
+
 
     # Consistency check of the method 'mass_formation' by checking that the 
     # values calculated for the formation mass match those used as an input
