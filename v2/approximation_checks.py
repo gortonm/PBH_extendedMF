@@ -332,6 +332,7 @@ def M_formation(m_values, M_star=5e14, alpha_evap=4):
             
     return M_values
              
+#%%
 
 if "__main__" == __name__:
     
@@ -422,8 +423,8 @@ def mass_evolved_BlackHawk():
     for i in range(len(m_pbh_values_formation_calculated)):
         
         # Load data from PBHs evolved to the present time (calculated using BlackHawk)
-        destination_folder = "mass_evolution" + "_{:.0f}".format(i+1)
-        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/mass_evolution/" + destination_folder + "/life_evolutions.txt"
+        destination_folder = "mass_evolution_v2" + "_{:.0f}".format(i+1)
+        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
         data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
         
         m = []
@@ -530,8 +531,8 @@ if "__main__" == __name__:
     
     for j in range(len(m_pbh_values_formation)):
         
-        destination_folder = "mass_evolution" + "_{:.0f}".format(j+1)
-        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/mass_evolution/" + destination_folder + "/life_evolutions.txt"
+        destination_folder = "mass_evolution_v2" + "_{:.0f}".format(j+1)
+        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
         data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
         
         print(j+1)
@@ -730,3 +731,38 @@ if "__main__" == __name__:
         fig2.set_tight_layout(True)
 
 
+#%% Try reproducing Fig. 1 of Mosbech & Picker (2022) [arXiv:2203.05743v2]
+
+m_Planck = 2.176e-5    # Planck mass, in grams
+t_Planck = 5.391e-44    # Planck time, in seconds
+
+def alpha_eff(tau, M_0):
+    """
+    tau : BH lifetime (calculated using BlackHawk), in seconds
+    M_0 : formation PBH mass, in grams
+    """
+    return (1/3) * (t_Planck/tau) * (M_0 / m_Planck)**3
+
+if "__main__" == __name__:
+
+    m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)    
+    pbh_lifetimes = []
+    
+    for j in range(len(m_pbh_values_formation)):
+        
+        destination_folder = "mass_evolution_v2" + "_{:.0f}".format(j+1)
+        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
+        data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
+        times = data[0]
+        tau = float(times[-1])
+
+        pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass
+        
+    alpha_eff_values = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation)
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.plot(m_pbh_values_formation, alpha_eff_values)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("Formation mass $M_0$~[g]")
+    ax.set_ylabel(r"$\alpha_\mathrm{eff}$")
+    fig.tight_layout()
