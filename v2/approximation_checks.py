@@ -566,8 +566,8 @@ if "__main__" == __name__:
     ax.plot(m_pbh_values_formation, m_pbh_values_0, label="BlackHawk_tot calculation")
     ax.plot(m_pbh_values_formation_test, m_pbh_values_0_test, marker="x", linestyle="None", label="Test of method mass_evolved")
     ax.plot(m_pbh_values_formation_test, m_0(m_pbh_values_formation_test), marker="+", linestyle="None", label="Analytic (CKSY '16 Eq. 2.18)")
-    ax.set_xlabel("Formation mass $m_f$ [g]")
-    ax.set_ylabel("Present mass $m_0$ [g]")
+    ax.set_xlabel("Formation mass $M_0$ [g]")
+    ax.set_ylabel("Present mass $M$ [g]")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(min(m_pbh_values_formation), 1e16)
@@ -731,21 +731,121 @@ if "__main__" == __name__:
         fig2.set_tight_layout(True)
 
 
-#%% Try reproducing Fig. 1 of Mosbech & Picker (2022) [arXiv:2203.05743v2]
+#%% Try reproducing results from Mosbech & Picker (2022) [arXiv:2203.05743v2]
 
-m_Planck = 2.176e-5    # Planck mass, in grams
-t_Planck = 5.391e-44    # Planck time, in seconds
+from preliminaries import load_data, LN
+
+m_Pl = 2.176e-5    # Planck mass, in grams
+t_Pl = 5.391e-44    # Planck time, in seconds
+t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 
 def alpha_eff(tau, M_0):
     """
     tau : BH lifetime (calculated using BlackHawk), in seconds
     M_0 : formation PBH mass, in grams
     """
-    return (1/3) * (t_Planck/tau) * (M_0 / m_Planck)**3
+    return (1/3) * (t_Pl/tau) * (M_0 / m_Pl)**3
+
+
+def alpha_eff_approx(M0_values):
+    """
+    Fitting formula used for alpha_eff, given in Eq. 10 of Mosbech & Picker (2022).
+
+    Parameters
+    ----------
+    M0_values : Array-like
+        PBH formation masses, in grams.
+
+    Returns
+    -------
+    Array-like.
+        Approximate value of alpha_eff.
+
+    """
+    c_1 = -0.3015
+    c_2 = 0.3113
+    p = -0.0008
+    
+    alpha_eff_values = []
+    for M_0 in M0_values:
+        #M_0 /= 7
+        if M_0 < 1e18:
+            alpha_eff_values.append(c_1 + c_2 * M_0**p)
+        else:
+            alpha_eff_values.append(2.011e-4)
+    return alpha_eff_values
+
+
+def alpha_eff_extracted(M0_values):
+    """
+    Result for alpha_eff, extracted from Fig. 1 of Mosbech & Picker (2022).
+
+    Parameters
+    ----------
+    M0_values : Array-like
+        PBH formation masses, in grams.
+
+    Returns
+    -------
+    Array-like.
+        Value of alpha_eff.
+
+    """
+    M0_extracted, alpha_eff_extracted_data = load_data("2203.05743/2203.05743_Fig2.csv")
+    
+    alpha_eff_values = np.interp(M0_values, M0_extracted, alpha_eff_extracted_data, left=max(alpha_eff_extracted_data), right=2.011e-4)
+    return alpha_eff_values
+
+
+def m_pbh_evolved_MP23(M0_values, t):
+    # Find the PBH mass at time t, evolved from initial masses M0_values
+    return np.power(M0_values**3 - 3 * alpha_eff_extracted(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
+
+
+def m_pbh_formation_MP23(M_values, t):
+    # Find formation mass in terms of the masses M_values at time t
+    
+    # Find evolved mass M in terms of the initial mass M_0
+    M_min = 7.56e14
+    M0_test_values = np.logspace(np.log10(M_min), 18, 1000)
+    M_evolved_test_values = m_pbh_evolved_MP23(M0_test_values, t)
+    
+    # Logarithmically interpolate to estimate the formation mass M0_values (y-axis) corresponding to present mass M_values (x-axis)
+    M0_values = np.interp(x=M_values, xp=M_evolved_test_values, fp=M0_test_values)
+    return M0_values
+
+
+def phi_LN(m, m_c, sigma):
+    return LN(m, m_c, sigma) / np.trapz(LN(m, m_c, sigma), m)
+
+
+def phi_evolved(phi_formation, M_values, t, eps=0.01):
+    # PBH mass function at time t, evolved form the initial MF phi_formation using Eq. 11 
+    M0_values = m_pbh_formation_MP23(M_values, t)
+    
+    """
+    phi_evolved_values = np.zeros(len(M_values))
+    for i in range(len(M_values)):
+        
+        # If the second term in the denominator dominates, neglect the first term for easier calculation
+        if M_values[i]**3 / (3 * alpha_eff_extracted(M0_values[i]) * m_Pl**3 * (t / t_Pl)) < eps:
+            print(alpha_eff_extracted(M0_values[i]))
+            phi_evolved_values[i] = phi_formation[i] * M_values[i]**2 * np.power(3 * alpha_eff_extracted(M0_values[i]) * m_Pl**3 * (t / t_Pl), -2/3)
+        
+        else:
+            phi_evolved_values[i] = phi_formation[i] * M_values[i]**2 * np.power(M_values[i]**3 + 3 * alpha_eff_extracted(M0_values[i]) * m_Pl**3 * (t / t_Pl), -2/3)
+    
+    return phi_evolved_values
+    """
+    return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_extracted(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
+
 
 if "__main__" == __name__:
 
-    m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)    
+    # Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of
+    # alpha_eff.
+    m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)
+    m_pbh_values_formation_wide = np.logspace(8, 18, 100)
     pbh_lifetimes = []
     
     for j in range(len(m_pbh_values_formation)):
@@ -759,10 +859,136 @@ if "__main__" == __name__:
         pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass
         
     alpha_eff_values = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation)
-    fig, ax = plt.subplots(figsize=(5, 5))
-    ax.plot(m_pbh_values_formation, alpha_eff_values)
+    alpha_eff_approx_values = alpha_eff_approx(m_pbh_values_formation)
+    alpha_eff_extracted_values = alpha_eff_extracted(m_pbh_values_formation_wide)
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(m_pbh_values_formation, alpha_eff_values, label="Calculated using BlackHawk")
+    ax.plot(m_pbh_values_formation, alpha_eff_approx_values, linestyle="dashed", label="Fitting formula (Eq. 10 MP '22)")
+    ax.plot(m_pbh_values_formation_wide, alpha_eff_extracted_values, linestyle="None", marker="x", label="Extracted (Fig. 1 MP '22)")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("Formation mass $M_0$~[g]")
     ax.set_ylabel(r"$\alpha_\mathrm{eff}$")
+    ax.legend(fontsize="small")
     fig.tight_layout()
+    
+    
+    # Plot the present mass against formation mass
+    fig, ax = plt.subplots(figsize=(6, 6))
+    m_pbh_values_formation = np.logspace(np.log10(5e14), 16, 500)
+    ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
+    ax.plot(m_pbh_values_formation, m_pbh_evolved_MP23(m_pbh_values_formation, t=t_0), marker="x", linestyle="None", label="Eq. 7 (MP '22)")
+    
+    # Test: plot formation mass against present mass
+    m_evolved_test = m_pbh_evolved_MP23(m_pbh_values_formation, t=t_0)
+    m_formation_test = m_pbh_formation_MP23(m_evolved_test, t=t_0)
+    ax.plot(m_formation_test, m_evolved_test, marker="+", linestyle="None", label="Inverting Eq. 7 (MP '22)")
+    
+    ax.set_xlabel("Formation mass $M_0$ [g]")
+    ax.set_ylabel("Present mass $M$ [g]")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(min(m_pbh_values_formation), 1e16)
+    ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
+    ax.legend()
+    fig.tight_layout()
+    
+#%%    
+if "__main__" == __name__:
+    
+    # Reproduce Fig. 2 of Mosbech & Picker (2022)
+    m_pbh_values_formation = 10**np.logspace(np.log10(11), np.log10(17), 1000000)
+    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation, t_0)
+    m_c = 1e15
+    
+    for sigma in [0.1, 0.5, 1, 1.5]:
+        phi_initial = phi_LN(m_pbh_values_formation, m_c, sigma)
+        phi_present = phi_evolved(phi_initial, m_pbh_values_evolved, t_0)
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.plot(m_pbh_values_formation, phi_initial, label="$t=0$")
+        ax.plot(m_pbh_values_evolved, phi_present, label="$t=t_0$")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\phi(M)~[\mathrm{g}]^{-1}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(title="$\sigma={:.1f}$".format(sigma), fontsize="small")
+        ax.set_xlim(min(m_pbh_values_formation), max(m_pbh_values_formation))
+        ax.set_ylim(1e-21, 1e-12)
+        fig.tight_layout()
+        
+
+#%%
+if "__main__" == __name__:
+
+    # Reproduce Fig. 3 of Mosbech & Picker (2022)
+    
+    f_pbh = 1e-8
+    
+    # Load gamma ray spectrum calculated from BlackHawk
+    BlackHawk_path = "./../../Downloads/version_finale/"
+    file_path_BlackHawk_data = BlackHawk_path + "/results/"
+    
+    E_5e14, spectrum_5e14 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e14/instantaneous_secondary_spectra.txt")
+    E_1e15, spectrum_1e15 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e15/instantaneous_secondary_spectra.txt")
+    E_5e15, spectrum_5e15 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e15/instantaneous_secondary_spectra.txt")
+    E_1e16, spectrum_1e16 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e16/instantaneous_secondary_spectra.txt")
+
+    E_5e14_evolved, spectrum_5e14_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e14_evolved/instantaneous_secondary_spectra.txt")
+    E_1e15_evolved, spectrum_1e15_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e15_evolved/instantaneous_secondary_spectra.txt")
+    E_5e15_evolved, spectrum_5e15_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e15_evolved/instantaneous_secondary_spectra.txt")
+    E_1e16_evolved, spectrum_1e16_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e16_evolved/instantaneous_secondary_spectra.txt")
+
+    
+    # Create and save file for PBH mass and spin distribution
+    
+    # Initial line of each PBH mass spectrum file.
+    spec_file_initial_line = "mass/spin \t 0.00000e+00"
+    
+    mc_values = [5e14, 1e15, 5e15, 1e16]
+    sigma = 0.1
+    m_pbh_values_formation = np.logspace(np.log10(7.6e14), 18, 1000)
+    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation, t_0)
+    dlog10m = (max(np.log10(m_pbh_values_evolved)) - min(np.log10(m_pbh_values_evolved))) / (len(m_pbh_values_evolved) - 1)
+    
+    colors = ["lime", "limegreen", "green", "darkgreen"]
+    
+    for i, m_c in enumerate(mc_values):
+        
+        spec_file = []
+        spec_file.append(spec_file_initial_line)
+    
+        filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + "MP22_test_evolved_{:.0f}.txt".format(i)
+        
+        phi_formation = phi_LN(m_pbh_values_formation, m_c, sigma)
+        phi_present = phi_evolved(phi_formation, m_pbh_values_evolved, t_0)
+        spec_values = phi_present * m_pbh_values_evolved * dlog10m
+        
+        for j in range(len(m_pbh_values_evolved)):
+            spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values_evolved[j], spec_values[j]))
+            
+        np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
+
+    
+    fig, ax = plt.subplots(figsize=(6, 6))
+    
+    ax.plot(E_5e14, f_pbh * E_5e14**2 * spectrum_5e14, label=r"$5\times 10^{14}$", linestyle="dotted", color=colors[0])
+    ax.plot(E_5e14_evolved, f_pbh * E_5e14_evolved**2 * spectrum_5e14_evolved, color=colors[0])
+    
+    ax.plot(E_1e15, f_pbh * E_1e15**2 * spectrum_1e15, label=r"$1\times 10^{15}$", linestyle="dotted", color=colors[1])
+    ax.plot(E_1e15_evolved, f_pbh * E_1e15_evolved**2 * spectrum_1e15_evolved, label=r"$1\times 10^{15}$", color=colors[1])
+    
+    ax.plot(E_5e15, f_pbh * E_5e15**2 * spectrum_5e15, label=r"$5\times 10^{15}$", linestyle="dotted", color=colors[2])
+    ax.plot(E_5e15_evolved, f_pbh * E_5e15_evolved**2 * spectrum_5e15_evolved, label=r"$5\times 10^{15}$", color=colors[2])
+    
+    ax.plot(E_1e16, f_pbh * E_1e16**2 * spectrum_1e16, label=r"$1\times 10^{16}$", linestyle="dotted", color=colors[3])
+    ax.plot(E_1e16_evolved, f_pbh * E_1e16_evolved**2 * spectrum_1e16_evolved, label=r"$1\times 10^{16}$", color=colors[3])
+
+    ax.legend(title="$M_*~[\mathrm{g}]$")
+    ax.set_xlabel("Particle energy $E$ [GeV]")
+    ax.set_ylabel("$\gamma$ flux: $E^2 \mathrm{d}^2 N / \mathrm{d}E\mathrm{d}t~[\mathrm{GeV}~\mathrm{s}^{-1}~\mathrm{cm}^{-2}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e-6, 2e5)
+    ax.set_ylim(1e-19, 1e-3)
+    fig.tight_layout()
+    
