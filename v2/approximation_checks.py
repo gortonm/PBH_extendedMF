@@ -1063,6 +1063,7 @@ if "__main__" == __name__:
 # Monochromatic MF constraint, calculated using the same approach as Isatis,
 # with the same parameter values as Auffinger (2022) [2201.01265].
 from isatis_reproduction import *
+from extended_MF_checks import envelope, constraint_Carr
 
 if "__main__" == __name__:
     
@@ -1170,10 +1171,17 @@ if "__main__" == __name__:
     
     # Save calculated results for f_PBH
     np.savetxt("./Data/fPBH_GC_%s_lower_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
+    
+
+#%% Plot the Fermi-LAT constraints (monochromatic MF)
+    
+    # Constraints data for each energy bin of each instrument.
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_lower_flux_monochromatic_lower_wide.txt"))
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_upper_flux_monochromatic_lower_wide.txt"))
 
     # Plot the monochromatic MF constraint
-    fig, ax = plt.subplot(figsize=(6,6))
-    ax.plot(m_pbh_mono, f_PBH_isatis)
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.fill_between(m_pbh_mono, envelope(constraints_mono_file_lower), envelope(constraints_mono_file_upper))
     ax.set_xlim(1e14, 1e18)
     ax.set_ylim(10**(-10), 1)
     ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
@@ -1181,3 +1189,66 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     plt.tight_layout()
+
+#%% Calculate constraints for an extended MF (basic lognormal and extended lognormal)
+
+def LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
+    # Distribution function for PBH energy density, when the number density follows a log-normal in the mass 
+    
+    log_m_min = np.log10(m_c) - log_m_factor*sigma
+    log_m_max = np.log10(m_c) + log_m_factor*sigma
+
+    m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
+    normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
+    
+    return (LN(m, m_c, sigma) * m) * normalisation
+
+if "__main__" == __name__:
+    # Constraints data for each energy bin of each instrument (extended MF)
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_lower_flux_monochromatic_lower_wide.txt"))
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_upper_flux_monochromatic_lower_wide.txt"))
+    
+    m_mono_values = np.logspace(11, 22, 1000)
+    mc_values = np.logspace(14, 17, 50)
+    
+    energy_bin_constraints_lower = []
+    energy_bin_constraints_upper = []
+    
+    sigma = 1.5
+    
+    params_LN = [sigma]
+        
+    for k in range(len(constraints_mono_file_lower)):
+
+        # Constraint from a particular energy bin
+        constraint_energy_bin = constraints_mono_file_lower[k]
+
+        # Calculate constraint on f_PBH from each bin
+        f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin, mf=LN_number_density, params=params_LN)
+        energy_bin_constraints_lower.append(f_PBH_k)
+
+    for k in range(len(constraints_mono_file_upper)):
+
+        # Constraint from a particular energy bin
+        constraint_energy_bin = constraints_mono_file_upper[k]
+
+        # Calculate constraint on f_PBH from each bin
+        f_PBH_k = constraint_Carr(mc_values, m_mono=m_mono_values, f_max=constraint_energy_bin, mf=LN_number_density, params=params_LN)
+        energy_bin_constraints_upper.append(f_PBH_k)
+
+
+    # Calculate constraint using method from 1705.05567, and plot.
+    f_PBH_Carr_lower = envelope(energy_bin_constraints_lower)
+    f_PBH_Carr_upper = envelope(energy_bin_constraints_upper)
+
+    fig, ax = plt.subplots(figsize=(6,6))    
+    ax.fill_between(mc_values, f_PBH_Carr_lower, f_PBH_Carr_upper)
+    #ax.set_xlim(1e14, 1e18)
+    #ax.set_ylim(10**(-10), 1)
+    ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    plt.tight_layout()
+
+

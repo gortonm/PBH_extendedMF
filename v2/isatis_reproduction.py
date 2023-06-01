@@ -193,7 +193,7 @@ def refined_energies(energies, n_refined):
     return ener_refined
 
 
-def refined_flux(flux, ener_spec, n_refined):
+def refined_flux(flux, ener_spec, n_refined, energies):
     """
     Calculate flux at energies evenly-spaced in log-space.
 
@@ -280,7 +280,7 @@ def J_D(l_min, l_max, b_min, b_max):
     return result / Delta
 
 
-def galactic(spectrum, b_max, l_max):
+def galactic(spectrum, b_max, l_max, m_pbh):
     """
     Calculate photon flux from a population of PBHs.
 
@@ -324,10 +324,10 @@ if "__main__" == __name__:
     f_PBH_isatis = []
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
     
-    COMPTEL = True
+    COMPTEL = False
     INTEGRAL = False
     EGRET = False
-    FermiLAT = False
+    FermiLAT = True
     
     exclude_last_bin = False
     save_each_bin = True
@@ -373,9 +373,9 @@ if "__main__" == __name__:
     
         ener_spec, spectrum = read_blackhawk_spectra(file_path_BlackHawk_data + "instantaneous_secondary_spectra.txt", col=1)
     
-        flux_galactic = galactic(spectrum, b_max, l_max)
+        flux_galactic = galactic(spectrum, b_max, l_max, m_pbh)
         ener_refined = refined_energies(energies, n_refined)
-        flux_refined = refined_flux(flux_galactic, ener_spec, n_refined)
+        flux_refined = refined_flux(flux_galactic, ener_spec, n_refined, energies)
     
         def binned_flux(flux_refined, ener_refined, ener_inst, ener_inst_minus, ener_inst_plus):
             """
@@ -431,4 +431,4 @@ if "__main__" == __name__:
         f_PBH_isatis.append(f_PBH)
     
     # Save calculated results for f_PBH
-    np.savetxt("./Data/fPBH_GC_%s_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
+    #np.savetxt("./Data/fPBH_GC_%s_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
