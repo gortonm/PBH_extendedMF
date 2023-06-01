@@ -948,11 +948,21 @@ if "__main__" == __name__:
     sigma = 0.1
     m_pbh_values_formation = np.logspace(np.log10(7.6e14), 18, 1000)
     m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation, t_0)
-    dlog10m = (max(np.log10(m_pbh_values_evolved)) - min(np.log10(m_pbh_values_evolved))) / (len(m_pbh_values_evolved) - 1)
+    dlog10m = (np.log10(max(m_pbh_values_evolved)) - np.log10(min(m_pbh_values_evolved))) / (len(m_pbh_values_evolved) - 1)
     
     colors = ["lime", "limegreen", "green", "darkgreen"]
     
+    
+    b_max, l_max = np.radians(7/2), np.radians(7/2)    
+    from isatis_reproduction import J_D
+    D_factor = J_D(-l_max, l_max, -b_max, b_max)
+    prefactors = []
+    
     for i, m_c in enumerate(mc_values):
+        
+        PBH_mass_mean = m_c * np.exp(sigma**2 / 2)
+        prefactor = D_factor / PBH_mass_mean
+        prefactors.append(prefactor)
         
         spec_file = []
         spec_file.append(spec_file_initial_line)
@@ -961,27 +971,30 @@ if "__main__" == __name__:
         
         phi_formation = phi_LN(m_pbh_values_formation, m_c, sigma)
         phi_present = phi_evolved(phi_formation, m_pbh_values_evolved, t_0)
-        spec_values = phi_present * m_pbh_values_evolved * dlog10m
+        spec_values = phi_present * m_pbh_values_evolved * dlog10m * np.log(10)
+        print(spec_values[5:10])
         
         for j in range(len(m_pbh_values_evolved)):
             spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values_evolved[j], spec_values[j]))
             
         np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
 
+    fig, ax = plt.subplots(figsize=(8, 6))
     
-    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.plot(E_5e14, prefactors[0] * f_pbh * E_5e14**2 * spectrum_5e14, label=r"$5\times 10^{14}$", linestyle="dotted", color=colors[0])
+    ax.plot(E_5e14_evolved, prefactors[0] * f_pbh * E_5e14_evolved**2 * spectrum_5e14_evolved, color=colors[0])
     
-    ax.plot(E_5e14, f_pbh * E_5e14**2 * spectrum_5e14, label=r"$5\times 10^{14}$", linestyle="dotted", color=colors[0])
-    ax.plot(E_5e14_evolved, f_pbh * E_5e14_evolved**2 * spectrum_5e14_evolved, color=colors[0])
+    ax.plot(E_1e15, prefactors[1] * f_pbh * E_1e15**2 * spectrum_1e15, label=r"$1\times 10^{15}$", linestyle="dotted", color=colors[1])
+    ax.plot(E_1e15_evolved, prefactors[1] * f_pbh * E_1e15_evolved**2 * spectrum_1e15_evolved, color=colors[1])
     
-    ax.plot(E_1e15, f_pbh * E_1e15**2 * spectrum_1e15, label=r"$1\times 10^{15}$", linestyle="dotted", color=colors[1])
-    ax.plot(E_1e15_evolved, f_pbh * E_1e15_evolved**2 * spectrum_1e15_evolved, label=r"$1\times 10^{15}$", color=colors[1])
+    ax.plot(E_5e15, prefactors[2] * f_pbh * E_5e15**2 * spectrum_5e15, label=r"$5\times 10^{15}$", linestyle="dotted", color=colors[2])
+    ax.plot(E_5e15_evolved, prefactors[2] * f_pbh * E_5e15_evolved**2 * spectrum_5e15_evolved, color=colors[2])
     
-    ax.plot(E_5e15, f_pbh * E_5e15**2 * spectrum_5e15, label=r"$5\times 10^{15}$", linestyle="dotted", color=colors[2])
-    ax.plot(E_5e15_evolved, f_pbh * E_5e15_evolved**2 * spectrum_5e15_evolved, label=r"$5\times 10^{15}$", color=colors[2])
+    ax.plot(E_1e16, prefactors[3] * f_pbh * E_1e16**2 * spectrum_1e16, label=r"$1\times 10^{16}$", linestyle="dotted", color=colors[3])
+    ax.plot(E_1e16_evolved, prefactors[3] * f_pbh * E_1e16_evolved**2 * spectrum_1e16_evolved, color=colors[3])
     
-    ax.plot(E_1e16, f_pbh * E_1e16**2 * spectrum_1e16, label=r"$1\times 10^{16}$", linestyle="dotted", color=colors[3])
-    ax.plot(E_1e16_evolved, f_pbh * E_1e16_evolved**2 * spectrum_1e16_evolved, label=r"$1\times 10^{16}$", color=colors[3])
+    ax.plot(0, 0, color="k", label="\nEvolved")    
+    ax.plot(0, 0, linestyle="dotted", color="k", label="Lognormal")
 
     ax.legend(title="$M_*~[\mathrm{g}]$")
     ax.set_xlabel("Particle energy $E$ [GeV]")
@@ -990,5 +1003,181 @@ if "__main__" == __name__:
     ax.set_yscale("log")
     ax.set_xlim(1e-6, 2e5)
     ax.set_ylim(1e-19, 1e-3)
+    ax.set_title("$\sigma={:.1f}$".format(sigma) + " (PYTHIA)")
     fig.tight_layout()
     
+
+#%% Reproduce Fig. 4 of Mosbech & Picker (2022) 
+from preliminaries import load_data
+
+if "__main__" == __name__:
+
+    # Load data from HESS (Abramowski et al. 2016, 1603.07730)
+    E_lower_y_HESS, flux_lower_y_HESS = load_data("1603.07730/1603.07730_lower_y.csv")
+    E_upper_y_HESS, flux_upper_y_HESS = load_data("1603.07730/1603.07730_upper_y.csv")
+    E_lower_HESS, flux_mid_HESS = load_data("1603.07730/1603.07730_x_bins.csv")
+    
+    # widths of energy bins
+    E_minus_HESS = E_upper_y_HESS - E_lower_HESS[:-1]
+    E_plus_HESS = E_lower_HESS[1:] - E_upper_y_HESS
+    
+    # upper and lower error bars on flux values
+    flux_plus_HESS = flux_upper_y_HESS - flux_mid_HESS[:-1]
+    flux_minus_HESS = flux_mid_HESS[:-1] - flux_lower_y_HESS
+    
+    
+    # Load data from FermiLAT (Abramowski et al. 2016, 1512.01846)
+    E_lower_y_FermiLAT, flux_lower_y_FermiLAT_sys = load_data("1512.01846/1512.01846_lower_y_sys.csv")
+    E_lower_y_FermiLAT, flux_lower_y_FermiLAT_stat = load_data("1512.01846/1512.01846_lower_y_stat.csv")
+    E_upper_y_FermiLAT, flux_upper_y_FermiLAT_sys = load_data("1512.01846/1512.01846_upper_y_sys.csv")
+    E_upper_y_FermiLAT, flux_upper_y_FermiLAT_stat = load_data("1512.01846/1512.01846_upper_y_stat.csv")
+    E_lower_FermiLAT, flux_mid_FermiLAT = load_data("1512.01846/1512.01846_x_bins.csv")
+    
+    # widths of energy bins
+    E_minus_FermiLAT = E_upper_y_FermiLAT - E_lower_FermiLAT[:-1]
+    E_plus_FermiLAT = E_lower_FermiLAT[1:] - E_upper_y_FermiLAT
+    
+    # upper and lower error bars on flux values
+    flux_plus_FermiLAT_stat = flux_upper_y_FermiLAT_stat - flux_mid_FermiLAT[:-1]
+    flux_minus_FermiLAT_stat = flux_mid_FermiLAT[:-1] - flux_lower_y_FermiLAT_stat
+    
+    flux_plus_FermiLAT_sys = flux_upper_y_FermiLAT_sys - flux_mid_FermiLAT[:-1]
+    flux_minus_FermiLAT_sys = flux_mid_FermiLAT[:-1] - flux_lower_y_FermiLAT_stat
+    
+    # Check the data is plotted in the correct position, matching Fig. 3 of Mosbech & Picker (2022)
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.errorbar(E_lower_y_HESS, flux_mid_HESS[:-1], yerr=(flux_minus_HESS, flux_plus_HESS), xerr=(E_minus_HESS, E_plus_HESS), linestyle="None", label="HESS")
+    ax.errorbar(E_lower_y_FermiLAT, flux_mid_FermiLAT[:-1], yerr=(flux_minus_FermiLAT_stat, flux_plus_FermiLAT_stat), xerr=(E_minus_FermiLAT, E_plus_FermiLAT), marker="x", linestyle="None", label="Fermi-LAT")
+    ax.errorbar(E_lower_y_FermiLAT, flux_mid_FermiLAT[:-1], yerr=(flux_minus_FermiLAT_sys, flux_plus_FermiLAT_sys), xerr=(E_minus_FermiLAT, E_plus_FermiLAT), linestyle="None")
+    ax.set_xlabel("Particle energy $E$ [GeV]")
+    ax.set_ylabel("$\gamma$ flux: $E^2 \mathrm{d}^2 N / \mathrm{d}E\mathrm{d}t~[\mathrm{GeV}~\mathrm{s}^{-1}~\mathrm{cm}^{-2}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e-6, 2e5)
+    ax.set_ylim(1e-19, 1e-3)
+    ax.legend()
+    fig.tight_layout()
+    
+#%% Calculate constraints on f_PBH
+
+# Monochromatic MF constraint, calculated using the same approach as Isatis,
+# with the same parameter values as Auffinger (2022) [2201.01265].
+from isatis_reproduction import *
+
+if "__main__" == __name__:
+    
+    monochromatic_MF = True
+    
+    if monochromatic_MF:
+        filename_append = "_monochromatic"
+        m_pbh_mono = np.logspace(11, 22, 1000)
+    
+    f_PBH_isatis = []
+    file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
+    
+    FermiLAT = True
+    HESS = False
+    
+    save_each_bin = True
+    lower_flux = False
+    upper_flux = True
+    
+    if FermiLAT:
+        append = "Fermi-LAT_1512.01846"
+        b_max, l_max = np.radians(3.5), np.radians(3.5)
+        energies, energies_minus, energies_plus, flux = E_lower_y_FermiLAT, E_minus_FermiLAT, E_plus_FermiLAT, flux_mid_FermiLAT[:-1]
+        flux_minus, flux_plus = flux_minus_FermiLAT_stat + flux_minus_FermiLAT_sys, flux_plus_FermiLAT_stat + flux_plus_FermiLAT_sys
+        
+    elif HESS:
+        """Come back to: more complicated range of b, l"""
+        append = "HESS_1603.07730"
+        b_max, l_max = np.radians(0.15), np.radians(0.15)
+        energies, energies_minus, energies_plus, flux = E_lower_y_HESS, E_minus_HESS, E_plus_HESS, flux_mid_HESS[:-1]
+        flux_minus, flux_plus = flux_minus_HESS, flux_plus_HESS
+        
+    if lower_flux:
+        flux -= flux_minus
+        append += "_lower_flux"
+    elif upper_flux:
+        flux += flux_plus
+        append += "_upper_flux"
+            
+    # Number of interpolation points
+    n_refined = 500
+    
+    for i, m_pbh in enumerate(m_pbh_mono):
+        
+        # Load photon spectra from BlackHawk outputs
+        exponent = np.floor(np.log10(m_pbh))
+        coefficient = m_pbh / 10**exponent
+    
+        if monochromatic_MF:
+            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
+    
+        print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
+    
+        ener_spec, spectrum = read_blackhawk_spectra(file_path_BlackHawk_data + "instantaneous_secondary_spectra.txt", col=1)
+    
+        flux_galactic = galactic(spectrum, b_max, l_max, m_pbh)
+        ener_refined = refined_energies(energies, n_refined)
+        flux_refined = refined_flux(flux_galactic, ener_spec, n_refined, energies)
+    
+        def binned_flux(flux_refined, ener_refined, ener_inst, ener_inst_minus, ener_inst_plus):
+            """
+            Calculate theoretical flux from PBHs in each bin of an instrument.
+    
+            Parameters
+            ----------
+            flux_refined : Array-like
+                Flux, evaluated at energies evenly-spaced in log-space.
+            ener_refined : Array-like
+                DESCRIPTION.
+            ener_inst : Array-like
+                Energies measured by instrument (middle values).
+            ener_inst_minus : Array-like
+                Energies measured by instrument (upper error bar).
+            ener_inst_plus : Array-like
+                Energies measured by instrument (lower error bar).
+    
+            Returns
+            -------
+            Array-like
+                Flux from a population of PBHs, sorted into energy bins measured by an instrument.
+    
+            """
+            flux_binned = []
+            nb_refined = len(flux_refined)
+            nb_inst = len(ener_inst)
+            
+            for i in range(nb_inst):
+                val_binned = 0
+                c = 0
+                while c < nb_refined and ener_refined[c] < ener_inst[i] - ener_inst_minus[i]:
+                    c += 1
+                if c > 0 and c+1 < nb_refined:
+                    while c < nb_refined and ener_refined[c] < ener_inst[i] + ener_inst_plus[i]:
+                        val_binned += (ener_refined[c+1] - ener_refined[c]) * (flux_refined[c+1] + flux_refined[c]) / 2
+                        c += 1
+                flux_binned.append(val_binned)
+            return np.array(flux_binned)
+    
+        # Calculate constraint on f_PBH
+        f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+        if save_each_bin:
+            f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
+            print(f_PBH)
+        f_PBH_isatis.append(f_PBH)
+    
+    # Save calculated results for f_PBH
+    np.savetxt("./Data/fPBH_GC_%s_lower_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
+
+    # Plot the monochromatic MF constraint
+    fig, ax = plt.subplot(figsize=(6,6))
+    ax.plot(m_pbh_mono, f_PBH_isatis)
+    ax.set_xlim(1e14, 1e18)
+    ax.set_ylim(10**(-10), 1)
+    ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    plt.tight_layout()
