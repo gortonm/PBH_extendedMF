@@ -739,6 +739,25 @@ m_Pl = 2.176e-5    # Planck mass, in grams
 t_Pl = 5.391e-44    # Planck time, in seconds
 t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 
+
+# Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of
+# alpha_eff.
+m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)
+m_pbh_values_formation_wide = np.logspace(8, 18, 100)
+pbh_lifetimes = []
+
+
+for j in range(len(m_pbh_values_formation)):
+    
+    destination_folder = "mass_evolution_v2" + "_{:.0f}".format(j+1)
+    filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
+    data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
+    times = data[0]
+    tau = float(times[-1])
+
+    pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass
+
+
 def alpha_eff(tau, M_0):
     """
     tau : BH lifetime (calculated using BlackHawk), in seconds
@@ -746,6 +765,7 @@ def alpha_eff(tau, M_0):
     """
     return (1/3) * (t_Pl/tau) * (M_0 / m_Pl)**3
 
+alpha_eff_values_BlackHawk = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation)
 
 def alpha_eff_approx(M0_values):
     """
@@ -768,7 +788,6 @@ def alpha_eff_approx(M0_values):
     
     alpha_eff_values = []
     for M_0 in M0_values:
-        #M_0 /= 7
         if M_0 < 1e18:
             alpha_eff_values.append(c_1 + c_2 * M_0**p)
         else:
@@ -796,9 +815,27 @@ def alpha_eff_extracted(M0_values):
     alpha_eff_values = np.interp(M0_values, M0_extracted, alpha_eff_extracted_data, left=max(alpha_eff_extracted_data), right=2.011e-4)
     return alpha_eff_values
 
+def alpha_eff_mixed(M0_values):
+    """ Calculate alpha_eff, using the BlackHawk result in the mass range
+    in which that is calculated, and the values extracted from Fig. 1 of Mosbech
+    & Picker (2022) outside of that mass range."""
+    
+    M0_min_BH, M0_max_BH = min(m_pbh_values_formation), max(m_pbh_values_formation)
+    
+    alpha_eff_values = []
+    
+    for M_0 in M0_values:
+        if M0_min_BH < M_0 < M0_max_BH:
+            alpha_eff_values.append(np.interp(M_0, m_pbh_values_formation, alpha_eff_values_BlackHawk))
+        else:
+            alpha_eff_values.append(alpha_eff_extracted(M_0))
+            
+    return alpha_eff_values
+
 
 def m_pbh_evolved_MP23(M0_values, t):
     # Find the PBH mass at time t, evolved from initial masses M0_values
+    print(M0_values**3 - 3 * alpha_eff_extracted(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
     return np.power(M0_values**3 - 3 * alpha_eff_extracted(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
 
 
@@ -842,29 +879,14 @@ def phi_evolved(phi_formation, M_values, t, eps=0.01):
 
 if "__main__" == __name__:
 
-    # Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of
-    # alpha_eff.
-    m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)
-    m_pbh_values_formation_wide = np.logspace(8, 18, 100)
-    pbh_lifetimes = []
-    
-    for j in range(len(m_pbh_values_formation)):
-        
-        destination_folder = "mass_evolution_v2" + "_{:.0f}".format(j+1)
-        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
-        data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
-        times = data[0]
-        tau = float(times[-1])
-
-        pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass
-        
-    alpha_eff_values = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation)
     alpha_eff_approx_values = alpha_eff_approx(m_pbh_values_formation)
     alpha_eff_extracted_values = alpha_eff_extracted(m_pbh_values_formation_wide)
+    alpha_eff_mixed_values = alpha_eff_mixed(m_pbh_values_formation_wide)
     fig, ax = plt.subplots(figsize=(6, 5))
-    ax.plot(m_pbh_values_formation, alpha_eff_values, label="Calculated using BlackHawk")
+    ax.plot(m_pbh_values_formation, alpha_eff_values_BlackHawk, label="Calculated using BlackHawk")
     ax.plot(m_pbh_values_formation, alpha_eff_approx_values, linestyle="dashed", label="Fitting formula (Eq. 10 MP '22)")
     ax.plot(m_pbh_values_formation_wide, alpha_eff_extracted_values, linestyle="None", marker="x", label="Extracted (Fig. 1 MP '22)")
+    ax.plot(m_pbh_values_formation_wide, alpha_eff_mixed_values, linestyle="None", marker="+", label="Mixed (extracted and BlackHawk)")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("Formation mass $M_0$~[g]")
@@ -897,6 +919,7 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # Reproduce Fig. 2 of Mosbech & Picker (2022)
+    m_pbh_values_formation = np.concatenate((np.logspace(np.log10(7.6e14), np.log10(8e14), 500), np.logspace(np.log10(8e14), 17, 500)))
     m_pbh_values_formation = 10**np.logspace(np.log10(11), np.log10(17), 1000000)
     m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation, t_0)
     m_c = 1e15
@@ -912,7 +935,7 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.legend(title="$\sigma={:.1f}$".format(sigma), fontsize="small")
-        ax.set_xlim(min(m_pbh_values_formation), max(m_pbh_values_formation))
+        ax.set_xlim(1e11, max(m_pbh_values_formation))
         ax.set_ylim(1e-21, 1e-12)
         fig.tight_layout()
         
@@ -1245,7 +1268,7 @@ if "__main__" == __name__:
     ax.fill_between(mc_values, f_PBH_Carr_lower, f_PBH_Carr_upper)
     #ax.set_xlim(1e14, 1e18)
     #ax.set_ylim(10**(-10), 1)
-    ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+    ax.set_xlabel("$M_c~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
