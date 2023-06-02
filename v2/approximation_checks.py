@@ -742,12 +742,12 @@ t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 
 # Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of
 # alpha_eff.
-m_pbh_values_formation = np.logspace(np.log10(4e14), 16, 50)
+m_pbh_values_formation_BlackHawk = np.logspace(np.log10(4e14), 16, 50)
 m_pbh_values_formation_wide = np.logspace(8, 18, 100)
 pbh_lifetimes = []
 
 
-for j in range(len(m_pbh_values_formation)):
+for j in range(len(m_pbh_values_formation_BlackHawk)):
     
     destination_folder = "mass_evolution_v2" + "_{:.0f}".format(j+1)
     filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
@@ -765,7 +765,7 @@ def alpha_eff(tau, M_0):
     """
     return (1/3) * (t_Pl/tau) * (M_0 / m_Pl)**3
 
-alpha_eff_values_BlackHawk = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation)
+alpha_eff_values_BlackHawk = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation_BlackHawk)
 
 def alpha_eff_approx(M0_values):
     """
@@ -820,23 +820,23 @@ def alpha_eff_mixed(M0_values):
     in which that is calculated, and the values extracted from Fig. 1 of Mosbech
     & Picker (2022) outside of that mass range."""
     
-    M0_min_BH, M0_max_BH = min(m_pbh_values_formation), max(m_pbh_values_formation)
+    M0_min_BH, M0_max_BH = min(m_pbh_values_formation_BlackHawk), max(m_pbh_values_formation_BlackHawk)
     
     alpha_eff_values = []
     
     for M_0 in M0_values:
         if M0_min_BH < M_0 < M0_max_BH:
-            alpha_eff_values.append(np.interp(M_0, m_pbh_values_formation, alpha_eff_values_BlackHawk))
+            alpha_eff_values.append(np.interp(M_0, m_pbh_values_formation_BlackHawk, alpha_eff_values_BlackHawk))
         else:
             alpha_eff_values.append(alpha_eff_extracted(M_0))
             
-    return alpha_eff_values
+    return np.array(alpha_eff_values)
 
 
 def m_pbh_evolved_MP23(M0_values, t):
     # Find the PBH mass at time t, evolved from initial masses M0_values
-    print(M0_values**3 - 3 * alpha_eff_extracted(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
-    return np.power(M0_values**3 - 3 * alpha_eff_extracted(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
+    print(M0_values**3 - 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
+    return np.power(M0_values**3 - 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
 
 
 def m_pbh_formation_MP23(M_values, t):
@@ -853,38 +853,29 @@ def m_pbh_formation_MP23(M_values, t):
 
 
 def phi_LN(m, m_c, sigma):
-    return LN(m, m_c, sigma) / np.trapz(LN(m, m_c, sigma), m)
+    return LN(m, m_c, sigma)
 
 
-def phi_evolved(phi_formation, M_values, t, eps=0.01):
+def phi_evolved(phi_formation, M_values, t):
     # PBH mass function at time t, evolved form the initial MF phi_formation using Eq. 11 
     M0_values = m_pbh_formation_MP23(M_values, t)
-    
-    """
-    phi_evolved_values = np.zeros(len(M_values))
-    for i in range(len(M_values)):
-        
-        # If the second term in the denominator dominates, neglect the first term for easier calculation
-        if M_values[i]**3 / (3 * alpha_eff_extracted(M0_values[i]) * m_Pl**3 * (t / t_Pl)) < eps:
-            print(alpha_eff_extracted(M0_values[i]))
-            phi_evolved_values[i] = phi_formation[i] * M_values[i]**2 * np.power(3 * alpha_eff_extracted(M0_values[i]) * m_Pl**3 * (t / t_Pl), -2/3)
-        
-        else:
-            phi_evolved_values[i] = phi_formation[i] * M_values[i]**2 * np.power(M_values[i]**3 + 3 * alpha_eff_extracted(M0_values[i]) * m_Pl**3 * (t / t_Pl), -2/3)
-    
-    return phi_evolved_values
-    """
-    return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_extracted(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
+    #print(3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl) / M_values**3)
+    return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
+
+def phi_evolved_v2(phi_formation, M_values, M0_values, t):
+    # PBH mass function at time t, evolved form the initial MF phi_formation using Eq. 11 
+    # In terms of the initial masses M
+    return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
 
 
 if "__main__" == __name__:
 
-    alpha_eff_approx_values = alpha_eff_approx(m_pbh_values_formation)
+    alpha_eff_approx_values = alpha_eff_approx(m_pbh_values_formation_BlackHawk)
     alpha_eff_extracted_values = alpha_eff_extracted(m_pbh_values_formation_wide)
     alpha_eff_mixed_values = alpha_eff_mixed(m_pbh_values_formation_wide)
     fig, ax = plt.subplots(figsize=(6, 5))
-    ax.plot(m_pbh_values_formation, alpha_eff_values_BlackHawk, label="Calculated using BlackHawk")
-    ax.plot(m_pbh_values_formation, alpha_eff_approx_values, linestyle="dashed", label="Fitting formula (Eq. 10 MP '22)")
+    ax.plot(m_pbh_values_formation_BlackHawk, alpha_eff_values_BlackHawk, label="Calculated using BlackHawk")
+    ax.plot(m_pbh_values_formation_BlackHawk, alpha_eff_approx_values, linestyle="dashed", label="Fitting formula (Eq. 10 MP '22)")
     ax.plot(m_pbh_values_formation_wide, alpha_eff_extracted_values, linestyle="None", marker="x", label="Extracted (Fig. 1 MP '22)")
     ax.plot(m_pbh_values_formation_wide, alpha_eff_mixed_values, linestyle="None", marker="+", label="Mixed (extracted and BlackHawk)")
     ax.set_xscale("log")
@@ -897,12 +888,12 @@ if "__main__" == __name__:
     
     # Plot the present mass against formation mass
     fig, ax = plt.subplots(figsize=(6, 6))
-    m_pbh_values_formation = np.logspace(np.log10(5e14), 16, 500)
-    ax.plot(m_pbh_values_formation, m_pbh_values_formation, linestyle="dotted", color="k", label="Formation mass = Present mass")
-    ax.plot(m_pbh_values_formation, m_pbh_evolved_MP23(m_pbh_values_formation, t=t_0), marker="x", linestyle="None", label="Eq. 7 (MP '22)")
+    m_pbh_values_formation_plot = np.logspace(np.log10(5e14), 16, 500)
+    ax.plot(m_pbh_values_formation_plot, m_pbh_values_formation_plot, linestyle="dotted", color="k", label="Formation mass = Present mass")
+    ax.plot(m_pbh_values_formation_plot, m_pbh_evolved_MP23(m_pbh_values_formation_plot, t=t_0), marker="x", linestyle="None", label="Eq. 7 (MP '22)")
     
     # Test: plot formation mass against present mass
-    m_evolved_test = m_pbh_evolved_MP23(m_pbh_values_formation, t=t_0)
+    m_evolved_test = m_pbh_evolved_MP23(m_pbh_values_formation_plot, t=t_0)
     m_formation_test = m_pbh_formation_MP23(m_evolved_test, t=t_0)
     ax.plot(m_formation_test, m_evolved_test, marker="+", linestyle="None", label="Inverting Eq. 7 (MP '22)")
     
@@ -910,8 +901,8 @@ if "__main__" == __name__:
     ax.set_ylabel("Present mass $M$ [g]")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_xlim(min(m_pbh_values_formation), 1e16)
-    ax.set_ylim(1e-1 * min(m_pbh_values_formation), max(m_pbh_values_formation))
+    ax.set_xlim(min(m_pbh_values_formation_plot), 1e16)
+    ax.set_ylim(1e-1 * min(m_pbh_values_formation_plot), max(m_pbh_values_formation_plot))
     ax.legend()
     fig.tight_layout()
     
@@ -919,17 +910,25 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # Reproduce Fig. 2 of Mosbech & Picker (2022)
-    m_pbh_values_formation = np.concatenate((np.logspace(np.log10(7.6e14), np.log10(8e14), 500), np.logspace(np.log10(8e14), 17, 500)))
-    m_pbh_values_formation = 10**np.logspace(np.log10(11), np.log10(17), 1000000)
-    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation, t_0)
+    m_pbh_values_formation = np.logspace(11, 17, 500)
+    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
+    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
     m_c = 1e15
     
     for sigma in [0.1, 0.5, 1, 1.5]:
         phi_initial = phi_LN(m_pbh_values_formation, m_c, sigma)
-        phi_present = phi_evolved(phi_initial, m_pbh_values_evolved, t_0)
+        phi_initial_to_evolve = phi_LN(m_pbh_values_formation_to_evolve, m_c, sigma)
+        
+        print("ratio (phi_initial / phi_initial_to_evolve) at 1e17g = {:.5f}".format(phi_initial[-1]/phi_initial_to_evolve[-1]))
+        
+        phi_present = phi_evolved_v2(phi_initial_to_evolve, m_pbh_values_evolved, m_pbh_values_formation_to_evolve, t_0)
+        phi_test = phi_evolved_v2(phi_initial_to_evolve, m_pbh_values_formation_to_evolve, m_pbh_values_formation_to_evolve, 0)
+
         fig, ax = plt.subplots(figsize=(6, 6))
         ax.plot(m_pbh_values_formation, phi_initial, label="$t=0$")
-        ax.plot(m_pbh_values_evolved, phi_present, label="$t=t_0$")
+        ax.plot(m_pbh_values_evolved, phi_present, label="$t=t_0$", marker="x")
+        ax.plot(m_pbh_values_formation_to_evolve, phi_test, label="$t=0$ (test)")
+
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$\phi(M)~[\mathrm{g}]^{-1}$")
         ax.set_xscale("log")
