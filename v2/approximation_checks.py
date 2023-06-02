@@ -760,10 +760,23 @@ for j in range(len(m_pbh_values_formation_BlackHawk)):
 
 def alpha_eff(tau, M_0):
     """
-    tau : BH lifetime (calculated using BlackHawk), in seconds
-    M_0 : formation PBH mass, in grams
+    Calculate alpha_eff from BlackHawk output files.
+
+    Parameters
+    ----------
+    tau : Array-like
+        PBH lifetimes, in seconds.
+    M_0 : Array-like
+        Initial PBH masses, in grams.
+
+    Returns
+    -------
+    Array-like
+        Values of alpha_eff.
+
     """
     return (1/3) * (t_Pl/tau) * (M_0 / m_Pl)**3
+
 
 alpha_eff_values_BlackHawk = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation_BlackHawk)
 
@@ -815,11 +828,24 @@ def alpha_eff_extracted(M0_values):
     alpha_eff_values = np.interp(M0_values, M0_extracted, alpha_eff_extracted_data, left=max(alpha_eff_extracted_data), right=2.011e-4)
     return alpha_eff_values
 
+
 def alpha_eff_mixed(M0_values):
-    """ Calculate alpha_eff, using the BlackHawk result in the mass range
+    """
+    Calculate alpha_eff, using the BlackHawk result in the mass range
     in which that is calculated, and the values extracted from Fig. 1 of Mosbech
-    & Picker (2022) outside of that mass range."""
-    
+    & Picker (2022) outside of that mass range.
+
+    Parameters
+    ----------
+    M0_values : Array-like
+        PBH formation masses, in grams.
+
+    Returns
+    -------
+    Array-like.
+        Value of alpha_eff.
+
+    """    
     M0_min_BH, M0_max_BH = min(m_pbh_values_formation_BlackHawk), max(m_pbh_values_formation_BlackHawk)
     
     alpha_eff_values = []
@@ -834,15 +860,43 @@ def alpha_eff_mixed(M0_values):
 
 
 def m_pbh_evolved_MP23(M0_values, t):
+    """
+    Find the PBH mass at time t, evolved from initial masses M0_values.
+
+    Parameters
+    ----------
+    M0_values : Array-like
+        Initial PBH masses.
+    t : Float
+        Time (after Big Bang) at which to evaluate PBH masses.
+
+    Returns
+    -------
+    Array-like
+        PBH mass at time t.
+
+    """
     # Find the PBH mass at time t, evolved from initial masses M0_values
-    print(M0_values**3 - 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
     return np.power(M0_values**3 - 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), 1/3)
 
 
 def m_pbh_formation_MP23(M_values, t):
-    # Find formation mass in terms of the masses M_values at time t
-    
-    # Find evolved mass M in terms of the initial mass M_0
+    """
+    Find formation mass in terms of the masses M_values at time t.
+
+    Parameters
+    ----------
+    M_values : Array-like
+        PBH masses at time t.
+    t : Float
+        Time (after Big Bang) at which PBH masses in M_values are evaluated.
+
+    Returns
+    -------
+    M0_values : Array-like
+        Initial PBH masses.
+
+    """    
     M_min = 7.56e14
     M0_test_values = np.logspace(np.log10(M_min), 18, 1000)
     M_evolved_test_values = m_pbh_evolved_MP23(M0_test_values, t)
@@ -853,16 +907,75 @@ def m_pbh_formation_MP23(M_values, t):
 
 
 def phi_LN(m, m_c, sigma):
+    """
+    Log-normal number density distribution of PBHs.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH mass, in grams.
+    m_c : Float
+        Characteristic PBH mass, in grams.
+    sigma : Float
+        Standard deviation of the distribution.
+
+    Returns
+    -------
+    Array-like
+        Values of the PBH number density distribution function.
+
+    """
     return LN(m, m_c, sigma)
 
 
 def phi_evolved(phi_formation, M_values, t):
+    """
+    PBH mass function at time t, evolved form the initial MF phi_formation 
+    using Eq. 11 of Mosbech & Picker (2022).
+
+    Parameters
+    ----------
+    phi_formation : Array-like
+        Initial PBH mass distribution (in number density).
+    M_values : Array-like
+        PBH masses at time t.
+    t : Float
+        Time (after Big Bang) at which PBH masses in M_values are evaluated.
+
+    Returns
+    -------
+    Array-like
+        Evolved values of the PBH number density distribution function.
+
+    """
     # PBH mass function at time t, evolved form the initial MF phi_formation using Eq. 11 
     M0_values = m_pbh_formation_MP23(M_values, t)
     #print(3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl) / M_values**3)
     return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
 
+
 def phi_evolved_v2(phi_formation, M_values, M0_values, t):
+    """
+    PBH mass function at time t, evolved form the initial MF phi_formation 
+    using Eq. 11 of Mosbech & Picker (2022).   
+
+    Parameters
+    ----------
+    phi_formation : Array-like
+        Initial PBH mass distribution (in number density).
+    M_values : Array-like
+        PBH masses at time t.
+    M0_values : Array-like
+        Initial PBH masses.
+    t : Float
+        Time (after Big Bang) at which PBH masses in M_values are evaluated.
+
+    Returns
+    -------
+    Array-like
+        Evolved values of the PBH number density distribution function.
+
+    """
     # PBH mass function at time t, evolved form the initial MF phi_formation using Eq. 11 
     # In terms of the initial masses M
     return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
@@ -1093,7 +1206,7 @@ if "__main__" == __name__:
     
     if monochromatic_MF:
         filename_append = "_monochromatic"
-        m_pbh_mono = np.logspace(11, 22, 1000)
+        m_pbh_mono = np.logspace(10, 18, 50)
     
     f_PBH_isatis = []
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
@@ -1102,8 +1215,8 @@ if "__main__" == __name__:
     HESS = False
     
     save_each_bin = True
-    lower_flux = False
-    upper_flux = True
+    lower_flux = True
+    upper_flux = False
     
     if FermiLAT:
         append = "Fermi-LAT_1512.01846"
@@ -1135,7 +1248,7 @@ if "__main__" == __name__:
         coefficient = m_pbh / 10**exponent
     
         if monochromatic_MF:
-            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
+            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_PYTHIA_{:.0f}/".format(i+1)
     
         print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
     
@@ -1230,6 +1343,7 @@ if "__main__" == __name__:
     constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_lower_flux_monochromatic_lower_wide.txt"))
     constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_upper_flux_monochromatic_lower_wide.txt"))
     
+    """1e11g is too small for the Hazma calculation to be reliable!"""
     m_mono_values = np.logspace(11, 22, 1000)
     mc_values = np.logspace(14, 17, 50)
     
