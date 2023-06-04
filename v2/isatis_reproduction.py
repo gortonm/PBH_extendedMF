@@ -283,8 +283,11 @@ def J_D(l_min, l_max, b_min, b_max):
     for i in range(0, nb_angles-1):
         for j in range(0, nb_angles-1):
             Delta += abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
-    return result / Delta
-
+    
+    if not Mosbech_Picker:
+        return result / Delta
+    else:
+        return result * 4 * np.pi
 
 def galactic(spectrum, b_max, l_max, m_pbh):
     """
@@ -323,9 +326,14 @@ if "__main__" == __name__:
 
     monochromatic_MF = True
     
-    if monochromatic_MF:
+    if Auffinger and monochromatic_MF:
         filename_append = "_monochromatic"
         m_pbh_mono = np.logspace(11, 22, 1000)
+        
+    elif Mosbech_Picker and monochromatic_MF:
+        filename_append = "_monochromatic"
+        m_pbh_mono = np.logspace(10, 18, 50)
+
     
     f_PBH_isatis = []
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
@@ -389,7 +397,7 @@ if "__main__" == __name__:
             file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
             
         elif Mosbech_Picker and monochromatic_MF:
-            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
+            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_PYTHIA_{:.0f}/".format(i+1)
    
         print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
     
