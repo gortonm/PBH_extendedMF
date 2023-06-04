@@ -1206,6 +1206,8 @@ if "__main__" == __name__:
 
 from extended_MF_checks import envelope, constraint_Carr
 
+b_max, l_max = np.radians(3.5), np.radians(3.5)
+
 def Delta(l_min, l_max, b_min, b_max):
     nb_angles = 100
 
@@ -1231,8 +1233,8 @@ if "__main__" == __name__:
     constraints_names_lower, constraints_mono_file_lower = load_results_Isatis(mf_string="results_MP22_lower")
     constraints_names_upper, constraints_mono_file_upper = load_results_Isatis(mf_string="results_MP22_upper")
     
-    f_PBH_Isatis_lower = constraints_mono_file_lower[-1] / Delta(-l_max, l_max, -b_max, b_max)
-    f_PBH_Isatis_upper = constraints_mono_file_upper[-1] / Delta(-l_max, l_max, -b_max, b_max)
+    f_PBH_Isatis_lower = np.array(constraints_mono_file_lower[-1]) / (Delta(-l_max, l_max, -b_max, b_max) / 4 * np.pi)
+    f_PBH_Isatis_upper = np.array(constraints_mono_file_upper[-1]) / (Delta(-l_max, l_max, -b_max, b_max) / 4 * np.pi)
     
     # Constraints data for each energy bin of each instrument, calculated using isatis_reproduction.py   
     constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
@@ -1264,6 +1266,29 @@ def LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
     m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
     normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
     return LN(m, m_c, sigma) * m * normalisation
+
+if "__main__" == __name__:
+    M_values = np.logspace(9, 18, 50)
+    
+    sigmas = [0.1, 0.5, 1., 1.5]
+    mc_values = [3e14, 3e13, 1e12, 2e10]
+    
+    for i in range(len(sigmas)):
+        fig, ax = plt.subplots(figsize=(6,6))
+        initial_MF = LN_number_density(M_values, mc_values[i], sigmas[i])
+        
+        ax.plot(M_values, initial_MF)
+        ax.set_xlabel("$M~\mathrm{g}$")
+        ax.set_ylabel("$\psi(M)$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.vlines(5e10, ymin=min(initial_MF), ymax=max(initial_MF), color="k", linestyle="dotted", label=r"$M=5\times 10^{10}~\mathrm{g}$")
+        ax.hlines(1e-4 * max(initial_MF), xmin=min(M_values), xmax=max(M_values), color="k", linestyle="dashed", label="$\psi = \psi_\mathrm{max} / 10^4$")
+        ax.legend()
+        ax.set_title("$M_c={:.0e}$g, $\sigma={:.1f}$".format(mc_values[i], sigmas[i]))
+        fig.tight_layout()
+
+#%%
 
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
