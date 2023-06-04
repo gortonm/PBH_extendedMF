@@ -38,8 +38,9 @@ file_path_extracted = './Extracted_files/'
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
 pc_to_cm = 3.0857e18    # conversion factor from pc to cm
 
-Auffinger = True
+Auffinger = False
 Korwar_Profumo = False
+Mosbech_Picker = True
 
 if Auffinger:
     r_s = 17 * 1000 * pc_to_cm    # scale radius, in cm
@@ -50,7 +51,12 @@ elif Korwar_Profumo:
     r_s = 9.98 * 1000 * pc_to_cm    # scale radius, in cm
     r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
     rho_0 = 2.2e-24	    # characteristic halo density in g/cm^3
-  
+
+elif Mosbech_Picker:
+    r_s = 9.2 * 1000 * pc_to_cm    # scale radius, in cm
+    r_odot = 8.122 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
+    rho_0 = 5.350023093424651e-25	    # characteristic halo density in g/cm^3
+
 
 def read_col(fname, first_row=0, col=1, convert=int, sep=None):
     """
@@ -327,7 +333,8 @@ if "__main__" == __name__:
     COMPTEL = False
     INTEGRAL = False
     EGRET = False
-    FermiLAT = True
+    FermiLAT = False
+    FermiLAT_2015 = True
     
     exclude_last_bin = False
     save_each_bin = True
@@ -347,6 +354,10 @@ if "__main__" == __name__:
     elif FermiLAT:
         append = "Fermi-LAT_1101.1381"
         b_max, l_max = np.radians(10), np.radians(30)
+        
+    elif FermiLAT_2015:
+        append = "Fermi-LAT_1512.01846"
+        b_max, l_max = np.radians(3.5), np.radians(3.5)
     
     energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
     
@@ -366,9 +377,12 @@ if "__main__" == __name__:
         exponent = np.floor(np.log10(m_pbh))
         coefficient = m_pbh / 10**exponent
     
-        if monochromatic_MF:
+        if Auffinger and monochromatic_MF:
             file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
-    
+            
+        elif Mosbech_Picker and monochromatic_MF:
+            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
+   
         print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
     
         ener_spec, spectrum = read_blackhawk_spectra(file_path_BlackHawk_data + "instantaneous_secondary_spectra.txt", col=1)
@@ -431,4 +445,4 @@ if "__main__" == __name__:
         f_PBH_isatis.append(f_PBH)
     
     # Save calculated results for f_PBH
-    #np.savetxt("./Data/fPBH_GC_%s_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
+    np.savetxt("./Data/fPBH_GC_%s_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
