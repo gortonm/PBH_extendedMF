@@ -1201,133 +1201,50 @@ if "__main__" == __name__:
     ax.legend()
     fig.tight_layout()
     
-#%% Calculate constraints on f_PBH
 
-# Monochromatic MF constraint, calculated using the same approach as Isatis,
-# with the same parameter values as Auffinger (2022) [2201.01265].
-from isatis_reproduction import *
+#%% Plot the Fermi-LAT constraints (monochromatic MF)
+
 from extended_MF_checks import envelope, constraint_Carr
+
+def Delta(l_min, l_max, b_min, b_max):
+    nb_angles = 100
+
+    b, l = [], []
+    for i in range(0, nb_angles):
+        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
+        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
+
+    Delta = 0
+    for i in range(0, nb_angles-1):
+        for j in range(0, nb_angles-1):
+            Delta += abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
+    return Delta
+
+
+from extended_MF_checks import load_results_Isatis
 
 if "__main__" == __name__:
     
-    monochromatic_MF = True
-    
-    if monochromatic_MF:
-        filename_append = "_monochromatic"
-        m_pbh_mono = np.logspace(10, 18, 50)
-    
-    f_PBH_isatis = []
-    file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
-    
-    FermiLAT = True
-    HESS = False
-    
-    save_each_bin = True
-    lower_flux = True
-    upper_flux = False
-    
-    if FermiLAT:
-        append = "Fermi-LAT_1512.01846"
-        b_max, l_max = np.radians(3.5), np.radians(3.5)
-        energies, energies_minus, energies_plus, flux = E_lower_y_FermiLAT, E_minus_FermiLAT, E_plus_FermiLAT, flux_mid_FermiLAT[:-1]
-        flux_minus, flux_plus = flux_minus_FermiLAT_stat + flux_minus_FermiLAT_sys, flux_plus_FermiLAT_stat + flux_plus_FermiLAT_sys
-        
-    elif HESS:
-        """Come back to: more complicated range of b, l"""
-        append = "HESS_1603.07730"
-        b_max, l_max = np.radians(0.15), np.radians(0.15)
-        energies, energies_minus, energies_plus, flux = E_lower_y_HESS, E_minus_HESS, E_plus_HESS, flux_mid_HESS[:-1]
-        flux_minus, flux_plus = flux_minus_HESS, flux_plus_HESS
-        
-    if lower_flux:
-        flux -= flux_minus
-        append += "_lower_flux"
-    elif upper_flux:
-        flux += flux_plus
-        append += "_upper_flux"
-            
-    # Number of interpolation points
-    n_refined = 500
-    
-    for i, m_pbh in enumerate(m_pbh_mono):
-        
-        # Load photon spectra from BlackHawk outputs
-        exponent = np.floor(np.log10(m_pbh))
-        coefficient = m_pbh / 10**exponent
-    
-        if monochromatic_MF:
-            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_PYTHIA_{:.0f}/".format(i+1)
-    
-        print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
-    
-        ener_spec, spectrum = read_blackhawk_spectra(file_path_BlackHawk_data + "instantaneous_secondary_spectra.txt", col=1)
-    
-        flux_galactic = galactic(spectrum, b_max, l_max, m_pbh)
-        ener_refined = refined_energies(energies, n_refined)
-        flux_refined = refined_flux(flux_galactic, ener_spec, n_refined, energies)
-    
-        def binned_flux(flux_refined, ener_refined, ener_inst, ener_inst_minus, ener_inst_plus):
-            """
-            Calculate theoretical flux from PBHs in each bin of an instrument.
-    
-            Parameters
-            ----------
-            flux_refined : Array-like
-                Flux, evaluated at energies evenly-spaced in log-space.
-            ener_refined : Array-like
-                DESCRIPTION.
-            ener_inst : Array-like
-                Energies measured by instrument (middle values).
-            ener_inst_minus : Array-like
-                Energies measured by instrument (upper error bar).
-            ener_inst_plus : Array-like
-                Energies measured by instrument (lower error bar).
-    
-            Returns
-            -------
-            Array-like
-                Flux from a population of PBHs, sorted into energy bins measured by an instrument.
-    
-            """
-            flux_binned = []
-            nb_refined = len(flux_refined)
-            nb_inst = len(ener_inst)
-            
-            for i in range(nb_inst):
-                val_binned = 0
-                c = 0
-                while c < nb_refined and ener_refined[c] < ener_inst[i] - ener_inst_minus[i]:
-                    c += 1
-                if c > 0 and c+1 < nb_refined:
-                    while c < nb_refined and ener_refined[c] < ener_inst[i] + ener_inst_plus[i]:
-                        val_binned += (ener_refined[c+1] - ener_refined[c]) * (flux_refined[c+1] + flux_refined[c]) / 2
-                        c += 1
-                flux_binned.append(val_binned)
-            return np.array(flux_binned)
-    
-        # Calculate constraint on f_PBH
-        f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
-        if save_each_bin:
-            f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
-            print(f_PBH)
-        f_PBH_isatis.append(f_PBH)
-    
-    # Save calculated results for f_PBH
-    np.savetxt("./Data/fPBH_GC_%s_lower_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
-    
-
-#%% Plot the Fermi-LAT constraints (monochromatic MF)
-    
     m_pbh_mono = np.logspace(10, 18, 50)
         
-    # Constraints data for each energy bin of each instrument.
-    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_lower_flux_monochromatic_lower_wide.txt"))
-    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_upper_flux_monochromatic_lower_wide.txt"))
-
+    # Constraints data at each PBH mass, calculated using Isatis
+    constraints_names_lower, constraints_mono_file_lower = load_results_Isatis(mf_string="results_MP22_lower")
+    constraints_names_upper, constraints_mono_file_upper = load_results_Isatis(mf_string="results_MP22_upper")
+    
+    f_PBH_Isatis_lower = constraints_mono_file_lower[-1] / Delta(-l_max, l_max, -b_max, b_max)
+    f_PBH_Isatis_upper = constraints_mono_file_upper[-1] / Delta(-l_max, l_max, -b_max, b_max)
+    
+    # Constraints data for each energy bin of each instrument, calculated using isatis_reproduction.py   
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
+    f_PBH_Isatis_reproduction_lower = envelope(constraints_mono_file_lower)
+    f_PBH_Isatis_reproduction_upper = envelope(constraints_mono_file_upper)
+        
     # Plot the monochromatic MF constraint
     fig, ax = plt.subplots(figsize=(6,6))
-    ax.fill_between(m_pbh_mono, envelope(constraints_mono_file_lower), envelope(constraints_mono_file_upper))
-    ax.plot(m_pbh_mono, envelope(constraints_mono_file_lower), marker="x", linestyle="None")
+    ax.fill_between(m_pbh_mono, f_PBH_Isatis_lower, f_PBH_Isatis_upper)
+    ax.fill_between(m_pbh_mono, f_PBH_Isatis_reproduction_lower, f_PBH_Isatis_reproduction_upper)
+    ax.plot(m_pbh_mono, f_PBH_Isatis_lower, marker="x", linestyle="None")
     ax.set_xlim(1e10, 1e18)
     ax.set_ylim(10**(-10), 1)
     ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
@@ -1346,15 +1263,14 @@ def LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
 
     m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
     normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
-    #print(m)
-    #print(sigma)
     return LN(m, m_c, sigma) * m * normalisation
 
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
-    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_lower_flux_monochromatic_lower_wide.txt"))
-    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_upper_flux_monochromatic_lower_wide.txt"))
     
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
+        
     M_values_eval = np.logspace(10, 18, 50)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values = np.logspace(14, 17, 50)
  
