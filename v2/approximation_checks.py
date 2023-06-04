@@ -1346,17 +1346,23 @@ def LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
 
     m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
     normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
-    
-    return (LN(m, m_c, sigma) * m) * normalisation
+    #print(m)
+    #print(sigma)
+    return LN(m, m_c, sigma) * m * normalisation
 
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
     constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_lower_flux_monochromatic_lower_wide.txt"))
     constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_Fermi-LAT_1512.01846_upper_flux_monochromatic_lower_wide.txt"))
     
-    M0_values = np.logspace(10, 18, 50)
+    M_values_eval = np.logspace(10, 18, 50)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values = np.logspace(14, 17, 50)
+ 
+    # Final constraint
+    constraint_lower = []
+    constraint_upper = []
     
+    # Constraint from each energy bin
     energy_bin_constraints_lower = []
     energy_bin_constraints_upper = []
     
@@ -1371,7 +1377,7 @@ if "__main__" == __name__:
         constraint_energy_bin = constraints_mono_file_lower[k]
 
         # Calculate constraint on f_PBH from each bin
-        f_PBH_k = constraint_Carr(mc_values, m_mono=M0_values, f_max=constraint_energy_bin, mf=LN_number_density, params=params_LN)
+        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=LN_number_density, params=params_LN)
         energy_bin_constraints_lower.append(f_PBH_k)
 
     for k in range(len(constraints_mono_file_upper)):
@@ -1380,9 +1386,12 @@ if "__main__" == __name__:
         constraint_energy_bin = constraints_mono_file_upper[k]
 
         # Calculate constraint on f_PBH from each bin
-        f_PBH_k = constraint_Carr(mc_values, m_mono=M0_values, f_max=constraint_energy_bin, mf=LN_number_density, params=params_LN)
+        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=LN_number_density, params=params_LN)
         energy_bin_constraints_upper.append(f_PBH_k)
-
+        
+    constraint_lower.append(envelope(energy_bin_constraints_lower))
+    constraint_upper.append(envelope(energy_bin_constraints_upper))
+    
 
     # Evolved mass function
     
@@ -1390,53 +1399,58 @@ if "__main__" == __name__:
     constraint_lower_evolved = []
     constraint_upper_evolved = []
     
-    # Constraint from each energy bin
-    energy_bin_constraints_lower = []
-    energy_bin_constraints_upper = []
-    
-    M_values_evolved = m_pbh_evolved_MP23(M0_values, t_0)     
+    M0_values = np.logspace(10, 18, 1000)
+    M_values_evolved = m_pbh_evolved_MP23(M0_values, t_0)
 
-    for m_c in range(len(mc_values)):
+    for m_c in mc_values:
                 
         mf_initial = LN_number_density(M0_values, m_c, sigma)
+
+        # Evolved mass function
+        mf_evolved = phi_evolved(mf_initial, M_values_evolved, t_0)
+        # Interpolate evolved mass function at the masses at which the delta-function MF constraint is calculated
+        mf_evolved_interp = np.interp(M_values_eval, M_values_evolved, mf_evolved)
         
         # Constraint from each energy bin
-        f_PBH_energy_bin = []
+        f_PBH_energy_bin_lower = []
         
         for k in range(len(constraints_mono_file_lower)):
     
-            # Constraint from a particular energy bin
+            # Constraint from a particular energy bin (delta function MF)
             constraint_energy_bin = constraints_mono_file_lower[k]
             
-            integral = np.trapz(phi_evolved(mf_initial, M_values_evolved, t=t_0) / constraint_energy_bin, M_values_evolved)
-            if integral == 0:
-                f_PBH_energy_bin.append(10)
+            integral = np.trapz(mf_evolved_interp / constraint_energy_bin, M_values_eval)
+            
+            if integral == 0 or np.isnan(integral):
+                f_PBH_energy_bin_lower.append(10)
             else:
-                f_PBH_energy_bin.append(1/integral)
+                f_PBH_energy_bin_lower.append(1/integral)
 
-            # Calculate constraint on f_PBH from each bin
-            energy_bin_constraints_lower.append(f_PBH_energy_bin)
+        # Calculate constraint on f_PBH from each bin
+        energy_bin_constraints_lower.append(f_PBH_energy_bin_lower)
+        
+        f_PBH_energy_bin_upper = []
+        constraint_lower_evolved.append(min(f_PBH_energy_bin_lower))
 
         for k in range(len(constraints_mono_file_upper)):
     
-            # Constraint from a particular energy bin
+            # Constraint from a particular energy bin (delta function MF)
             constraint_energy_bin = constraints_mono_file_upper[k]
             
-            integral = np.trapz(phi_evolved(mf_initial, M_values_evolved, t=t_0) / constraint_energy_bin, M_values_evolved)
-            if integral == 0:
-                f_PBH_energy_bin.append(10)
+            integral = np.trapz(mf_evolved_interp / constraint_energy_bin, M_values_eval)
+            
+            if integral == 0 or np.isnan(integral):
+                f_PBH_energy_bin_upper.append(10)
             else:
-                f_PBH_energy_bin.append(1/integral)
+                f_PBH_energy_bin_upper.append(1/integral)
 
-            # Calculate constraint on f_PBH from each bin
-            energy_bin_constraints_upper.append(f_PBH_energy_bin)
-    
-        constraint_lower_evolved.append(envelope(energy_bin_constraints_lower))
-        constraint_upper_evolved.append(envelope(energy_bin_constraints_upper))
-
+        constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
+        
     fig, ax = plt.subplots(figsize=(6,6))    
-    ax.fill_between(mc_values, f_PBH_Carr_lower, f_PBH_Carr_upper)
+    ax.fill_between(mc_values, constraint_lower[0], constraint_upper[0])
+    ax.plot(mc_values, constraint_lower[0], marker="x", color="tab:blue")
     ax.fill_between(mc_values, constraint_lower_evolved, constraint_upper_evolved)
+    ax.plot(mc_values, constraint_lower_evolved, marker="x", color="tab:orange")
     ax.set_xlim(1e10, 1e18)
     ax.set_ylim(10**(-12), 1)
     ax.set_xlabel("$M_c~[\mathrm{g}]$")
