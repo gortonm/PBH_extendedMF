@@ -343,7 +343,7 @@ if "__main__" == __name__:
     EGRET = False
     FermiLAT = False
     FermiLAT_2015 = True
-    CL = 1
+    CL = -1
     
     exclude_last_bin = False
     save_each_bin = True
@@ -380,7 +380,7 @@ if "__main__" == __name__:
         flux += CL * flux_plus
         append = "%s_lower"%(append)
     elif CL < 0:
-        flux -= CL * flux_minus
+        flux += CL * flux_minus
         append = "%s_upper"%(append)
     
     # Number of interpolation points
