@@ -1064,33 +1064,17 @@ if "__main__" == __name__:
 if "__main__" == __name__:
 
     # Reproduce Fig. 3 of Mosbech & Picker (2022)
-    
-    f_pbh = 1e-8
-    
-    # Load gamma ray spectrum calculated from BlackHawk
-    BlackHawk_path = "./../../Downloads/version_finale/"
-    file_path_BlackHawk_data = BlackHawk_path + "/results/"
-    
-    E_5e14, spectrum_5e14 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e14/instantaneous_secondary_spectra.txt")
-    E_1e15, spectrum_1e15 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e15/instantaneous_secondary_spectra.txt")
-    E_5e15, spectrum_5e15 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e15/instantaneous_secondary_spectra.txt")
-    E_1e16, spectrum_1e16 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e16/instantaneous_secondary_spectra.txt")
-
-    E_5e14_evolved, spectrum_5e14_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e14_evolved/instantaneous_secondary_spectra.txt")
-    E_1e15_evolved, spectrum_1e15_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e15_evolved/instantaneous_secondary_spectra.txt")
-    E_5e15_evolved, spectrum_5e15_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e15_evolved/instantaneous_secondary_spectra.txt")
-    E_1e16_evolved, spectrum_1e16_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e16_evolved/instantaneous_secondary_spectra.txt")
-
-    
+        
     # Create and save file for PBH mass and spin distribution
+    BlackHawk_path = "./../../Downloads/version_finale/"
     
     # Initial line of each PBH mass spectrum file.
     spec_file_initial_line = "mass/spin \t 0.00000e+00"
     
     mc_values = [5e14, 1e15, 5e15, 1e16]
-    sigma = 0.1
-    m_pbh_values_formation = np.logspace(np.log10(7.6e14), 18, 1000)
-    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation, t_0)
+    sigma = 0.5
+    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
+    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
     dlog10m = (np.log10(max(m_pbh_values_evolved)) - np.log10(min(m_pbh_values_evolved))) / (len(m_pbh_values_evolved) - 1)
     
     colors = ["lime", "limegreen", "green", "darkgreen"]
@@ -1121,6 +1105,22 @@ if "__main__" == __name__:
             spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values_evolved[j], spec_values[j]))
             
         np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
+
+    f_pbh = 1e-8
+    
+    # Load gamma ray spectrum calculated from BlackHawk
+    file_path_BlackHawk_data = BlackHawk_path + "/results/"
+    
+    E_5e14, spectrum_5e14 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e14/instantaneous_secondary_spectra.txt")
+    E_1e15, spectrum_1e15 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e15/instantaneous_secondary_spectra.txt")
+    E_5e15, spectrum_5e15 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e15/instantaneous_secondary_spectra.txt")
+    E_1e16, spectrum_1e16 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e16/instantaneous_secondary_spectra.txt")
+
+    E_5e14_evolved, spectrum_5e14_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e14_evolved/instantaneous_secondary_spectra.txt")
+    E_1e15_evolved, spectrum_1e15_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e15_evolved/instantaneous_secondary_spectra.txt")
+    E_5e15_evolved, spectrum_5e15_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e15_evolved/instantaneous_secondary_spectra.txt")
+    E_1e16_evolved, spectrum_1e16_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e16_evolved/instantaneous_secondary_spectra.txt")
+
 
     fig, ax = plt.subplots(figsize=(8, 6))
     
@@ -1202,6 +1202,27 @@ if "__main__" == __name__:
     fig.tight_layout()
     
 
+#%% Plot the spectrum for different PBH masses
+
+if "__main__" == __name__:
+    M_values_eval = np.logspace(10, 18, 50)
+    fig, ax = plt.subplots(figsize=(6,6))
+    
+    for i in range(len(M_values_eval)):
+        if (i+1) % 4 == 0 and i < 20:
+            filepath = os.path.expanduser('~') + "/Downloads/version_finale/results/GC_mono_PYTHIA_v2_{:.0f}/".format(i+1)
+            energies, spectrum = read_blackhawk_spectra(filepath + "instantaneous_secondary_spectra.txt")
+            ax.plot(energies[200:500], spectrum[200:500], label="{:.2e} g".format(M_values_eval[i]))
+            
+    ax.set_xlabel("$E~[\mathrm{GeV}]$")
+    ax.set_ylabel("$\mathrm{d}^2 N / \mathrm{d}E\mathrm{d}t~[\mathrm{GeV}^{-1}~\mathrm{sr}^{-1}~\mathrm{s}^{-1}~\mathrm{cm}^{-2}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_ylim(1e19, 1e30)
+    ax.legend(fontsize="small")
+    fig.tight_layout()
+
+
 #%% Plot the Fermi-LAT constraints (monochromatic MF)
 
 from extended_MF_checks import envelope, constraint_Carr
@@ -1233,14 +1254,14 @@ if "__main__" == __name__:
     constraints_names_lower, constraints_mono_file_lower = load_results_Isatis(mf_string="results_MP22_lower")
     constraints_names_upper, constraints_mono_file_upper = load_results_Isatis(mf_string="results_MP22_upper")
     
-    f_PBH_Isatis_lower = np.array(constraints_mono_file_lower[-1]) / (Delta(-l_max, l_max, -b_max, b_max) / 4 * np.pi)
-    f_PBH_Isatis_upper = np.array(constraints_mono_file_upper[-1]) / (Delta(-l_max, l_max, -b_max, b_max) / 4 * np.pi)
+    f_PBH_Isatis_lower = np.array(constraints_mono_file_lower[-1]) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
+    f_PBH_Isatis_upper = np.array(constraints_mono_file_upper[-1]) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
     
     # Constraints data for each energy bin of each instrument, calculated using isatis_reproduction.py   
     constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
     constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
-    f_PBH_Isatis_reproduction_lower = envelope(constraints_mono_file_lower)
-    f_PBH_Isatis_reproduction_upper = envelope(constraints_mono_file_upper)
+    f_PBH_Isatis_reproduction_lower = envelope(constraints_mono_file_lower) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
+    f_PBH_Isatis_reproduction_upper = envelope(constraints_mono_file_upper) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
         
     # Plot the monochromatic MF constraint
     fig, ax = plt.subplots(figsize=(6,6))
@@ -1268,17 +1289,21 @@ def LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
     return LN(m, m_c, sigma) * m * normalisation
 
 if "__main__" == __name__:
-    M_values = np.logspace(9, 18, 50)
+    M0_values = np.logspace(9, 18, 50)
     
     sigmas = [0.1, 0.5, 1., 1.5]
     mc_values = [3e14, 3e13, 1e12, 2e10]
     
     for i in range(len(sigmas)):
         fig, ax = plt.subplots(figsize=(6,6))
-        initial_MF = LN_number_density(M_values, mc_values[i], sigmas[i])
+        initial_MF = LN_number_density(M0_values, mc_values[i], sigmas[i])
         
-        ax.plot(M_values, initial_MF)
-        ax.set_xlabel("$M~\mathrm{g}$")
+        M_values = m_pbh_evolved_MP23(M0_values, t=t_0)
+        evolved_MF = phi_evolved(initial_MF, M_values, t=t_0)
+        
+        ax.plot(M0_values, initial_MF, linestyle="dotted")
+        ax.plot(M_values, evolved_MF)
+        ax.set_xlabel("$M~[\mathrm{g}$]")
         ax.set_ylabel("$\psi(M)$")
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -1286,15 +1311,20 @@ if "__main__" == __name__:
         ax.hlines(1e-4 * max(initial_MF), xmin=min(M_values), xmax=max(M_values), color="k", linestyle="dashed", label="$\psi = \psi_\mathrm{max} / 10^4$")
         ax.legend()
         ax.set_title("$M_c={:.0e}$g, $\sigma={:.1f}$".format(mc_values[i], sigmas[i]))
+        ax.set_xlim(min(M0_values), max(M0_values))
         fig.tight_layout()
+        
+        # Check if the mass function is normalised to a value close to 1
+        print(np.trapz(initial_MF, M0_values))
+        print(np.trapz(evolved_MF, M_values))
 
 #%%
 
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
     
-    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
-    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
         
     M_values_eval = np.logspace(10, 18, 50)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values = np.logspace(14, 17, 50)
@@ -1307,7 +1337,7 @@ if "__main__" == __name__:
     energy_bin_constraints_lower = []
     energy_bin_constraints_upper = []
     
-    sigma = 0.1
+    sigma = 0.5
     
     params_LN = [sigma]
     
@@ -1341,63 +1371,80 @@ if "__main__" == __name__:
     constraint_upper_evolved = []
     
     M0_values = np.logspace(10, 18, 1000)
-    M_values_evolved = m_pbh_evolved_MP23(M0_values, t_0)
+    M_values_evolved = m_pbh_evolved_MP23(M0_values, t_0)  # PBH masses evolved from the formation masses
 
     for m_c in mc_values:
                 
-        mf_initial = LN_number_density(M0_values, m_c, sigma)
+        mf_initial = LN_number_density(M0_values, m_c, sigma)  # initial PBH distribution
+        print("Initial MF (integrated over all masses) = {:.4f}".format(np.trapz(mf_initial, M0_values)))
 
         # Evolved mass function
-        mf_evolved = phi_evolved(mf_initial, M_values_evolved, t_0)
-        # Interpolate evolved mass function at the masses at which the delta-function MF constraint is calculated
+        mf_evolved = phi_evolved_v2(mf_initial, M_values_evolved, M0_values, t_0)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
+        # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
         mf_evolved_interp = np.interp(M_values_eval, M_values_evolved, mf_evolved)
+        
+        print("Evolved MF (integrated over all masses) = {:.4f}".format(np.trapz(mf_evolved_interp, M_values_eval)))
         
         # Constraint from each energy bin
         f_PBH_energy_bin_lower = []
-        
         for k in range(len(constraints_mono_file_lower)):
     
             # Constraint from a particular energy bin (delta function MF)
             constraint_energy_bin = constraints_mono_file_lower[k]
             
-            integral = np.trapz(mf_evolved_interp / constraint_energy_bin, M_values_eval)
+            integrand = mf_evolved_interp / constraint_energy_bin
+            integral = np.trapz(integrand, M_values_eval)
             
             if integral == 0 or np.isnan(integral):
                 f_PBH_energy_bin_lower.append(10)
             else:
                 f_PBH_energy_bin_lower.append(1/integral)
 
-        # Calculate constraint on f_PBH from each bin
-        energy_bin_constraints_lower.append(f_PBH_energy_bin_lower)
+        constraint_lower_evolved.append(min(f_PBH_energy_bin_lower))
+        
         
         f_PBH_energy_bin_upper = []
-        constraint_lower_evolved.append(min(f_PBH_energy_bin_lower))
-
         for k in range(len(constraints_mono_file_upper)):
     
             # Constraint from a particular energy bin (delta function MF)
             constraint_energy_bin = constraints_mono_file_upper[k]
             
-            integral = np.trapz(mf_evolved_interp / constraint_energy_bin, M_values_eval)
+            integrand = mf_evolved_interp / constraint_energy_bin
+
+            integral = np.trapz(integrand, M_values_eval)
             
             if integral == 0 or np.isnan(integral):
                 f_PBH_energy_bin_upper.append(10)
             else:
                 f_PBH_energy_bin_upper.append(1/integral)
-
+                
+            if m_c == mc_values[0] and k % 3 == 0:
+                fig, ax = plt.subplots()
+                ax.plot(M_values_eval, integrand)
+                ax.set_xlabel("$M~[\mathrm{g}]$")
+                ax.set_ylabel("Integrand")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                fig.tight_layout()
+      
         constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
+        print(f_PBH_energy_bin_upper)
+        
+    print(constraint_upper_evolved)
         
     fig, ax = plt.subplots(figsize=(6,6))    
     ax.fill_between(mc_values, constraint_lower[0], constraint_upper[0])
-    ax.plot(mc_values, constraint_lower[0], marker="x", color="tab:blue")
+    ax.plot(mc_values, constraint_lower[0], color="tab:blue", label="Adapted, unevolved")
     ax.fill_between(mc_values, constraint_lower_evolved, constraint_upper_evolved)
-    ax.plot(mc_values, constraint_lower_evolved, marker="x", color="tab:orange")
+    ax.plot(mc_values, constraint_lower_evolved, color="tab:orange", label="Adapted, evolved")
     ax.set_xlim(1e10, 1e18)
-    ax.set_ylim(10**(-12), 1)
+    ax.set_ylim(10**(-15), 1)
     ax.set_xlabel("$M_c~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
+    ax.set_title("$\sigma={:.1f}$".format(sigma))
+    ax.legend()
     plt.tight_layout()
 
 
