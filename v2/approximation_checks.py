@@ -1434,9 +1434,9 @@ if "__main__" == __name__:
         
     fig, ax = plt.subplots(figsize=(6,6))    
     ax.fill_between(mc_values, constraint_lower[0], constraint_upper[0])
-    ax.plot(mc_values, constraint_lower[0], color="tab:blue", label="Adapted, unevolved")
+    ax.plot(mc_values, constraint_lower[0], color="tab:green", label="Adapted, unevolved")
     ax.fill_between(mc_values, constraint_lower_evolved, constraint_upper_evolved)
-    ax.plot(mc_values, constraint_lower_evolved, color="tab:orange", label="Adapted, evolved")
+    ax.plot(mc_values, constraint_lower_evolved, color="tab:purple", label="Adapted, evolved")
     ax.set_xlim(1e10, 1e18)
     ax.set_ylim(10**(-15), 1)
     ax.set_xlabel("$M_c~[\mathrm{g}]$")
