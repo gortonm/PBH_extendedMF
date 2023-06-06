@@ -42,7 +42,7 @@ Auffinger = False
 Korwar_Profumo = False
 Mosbech_Picker = True
 
-if Auffinger:
+if Auffinger or Mosbech_Picker:
     r_s = 17 * 1000 * pc_to_cm    # scale radius, in cm
     r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
     rho_0 = 8.5e-25	    # characteristic halo density in g/cm^3
@@ -52,11 +52,12 @@ elif Korwar_Profumo:
     r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
     rho_0 = 2.2e-24	    # characteristic halo density in g/cm^3
 
+"""
 elif Mosbech_Picker:
     r_s = 9.2 * 1000 * pc_to_cm    # scale radius, in cm
     r_odot = 8.122 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
     rho_0 = 5.350023093424651e-25	    # characteristic halo density in g/cm^3
-
+"""
 
 def read_col(fname, first_row=0, col=1, convert=int, sep=None):
     """
@@ -278,16 +279,14 @@ def J_D(l_min, l_max, b_min, b_max):
             for k in range(0, nb_radii-1):  # integral over s(r(l, b))
                 metric = abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j]) * (s[k+1] - s[k])
                 result += metric * rho_NFW(s[k], b[j], l[i])
-
+        
     Delta = 0
     for i in range(0, nb_angles-1):
         for j in range(0, nb_angles-1):
             Delta += abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
     
-    if not Mosbech_Picker:
-        return result / Delta
-    else:
-        return result * 4 * np.pi
+    return result / Delta
+
 
 def galactic(spectrum, b_max, l_max, m_pbh):
     """
@@ -313,7 +312,7 @@ def galactic(spectrum, b_max, l_max, m_pbh):
     # Calculate J-factor
     j_factor = J_D(-l_max, l_max, -b_max, b_max)
 
-    print(j_factor)
+    print("J_D = {:.4e} g / cm^2".format(j_factor))
 
     galactic = []
     for i in range(n_spec):
@@ -332,7 +331,7 @@ if "__main__" == __name__:
         
     elif Mosbech_Picker and monochromatic_MF:
         filename_append = "_monochromatic"
-        m_pbh_mono = np.logspace(10, 18, 50)
+        m_pbh_mono = np.logspace(10, 18, 100)
 
     
     f_PBH_isatis = []
@@ -343,7 +342,7 @@ if "__main__" == __name__:
     EGRET = False
     FermiLAT = False
     FermiLAT_2015 = True
-    CL = -1
+    CL = 1
     
     exclude_last_bin = False
     save_each_bin = True
@@ -367,7 +366,7 @@ if "__main__" == __name__:
     elif FermiLAT_2015:
         append = "Fermi-LAT_1512.01846"
         b_max, l_max = np.radians(3.5), np.radians(3.5)
-    
+            
     energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
     
     if not exclude_last_bin:
@@ -397,7 +396,7 @@ if "__main__" == __name__:
             file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
             
         elif Mosbech_Picker and monochromatic_MF:
-            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_PYTHIA_{:.0f}/".format(i+1)
+            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_PYTHIA_v2_{:.0f}/".format(i+1)
    
         print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
     
