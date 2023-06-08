@@ -1248,21 +1248,26 @@ from extended_MF_checks import load_results_Isatis
 
 if "__main__" == __name__:
     
+    delta_Omega = Delta(-l_max, l_max, -b_max, b_max)
+    
     m_pbh_mono = np.logspace(10, 18, 100)
         
     # Constraints data at each PBH mass, calculated using Isatis
-    constraints_names_lower, constraints_mono_file_lower = load_results_Isatis(mf_string="results_MP22_lower_v2")
-    constraints_names_upper, constraints_mono_file_upper = load_results_Isatis(mf_string="results_MP22_upper_v2")
+    constraints_names_lower, constraints_Isatis_file_lower = load_results_Isatis(mf_string="results_MP22_lower_v2")
+    constraints_names_upper, constraints_Isatis_file_upper = load_results_Isatis(mf_string="results_MP22_upper_v2")
     
-    f_PBH_Isatis_lower = np.array(constraints_mono_file_lower[-1]) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
-    f_PBH_Isatis_upper = np.array(constraints_mono_file_upper[-1]) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
+    f_PBH_Isatis_lower = np.array(constraints_Isatis_file_lower[-1]) * 4 * np.pi / delta_Omega
+    f_PBH_Isatis_upper = np.array(constraints_Isatis_file_upper[-1]) * 4 * np.pi / delta_Omega
+   
     
     # Constraints data for each energy bin of each instrument, calculated using isatis_reproduction.py   
-    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
-    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
-    f_PBH_Isatis_reproduction_lower = envelope(constraints_mono_file_lower) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
-    f_PBH_Isatis_reproduction_upper = envelope(constraints_mono_file_upper) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
-        
+    constraints_Isatis_reproduction_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
+    constraints_Isatis_reproduction_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
+     
+    f_PBH_Isatis_reproduction_lower = envelope(constraints_Isatis_reproduction_file_lower) * 4 * np.pi / delta_Omega
+    f_PBH_Isatis_reproduction_upper = envelope(constraints_Isatis_reproduction_file_upper) * 4 * np.pi / delta_Omega
+       
+    
     # Plot the monochromatic MF constraint
     fig, ax = plt.subplots(figsize=(6,6))
     ax.fill_between(m_pbh_mono, f_PBH_Isatis_lower, f_PBH_Isatis_upper)
@@ -1323,8 +1328,8 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
     
-    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) / (4 * np.pi / Delta(-l_max, l_max, -b_max, b_max))
-    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) / (4 * np.pi / Delta(-l_max, l_max, -b_max, b_max))
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) * 4 * np.pi / delta_Omega
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) * 4 * np.pi / delta_Omega
         
     M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values = np.logspace(14, 17, 50)
@@ -1337,7 +1342,7 @@ if "__main__" == __name__:
     energy_bin_constraints_lower = []
     energy_bin_constraints_upper = []
     
-    sigma = 0.1
+    sigma = 0.5
     
     params_LN = [sigma]
     
@@ -1376,14 +1381,14 @@ if "__main__" == __name__:
     for m_c in mc_values:
                 
         mf_initial = LN_number_density(M0_values, m_c, sigma)  # initial PBH distribution
-        print("Initial MF (integrated over all masses) = {:.4f}".format(np.trapz(mf_initial, M0_values)))
+        #print("Initial MF (integrated over all masses) = {:.4f}".format(np.trapz(mf_initial, M0_values)))
 
         # Evolved mass function
         mf_evolved = phi_evolved_v2(mf_initial, M_values_evolved, M0_values, t_0)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
         # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
         mf_evolved_interp = np.interp(M_values_eval, M_values_evolved, mf_evolved)
         
-        print("Evolved MF (integrated over all masses) = {:.4f}".format(np.trapz(mf_evolved_interp, M_values_eval)))
+        #print("Evolved MF (integrated over all masses) = {:.4f}".format(np.trapz(mf_evolved_interp, M_values_eval)))
         
         # Constraint from each energy bin
         f_PBH_energy_bin_lower = []
@@ -1432,11 +1437,22 @@ if "__main__" == __name__:
         
     print(constraint_upper_evolved)
         
-    fig, ax = plt.subplots(figsize=(6,6))    
-    ax.fill_between(mc_values, constraint_lower[0], constraint_upper[0], color="tab:green")
-    ax.plot(mc_values, constraint_lower[0], color="tab:green", label="Adapted, unevolved")
-    ax.fill_between(mc_values, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple")
-    ax.plot(mc_values, constraint_lower_evolved, color="tab:purple", label="Adapted, evolved")
+    
+    # Load data from Fig. 4 of Mosbech & Picker (2022)
+    m_LN_lower, f_LN_lower = load_data("2203.05743/MP22_sigma_{:.1f}_LN_lower.csv".format(sigma))
+    m_LN_upper, f_LN_upper = load_data("2203.05743/MP22_sigma_{:.1f}_LN_upper.csv".format(sigma))
+    m_evolved_lower, f_evolved_lower = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_lower.csv".format(sigma))
+    m_evolved_upper, f_evolved_upper = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_upper.csv".format(sigma))
+   
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.fill_between(mc_values, constraint_lower[0], constraint_upper[0], color="tab:green", alpha=0.75)
+    ax.plot(m_LN_lower, f_LN_lower, color="tab:green", linestyle="None", marker="x")   
+    ax.plot(m_LN_upper, f_LN_upper, color="tab:green", linestyle="None", marker="x")
+
+    ax.fill_between(mc_values, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.75)
+    ax.plot(m_evolved_lower, f_evolved_lower, color="tab:purple", linestyle="None", marker="x")   
+    ax.plot(m_evolved_upper, f_evolved_upper, color="tab:purple", linestyle="None", marker="x")
+    
     ax.set_xlim(1e10, 1e18)
     ax.set_ylim(10**(-15), 1)
     ax.set_xlabel("$M_c~[\mathrm{g}]$")
