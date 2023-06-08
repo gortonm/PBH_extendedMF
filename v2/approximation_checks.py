@@ -1072,8 +1072,8 @@ if "__main__" == __name__:
     spec_file_initial_line = "mass/spin \t 0.00000e+00"
     
     mc_values = [5e14, 1e15, 5e15, 1e16]
-    sigma = 0.5
-    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
+    sigma = 1.5
+    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
     m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
     dlog10m = (np.log10(max(m_pbh_values_evolved)) - np.log10(min(m_pbh_values_evolved))) / (len(m_pbh_values_evolved) - 1)
     
@@ -1096,7 +1096,7 @@ if "__main__" == __name__:
     
         filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + "MP22_test_evolved_{:.0f}.txt".format(i)
         
-        phi_formation = phi_LN(m_pbh_values_formation, m_c, sigma)
+        phi_formation = phi_LN(m_pbh_values_formation_to_evolve, m_c, sigma)
         phi_present = phi_evolved(phi_formation, m_pbh_values_evolved, t_0)
         spec_values = phi_present * m_pbh_values_evolved * dlog10m * np.log(10)
         print(spec_values[5:10])
@@ -1248,11 +1248,11 @@ from extended_MF_checks import load_results_Isatis
 
 if "__main__" == __name__:
     
-    m_pbh_mono = np.logspace(10, 18, 50)
+    m_pbh_mono = np.logspace(10, 18, 100)
         
     # Constraints data at each PBH mass, calculated using Isatis
-    constraints_names_lower, constraints_mono_file_lower = load_results_Isatis(mf_string="results_MP22_lower")
-    constraints_names_upper, constraints_mono_file_upper = load_results_Isatis(mf_string="results_MP22_upper")
+    constraints_names_lower, constraints_mono_file_lower = load_results_Isatis(mf_string="results_MP22_lower_v2")
+    constraints_names_upper, constraints_mono_file_upper = load_results_Isatis(mf_string="results_MP22_upper_v2")
     
     f_PBH_Isatis_lower = np.array(constraints_mono_file_lower[-1]) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
     f_PBH_Isatis_upper = np.array(constraints_mono_file_upper[-1]) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
@@ -1323,10 +1323,10 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
     
-    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
-    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) / (4 * np.pi * Delta(-l_max, l_max, -b_max, b_max))
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) / (4 * np.pi / Delta(-l_max, l_max, -b_max, b_max))
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) / (4 * np.pi / Delta(-l_max, l_max, -b_max, b_max))
         
-    M_values_eval = np.logspace(10, 18, 50)   # masses at which the constraint is evaluated for a delta-function MF
+    M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values = np.logspace(14, 17, 50)
  
     # Final constraint
@@ -1337,7 +1337,7 @@ if "__main__" == __name__:
     energy_bin_constraints_lower = []
     energy_bin_constraints_upper = []
     
-    sigma = 0.5
+    sigma = 0.1
     
     params_LN = [sigma]
     
@@ -1433,9 +1433,9 @@ if "__main__" == __name__:
     print(constraint_upper_evolved)
         
     fig, ax = plt.subplots(figsize=(6,6))    
-    ax.fill_between(mc_values, constraint_lower[0], constraint_upper[0])
+    ax.fill_between(mc_values, constraint_lower[0], constraint_upper[0], color="tab:green")
     ax.plot(mc_values, constraint_lower[0], color="tab:green", label="Adapted, unevolved")
-    ax.fill_between(mc_values, constraint_lower_evolved, constraint_upper_evolved)
+    ax.fill_between(mc_values, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple")
     ax.plot(mc_values, constraint_lower_evolved, color="tab:purple", label="Adapted, evolved")
     ax.set_xlim(1e10, 1e18)
     ax.set_ylim(10**(-15), 1)
@@ -1448,3 +1448,92 @@ if "__main__" == __name__:
     plt.tight_layout()
 
 
+#%% Compare the log-normal in terms of the mass distribution to a log-normal
+# in terms of the number density.
+
+if "__main__" == __name__:
+    
+    def psi_LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
+        # Distribution function for PBH energy density, when the number density follows a log-normal in the mass 
+        
+        log_m_min = np.log10(m_c) - log_m_factor*sigma
+        log_m_max = np.log10(m_c) + log_m_factor*sigma
+    
+        m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
+        normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
+        return LN(m, m_c, sigma) * m * normalisation
+
+    def phi_LN_mass_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
+        # Distribution function for PBH number density, when the mass density follows a log-normal in the mass 
+        
+        log_m_min = np.log10(m_c) - log_m_factor*sigma
+        log_m_max = np.log10(m_c) + log_m_factor*sigma
+    
+        m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
+        normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) / m_pbh_values, m_pbh_values)
+        return (LN(m, m_c, sigma) / m) * normalisation
+
+     
+    m_c = 1e20
+    sigma = 1
+    m_pbh_values = np.logspace(np.log10(m_c)-9, np.log10(m_c)+6, 1000)
+
+    sigmas = [0.37575, 0.5, 1, 1.84859]
+
+    # Plot of the number density
+    
+    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
+    ax0 = axes[0][0]
+    ax1 = axes[0][1]
+    ax2 = axes[1][0]
+    ax3 = axes[1][1]
+    ax_loop = [ax0, ax1, ax2, ax3]
+    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (2e16, 3e22), (5e11, 2e24)]
+    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-18)]
+   
+    for i in range(len(ax_loop)):
+        # Plot of the number density
+        ax = ax_loop[i]
+        sigma = sigmas[i]
+        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in number density")
+        ax.plot(m_pbh_values, phi_LN_mass_density(m_pbh_values, m_c, sigma), label="LN in mass density")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\phi(M) \propto \mathrm{d}n/\mathrm{d}M$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title("$\sigma={:.2f}$".format(sigma))
+        ax.set_xlim(ax_x_lims[i])
+        ax.set_ylim(ax_y_lims[i])
+        
+    ax0.legend()
+    fig.suptitle("Number density distribution ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
+    fig.tight_layout()
+
+    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
+    ax0 = axes[0][0]
+    ax1 = axes[0][1]
+    ax2 = axes[1][0]
+    ax3 = axes[1][1]
+    ax_loop = [ax0, ax1, ax2, ax3]
+    
+    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (5e16, 1e23), (1e13, 1e25)]
+    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (5e-30, 5e-20)]
+
+
+    for i in range(len(ax_loop)):
+        # Plot of the mass density
+        ax = ax_loop[i]
+        sigma = sigmas[i]
+        ax.plot(m_pbh_values, psi_LN_number_density(m_pbh_values, m_c, sigma), label="LN in number density")
+        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in mass density")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\psi(M) \propto M\mathrm{d}n/\mathrm{d}M$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title("$\sigma={:.2f}$".format(sigma))
+        ax.set_xlim(ax_x_lims[i])
+        ax.set_ylim(ax_y_lims[i])
+
+    ax0.legend()
+    fig.suptitle("Mass density distribution ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
+    fig.tight_layout()
