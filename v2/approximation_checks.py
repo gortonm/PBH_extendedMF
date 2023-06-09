@@ -1256,22 +1256,22 @@ if "__main__" == __name__:
     constraints_names_lower, constraints_Isatis_file_lower = load_results_Isatis(mf_string="results_MP22_lower_v2")
     constraints_names_upper, constraints_Isatis_file_upper = load_results_Isatis(mf_string="results_MP22_upper_v2")
     
-    f_PBH_Isatis_lower = np.array(constraints_Isatis_file_lower[-1]) * 4 * np.pi / delta_Omega
-    f_PBH_Isatis_upper = np.array(constraints_Isatis_file_upper[-1]) * 4 * np.pi / delta_Omega
+    f_PBH_Isatis_lower = np.array(constraints_Isatis_file_lower[-1]) / delta_Omega
+    f_PBH_Isatis_upper = np.array(constraints_Isatis_file_upper[-1]) / delta_Omega
    
     
     # Constraints data for each energy bin of each instrument, calculated using isatis_reproduction.py   
     constraints_Isatis_reproduction_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
     constraints_Isatis_reproduction_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
      
-    f_PBH_Isatis_reproduction_lower = envelope(constraints_Isatis_reproduction_file_lower) * 4 * np.pi / delta_Omega
-    f_PBH_Isatis_reproduction_upper = envelope(constraints_Isatis_reproduction_file_upper) * 4 * np.pi / delta_Omega
+    f_PBH_Isatis_reproduction_lower = envelope(constraints_Isatis_reproduction_file_lower) / delta_Omega
+    f_PBH_Isatis_reproduction_upper = envelope(constraints_Isatis_reproduction_file_upper) / delta_Omega
        
     
     # Plot the monochromatic MF constraint
     fig, ax = plt.subplots(figsize=(6,6))
     ax.fill_between(m_pbh_mono, f_PBH_Isatis_lower, f_PBH_Isatis_upper)
-    ax.fill_between(m_pbh_mono, f_PBH_Isatis_reproduction_lower, f_PBH_Isatis_reproduction_upper)
+    ax.fill_between(m_pbh_mono, f_PBH_Isatis_reproduction_lower, f_PBH_Isatis_reproduction_upper, alpha=0.5)
     ax.plot(m_pbh_mono, f_PBH_Isatis_lower, marker="x", linestyle="None")
     ax.set_xlim(1e10, 1e18)
     ax.set_ylim(10**(-10), 1)
@@ -1328,8 +1328,8 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
     
-    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) * 4 * np.pi / delta_Omega
-    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) * 4 * np.pi / delta_Omega
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) / delta_Omega
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) / delta_Omega
         
     M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values = np.logspace(14, 17, 50)
@@ -1422,7 +1422,7 @@ if "__main__" == __name__:
                 f_PBH_energy_bin_upper.append(10)
             else:
                 f_PBH_energy_bin_upper.append(1/integral)
-                
+            """  
             if m_c == mc_values[0] and k % 3 == 0:
                 fig, ax = plt.subplots()
                 ax.plot(M_values_eval, integrand)
@@ -1431,7 +1431,7 @@ if "__main__" == __name__:
                 ax.set_xscale("log")
                 ax.set_yscale("log")
                 fig.tight_layout()
-      
+            """
         constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
         print(f_PBH_energy_bin_upper)
         
