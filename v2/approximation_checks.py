@@ -1202,7 +1202,7 @@ if "__main__" == __name__:
     fig.tight_layout()
     
 
-#%% Plot the spectrum for different PBH masses
+#%% Plot the photon spectrum for different PBH masses
 
 if "__main__" == __name__:
     M_values_eval = np.logspace(10, 18, 50)
@@ -1328,8 +1328,8 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
     
-    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) / delta_Omega
-    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) / delta_Omega
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt")) * 4*np.pi / (delta_Omega)
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt")) * 4*np.pi / (delta_Omega)
         
     M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values = np.logspace(14, 17, 50)
@@ -1494,7 +1494,7 @@ if "__main__" == __name__:
     sigma = 1
     m_pbh_values = np.logspace(np.log10(m_c)-9, np.log10(m_c)+6, 1000)
 
-    sigmas = [0.37575, 0.5, 1, 1.84859]
+    sigmas = [0.373429, 0.5, 1, 1.84859]
 
     # Plot of the number density
     
@@ -1513,6 +1513,8 @@ if "__main__" == __name__:
         sigma = sigmas[i]
         ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in number density")
         ax.plot(m_pbh_values, phi_LN_mass_density(m_pbh_values, m_c, sigma), label="LN in mass density")
+        ax.plot(m_pbh_values, 10*phi_LN_mass_density(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        ax.plot(m_pbh_values, 0.1*phi_LN_mass_density(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$\phi(M) \propto \mathrm{d}n/\mathrm{d}M$")
         ax.set_xscale("log")
@@ -1542,6 +1544,8 @@ if "__main__" == __name__:
         sigma = sigmas[i]
         ax.plot(m_pbh_values, psi_LN_number_density(m_pbh_values, m_c, sigma), label="LN in number density")
         ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in mass density")
+        ax.plot(m_pbh_values, 10*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        ax.plot(m_pbh_values, 0.1*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$\psi(M) \propto M\mathrm{d}n/\mathrm{d}M$")
         ax.set_xscale("log")
@@ -1552,4 +1556,86 @@ if "__main__" == __name__:
 
     ax0.legend()
     fig.suptitle("Mass density distribution ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
+    fig.tight_layout()
+
+
+    # Plot both MFs with the same peak mass
+    m_p = 1e20
+    m_c = m_p * np.exp(sigma**2)
+    print(m_c)
+    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
+    ax0 = axes[0][0]
+    ax1 = axes[0][1]
+    ax2 = axes[1][0]
+    ax3 = axes[1][1]
+    ax_loop = [ax0, ax1, ax2, ax3]
+    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (2e16, 3e22), (5e11, 2e24)]
+    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-18)]
+   
+    for i in range(len(ax_loop)):
+        
+        sigma = sigmas[i]
+        m_c = m_p * np.exp(sigma**2)
+        
+        if sigma < 1:
+            mc_test = m_c * (1+sigma**2)
+        elif sigma==1:
+            mc_test = m_c * 2.7
+        else:
+            mc_test = m_c * 30
+        # Plot of the number density
+        print(m_pbh_values[np.argmax(LN(m_pbh_values, m_c, sigma))])
+        print(m_pbh_values[np.argmax(phi_LN_mass_density(m_pbh_values, mc_test, sigma))])
+        
+        ax = ax_loop[i]
+        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in number density")
+        ax.plot(m_pbh_values, phi_LN_mass_density(m_pbh_values, mc_test, sigma), label="LN in mass density")
+        ax.plot(m_pbh_values, 10*phi_LN_mass_density(m_pbh_values, mc_test, sigma), color="tab:orange", linestyle="dotted")
+        ax.plot(m_pbh_values, 0.1*phi_LN_mass_density(m_pbh_values, mc_test, sigma), color="tab:orange", linestyle="dotted")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\phi(M) \propto \mathrm{d}n/\mathrm{d}M$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title("$\sigma={:.2f}$".format(sigma))
+        ax.set_xlim(ax_x_lims[i])
+        ax.set_ylim(ax_y_lims[i])
+        
+    ax0.legend()
+    fig.suptitle("Number density distribution ($M_p={:.1e}~".format(m_p) + "\mathrm{g})$")
+    fig.tight_layout()
+
+    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
+    ax0 = axes[0][0]
+    ax1 = axes[0][1]
+    ax2 = axes[1][0]
+    ax3 = axes[1][1]
+    ax_loop = [ax0, ax1, ax2, ax3]
+    
+    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (5e16, 1e23), (1e13, 1e25)]
+    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (5e-30, 5e-20)]
+
+    for i in range(len(ax_loop)):
+        # Plot of the mass density
+        ax = ax_loop[i]
+        sigma = sigmas[i]
+        
+        m_c = m_p * np.exp(sigma**2)        
+        mc_test = m_p
+        #print(m_pbh_values[np.argmax(LN(m_pbh_values, m_c, sigma))])
+        #print(m_pbh_values[np.argmax(psi_LN_number_density(m_pbh_values, mc_test, sigma))])
+       
+        ax.plot(m_pbh_values, psi_LN_number_density(m_pbh_values, mc_test, sigma), label="LN in number density")
+        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in mass density")
+        ax.plot(m_pbh_values, 10*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        ax.plot(m_pbh_values, 0.1*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\psi(M) \propto M\mathrm{d}n/\mathrm{d}M$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title("$\sigma={:.2f}$".format(sigma))
+        ax.set_xlim(ax_x_lims[i])
+        ax.set_ylim(ax_y_lims[i])
+
+    ax0.legend()
+    fig.suptitle("Mass density distribution ($M_p={:.1e}~".format(m_p) + "\mathrm{g})$")
     fig.tight_layout()
