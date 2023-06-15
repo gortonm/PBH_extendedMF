@@ -170,9 +170,8 @@ for mc_max in mc_max_values:
                             params_BlackHawk[19][1] = "{:.3f}".format(sigmas_LN[i])
                             params_BlackHawk[20][1] = "{:.5e}".format(m_c)
                             
-                        if SLN_bool:
+                        elif SLN_bool:
                             BH_number = int((np.log10(m_c*m_upper_SLN[i])-np.log10(m_c*m_lower_SLN[i])) / delta_log_m)
-                            print(BH_number)
                             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
                             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_SLN[i] * m_c)
                             params_BlackHawk[6][1] = "{:.5e}".format(m_upper_SLN[i] * m_c)
@@ -194,7 +193,7 @@ for mc_max in mc_max_values:
                                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
                             np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
                             
-                        if CC3_bool:
+                        elif CC3_bool:
                             BH_number = int((np.log10(m_c*m_upper_CC3[i])-np.log10(m_c*m_lower_CC3[i])) / delta_log_m)
                             params_BlackHawk[4][1] = "{:.0f}".format(BH_number)
                             params_BlackHawk[5][1] = "{:.5e}".format(m_lower_CC3[i] * m_c)
@@ -215,8 +214,8 @@ for mc_max in mc_max_values:
                             spec_values = CC3(m_pbh_values, m_c, alphas_CC3[i], betas[i])
                             for k in range(len(m_pbh_values)):
                                 spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values[k], spec_values[k]))
-                            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
-                            
+                            np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")     
+                                                        
                         params_BlackHawk[34][1] = "{:.0f}".format(E_number)
                         params_BlackHawk[35][1] = "{:.5e}".format(E_min)
                         params_BlackHawk[36][1] = "{:.5e}".format(E_max)

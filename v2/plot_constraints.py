@@ -44,11 +44,9 @@ if "__main__" == __name__:
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = not plot_GC_Isatis
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
-    include_extrapolated = False
+    include_extrapolated = True
     if not plot_KP23:
         include_extrapolated = False
-    # If True, plot results obtained using the numerical MF from Fig. 5 of 2009.03204
-    plot_numeric = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['tab:grey', 'r', 'b', 'g', 'k']
@@ -68,7 +66,7 @@ if "__main__" == __name__:
         
     for i in range(len(Deltas)):
                 
-        fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+        fig, axes = plt.subplots(1, 3, figsize=(17, 5.5))
         ax0 = axes[0]
         ax1 = axes[1]
         ax2 = axes[2]
@@ -132,13 +130,11 @@ if "__main__" == __name__:
                 mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
                 mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
                 mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
-                mp_KP23_numeric, f_PBH_KP23_numeric = np.genfromtxt("./Data/numeric_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
                
             else:
                 mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
                 mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
                 mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-                mp_KP23_numeric, f_PBH_KP23_numeric = np.genfromtxt("./Data/numeric_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
 
             # Estimate peak mass of skew-lognormal MF
             mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
@@ -178,19 +174,7 @@ if "__main__" == __name__:
         ax2.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
         ax2.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
         ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], dashes=[6, 2])
-        
-        if plot_numeric:
-
-            # Loading constraints from numeric mass function (Subaru-HSC).
-            mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC = np.genfromtxt("./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            ax0.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4], label="numeric")
-            ax2.plot(mp_Carr_numeric_HSC, f_PBH_Carr_numeric_HSC, color=colors[4])
-            
-            # Loading constraints from numeric mass function (Galactic Centre photons).
-            mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap = np.genfromtxt("./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            ax0.plot(mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap, color=colors[4])
-            ax1.plot(mp_Carr_numeric_evap, f_PBH_Carr_numeric_evap, color=colors[4])
-          
+                  
         ax0.set_xlim(xmin_evap, xmax_HSC)
         ax0.set_ylim(ymin, ymax)
         ax1.set_xlim(xmin_evap, xmax_evap)
