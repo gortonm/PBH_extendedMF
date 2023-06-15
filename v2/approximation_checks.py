@@ -989,6 +989,73 @@ def phi_evolved_v2(phi_formation, M_values, M0_values, t):
     return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
 
 
+def psi_evolved_LN_number_density(M_values_eval, m_c, sigma, t, log_m_factor=5, n_steps=100000):
+    """
+    PBH mass function at time t (in terms of the mass density), for an initial MF (in the number density)
+    being a log-normal with characteristic mass m_c and width sigma.
+
+    Parameters
+    ----------
+    M_values_eval : Array-like
+        PBH masses at time t, at which to evaluate the mass density distribution.
+    m_c : Float
+        Characteristic mass of the initial log-normal distribution in the number density.
+    sigma : Float
+        Standard deviation of the initial log-normal distribution in the number density.
+    t : Float
+        Time (after Big Bang) at which to evaluate the distribution.
+    log_m_factor : Float, optional
+        Number of multiples of sigma (in log-space) of masses around m_c to consider when estimating the maximum. The default is 5.
+    n_steps : Integer, optional
+        Number of masses to use for estimating the peak mass of the skew-lognormal mass function. The default is 100000.
+
+    Returns
+    -------
+    Array-like
+        Evolved PBH mass density distribution, evaluated at time t.
+
+    """
+    # Distribution function for PBH energy density, when the number density follows distribution phi_evolved, obtained
+    # from an initially log-normal distribution
+
+    log_m_min = np.log10(m_c) - log_m_factor*sigma
+    log_m_max = np.log10(m_c) + log_m_factor*sigma
+    
+    # To accurately evaluate the evolved mass function at small PBH masses, need to include a dense sampling of initial masses close to M_* = 7.5e14g
+    #M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(log_m_min, log_m_max, n_steps))))
+    M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2),  np.logspace(log_m_min, log_m_max, n_steps))))
+    M_test_values = m_pbh_evolved_MP23(M0_test_values, t)
+    
+    phi_formation = LN(M0_test_values, m_c, sigma)
+    phi_evolved_values = phi_evolved_v2(phi_formation, M_test_values, M0_test_values, t)
+    
+    # Exclude nan values in M_test_values and phi_evolved_values
+    M_test_values_nonan = M_test_values
+    phi_evolved_values_nonan = phi_evolved_values
+   
+    # Find mass * evolved values of phi (proportional to the mass distribution psi)
+    psi_unnormalised = phi_evolved_values_nonan * M_test_values_nonan
+    
+    # Estimate the normalisation of psi (such that the evolved MF is normalised to 1)
+    psi_normalisation = 1 / np.trapz(psi_unnormalised, M_test_values_nonan)
+    
+    # Interpolate the evolved MF at the desired masses M_values_eval
+    psi_unnormalised_interp = np.interp(M_values_eval, M_test_values_nonan, psi_unnormalised, left=0, right=0)
+    
+    return psi_unnormalised_interp * psi_normalisation
+
+
+def psi_LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
+    # Distribution function for PBH energy density, when the number density follows a log-normal in the mass 
+    
+    log_m_min = np.log10(m_c) - log_m_factor*sigma
+    log_m_max = np.log10(m_c) + log_m_factor*sigma
+
+    m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
+    normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
+    return LN(m, m_c, sigma) * m * normalisation
+
+
 if "__main__" == __name__:
 
     alpha_eff_approx_values = alpha_eff_approx(m_pbh_values_formation_BlackHawk)
@@ -1005,7 +1072,6 @@ if "__main__" == __name__:
     ax.set_ylabel(r"$\alpha_\mathrm{eff}$")
     ax.legend(fontsize="small")
     fig.tight_layout()
-    
     
     # Plot the present mass against formation mass
     fig, ax = plt.subplots(figsize=(6, 6))
@@ -1027,10 +1093,10 @@ if "__main__" == __name__:
     ax.legend()
     fig.tight_layout()
     
-#%%    
+    
+#%% Reproduce Fig. 2 of Mosbech & Picker (2022)
 if "__main__" == __name__:
     
-    # Reproduce Fig. 2 of Mosbech & Picker (2022)
     m_pbh_values_formation = np.logspace(11, 17, 500)
     m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
     m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
@@ -1058,7 +1124,37 @@ if "__main__" == __name__:
         ax.set_xlim(1e11, max(m_pbh_values_formation))
         ax.set_ylim(1e-21, 1e-12)
         fig.tight_layout()
+
+
+#%% Plot the mass density distribution, for an initial distribution following a log-normal in the number density
+if "__main__" == __name__:
+    
+    m_pbh_values_formation = np.logspace(11, 17, 500)
+    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.logspace(np.log10(7.47e14), 17, 100)))
+    #m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
+    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
+    m_c = 1e15
+    
+    for sigma in [0.1, 0.5, 1, 1.5]:
+        psi_initial = psi_LN_number_density(m_pbh_values_formation, m_c, sigma)
+        psi_present = psi_evolved_LN_number_density(m_pbh_values_evolved, m_c, sigma, t_0)
         
+        phi_initial_to_evolve = phi_LN(m_pbh_values_formation_to_evolve, m_c, sigma)
+        phi_present = phi_evolved_v2(phi_initial_to_evolve, m_pbh_values_evolved, m_pbh_values_formation_to_evolve, t_0)
+
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.plot(m_pbh_values_formation, psi_initial, label="$t=0$")
+        ax.plot(m_pbh_values_evolved, psi_present, label="$t=t_0$", marker="x")
+        ax.plot(m_pbh_values_evolved, phi_present*m_pbh_values_evolved / np.trapz(phi_present*m_pbh_values_evolved, m_pbh_values_evolved), marker="x", label=r"$\phi \times M$ \n (normalised to 1) ($t_0$)")
+
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\psi(M)~[\mathrm{g}]^{-1}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(title="$\sigma={:.1f}$".format(sigma), fontsize="small")
+        ax.set_xlim(1e11, max(m_pbh_values_formation))
+        #ax.set_ylim(1e-21, 1e-12)
+        fig.tight_layout()
 
 #%%
 if "__main__" == __name__:
@@ -1297,16 +1393,6 @@ if "__main__" == __name__:
 
 #%% Calculate constraints for an extended MF (basic lognormal and extended lognormal)
 
-def LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
-    # Distribution function for PBH energy density, when the number density follows a log-normal in the mass 
-    
-    log_m_min = np.log10(m_c) - log_m_factor*sigma
-    log_m_max = np.log10(m_c) + log_m_factor*sigma
-
-    m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
-    normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
-    return LN(m, m_c, sigma) * m * normalisation
-
 if "__main__" == __name__:
     M0_values = np.logspace(9, 18, 50)
     
@@ -1315,7 +1401,7 @@ if "__main__" == __name__:
     
     for i in range(len(sigmas)):
         fig, ax = plt.subplots(figsize=(6,6))
-        initial_MF = LN_number_density(M0_values, mc_values[i], sigmas[i])
+        initial_MF = psi_LN_number_density(M0_values, mc_values[i], sigmas[i])
         
         M_values = m_pbh_evolved_MP23(M0_values, t=t_0)
         evolved_MF = phi_evolved(initial_MF, M_values, t=t_0)
@@ -1337,7 +1423,7 @@ if "__main__" == __name__:
         print(np.trapz(initial_MF, M0_values))
         print(np.trapz(evolved_MF, M_values))
 
-#%%
+#%% Plot constraints for extended MF (reproducing Fig. 4 of Mosbech & Picker (2022)).
 
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
@@ -1370,7 +1456,7 @@ if "__main__" == __name__:
         constraint_energy_bin = constraints_mono_file_lower[k]
 
         # Calculate constraint on f_PBH from each bin
-        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=LN_number_density, params=params_LN)
+        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=psi_LN_number_density, params=params_LN)
         energy_bin_constraints_lower.append(f_PBH_k)
 
     for k in range(len(constraints_mono_file_upper)):
@@ -1379,7 +1465,7 @@ if "__main__" == __name__:
         constraint_energy_bin = constraints_mono_file_upper[k]
 
         # Calculate constraint on f_PBH from each bin
-        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=LN_number_density, params=params_LN)
+        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=psi_LN_number_density, params=params_LN)
         energy_bin_constraints_upper.append(f_PBH_k)
         
     constraint_lower.append(envelope(energy_bin_constraints_lower))
@@ -1397,7 +1483,7 @@ if "__main__" == __name__:
 
     for m_c in mc_values:
                 
-        mf_initial = LN_number_density(M0_values, m_c, sigma)  # initial PBH distribution
+        mf_initial = psi_LN_number_density(M0_values, m_c, sigma)  # initial PBH distribution
         #print("Initial MF (integrated over all masses) = {:.4f}".format(np.trapz(mf_initial, M0_values)))
 
         # Evolved mass function
