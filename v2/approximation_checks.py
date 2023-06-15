@@ -1160,6 +1160,11 @@ if "__main__" == __name__:
     E_upper_y_HESS, flux_upper_y_HESS = load_data("1603.07730/1603.07730_upper_y.csv")
     E_lower_HESS, flux_mid_HESS = load_data("1603.07730/1603.07730_x_bins.csv")
     
+    # Divide HESS data by a factor of 10 to account for the shift in Fig. 3 of Abramowski et al. (2016)
+    flux_mid_HESS /= 10
+    flux_lower_y_HESS /= 10
+    flux_upper_y_HESS /= 10
+    
     # widths of energy bins
     E_minus_HESS = E_upper_y_HESS - E_lower_HESS[:-1]
     E_plus_HESS = E_lower_HESS[1:] - E_upper_y_HESS
