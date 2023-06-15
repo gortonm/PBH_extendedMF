@@ -312,7 +312,7 @@ def galactic(spectrum, b_max, l_max, m_pbh):
     # Calculate J-factor
     j_factor = J_D(-l_max, l_max, -b_max, b_max)
 
-    print("J_D = {:.4e} g / cm^2".format(j_factor))
+    print("J_D = {:.5e} g / cm^2".format(j_factor))
 
     galactic = []
     for i in range(n_spec):
@@ -342,7 +342,7 @@ if "__main__" == __name__:
     EGRET = False
     FermiLAT = False
     FermiLAT_2015 = True
-    CL = 1
+    CL = -1
     
     exclude_last_bin = False
     save_each_bin = True
@@ -368,6 +368,8 @@ if "__main__" == __name__:
         b_max, l_max = np.radians(3.5), np.radians(3.5)
             
     energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
+    print(append)
+    print(flux)
     
     if not exclude_last_bin:
         append = "all_bins_%s"%(append)
@@ -381,7 +383,7 @@ if "__main__" == __name__:
     elif CL < 0:
         flux += CL * flux_minus
         append = "%s_upper"%(append)
-    
+            
     # Number of interpolation points
     n_refined = 500
     
@@ -456,7 +458,7 @@ if "__main__" == __name__:
             f_PBH = min(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
             if save_each_bin:
                 f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
-                print(f_PBH)
+                #print(f_PBH)
         f_PBH_isatis.append(f_PBH)
     
     # Save calculated results for f_PBH
