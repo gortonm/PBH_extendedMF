@@ -1565,7 +1565,7 @@ if "__main__" == __name__:
     for m_c in mc_values:
                 
         # Evolved mass function
-        log_m_evolved, log_psi_evolved = psi_evolved_LN_number_density_v2(m_c, sigma, t_0, n_steps=100)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
+        log_m_evolved, log_psi_evolved = psi_evolved_LN_number_density_v2(m_c, sigma, t_0, n_steps=1000)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
         # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
         mf_evolved_interp = 10**np.interp(np.log10(M_values_eval), log_m_evolved, log_psi_evolved)
         
@@ -1577,8 +1577,9 @@ if "__main__" == __name__:
             constraint_energy_bin = constraints_mono_file_lower[k]
             
             integrand = mf_evolved_interp / constraint_energy_bin
-            integral = np.trapz(integrand, M_values_eval)
-            
+            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
+            print(integrand)
+            print(M_values_eval)
             if integral == 0 or np.isnan(integral):
                 f_PBH_energy_bin_lower.append(10)
             else:
@@ -1595,7 +1596,7 @@ if "__main__" == __name__:
             
             integrand = mf_evolved_interp / constraint_energy_bin
 
-            integral = np.trapz(integrand, M_values_eval)
+            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
             
             if integral == 0 or np.isnan(integral):
                 f_PBH_energy_bin_upper.append(10)
