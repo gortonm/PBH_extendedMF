@@ -1007,7 +1007,7 @@ def psi_evolved_LN_number_density(M_values_eval, m_c, sigma, t, log_m_factor=5, 
     log_m_factor : Float, optional
         Number of multiples of sigma (in log-space) of masses around m_c to consider when estimating the maximum. The default is 5.
     n_steps : Integer, optional
-        Number of masses to use for estimating the peak mass of the skew-lognormal mass function. The default is 100000.
+        Number of masses at which to evaluate the evolved mass function. The default is 10000.
 
     Returns
     -------
@@ -1041,10 +1041,10 @@ def psi_evolved_LN_number_density(M_values_eval, m_c, sigma, t, log_m_factor=5, 
     return psi_unnormalised_interp * psi_normalisation
 
 
-def psi_evolved_LN_number_density_v2(m_c, sigma, t, log_m_factor=5, n_steps=1000, log_output=True):
+def psi_evolved_LN_number_density_v2(m_c, sigma, t, log_m_factor=5, n_steps=10000, log_output=True):
     """
-    PBH mass function at time t (in terms of the mass density), for an initial MF (in the number density)
-    being a log-normal with characteristic mass m_c and width sigma.
+    PBH mass distribution at time t, for a log-normal initial number density distribution
+    with characteristic mass m_c and width sigma.
 
     Parameters
     ----------
@@ -1057,12 +1057,16 @@ def psi_evolved_LN_number_density_v2(m_c, sigma, t, log_m_factor=5, n_steps=1000
     log_m_factor : Float, optional
         Number of multiples of sigma (in log-space) of masses around m_c to consider when estimating the maximum. The default is 5.
     n_steps : Integer, optional
-        Number of masses to use for estimating the peak mass of the skew-lognormal mass function. The default is 100000.
+        Number of masses at which to evaluate the evolved mass function. The default is 10000.
+    log_output : Boolean, optional
+        If True, return the logarithm of the evolved masses and mass density distribution (helpful for interpolation). The default is True.
 
     Returns
     -------
     Array-like
-        Evolved PBH mass density distribution, evaluated at time t.
+        Evolved PBH masses, evaluated at time t in grams. If log_output=True, returns the logarithm of this quantity.
+    Array-like
+        Evolved PBH mass density distribution, evaluated at time t. If log_output=True, returns the logarithm of this quantity.
 
     """
     # Distribution function for PBH energy density, when the number density follows distribution phi_evolved, obtained
