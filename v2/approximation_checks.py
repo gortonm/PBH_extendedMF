@@ -1416,7 +1416,6 @@ if "__main__" == __name__:
 
 
 #%% Plot the Fermi-LAT constraints (monochromatic MF)
-
 from extended_MF_checks import envelope, constraint_Carr
 
 b_max, l_max = np.radians(3.5), np.radians(3.5)
@@ -1507,6 +1506,7 @@ if "__main__" == __name__:
 
 #%% Plot constraints for extended MF (reproducing Fig. 4 of Mosbech & Picker (2022)).
 
+
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (extended MF)
     
@@ -1527,7 +1527,7 @@ if "__main__" == __name__:
     energy_bin_constraints_lower = []
     energy_bin_constraints_upper = []
     
-    sigma = 0.5
+    sigma = 0.1
     
     params_LN = [sigma]
     
@@ -1555,31 +1555,49 @@ if "__main__" == __name__:
     
 
     # Evolved mass function
-    params_LN_evolved = [sigma, t_0]
-    
     constraint_lower_evolved = []
     constraint_upper_evolved = []
     
-    for k in range(len(constraints_mono_file_lower)):
-
-        # Constraint from a particular energy bin
-        constraint_energy_bin = constraints_mono_file_lower[k]
-
-        # Calculate constraint on f_PBH from each bin
-        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=psi_evolved_LN_number_density, params=params_LN_evolved)
-        energy_bin_constraints_lower.append(f_PBH_k)
-
-    for k in range(len(constraints_mono_file_upper)):
-
-        # Constraint from a particular energy bin
-        constraint_energy_bin = constraints_mono_file_upper[k]
-
-        # Calculate constraint on f_PBH from each bin
-        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=psi_evolved_LN_number_density, params=params_LN_evolved)
-        energy_bin_constraints_upper.append(f_PBH_k)
+    for m_c in mc_values:
+                
+        # Evolved mass function
+        log_m_evolved, log_psi_evolved = psi_evolved_LN_number_density_v2(m_c, sigma, t_0, n_steps=100)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
+        # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
+        mf_evolved_interp = 10**np.interp(np.log10(M_values_eval), log_m_evolved, log_psi_evolved)
         
-    constraint_lower_evolved.append(envelope(energy_bin_constraints_lower))
-    constraint_upper_evolved.append(envelope(energy_bin_constraints_upper))
+        # Constraint from each energy bin
+        f_PBH_energy_bin_lower = []
+        for k in range(len(constraints_mono_file_lower)):
+    
+            # Constraint from a particular energy bin (delta function MF)
+            constraint_energy_bin = constraints_mono_file_lower[k]
+            
+            integrand = mf_evolved_interp / constraint_energy_bin
+            integral = np.trapz(integrand, M_values_eval)
+            
+            if integral == 0 or np.isnan(integral):
+                f_PBH_energy_bin_lower.append(10)
+            else:
+                f_PBH_energy_bin_lower.append(1/integral)
+
+        constraint_lower_evolved.append(min(f_PBH_energy_bin_lower))
+        
+        
+        f_PBH_energy_bin_upper = []
+        for k in range(len(constraints_mono_file_upper)):
+    
+            # Constraint from a particular energy bin (delta function MF)
+            constraint_energy_bin = constraints_mono_file_upper[k]
+            
+            integrand = mf_evolved_interp / constraint_energy_bin
+
+            integral = np.trapz(integrand, M_values_eval)
+            
+            if integral == 0 or np.isnan(integral):
+                f_PBH_energy_bin_upper.append(10)
+            else:
+                f_PBH_energy_bin_upper.append(1/integral)
+        constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
         
     
     # Load data from Fig. 4 of Mosbech & Picker (2022)
