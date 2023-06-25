@@ -337,7 +337,8 @@ def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=5, n_steps=10000, 
     psi_unnormalised = phi_evolved_values * M_test_values
     
     # Estimate the normalisation of psi (such that the evolved MF is normalised to 1)
-    psi_normalisation = 1 / np.trapz(psi_unnormalised, M_test_values)
+    #psi_normalisation = 1 / np.trapz(psi_unnormalised, M_test_values)
+    psi_normalisation = 1 / np.trapz(phi_formation*M0_test_values, M0_test_values)
     
     if log_output:
         return np.log10(M_test_values), np.log10(psi_unnormalised * psi_normalisation)
@@ -492,7 +493,7 @@ if "__main__" == __name__:
 
 #%% Plot the mass density distribution, for an initial distribution following a log-normal in the number density
 # This cell includes a test of the effect of not evolving the total PBH mass density with time on the resulting mass function psi(M),
-# by comparing the initial and evolved psi(M) in a mass range where the effects of evaporation are negligible (~1e16g).
+# by comparing the initial and evolved psi(M) in a mass range where the effects of evaporation are negligible (M>~1e15g).
 
 if "__main__" == __name__:
     
@@ -507,7 +508,7 @@ if "__main__" == __name__:
             psi_initial = psi_LN_number_density(m_pbh_values_formation, m_c, sigma)
             
             if sigma < 0.5:
-                log_m_pbh_v2_10000, log_psi_present_v2_10000 = psi_evolved_LN_number_density(m_c, sigma, log_m_factor=12, t=t_0, n_steps=50000)
+                log_m_pbh_v2_10000, log_psi_present_v2_10000 = psi_evolved_LN_number_density(m_c, sigma, log_m_factor=50, t=t_0, n_steps=50000)
             else:
                 log_m_pbh_v2_10000, log_psi_present_v2_10000 = psi_evolved_LN_number_density(m_c, sigma, log_m_factor=8, t=t_0, n_steps=50000)
                 
@@ -516,7 +517,7 @@ if "__main__" == __name__:
             ax.plot(m_pbh_values_formation, psi_initial, label="$t=0$")
             ax.plot(m_pbh_values_formation, 10**np.interp(np.log10(m_pbh_values_formation), log_m_pbh_v2_10000, log_psi_present_v2_10000, left=-100, right=-100), label="$t=t_0$")
             ax.set_xlabel("$M~[\mathrm{g}]$")
-            ax.set_ylabel("$\psi(M)~[\mathrm{g}]^{-1}$ (normalised to one)")
+            ax.set_ylabel("$\psi(M)~[\mathrm{g}]^{-1}$")
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.legend(fontsize="small")
@@ -529,13 +530,12 @@ if "__main__" == __name__:
 
         # Plot the evolved mass distribution psi when evaluated at a different number of masses
         ax1.set_xlabel("$M~[\mathrm{g}]$")
-        ax1.set_ylabel("$\psi(t=t_0)/ \psi(t=0)$ (both normalised to one)")
+        ax1.set_ylabel("$\psi(t=t_0)/ \psi(t=0)$")
         ax1.set_xscale("log")
-        ax1.set_yscale("log")
         ax1.legend(title="$M_c~[\mathrm{g}]$", fontsize="small")
         ax1.set_title("$\sigma={:.1f}$".format(sigma), fontsize="small")
         ax1.set_xlim(1e15, max(m_pbh_values_formation))
-        ax1.set_ylim(1e-1, 1e4)
+        ax1.set_ylim(0, 1.5)
         fig1.tight_layout()
 
 
