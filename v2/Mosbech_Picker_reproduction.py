@@ -44,10 +44,10 @@ t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 #%%
 # Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of
 # alpha_eff.
-
-m_pbh_values_formation_BlackHawk = np.logspace(np.log10(4e14), 16, 50)
-m_pbh_values_formation_wide = np.logspace(8, 18, 100)
+m_pbh_values_formation_BlackHawk = np.logspace(np.log10(4e14), 16, 50)   # Range of formation masses for which the lifetime is calculated using BlackHawk (primary particle energy range from 1e-6 to 1e5 GeV)
+m_pbh_values_formation_wide = np.logspace(8, 18, 100)    # Test range of initial masses
 pbh_lifetimes = []
+M0_min_BH, M0_max_BH = min(m_pbh_values_formation_BlackHawk), max(m_pbh_values_formation_BlackHawk)
 
 # Find PBH lifetimes corresponding to PBH formation masses in m_pbh_values_formation_BlackHawk
 for j in range(len(m_pbh_values_formation_BlackHawk)):
@@ -57,8 +57,7 @@ for j in range(len(m_pbh_values_formation_BlackHawk)):
     data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
     times = data[0]
     tau = float(times[-1])
-
-    pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass, corresponding to the present time
+    pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass, corresponding to the PBH lifetime (when estimated PBH mass ~= Planck mass [see paragraph after Eq. 43b in manual, line 490 of evolution.c])
 
 
 def alpha_eff(tau, M_0):
@@ -82,7 +81,7 @@ def alpha_eff(tau, M_0):
 
 
 # Calculate alpha_eff directly from BlackHawk
-# Put this here because it is used by later methods.
+# Put this here because it is used by later methods (more efficient than recalculating each time other methods are called)
 alpha_eff_values_BlackHawk = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation_BlackHawk)
 
 
@@ -130,7 +129,7 @@ def alpha_eff_extracted(M0_values):
 
     """
     M0_extracted, alpha_eff_extracted_data = load_data("2203.05743/2203.05743_Fig2.csv")
-    
+    # Value assigned at large masses equals that of the fitting function at M >~ 1e18g in Eq. 10 of Mosbech & Picker (2022), in turn from Page (1976).
     alpha_eff_values = np.interp(M0_values, M0_extracted, alpha_eff_extracted_data, left=max(alpha_eff_extracted_data), right=2.011e-4)
     return alpha_eff_values
 
@@ -151,12 +150,11 @@ def alpha_eff_mixed(M0_values):
     Array-like.
         Value of alpha_eff.
 
-    """    
-    M0_min_BH, M0_max_BH = min(m_pbh_values_formation_BlackHawk), max(m_pbh_values_formation_BlackHawk)
-    
+    """      
     alpha_eff_values = []
     
     for M_0 in M0_values:
+        # If in mass range calcualated using BlackHawk, linearly interpolate.
         if M0_min_BH < M_0 < M0_max_BH:
             alpha_eff_values.append(np.interp(M_0, m_pbh_values_formation_BlackHawk, alpha_eff_values_BlackHawk))
         else:
@@ -165,7 +163,7 @@ def alpha_eff_mixed(M0_values):
     return np.array(alpha_eff_values)
 
 
-def m_pbh_evolved_MP23(M0_values, t):
+def m_pbh_evolved_MP22(M0_values, t):
     """
     Find the PBH mass at time t, evolved from initial masses M0_values.
 
@@ -189,12 +187,14 @@ def m_pbh_evolved_MP23(M0_values, t):
         if M_0**3 - 3 * alpha_eff_mixed(np.array([M_0])) * m_Pl**3 * (t / t_Pl) <= 0:
             M_values.append(0)
         else:
+            # By default, alpha_eff_mixed() takes array-like quantities as arguments.
+            # Choose the 'zeroth' entry to append a scalar to the list M_values.
             M_values.append(np.power(M_0**3 - 3 * alpha_eff_mixed(np.array([M_0])) * m_Pl**3 * (t / t_Pl), 1/3)[0])
     
     return np.array(M_values)
 
 
-def m_pbh_formation_MP23(M_values, t):
+def m_pbh_formation_MP22(M_values, t):
     """
     Find formation mass in terms of the masses M_values at time t.
 
@@ -212,9 +212,9 @@ def m_pbh_formation_MP23(M_values, t):
 
     """
     # Smallest initial PBH mass to consider corresponds to the initial mass of a PBH with a lifetime equal to the age of the Universe (BlackHawk defaults, using the default energy range of primary particles when using PYTHIA hadronisation tables).
-    M_min = 7.56e14
-    M0_test_values = np.logspace(np.log10(M_min), 18, 1000)
-    M_evolved_test_values = m_pbh_evolved_MP23(M0_test_values, t)
+    M0_min = 7.56e14
+    M0_test_values = np.logspace(np.log10(M0_min), 18, 1000)
+    M_evolved_test_values = m_pbh_evolved_MP22(M0_test_values, t)
 
     # Logarithmically interpolate to estimate the formation mass M0_values (y-axis) corresponding to present mass M_values (x-axis)
     M0_values = np.interp(x=M_values, xp=M_evolved_test_values, fp=M0_test_values)
@@ -263,7 +263,7 @@ def phi_evolved(phi_formation, M_values, t):
         Evolved values of the PBH number density distribution function.
 
     """
-    M0_values = m_pbh_formation_MP23(M_values, t)
+    M0_values = m_pbh_formation_MP22(M_values, t)
     return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
 
 
@@ -330,7 +330,7 @@ def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=3, n_steps=1000, l
     
     # To accurately evaluate the evolved mass function at small PBH masses, need to include a dense sampling of initial masses close to M_* = 7.5e14g
     M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2),  np.logspace(log_m_min, log_m_max, n_steps))))
-    M_test_values = m_pbh_evolved_MP23(M0_test_values, t)
+    M_test_values = m_pbh_evolved_MP22(M0_test_values, t)
     
     phi_formation = LN(M0_test_values, m_c, sigma)
     phi_evolved_values = phi_evolved_v2(phi_formation, M_test_values, M0_test_values, t)
@@ -338,7 +338,7 @@ def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=3, n_steps=1000, l
     # Find mass * evolved values of phi (proportional to the mass distribution psi)
     psi_unnormalised = phi_evolved_values * M_test_values
     
-    # Estimate the normalisation of psi (such that the evolved MF is normalised to 1)
+    # Estimate the normalisation of psi
     psi_normalisation = 1 / np.trapz(phi_formation*M0_test_values, M0_test_values)
     
     if log_output:
@@ -413,6 +413,9 @@ def Delta(l_min, l_max, b_min, b_max):
             Delta += abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
     return Delta
 
+
+#%% Plot present mass against formation mass (and vice versa)
+
 if "__main__" == __name__:
 
     alpha_eff_approx_values = alpha_eff_approx(m_pbh_values_formation_BlackHawk)
@@ -434,11 +437,11 @@ if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(6, 6))
     m_pbh_values_formation_plot = np.logspace(np.log10(5e14), 16, 500)
     ax.plot(m_pbh_values_formation_plot, m_pbh_values_formation_plot, linestyle="dotted", color="k", label="Formation mass = Present mass")
-    ax.plot(m_pbh_values_formation_plot, m_pbh_evolved_MP23(m_pbh_values_formation_plot, t=t_0), marker="x", linestyle="None", label="Eq. 7 (MP '22)")
+    ax.plot(m_pbh_values_formation_plot, m_pbh_evolved_MP22(m_pbh_values_formation_plot, t=t_0), marker="x", linestyle="None", label="Eq. 7 (MP '22)")
     
     # Test: plot formation mass against present mass
-    m_evolved_test = m_pbh_evolved_MP23(m_pbh_values_formation_plot, t=t_0)
-    m_formation_test = m_pbh_formation_MP23(m_evolved_test, t=t_0)
+    m_evolved_test = m_pbh_evolved_MP22(m_pbh_values_formation_plot, t=t_0)
+    m_formation_test = m_pbh_formation_MP22(m_evolved_test, t=t_0)
     ax.plot(m_formation_test, m_evolved_test, marker="+", linestyle="None", label="Inverting Eq. 7 (MP '22)")
     
     ax.set_xlabel("Formation mass $M_0$ [g]")
@@ -452,11 +455,12 @@ if "__main__" == __name__:
     
  
 #%% Reproduce Fig. 2 of Mosbech & Picker (2022)
+
 if "__main__" == __name__:
     
     m_pbh_values_formation = np.logspace(11, 17, 500)
     m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
-    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
+    m_pbh_values_evolved = m_pbh_evolved_MP22(m_pbh_values_formation_to_evolve, t_0)
     m_c = 1e15
     
     for sigma in [0.1, 0.5, 1, 1.5]:
@@ -489,7 +493,7 @@ if "__main__" == __name__:
     
     m_pbh_values_formation = np.logspace(11, 17, 100)
     m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715116e14, 5e2), np.logspace(np.log10(7.47e14), 17, 100)))
-    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
+    m_pbh_values_evolved = m_pbh_evolved_MP22(m_pbh_values_formation_to_evolve, t_0)
     m_c = 1e15
     
     for sigma in [0.1, 0.5, 1, 1.5]:
@@ -624,7 +628,7 @@ if "__main__" == __name__:
                     
                     # To accurately evaluate the evolved mass function at small PBH masses, need to include a dense sampling of initial masses close to M_* = 7.5e14g
                     M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2),  np.logspace(log_m_min, log_m_max, n_steps))))
-                    M_test_values = m_pbh_evolved_MP23(M0_test_values, t)
+                    M_test_values = m_pbh_evolved_MP22(M0_test_values, t)
                     
                     phi_formation = LN(M0_test_values, m_c, sigma)
                     
@@ -767,7 +771,7 @@ if "__main__" == __name__:
         fig, ax = plt.subplots(figsize=(6,6))
         initial_MF = psi_LN_number_density(M0_values, mc_values[i], sigmas[i])
         
-        M_values = m_pbh_evolved_MP23(M0_values, t=t_0)
+        M_values = m_pbh_evolved_MP22(M0_values, t=t_0)
         evolved_MF = phi_evolved(initial_MF, M_values, t=t_0)
         
         ax.plot(M0_values, initial_MF, linestyle="dotted")
