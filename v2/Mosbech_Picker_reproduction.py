@@ -337,7 +337,6 @@ def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=5, n_steps=10000, 
     psi_unnormalised = phi_evolved_values * M_test_values
     
     # Estimate the normalisation of psi (such that the evolved MF is normalised to 1)
-    #psi_normalisation = 1 / np.trapz(psi_unnormalised, M_test_values)
     psi_normalisation = 1 / np.trapz(phi_formation*M0_test_values, M0_test_values)
     
     if log_output:
@@ -435,7 +434,6 @@ if "__main__" == __name__:
     
     m_pbh_values_formation = np.logspace(11, 17, 100)
     m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715116e14, 5e2), np.logspace(np.log10(7.47e14), 17, 100)))
-    #m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
     m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
     m_c = 1e15
     
@@ -538,6 +536,62 @@ if "__main__" == __name__:
         ax1.set_ylim(0, 1.5)
         fig1.tight_layout()
 
+
+#%% Test how much the normalisation factor used to convert between the number density and the mass density (n_0 / rho_0, equal to the mean of phi(M)), for a log-normal initial mass function, depends on the range of masses and number of masses:
+if "__main__" == __name__:
+    m_c = 1e12
+    sigma = 0.1
+    t = t_0
+    
+    n_steps_values = np.logspace(5, 1, 5)
+    log_m_factors = np.linspace(10, 1, 10)
+    
+    for m_c in np.linspace(11, 15, 5):
+        
+        for sigma in [0.1, 0.5, 1.0]:
+            fig, ax = plt.subplots(figsize=(5, 5))
+
+            for n_steps in n_steps_values:    
+                
+                K_values_per_step = []
+                
+                for log_m_factor in log_m_factors:
+                    
+                    n_steps = int(n_steps)
+                    
+                    # Distribution function for PBH energy density, when the number density follows distribution phi_evolved, obtained
+                    # from an initially log-normal distribution
+                
+                    log_m_min = np.log10(m_c) - log_m_factor*sigma
+                    log_m_max = np.log10(m_c) + log_m_factor*sigma
+                    
+                    # To accurately evaluate the evolved mass function at small PBH masses, need to include a dense sampling of initial masses close to M_* = 7.5e14g
+                    #M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(log_m_min, log_m_max, n_steps))))
+                    M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2),  np.logspace(log_m_min, log_m_max, n_steps))))
+                    M_test_values = m_pbh_evolved_MP23(M0_test_values, t)
+                    
+                    phi_formation = LN(M0_test_values, m_c, sigma)
+                    
+                    # Estimate the normalisation of psi (such that the evolved MF is normalised to 1)
+                    psi_normalisation = 1 / np.trapz(phi_formation*M0_test_values, M0_test_values)
+                    
+                    if log_m_factor == max(np.linspace(1, 10, 10)) and n_steps == max(np.logspace(1, 5, 5)):
+                        psi_normalisation_most_acc = psi_normalisation
+                        K_values_per_step.append(1)
+        
+                    else:
+                        K_values_per_step.append(psi_normalisation / psi_normalisation_most_acc)
+                    
+                ax.plot(log_m_factors, K_values_per_step, marker="x", linestyle="None", label="{:.0f}".format(np.log10(n_steps)))
+                    
+            ax.set_title("$M_c={:.0e}$".format(m_c) + "g , $\sigma={:.1f}$".format(sigma))
+            ax.legend(title="$\log_{10}(N_\mathrm{steps})$", fontsize="small")
+            ax.set_ylabel=("$K / K_\mathrm{most~acc.}$")
+            ax.set_xlabel("log_m_factor")
+            ax.set_ylim(0, 10)
+            fig.tight_layout()
+            fig.savefig("./MP22_reproduction_pictures/K_comparison_Mc=1e{:.0f}g".format(np.log10(m_c)) + "_sigma=0p{:.0f}.pdf".format(10*sigma))
+                
 
 #%% Reproduce Fig. 3 of Mosbech & Picker (2022)
 
@@ -923,174 +977,3 @@ if "__main__" == __name__:
     ax.set_title("$\sigma={:.1f}$ (Comparing flux per sr)".format(sigma))
     ax.legend(fontsize="small")
     plt.tight_layout()
-
-
-#%% Compare the log-normal in terms of the mass distribution to a log-normal
-# in terms of the number density.
-
-if "__main__" == __name__:
-    
-    def psi_LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
-        # Distribution function for PBH energy density, when the number density follows a log-normal in the mass 
-        
-        #log_m_min = np.log10(m_c) - log_m_factor*sigma
-        #log_m_max = np.log10(m_c) + log_m_factor*sigma
-    
-        #m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
-        #normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
-        #return LN(m, m_c, sigma) * m * normalisation
-        
-        return LN(m, m_c, sigma) * (m / m_c) * np.exp(-sigma**2/2)
-
-    def phi_LN_mass_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
-        # Distribution function for PBH number density, when the mass density follows a log-normal in the mass 
-        
-        log_m_min = np.log10(m_c) - log_m_factor*sigma
-        log_m_max = np.log10(m_c) + log_m_factor*sigma
-    
-        m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
-        normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) / m_pbh_values, m_pbh_values)
-        return (LN(m, m_c, sigma) / m) * normalisation
-
-     
-    m_c = 1e20
-    m_p = 1e20
-
-    sigma = 1
-    m_pbh_values = np.logspace(np.log10(m_c)-9, np.log10(m_c)+6, 1000)
-
-    sigmas = [0.373429, 0.5, 1, 1.84859]
-
-    # Plot of the number density
-    
-    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
-    ax0 = axes[0][0]
-    ax1 = axes[0][1]
-    ax2 = axes[1][0]
-    ax3 = axes[1][1]
-    ax_loop = [ax0, ax1, ax2, ax3]
-    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (2e16, 3e22), (5e11, 2e24)]
-    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-18)]
-   
-    for i in range(len(ax_loop)):
-        # Plot of the number density
-        ax = ax_loop[i]
-        sigma = sigmas[i]
-        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in number density")
-        ax.plot(m_pbh_values, phi_LN_mass_density(m_pbh_values, m_c, sigma), label="LN in mass density")
-        ax.set_xlabel("$M~[\mathrm{g}]$")
-        ax.set_ylabel("$\phi(M) \propto \mathrm{d}n/\mathrm{d}M$")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_title("$\sigma={:.2f}$".format(sigma))
-        ax.set_xlim(ax_x_lims[i])
-        ax.set_ylim(ax_y_lims[i])
-        
-    ax0.legend()
-    fig.suptitle("Number density distribution ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
-    fig.tight_layout()
-
-    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
-    ax0 = axes[0][0]
-    ax1 = axes[0][1]
-    ax2 = axes[1][0]
-    ax3 = axes[1][1]
-    ax_loop = [ax0, ax1, ax2, ax3]
-    
-    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (5e16, 1e23), (1e13, 1e25)]
-    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (5e-30, 5e-20)]
-
-
-    for i in range(len(ax_loop)):
-        # Plot of the mass density
-        ax = ax_loop[i]
-        sigma = sigmas[i]
-        ax.plot(m_pbh_values, psi_LN_number_density(m_pbh_values, m_c, sigma), label="LN in number density")
-        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in mass density")
-        ax.set_xlabel("$M~[\mathrm{g}]$")
-        ax.set_ylabel("$\psi(M) \propto M\mathrm{d}n/\mathrm{d}M$")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_title("$\sigma={:.2f}$".format(sigma))
-        ax.set_xlim(ax_x_lims[i])
-        ax.set_ylim(ax_y_lims[i])
-
-    ax0.legend()
-    fig.suptitle("Mass density distribution ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
-    fig.tight_layout()
-    
-    
-    # Plot both MFs with the same peak mass
-
-    m_c = m_p * np.exp(sigma**2)
-    print(m_c)
-    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
-    ax0 = axes[0][0]
-    ax1 = axes[0][1]
-    ax2 = axes[1][0]
-    ax3 = axes[1][1]
-    ax_loop = [ax0, ax1, ax2, ax3]
-    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (2e16, 3e22), (5e11, 2e24)]
-    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-18)]
-   
-    for i in range(len(ax_loop)):
-        
-        sigma = sigmas[i]
-        m_c = m_p * np.exp(sigma**2)
-        
-        if sigma < 1:
-            mc_test = m_c * (1+sigma**2)
-        elif sigma==1:
-            mc_test = m_c * 2.7
-        else:
-            mc_test = m_c * 30
-        # Plot of the number density
-        print(m_pbh_values[np.argmax(LN(m_pbh_values, m_c, sigma))])
-        print(m_pbh_values[np.argmax(phi_LN_mass_density(m_pbh_values, mc_test, sigma))])
-        
-        ax = ax_loop[i]
-        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in number density")
-        ax.plot(m_pbh_values, phi_LN_mass_density(m_pbh_values, mc_test, sigma), linestyle="dotted", linewidth=4, label="LN in mass density")
-        ax.set_xlabel("$M~[\mathrm{g}]$")
-        ax.set_ylabel("$\phi(M) \propto \mathrm{d}n/\mathrm{d}M$")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_title("$\sigma={:.2f}$".format(sigma))
-        ax.set_xlim(ax_x_lims[i])
-        ax.set_ylim(ax_y_lims[i])
-        
-    ax0.legend()
-    fig.suptitle("Number density distribution ($M_p={:.1e}~".format(m_p) + "\mathrm{g})$")
-    fig.tight_layout()
-    
-    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
-    ax0 = axes[0][0]
-    ax1 = axes[0][1]
-    ax2 = axes[1][0]
-    ax3 = axes[1][1]
-    ax_loop = [ax0, ax1, ax2, ax3]
-    
-    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (5e16, 1e23), (1e13, 1e25)]
-    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (5e-30, 5e-20)]
-
-    for i in range(len(ax_loop)):
-        # Plot of the mass density
-        ax = ax_loop[i]
-        sigma = sigmas[i]
-        
-        m_c = m_p * np.exp(sigma**2)        
-        mc_test = m_p
-              
-        ax.plot(m_pbh_values, psi_LN_number_density(m_pbh_values, mc_test, sigma), label="LN in number density")
-        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), linestyle="dotted", linewidth=4, label="LN in mass density")
-        ax.set_xlabel("$M~[\mathrm{g}]$")
-        ax.set_ylabel("$\psi(M) \propto M\mathrm{d}n/\mathrm{d}M$")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_title("$\sigma={:.2f}$".format(sigma))
-        ax.set_xlim(ax_x_lims[i])
-        ax.set_ylim(ax_y_lims[i])
-
-    ax0.legend()
-    fig.suptitle("Mass density distribution ($M_p={:.1e}~".format(m_p) + "\mathrm{g})$")
-    fig.tight_layout()
