@@ -544,7 +544,7 @@ if "__main__" == __name__:
     sigma = 0.1
     t = t_0
     
-    n_steps_values = np.logspace(5, 1, 5)
+    n_steps_values = np.logspace(4, 1, 3)
     log_m_factors = np.linspace(10, 1, 10)
     
     for m_c in np.logspace(11, 15, 5):
@@ -576,7 +576,7 @@ if "__main__" == __name__:
                     # Estimate the normalisation of psi (such that the evolved MF is normalised to 1)
                     psi_normalisation = 1 / np.trapz(phi_formation*M0_test_values, M0_test_values)
                     
-                    if log_m_factor == max(np.linspace(1, 10, 10)) and n_steps == max(np.logspace(1, 5, 5)):
+                    if log_m_factor == max(log_m_factors) and n_steps == max(n_steps_values):
                         psi_normalisation_most_acc = psi_normalisation
                         K_values_per_step.append(1)
         
@@ -972,6 +972,6 @@ if "__main__" == __name__:
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_title("$\sigma={:.1f}$ (Comparing flux per sr)".format(sigma))
+    ax.set_title("$\sigma={:.1f}$".format(sigma))
     ax.legend(fontsize="small")
     plt.tight_layout()
