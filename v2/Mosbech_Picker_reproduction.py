@@ -10,8 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from preliminaries import load_data, LN
-from isatis_reproduction import read_blackhawk_spectra
-from extended_MF_checks import envelope, constraint_Carr
+from extended_MF_checks import envelope, constraint_Carr, load_results_Isatis
 import os
 
 # Script for reproducing results from Mosbech & Picker (2022) [arXiv:2203.05743v2]
@@ -38,7 +37,6 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 plt.style.use('tableau-colorblind10')
 filepath = './Extracted_files/'
 
-
 m_Pl = 2.176e-5    # Planck mass, in grams
 t_Pl = 5.391e-44    # Planck time, in seconds
 t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
@@ -46,11 +44,12 @@ t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 #%%
 # Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of
 # alpha_eff.
+
 m_pbh_values_formation_BlackHawk = np.logspace(np.log10(4e14), 16, 50)
 m_pbh_values_formation_wide = np.logspace(8, 18, 100)
 pbh_lifetimes = []
 
-
+# Find PBH lifetimes corresponding to PBH formation masses in m_pbh_values_formation_BlackHawk
 for j in range(len(m_pbh_values_formation_BlackHawk)):
     
     destination_folder = "mass_evolution_v2" + "_{:.0f}".format(j+1)
@@ -59,7 +58,7 @@ for j in range(len(m_pbh_values_formation_BlackHawk)):
     times = data[0]
     tau = float(times[-1])
 
-    pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass
+    pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass, corresponding to the present time
 
 
 def alpha_eff(tau, M_0):
@@ -82,7 +81,10 @@ def alpha_eff(tau, M_0):
     return (1/3) * (t_Pl/tau) * (M_0 / m_Pl)**3
 
 
+# Calculate alpha_eff directly from BlackHawk
+# Put this here because it is used by later methods.
 alpha_eff_values_BlackHawk = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation_BlackHawk)
+
 
 def alpha_eff_approx(M0_values):
     """
@@ -208,7 +210,8 @@ def m_pbh_formation_MP23(M_values, t):
     M0_values : Array-like
         Initial PBH masses.
 
-    """    
+    """
+    # Smallest initial PBH mass to consider corresponds to the initial mass of a PBH with a lifetime equal to the age of the Universe (BlackHawk defaults, using the default energy range of primary particles when using PYTHIA hadronisation tables).
     M_min = 7.56e14
     M0_test_values = np.logspace(np.log10(M_min), 18, 1000)
     M_evolved_test_values = m_pbh_evolved_MP23(M0_test_values, t)
@@ -260,7 +263,6 @@ def phi_evolved(phi_formation, M_values, t):
         Evolved values of the PBH number density distribution function.
 
     """
-    # PBH mass function at time t, evolved form the initial MF phi_formation using Eq. 11 
     M0_values = m_pbh_formation_MP23(M_values, t)
     return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
 
@@ -292,7 +294,7 @@ def phi_evolved_v2(phi_formation, M_values, M0_values, t):
     return phi_formation * M_values**2 * np.power(M_values**3 + 3 * alpha_eff_mixed(M0_values) * m_Pl**3 * (t / t_Pl), -2/3)
 
 
-def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=5, n_steps=10000, log_output=True):
+def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=3, n_steps=1000, log_output=True):
     """
     PBH mass distribution at time t, for a log-normal initial number density distribution
     with characteristic mass m_c and width sigma.
@@ -306,9 +308,9 @@ def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=5, n_steps=10000, 
     t : Float
         Time (after Big Bang) at which to evaluate the distribution.
     log_m_factor : Float, optional
-        Number of multiples of sigma (in log-space) of masses around m_c to consider when estimating the maximum. The default is 5.
+        Number of multiples of sigma (in log-space) of masses around m_c to consider when estimating the maximum. The default is 3.
     n_steps : Integer, optional
-        Number of masses at which to evaluate the evolved mass function. The default is 10000.
+        Number of masses at which to evaluate the evolved mass function. The default is 1000.
     log_output : Boolean, optional
         If True, return the logarithm of the evolved masses and mass density distribution (helpful for interpolation). The default is True.
 
@@ -327,7 +329,6 @@ def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=5, n_steps=10000, 
     log_m_max = np.log10(m_c) + log_m_factor*sigma
     
     # To accurately evaluate the evolved mass function at small PBH masses, need to include a dense sampling of initial masses close to M_* = 7.5e14g
-    #M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(log_m_min, log_m_max, n_steps))))
     M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2),  np.logspace(log_m_min, log_m_max, n_steps))))
     M_test_values = m_pbh_evolved_MP23(M0_test_values, t)
     
@@ -347,10 +348,29 @@ def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=5, n_steps=10000, 
         return M_test_values, psi_unnormalised * psi_normalisation
 
 
+def psi_LN_number_density(m, m_c, sigma, log_m_factor=3, n_steps=1000):
+    """
+    Distribution function for PBH energy density, when the number density follows a log-normal in the mass.
 
-def psi_LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
-    # Distribution function for PBH energy density, when the number density follows a log-normal in the mass 
-    
+    Parameters
+    ----------
+    m : Array-like
+        PBH mass, in grams.
+    m_c : Float
+        Characteristic mass of the initial log-normal distribution in the number density.
+    sigma : Float
+        Standard deviation of the initial log-normal distribution in the number density.
+    log_m_factor : Float, optional
+        Number of multiples of sigma (in log-space) of masses around m_c to consider when estimating the maximum. The default is 3.
+    n_steps : Integer, optional
+        Number of masses at which to evaluate the evolved mass function. The default is 1000.
+
+    Returns
+    -------
+    Array-like
+        Evolved PBH mass density distribution, evaluated at time t and masses m.
+
+    """
     log_m_min = np.log10(m_c) - log_m_factor*sigma
     log_m_max = np.log10(m_c) + log_m_factor*sigma
 
@@ -358,6 +378,40 @@ def psi_LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
     normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
     return LN(m, m_c, sigma) * m * normalisation
 
+
+def Delta(l_min, l_max, b_min, b_max):
+    """
+    Calculate solid angle observed by a telescope.
+
+    Parameters
+    ----------
+    l_min : Float
+        Minimum galactic longitude, in radians.
+    l_max : Float
+        Maximum galactic longitude, in radians.
+    b_min : Float
+        Minimum galactic latitude, in radians.
+    b_max : Float
+        Maximum galactic latitude, in radians.
+
+    Returns
+    -------
+    Delta : Float
+        Solid angle observed, in steradians.
+
+    """
+    nb_angles = 100
+
+    b, l = [], []
+    for i in range(0, nb_angles):
+        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
+        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
+
+    Delta = 0
+    for i in range(0, nb_angles-1):
+        for j in range(0, nb_angles-1):
+            Delta += abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
+    return Delta
 
 if "__main__" == __name__:
 
@@ -396,7 +450,7 @@ if "__main__" == __name__:
     ax.legend()
     fig.tight_layout()
     
-    
+ 
 #%% Reproduce Fig. 2 of Mosbech & Picker (2022)
 if "__main__" == __name__:
     
@@ -539,17 +593,19 @@ if "__main__" == __name__:
 
 
 #%% Test how much the normalisation factor used to convert between the number density and the mass density (n_0 / rho_0, equal to the mean of phi(M)), for a log-normal initial mass function, depends on the range of masses and number of masses:
+
 if "__main__" == __name__:
+    
     m_c = 1e12
     sigma = 0.1
     t = t_0
     
-    n_steps_values = np.logspace(4, 1, 3)
+    n_steps_values = np.logspace(4, 1, 4)
     log_m_factors = np.linspace(10, 1, 10)
     
     for m_c in np.logspace(11, 15, 5):
         
-        for sigma in [2.0]:
+        for sigma in [0.1, 0.5, 1]:
             fig, ax = plt.subplots(figsize=(5, 5))
 
             for n_steps in n_steps_values:    
@@ -567,7 +623,6 @@ if "__main__" == __name__:
                     log_m_max = np.log10(m_c) + log_m_factor*sigma
                     
                     # To accurately evaluate the evolved mass function at small PBH masses, need to include a dense sampling of initial masses close to M_* = 7.5e14g
-                    #M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2), np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(log_m_min, log_m_max, n_steps))))
                     M0_test_values = np.sort(np.concatenate((np.arange(7.4687715114e14, 7.4687715115e14, 5e2),  np.logspace(log_m_min, log_m_max, n_steps))))
                     M_test_values = m_pbh_evolved_MP23(M0_test_values, t)
                     
@@ -578,10 +633,10 @@ if "__main__" == __name__:
                     
                     if log_m_factor == max(log_m_factors) and n_steps == max(n_steps_values):
                         psi_normalisation_most_acc = psi_normalisation
-                        K_values_per_step.append(1)
+                        K_values_per_step.append(0)
         
                     else:
-                        K_values_per_step.append(psi_normalisation / psi_normalisation_most_acc)
+                        K_values_per_step.append(psi_normalisation / psi_normalisation_most_acc - 1)
                     
                 ax.plot(log_m_factors, K_values_per_step, marker="x", linestyle="None", label="{:.0f}".format(np.log10(n_steps)))
                     
@@ -589,99 +644,16 @@ if "__main__" == __name__:
             ax.legend(title="$\log_{10}(N_\mathrm{steps})$", fontsize="small")
             ax.set_ylabel("$K / K_\mathrm{most~acc.}$")
             ax.set_xlabel("log_m_factor")
-            ax.set_ylim(0, 2)
+            ax.set_ylim(-1, 1)
             fig.tight_layout()
-            fig.savefig("./MP22_reproduction_pictures/K_comparison_Mc=1e{:.0f}g".format(np.log10(m_c)) + "_sigma=0p{:.0f}.pdf".format(10*sigma))
-                
-
-#%% Reproduce Fig. 3 of Mosbech & Picker (2022)
-
-if "__main__" == __name__:
-        
-    # Create and save file for PBH mass and spin distribution
-    BlackHawk_path = "./../../Downloads/version_finale/"
-    
-    # Initial line of each PBH mass spectrum file.
-    spec_file_initial_line = "mass/spin \t 0.00000e+00"
-    
-    mc_values = [5e14, 1e15, 5e15, 1e16]
-    sigma = 1.5
-    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.4687715115e14, 7.47e14, 5e7), np.logspace(np.log10(7.47e14), 17, 500)))
-    m_pbh_values_evolved = m_pbh_evolved_MP23(m_pbh_values_formation_to_evolve, t_0)
-    dlog10m = (np.log10(max(m_pbh_values_evolved)) - np.log10(min(m_pbh_values_evolved))) / (len(m_pbh_values_evolved) - 1)
-    
-    colors = ["lime", "limegreen", "green", "darkgreen"]
-    
-    
-    b_max, l_max = np.radians(7/2), np.radians(7/2)    
-    from isatis_reproduction import J_D
-    D_factor = J_D(-l_max, l_max, -b_max, b_max)
-    prefactors = []
-    
-    for i, m_c in enumerate(mc_values):
-        
-        PBH_mass_mean = m_c * np.exp(sigma**2 / 2)
-        prefactor = D_factor / PBH_mass_mean
-        prefactors.append(prefactor)
-        
-        spec_file = []
-        spec_file.append(spec_file_initial_line)
-    
-        filename_BH_spec = BlackHawk_path + "/src/tables/users_spectra/" + "MP22_test_evolved_{:.0f}.txt".format(i)
-        
-        phi_formation = phi_LN(m_pbh_values_formation_to_evolve, m_c, sigma)
-        phi_present = phi_evolved(phi_formation, m_pbh_values_evolved, t_0)
-        spec_values = phi_present * m_pbh_values_evolved * dlog10m * np.log(10)
-        print(spec_values[5:10])
-        
-        for j in range(len(m_pbh_values_evolved)):
-            spec_file.append("{:.5e}\t{:.5e}".format(m_pbh_values_evolved[j], spec_values[j]))
+            if sigma < 1:
+                fig.savefig("./MP22_reproduction_pictures/K_comparison_Mc=1e{:.0f}g".format(np.log10(m_c)) + "_sigma=0p{:.0f}.pdf".format(10*sigma))
+                fig.savefig("./MP22_reproduction_pictures/K_comparison_Mc=1e{:.0f}g".format(np.log10(m_c)) + "_sigma=0p{:.0f}.png".format(10*sigma))
+            else:
+                fig.savefig("./MP22_reproduction_pictures/K_comparison_Mc=1e{:.0f}g".format(np.log10(m_c)) + "_sigma={:.0f}.pdf".format(sigma))
+                fig.savefig("./MP22_reproduction_pictures/K_comparison_Mc=1e{:.0f}g".format(np.log10(m_c)) + "_sigma={:.0f}.png".format(sigma))
+            plt.close()
             
-        np.savetxt(filename_BH_spec, spec_file, fmt="%s", delimiter = " = ")            
-
-    f_pbh = 1e-8
-    
-    # Load gamma ray spectrum calculated from BlackHawk
-    file_path_BlackHawk_data = BlackHawk_path + "/results/"
-    
-    E_5e14, spectrum_5e14 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e14/instantaneous_secondary_spectra.txt")
-    E_1e15, spectrum_1e15 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e15/instantaneous_secondary_spectra.txt")
-    E_5e15, spectrum_5e15 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e15/instantaneous_secondary_spectra.txt")
-    E_1e16, spectrum_1e16 = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e16/instantaneous_secondary_spectra.txt")
-
-    E_5e14_evolved, spectrum_5e14_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e14_evolved/instantaneous_secondary_spectra.txt")
-    E_1e15_evolved, spectrum_1e15_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e15_evolved/instantaneous_secondary_spectra.txt")
-    E_5e15_evolved, spectrum_5e15_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_5e15_evolved/instantaneous_secondary_spectra.txt")
-    E_1e16_evolved, spectrum_1e16_evolved = read_blackhawk_spectra(file_path_BlackHawk_data + "MP22_test_1e16_evolved/instantaneous_secondary_spectra.txt")
-
-
-    fig, ax = plt.subplots(figsize=(8, 6))
-    
-    ax.plot(E_5e14, prefactors[0] * f_pbh * E_5e14**2 * spectrum_5e14, label=r"$5\times 10^{14}$", linestyle="dotted", color=colors[0])
-    ax.plot(E_5e14_evolved, prefactors[0] * f_pbh * E_5e14_evolved**2 * spectrum_5e14_evolved, color=colors[0])
-    
-    ax.plot(E_1e15, prefactors[1] * f_pbh * E_1e15**2 * spectrum_1e15, label=r"$1\times 10^{15}$", linestyle="dotted", color=colors[1])
-    ax.plot(E_1e15_evolved, prefactors[1] * f_pbh * E_1e15_evolved**2 * spectrum_1e15_evolved, color=colors[1])
-    
-    ax.plot(E_5e15, prefactors[2] * f_pbh * E_5e15**2 * spectrum_5e15, label=r"$5\times 10^{15}$", linestyle="dotted", color=colors[2])
-    ax.plot(E_5e15_evolved, prefactors[2] * f_pbh * E_5e15_evolved**2 * spectrum_5e15_evolved, color=colors[2])
-    
-    ax.plot(E_1e16, prefactors[3] * f_pbh * E_1e16**2 * spectrum_1e16, label=r"$1\times 10^{16}$", linestyle="dotted", color=colors[3])
-    ax.plot(E_1e16_evolved, prefactors[3] * f_pbh * E_1e16_evolved**2 * spectrum_1e16_evolved, color=colors[3])
-    
-    ax.plot(0, 0, color="k", label="\nEvolved")    
-    ax.plot(0, 0, linestyle="dotted", color="k", label="Lognormal")
-
-    ax.legend(title="$M_*~[\mathrm{g}]$")
-    ax.set_xlabel("Particle energy $E$ [GeV]")
-    ax.set_ylabel("$\gamma$ flux: $E^2 \mathrm{d}^2 N / \mathrm{d}E\mathrm{d}t~[\mathrm{GeV}~\mathrm{s}^{-1}~\mathrm{cm}^{-2}]$")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlim(1e-6, 2e5)
-    ax.set_ylim(1e-19, 1e-3)
-    ax.set_title("$\sigma={:.1f}$".format(sigma) + " (PYTHIA)")
-    fig.tight_layout()
-    
 
 #%% Reproduce Fig. 4 of Mosbech & Picker (2022) 
 
@@ -697,14 +669,13 @@ if "__main__" == __name__:
     flux_lower_y_HESS /= 10
     flux_upper_y_HESS /= 10
     
-    # widths of energy bins
+    # Widths of energy bins
     E_minus_HESS = E_upper_y_HESS - E_lower_HESS[:-1]
     E_plus_HESS = E_lower_HESS[1:] - E_upper_y_HESS
     
-    # upper and lower error bars on flux values
+    # Upper and lower error bars on flux values
     flux_plus_HESS = flux_upper_y_HESS - flux_mid_HESS[:-1]
     flux_minus_HESS = flux_mid_HESS[:-1] - flux_lower_y_HESS
-    
     
     # Load data from FermiLAT (Abramowski et al. 2016, 1512.01846)
     E_lower_y_FermiLAT, flux_lower_y_FermiLAT_sys = load_data("1512.01846/1512.01846_lower_y_sys.csv")
@@ -738,56 +709,17 @@ if "__main__" == __name__:
     ax.legend()
     fig.tight_layout()
     
-    
     flux_plus_FermiLAT = flux_plus_FermiLAT_stat + flux_plus_FermiLAT_sys
     flux_minus_FermiLAT = flux_minus_FermiLAT_stat + flux_minus_FermiLAT_sys
     
     # Print fluxes (rather than E^2 * fluxes)
-    print(flux_mid_FermiLAT[:-1] / E_lower_y_FermiLAT**2)
-    print(flux_minus_FermiLAT / E_lower_y_FermiLAT**2)
-    print(flux_plus_FermiLAT / E_lower_y_FermiLAT**2)
+    #print(flux_mid_FermiLAT[:-1] / E_lower_y_FermiLAT**2)
+    #print(flux_minus_FermiLAT / E_lower_y_FermiLAT**2)
+    #print(flux_plus_FermiLAT / E_lower_y_FermiLAT**2)
     
-
-#%% Plot the photon spectrum for different PBH masses
-
-if "__main__" == __name__:
-    M_values_eval = np.logspace(10, 18, 50)
-    fig, ax = plt.subplots(figsize=(6,6))
-    
-    for i in range(len(M_values_eval)):
-        if (i+1) % 4 == 0 and i < 20:
-            filepath = os.path.expanduser('~') + "/Downloads/version_finale/results/GC_mono_PYTHIA_v2_{:.0f}/".format(i+1)
-            energies, spectrum = read_blackhawk_spectra(filepath + "instantaneous_secondary_spectra.txt")
-            ax.plot(energies[200:500], spectrum[200:500], label="{:.2e} g".format(M_values_eval[i]))
-            
-    ax.set_xlabel("$E~[\mathrm{GeV}]$")
-    ax.set_ylabel("$\mathrm{d}^2 N / \mathrm{d}E\mathrm{d}t~[\mathrm{GeV}^{-1}~\mathrm{sr}^{-1}~\mathrm{s}^{-1}~\mathrm{cm}^{-2}]$")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_ylim(1e19, 1e30)
-    ax.legend(fontsize="small")
-    fig.tight_layout()
-
 
 #%% Plot the Fermi-LAT constraints (monochromatic MF)
 b_max, l_max = np.radians(3.5), np.radians(3.5)
-
-def Delta(l_min, l_max, b_min, b_max):
-    nb_angles = 100
-
-    b, l = [], []
-    for i in range(0, nb_angles):
-        l.append(l_min + i*(l_max - l_min)/(nb_angles - 1))
-        b.append(b_min + i*(b_max - b_min)/(nb_angles - 1))
-
-    Delta = 0
-    for i in range(0, nb_angles-1):
-        for j in range(0, nb_angles-1):
-            Delta += abs(np.cos(b[i])) * (l[i+1] - l[i]) * (b[j+1] - b[j])
-    return Delta
-
-
-from extended_MF_checks import load_results_Isatis
 
 if "__main__" == __name__:
     
@@ -802,7 +734,6 @@ if "__main__" == __name__:
     f_PBH_Isatis_lower = np.array(constraints_Isatis_file_lower[-1])
     f_PBH_Isatis_upper = np.array(constraints_Isatis_file_upper[-1])
    
-    
     # Constraints data for each energy bin of each instrument, calculated using isatis_reproduction.py   
     constraints_Isatis_reproduction_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
     constraints_Isatis_reproduction_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
@@ -810,7 +741,6 @@ if "__main__" == __name__:
     f_PBH_Isatis_reproduction_lower = envelope(constraints_Isatis_reproduction_file_lower)
     f_PBH_Isatis_reproduction_upper = envelope(constraints_Isatis_reproduction_file_upper)
        
-    
     # Plot the monochromatic MF constraint
     fig, ax = plt.subplots(figsize=(6,6))
     ax.fill_between(m_pbh_mono, f_PBH_Isatis_lower, f_PBH_Isatis_upper)
@@ -823,6 +753,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     plt.tight_layout()
+
 
 #%% Calculate constraints for an extended MF (initial lognormal and evolved lognormal)
 
