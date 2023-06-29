@@ -546,7 +546,7 @@ if "__main__" == __name__:
     n_steps_values = np.logspace(5, 1, 5)
     log_m_factors = np.linspace(10, 1, 10)
     
-    for m_c in np.linspace(11, 15, 5):
+    for m_c in np.logspace(11, 15, 5):
         
         for sigma in [0.1, 0.5, 1.0]:
             fig, ax = plt.subplots(figsize=(5, 5))
