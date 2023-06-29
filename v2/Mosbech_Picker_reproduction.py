@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from preliminaries import load_data, LN
 from isatis_reproduction import read_blackhawk_spectra
+from extended_MF_checks import envelope, constraint_Carr
 import os
 
 # Script for reproducing results from Mosbech & Picker (2022) [arXiv:2203.05743v2]
@@ -548,7 +549,7 @@ if "__main__" == __name__:
     
     for m_c in np.logspace(11, 15, 5):
         
-        for sigma in [0.1, 0.5, 1.0]:
+        for sigma in [2.0]:
             fig, ax = plt.subplots(figsize=(5, 5))
 
             for n_steps in n_steps_values:    
@@ -586,9 +587,9 @@ if "__main__" == __name__:
                     
             ax.set_title("$M_c={:.0e}$".format(m_c) + "g , $\sigma={:.1f}$".format(sigma))
             ax.legend(title="$\log_{10}(N_\mathrm{steps})$", fontsize="small")
-            ax.set_ylabel=("$K / K_\mathrm{most~acc.}$")
+            ax.set_ylabel("$K / K_\mathrm{most~acc.}$")
             ax.set_xlabel("log_m_factor")
-            ax.set_ylim(0, 10)
+            ax.set_ylim(0, 2)
             fig.tight_layout()
             fig.savefig("./MP22_reproduction_pictures/K_comparison_Mc=1e{:.0f}g".format(np.log10(m_c)) + "_sigma=0p{:.0f}.pdf".format(10*sigma))
                 
@@ -769,8 +770,6 @@ if "__main__" == __name__:
 
 
 #%% Plot the Fermi-LAT constraints (monochromatic MF)
-from extended_MF_checks import envelope, constraint_Carr
-
 b_max, l_max = np.radians(3.5), np.radians(3.5)
 
 def Delta(l_min, l_max, b_min, b_max):
@@ -867,8 +866,9 @@ if "__main__" == __name__:
     constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
         
     M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
-    mc_values = np.logspace(14, 17, 50)
- 
+    mc_values_unevolved = np.logspace(14, 17, 50)
+    mc_values_evolved = np.logspace(13, 17, 50)
+
     # Final constraint
     constraint_lower = []
     constraint_upper = []
@@ -888,7 +888,7 @@ if "__main__" == __name__:
         constraint_energy_bin = constraints_mono_file_lower[k]
 
         # Calculate constraint on f_PBH from each bin
-        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=psi_LN_number_density, params=params_LN)
+        f_PBH_k = constraint_Carr(mc_values_unevolved, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=psi_LN_number_density, params=params_LN)
         energy_bin_constraints_lower.append(f_PBH_k)
 
     for k in range(len(constraints_mono_file_upper)):
@@ -897,7 +897,7 @@ if "__main__" == __name__:
         constraint_energy_bin = constraints_mono_file_upper[k]
 
         # Calculate constraint on f_PBH from each bin
-        f_PBH_k = constraint_Carr(mc_values, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=psi_LN_number_density, params=params_LN)
+        f_PBH_k = constraint_Carr(mc_values_unevolved, m_mono=M_values_eval, f_max=constraint_energy_bin, mf=psi_LN_number_density, params=params_LN)
         energy_bin_constraints_upper.append(f_PBH_k)
         
     constraint_lower.append(envelope(energy_bin_constraints_lower))
@@ -907,11 +907,11 @@ if "__main__" == __name__:
     # Evolved mass function
     constraint_lower_evolved = []
     constraint_upper_evolved = []
-    
-    for m_c in mc_values:
+        
+    for m_c in mc_values_evolved:
                 
         # Evolved mass function
-        log_m_evolved, log_psi_evolved = psi_evolved_LN_number_density(m_c, sigma, t_0, n_steps=1000)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
+        log_m_evolved, log_psi_evolved = psi_evolved_LN_number_density(m_c, sigma, t_0, log_m_factor=3, n_steps=100)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
         # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
         mf_evolved_interp = 10**np.interp(np.log10(M_values_eval), log_m_evolved, log_psi_evolved)
         
@@ -924,8 +924,7 @@ if "__main__" == __name__:
             
             integrand = mf_evolved_interp / constraint_energy_bin
             integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
-            print(integrand)
-            print(M_values_eval)
+
             if integral == 0 or np.isnan(integral):
                 f_PBH_energy_bin_lower.append(10)
             else:
@@ -941,7 +940,6 @@ if "__main__" == __name__:
             constraint_energy_bin = constraints_mono_file_upper[k]
             
             integrand = mf_evolved_interp / constraint_energy_bin
-
             integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
             
             if integral == 0 or np.isnan(integral):
@@ -958,11 +956,11 @@ if "__main__" == __name__:
     m_evolved_upper, f_evolved_upper = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_upper.csv".format(sigma))
    
     fig, ax = plt.subplots(figsize=(6.5,6.5))
-    ax.fill_between(mc_values, constraint_lower[0], constraint_upper[0], color="tab:green", alpha=0.5, label="Log-normal \n (unevolved)")
+    ax.fill_between(mc_values_unevolved, constraint_lower[0], constraint_upper[0], color="tab:green", alpha=0.5, label="Log-normal \n (unevolved)")
     ax.plot(m_LN_lower, f_LN_lower, color="tab:green", linestyle="dotted")   
     ax.plot(m_LN_upper, f_LN_upper, color="tab:green", linestyle="dotted")
 
-    ax.fill_between(mc_values, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.5, label="Evolved")
+    ax.fill_between(mc_values_evolved, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.5, label="Evolved")
     ax.plot(m_evolved_lower, f_evolved_lower, color="tab:purple", linestyle="dotted")   
     ax.plot(m_evolved_upper, f_evolved_upper, color="tab:purple", linestyle="dotted")
     ax.plot(0,0, linestyle="dotted", color="k", label="Extracted from \n Mosbech \& \n Picker (2022)")
