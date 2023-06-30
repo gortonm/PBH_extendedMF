@@ -85,34 +85,6 @@ def alpha_eff(tau, M_0):
 alpha_eff_values_BlackHawk = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation_BlackHawk)
 
 
-def alpha_eff_approx(M0_values):
-    """
-    Fitting formula used for alpha_eff, given in Eq. 10 of Mosbech & Picker (2022).
-
-    Parameters
-    ----------
-    M0_values : Array-like
-        PBH formation masses, in grams.
-
-    Returns
-    -------
-    Array-like.
-        Approximate value of alpha_eff.
-
-    """
-    c_1 = -0.3015
-    c_2 = 0.3113
-    p = -0.0008
-    
-    alpha_eff_values = []
-    for M_0 in M0_values:
-        if M_0 < 1e18:
-            alpha_eff_values.append(c_1 + c_2 * M_0**p)
-        else:
-            alpha_eff_values.append(2.011e-4)
-    return alpha_eff_values
-
-
 def alpha_eff_extracted(M0_values):
     """
     Result for alpha_eff, extracted from Fig. 1 of Mosbech & Picker (2022).
@@ -394,7 +366,6 @@ if "__main__" == __name__:
     alpha_eff_extracted_values = alpha_eff_extracted(m_pbh_values_formation_wide)
     fig, ax = plt.subplots(figsize=(6, 5))
     ax.plot(m_pbh_values_formation_BlackHawk, alpha_eff_values_BlackHawk, label="Calculated using BlackHawk")
-    ax.plot(m_pbh_values_formation_BlackHawk, alpha_eff_approx_values, linestyle="dashed", label="Fitting formula (Eq. 10 MP '22)")
     ax.plot(m_pbh_values_formation_wide, alpha_eff_extracted_values, linestyle="None", marker="x", label="Extracted (Fig. 1 MP '22)")
     ax.set_xscale("log")
     ax.set_yscale("log")
