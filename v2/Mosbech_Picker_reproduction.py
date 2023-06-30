@@ -362,7 +362,6 @@ def Delta(l_min, l_max, b_min, b_max):
 
 if "__main__" == __name__:
 
-    alpha_eff_approx_values = alpha_eff_approx(m_pbh_values_formation_BlackHawk)
     alpha_eff_extracted_values = alpha_eff_extracted(m_pbh_values_formation_wide)
     fig, ax = plt.subplots(figsize=(6, 5))
     ax.plot(m_pbh_values_formation_BlackHawk, alpha_eff_values_BlackHawk, label="Calculated using BlackHawk")
