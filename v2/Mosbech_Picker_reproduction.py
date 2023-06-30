@@ -42,8 +42,6 @@ t_Pl = 5.391e-44    # Planck time, in seconds
 t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 
 #%%
-# Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of
-# alpha_eff.
 m_pbh_values_formation_BlackHawk = np.logspace(np.log10(4e14), 16, 50)   # Range of formation masses for which the lifetime is calculated using BlackHawk (primary particle energy range from 1e-6 to 1e5 GeV)
 m_pbh_values_formation_wide = np.logspace(8, 18, 100)    # Test range of initial masses
 pbh_lifetimes = []
@@ -358,7 +356,8 @@ def Delta(l_min, l_max, b_min, b_max):
     return Delta
 
 
-#%% Plot present mass against formation mass (and vice versa)
+#%% Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of alpha_eff.
+
 
 if "__main__" == __name__:
 
@@ -399,6 +398,8 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     m_pbh_values_formation = np.logspace(11, 17, 500)
+    # Initial PBH mass values includes values close to the initial mass of a PBH with lifetime equal to the age of the Universe,
+    # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
     m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.logspace(np.log10(7.474e14), 17, 500)))
     m_pbh_values_evolved = m_pbh_evolved_MP22(m_pbh_values_formation_to_evolve, t_0)
     m_c = 1e15
@@ -428,12 +429,11 @@ if "__main__" == __name__:
 
 #%% Plot the mass density distribution, for an initial distribution following a log-normal in the number density
 # This cell includes a test of the method psi_evolved_LN_number_density()
+# Includes comparisons of results obtained using different numbers of evaluations, and compares logarithmic and linear interpolation of the results
 
 if "__main__" == __name__:
     
     m_pbh_values_formation = np.logspace(11, 17, 100)
-    # Initial PBH mass values includes values close to the initial mass of a PBH with lifetime equal to the age of the Universe,
-    # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
     m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.logspace(np.log10(7.47e14), 17, 100)))
     m_pbh_values_evolved = m_pbh_evolved_MP22(m_pbh_values_formation_to_evolve, t_0)
     m_c = 1e15
@@ -604,6 +604,8 @@ if "__main__" == __name__:
 #%% Reproduce Fig. 4 of Mosbech & Picker (2022) 
 
 if "__main__" == __name__:
+    b_max, l_max = np.radians(3.5), np.radians(3.5)
+    delta_Omega = Delta(-l_max, l_max, -b_max, b_max)
 
     # Load data from HESS (Abramowski et al. 2016, 1603.07730)
     E_lower_y_HESS, flux_lower_y_HESS = load_data("1603.07730/1603.07730_lower_y.csv")
@@ -623,18 +625,18 @@ if "__main__" == __name__:
     flux_plus_HESS = flux_upper_y_HESS - flux_mid_HESS[:-1]
     flux_minus_HESS = flux_mid_HESS[:-1] - flux_lower_y_HESS
     
-    # Load data from FermiLAT (Abramowski et al. 2016, 1512.01846)
+    # Load data from FermiLAT (Lacroix et al. 2016, 1512.01846)
     E_lower_y_FermiLAT, flux_lower_y_FermiLAT_sys = load_data("1512.01846/1512.01846_lower_y_sys.csv")
     E_lower_y_FermiLAT, flux_lower_y_FermiLAT_stat = load_data("1512.01846/1512.01846_lower_y_stat.csv")
     E_upper_y_FermiLAT, flux_upper_y_FermiLAT_sys = load_data("1512.01846/1512.01846_upper_y_sys.csv")
     E_upper_y_FermiLAT, flux_upper_y_FermiLAT_stat = load_data("1512.01846/1512.01846_upper_y_stat.csv")
     E_lower_FermiLAT, flux_mid_FermiLAT = load_data("1512.01846/1512.01846_x_bins.csv")
     
-    # widths of energy bins
+    # Widths of energy bins
     E_minus_FermiLAT = E_upper_y_FermiLAT - E_lower_FermiLAT[:-1]
     E_plus_FermiLAT = E_lower_FermiLAT[1:] - E_upper_y_FermiLAT
     
-    # upper and lower error bars on flux values
+    # Upper and lower error bars on flux values
     flux_plus_FermiLAT_stat = flux_upper_y_FermiLAT_stat - flux_mid_FermiLAT[:-1]
     flux_minus_FermiLAT_stat = flux_mid_FermiLAT[:-1] - flux_lower_y_FermiLAT_stat
     
@@ -658,14 +660,13 @@ if "__main__" == __name__:
     flux_plus_FermiLAT = flux_plus_FermiLAT_stat + flux_plus_FermiLAT_sys
     flux_minus_FermiLAT = flux_minus_FermiLAT_stat + flux_minus_FermiLAT_sys
     
-    # Print fluxes (rather than E^2 * fluxes)
-    #print(flux_mid_FermiLAT[:-1] / E_lower_y_FermiLAT**2)
-    #print(flux_minus_FermiLAT / E_lower_y_FermiLAT**2)
-    #print(flux_plus_FermiLAT / E_lower_y_FermiLAT**2)
+    # Print fluxes per steradian
+    print(flux_mid_FermiLAT[:-1] / (delta_Omega * E_lower_y_FermiLAT**2))
+    print(flux_minus_FermiLAT / (delta_Omega * E_lower_y_FermiLAT**2))
+    print(flux_plus_FermiLAT / (delta_Omega * E_lower_y_FermiLAT**2))
     
 
 #%% Plot the Fermi-LAT constraints (monochromatic MF)
-b_max, l_max = np.radians(3.5), np.radians(3.5)
 
 if "__main__" == __name__:
     
