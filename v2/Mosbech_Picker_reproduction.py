@@ -491,14 +491,14 @@ if "__main__" == __name__:
 
 
 #%% Plot the mass density distribution, for an initial distribution following a log-normal in the number density
-# This cell includes a test of the effect of not evolving the total PBH mass density with time on the resulting mass function psi(M),
-# by comparing the initial and evolved psi(M) in a mass range where the effects of evaporation are negligible (M>~1e15g).
+# This cell includes a test of the normalisation of psi(M), by comparing the initial and evolved psi(M) in a mass 
+# range where the effects of evaporation are negligible (M>~1e15g).
 
 if "__main__" == __name__:
     
     m_pbh_values_formation = np.logspace(11, 17, 100)
     
-    for sigma in [0.5]:
+    for sigma in [0.1]:
         
         fig1, ax1 = plt.subplots(figsize=(6, 6))
         
@@ -588,7 +588,7 @@ if "__main__" == __name__:
                     
             ax.set_title("$M_c={:.0e}$".format(m_c) + "g , $\sigma={:.1f}$".format(sigma))
             ax.legend(title="$\log_{10}(N_\mathrm{steps})$", fontsize="small")
-            ax.set_ylabel("$K / K_\mathrm{most~acc.}$")
+            ax.set_ylabel("$K / K_\mathrm{most~acc.} - 1$")
             ax.set_xlabel("log_m_factor")
             ax.set_ylim(-1, 1)
             fig.tight_layout()
@@ -688,7 +688,7 @@ if "__main__" == __name__:
     f_PBH_Isatis_reproduction_lower = envelope(constraints_Isatis_reproduction_file_lower)
     f_PBH_Isatis_reproduction_upper = envelope(constraints_Isatis_reproduction_file_upper)
        
-    # Plot the monochromatic MF constraint
+    # Plot the delta function MF constraint
     fig, ax = plt.subplots(figsize=(6,6))
     ax.fill_between(m_pbh_mono, f_PBH_Isatis_lower, f_PBH_Isatis_upper)
     ax.fill_between(m_pbh_mono, f_PBH_Isatis_reproduction_lower, f_PBH_Isatis_reproduction_upper, alpha=0.5)
@@ -700,40 +700,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     plt.tight_layout()
-
-
-#%% Calculate constraints for an extended MF (initial lognormal and evolved lognormal)
-
-if "__main__" == __name__:
-    M0_values = np.logspace(9, 18, 50)
     
-    sigmas = [0.1, 0.5, 1., 1.5]
-    mc_values = [3e14, 3e13, 1e12, 2e10]
-    
-    for i in range(len(sigmas)):
-        fig, ax = plt.subplots(figsize=(6,6))
-        initial_MF = psi_LN_number_density(M0_values, mc_values[i], sigmas[i])
-        
-        M_values = m_pbh_evolved_MP22(M0_values, t=t_0)
-        evolved_MF = phi_evolved(initial_MF, M_values, t=t_0)
-        
-        ax.plot(M0_values, initial_MF, linestyle="dotted")
-        ax.plot(M_values, evolved_MF)
-        ax.set_xlabel("$M~[\mathrm{g}$]")
-        ax.set_ylabel("$\psi(M)$")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.vlines(5e10, ymin=min(initial_MF), ymax=max(initial_MF), color="k", linestyle="dotted", label=r"$M=5\times 10^{10}~\mathrm{g}$")
-        ax.hlines(1e-4 * max(initial_MF), xmin=min(M_values), xmax=max(M_values), color="k", linestyle="dashed", label="$\psi = \psi_\mathrm{max} / 10^4$")
-        ax.legend()
-        ax.set_title("$M_c={:.0e}$g, $\sigma={:.1f}$".format(mc_values[i], sigmas[i]))
-        ax.set_xlim(min(M0_values), max(M0_values))
-        fig.tight_layout()
-        
-        # Check if the mass function is normalised to a value close to 1
-        print(np.trapz(initial_MF, M0_values))
-        print(np.trapz(evolved_MF, M_values))
-
 
 #%% Plot constraints for extended MF (reproducing Fig. 4 of Mosbech & Picker (2022)).
 
@@ -755,7 +722,7 @@ if "__main__" == __name__:
     energy_bin_constraints_lower = []
     energy_bin_constraints_upper = []
     
-    sigma = 0.5
+    sigma = 0.1
     
     params_LN = [sigma]
     
