@@ -400,7 +400,7 @@ if "__main__" == __name__:
     m_pbh_values_formation = np.logspace(11, 17, 500)
     # Initial PBH mass values includes values close to the initial mass of a PBH with lifetime equal to the age of the Universe,
     # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
-    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.logspace(np.log10(7.474e14), 17, 500)))
+    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 17, 500)))
     m_pbh_values_evolved = m_pbh_evolved_MP22(m_pbh_values_formation_to_evolve, t_0)
     m_c = 1e15
     
@@ -437,12 +437,13 @@ if "__main__" == __name__:
         fig, ax = plt.subplots(figsize=(6, 6))
         phi_extracted_evolved_interp = 10**np.interp(np.log10(m_pbh_values_evolved), np.log10(m_extracted_evolved), np.log10(phi_extracted_evolved))
         ratio = phi_present/phi_extracted_evolved_interp
-        ax.plot(m_pbh_values_evolved, ratio-1, marker="x")
+        ax.plot(m_pbh_values_evolved, ratio-1, marker="x", linestyle="None")
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$\phi(M, t)$ (reproduction / extracted - 1)")
         ax.set_xscale("log")
+        ax.set_title("$\sigma={:.1f}$".format(sigma))
         ax.set_xlim(min(m_extracted_evolved), max(m_extracted_evolved))
-        #ax.set_yscale("log")
+        ax.set_ylim(-0.2, 0.2)
         fig.tight_layout()
 
 
