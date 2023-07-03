@@ -98,7 +98,7 @@ def alpha_eff_extracted(M0_values):
         Value of alpha_eff.
 
     """
-    M0_extracted, alpha_eff_extracted_data = load_data("2203.05743/2203.05743_Fig2.csv")
+    M0_extracted, alpha_eff_extracted_data = load_data("2203.05743/2203.05743_Fig1.csv")
     # Value assigned at large masses equals that of the fitting function at M >~ 1e18g in Eq. 10 of Mosbech & Picker (2022), in turn from Page (1976).
     alpha_eff_values = np.interp(M0_values, M0_extracted, alpha_eff_extracted_data, left=max(alpha_eff_extracted_data), right=2.011e-4)
     return alpha_eff_values
@@ -405,6 +405,13 @@ if "__main__" == __name__:
     m_c = 1e15
     
     for sigma in [0.1, 0.5, 1, 1.5]:
+        
+        if sigma < 1:
+           m_extracted_evolved, phi_extracted_evolved = load_data("2203.05743/2203.05743_Fig2_sigma0p{:.0f}.csv".format(10*sigma))
+        else:
+           m_extracted_evolved, phi_extracted_evolved = load_data("2203.05743/2203.05743_Fig2_sigma1p{:.0f}.csv".format(10*(sigma-1)))
+
+        
         phi_initial = phi_LN(m_pbh_values_formation, m_c, sigma)
         phi_initial_to_evolve = phi_LN(m_pbh_values_formation_to_evolve, m_c, sigma)
                 
@@ -416,6 +423,7 @@ if "__main__" == __name__:
         ax.plot(m_pbh_values_formation, phi_initial, label="$t=0$")
         ax.plot(m_pbh_values_evolved, phi_present, label="$t=t_0$", marker="x")
         ax.plot(m_pbh_values_formation_to_evolve, phi_test, label="$t=0$ (test)")
+        ax.plot(m_extracted_evolved, phi_extracted_evolved, linestyle="None", marker="+", label="$t=0$ (extracted)")
 
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$\phi(M)~[\mathrm{g}]^{-1}$")
@@ -664,6 +672,23 @@ if "__main__" == __name__:
     print(flux_mid_FermiLAT[:-1] / (delta_Omega * E_lower_y_FermiLAT**2))
     print(flux_minus_FermiLAT / (delta_Omega * E_lower_y_FermiLAT**2))
     print(flux_plus_FermiLAT / (delta_Omega * E_lower_y_FermiLAT**2))
+
+    print("\nValues used in Isatis and isatis_reproduction.py")
+    file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"    
+    append = "Fermi-LAT_1512.01846"
+    energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
+    print(flux)
+    print(flux_minus)
+    print(flux_plus)
+    
+    print("\nOlder values:")
+    energies_old, energies_minus_old, energies_plus_old, flux_old, flux_minus_old, flux_plus_old = np.genfromtxt("%sflux_%s_old.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
+    print(flux_old)
+    print(flux_minus_old)
+    print(flux_plus_old)
+
+    print("\nMiddle fluxes (corrected / old)")
+    print(flux / flux_old)
     
 
 #%% Plot the Fermi-LAT constraints (monochromatic MF)
@@ -756,7 +781,7 @@ if "__main__" == __name__:
     for m_c in mc_values_evolved:
                 
         # Evolved mass function
-        log_m_evolved, log_psi_evolved = psi_evolved_LN_number_density(m_c, sigma, t_0, log_m_factor=3, n_steps=100)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
+        log_m_evolved, log_psi_evolved = psi_evolved_LN_number_density(m_c, sigma, t_0, log_m_factor=3, n_steps=1000)   # evolved PBH distribution, evaluated at present masses corresponding to the formation masses in M0_values
         # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
         mf_evolved_interp = 10**np.interp(np.log10(M_values_eval), log_m_evolved, log_psi_evolved)
         
@@ -812,7 +837,7 @@ if "__main__" == __name__:
     ax.plot(0,0, color="k", label="Reproduced")
     
     ax.set_xlim(1e10, 1e18)
-    ax.set_ylim(10**(-15), 1)
+    ax.set_ylim(10**(-12), 1)
     ax.set_xlabel("$M_c~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
