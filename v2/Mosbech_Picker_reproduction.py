@@ -434,6 +434,17 @@ if "__main__" == __name__:
         ax.set_ylim(1e-21, 1e-12)
         fig.tight_layout()
 
+        fig, ax = plt.subplots(figsize=(6, 6))
+        phi_extracted_evolved_interp = 10**np.interp(np.log10(m_pbh_values_evolved), np.log10(m_extracted_evolved), np.log10(phi_extracted_evolved))
+        ratio = phi_present/phi_extracted_evolved_interp
+        ax.plot(m_pbh_values_evolved, ratio-1, marker="x")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\phi(M, t)$ (reproduction / extracted - 1)")
+        ax.set_xscale("log")
+        ax.set_xlim(min(m_extracted_evolved), max(m_extracted_evolved))
+        #ax.set_yscale("log")
+        fig.tight_layout()
+
 
 #%% Plot the mass density distribution, for an initial distribution following a log-normal in the number density
 # This cell includes a test of the method psi_evolved_LN_number_density()
