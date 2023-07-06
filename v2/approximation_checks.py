@@ -235,14 +235,7 @@ if "__main__" == __name__:
     
     def psi_LN_number_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
         # Distribution function for PBH energy density, when the number density follows a log-normal in the mass 
-        
-        #log_m_min = np.log10(m_c) - log_m_factor*sigma
-        #log_m_max = np.log10(m_c) + log_m_factor*sigma
-    
-        #m_pbh_values = np.logspace(log_m_min, log_m_max, n_steps)
-        #normalisation = 1 / np.trapz(LN(m_pbh_values, m_c, sigma) * m_pbh_values, m_pbh_values)
-        #return LN(m, m_c, sigma) * m * normalisation
-        
+                
         return LN(m, m_c, sigma) * (m / m_c) * np.exp(-sigma**2/2)
 
     def phi_LN_mass_density(m, m_c, sigma, log_m_factor=5, n_steps=100000):
@@ -264,8 +257,7 @@ if "__main__" == __name__:
 
     sigmas = [0.373429, 0.5, 1, 1.84859]
 
-    # Plot of the number density
-    
+    # Plot of the number density 
     fig, axes = plt.subplots(2, 2, figsize=(9, 9))
     ax0 = axes[0][0]
     ax1 = axes[0][1]
@@ -368,6 +360,8 @@ if "__main__" == __name__:
         ax.set_xlim(ax_x_lims[i])
         ax.set_ylim(ax_y_lims[i])
         
+        
+        
     ax0.legend()
     fig.suptitle("Number density distribution ($M_p={:.1e}~".format(m_p) + "\mathrm{g})$")
     fig.tight_layout()
@@ -411,3 +405,53 @@ if "__main__" == __name__:
     ax0.legend()
     fig.suptitle("Mass density distribution ($M_p={:.1e}~".format(m_p) + "\mathrm{g})$")
     fig.tight_layout()
+
+    # Plot the ratio of the mass distributions.
+
+    fig_ratio, axes_ratio = plt.subplots(2, 2, figsize=(9, 9))
+    ax_ratio_0 = axes_ratio[0][0]
+    ax_ratio_1 = axes_ratio[0][1]
+    ax_ratio_2 = axes_ratio[1][0]
+    ax_ratio_3 = axes_ratio[1][1]
+    ax_ratio_loop = [ax_ratio_0, ax_ratio_1, ax_ratio_2, ax_ratio_3]
+   
+    for i in range(len(ax_ratio_loop)):
+        # Plot of the number density
+        ax = ax_ratio_loop[i]
+        sigma = sigmas[i]
+        ax.plot(m_pbh_values, abs(LN(m_pbh_values, m_c, sigma) / phi_LN_mass_density(m_pbh_values, m_c, sigma) - 1))
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\Delta\phi / \phi$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title("$\sigma={:.2f}$".format(sigma))
+        ax.set_xlim(ax_x_lims[i])
+        ax.set_ylim(1e-3, 100)
+        
+    fig_ratio.suptitle("LN in number density / LN in mass density - 1 ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
+    fig_ratio.tight_layout()
+
+    fig_ratio, axes_ratio = plt.subplots(2, 2, figsize=(9, 9))
+    ax_ratio_0 = axes_ratio[0][0]
+    ax_ratio_1 = axes_ratio[0][1]
+    ax_ratio_2 = axes_ratio[1][0]
+    ax_ratio_3 = axes_ratio[1][1]
+    ax_ratio_loop = [ax_ratio_0, ax_ratio_1, ax_ratio_2, ax_ratio_3]
+    
+    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (5e16, 1e23), (1e13, 1e25)]
+
+    for i in range(len(ax_ratio_loop)):
+        # Plot of the mass density
+        ax = ax_ratio_loop[i]
+        sigma = sigmas[i]
+        ax.plot(m_pbh_values, abs(psi_LN_number_density(m_pbh_values, m_c, sigma) / LN(m_pbh_values, m_c, sigma) - 1))
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\Delta\psi / \psi$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title("$\sigma={:.2f}$".format(sigma))
+        ax.set_xlim(ax_x_lims[i])
+        ax.set_ylim(1e-3, 100)
+
+    fig_ratio.suptitle("LN in number density / LN in mass density - 1 ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
+    fig_ratio.tight_layout()
