@@ -271,7 +271,7 @@ def psi_evolved_LN_number_density(m_c, sigma, t, log_m_factor=3, n_steps=1000, l
     log_m_max = np.log10(m_c) + log_m_factor*sigma
     
     # To accurately evaluate the evolved mass function at small PBH masses, need to include a dense sampling of initial masses close to M_* = 7.5e14g
-    M0_test_values = np.sort(np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2),  np.logspace(log_m_min, log_m_max, n_steps))))
+    M0_test_values = np.sort(np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(log_m_min, log_m_max, n_steps))))
     M_test_values = m_pbh_evolved_MP22(M0_test_values, t)
     
     phi_formation = LN(M0_test_values, m_c, sigma)
@@ -857,3 +857,258 @@ if "__main__" == __name__:
     ax.set_title("$\sigma={:.1f}$".format(sigma))
     ax.legend(fontsize="small")
     plt.tight_layout()
+ 
+    print(f_evolved_lower)
+    print(f_evolved_upper)
+    
+#%% Additional methods, for further checks and calculations
+
+def psi_evolved_direct(psi_formation, M_values, M0_values):
+    """
+    PBH mass function (in terms of the mass density) at time t, evolved form 
+    the initial MF phi_formation using Eq. 11 of Mosbech & Picker (2022).   
+
+    Parameters
+    ----------
+    psi_formation : Array-like
+        Initial PBH mass distribution (in mass density).
+    M_values : Array-like
+        PBH masses at time t.
+    M0_values : Array-like
+        Initial PBH masses.
+
+    Returns
+    -------
+    Array-like
+        Evolved values of the PBH mass density distribution function (not normalised to unity).
+
+    """
+    return psi_formation * (M_values / M0_values)**3
+
+
+def psi_evolved_direct_normalised(psi_formation, M_values, M0_values):
+    """
+    PBH mass function (in terms of the mass density) at time t, evolved form 
+    the initial MF phi_formation using Eq. 11 of Mosbech & Picker (2022),
+    normalised to one
+
+    Parameters
+    ----------
+    psi_formation : Array-like
+        Initial PBH mass distribution (in mass density).
+    M_values : Array-like
+        PBH masses at time t.
+    M0_values : Array-like
+        Initial PBH masses.
+
+    Returns
+    -------
+    Array-like
+        Evolved values of the PBH mass density distribution function (normalised to unity).
+
+    """
+    return psi_evolved_direct(psi_formation, M_values, M0_values) / np.trapz(psi_evolved_direct(psi_formation, M_values, M0_values), M_values)
+
+
+#%% Plot the mass density distribution, for an initial distribution following a log-normal in the number density
+# Compare the direct calculation in psi_evolved_direct() to the indirect calculation using psi_evolved_LN_number_density()
+
+if "__main__" == __name__:
+        
+    log_m_factor = 3
+    n_steps = 1000
+    m_c = 1e17
+    
+    normalised_unity = False
+        
+    for sigma in [0.1, 0.5, 1, 1.5]:
+        
+        log_m_min = np.log10(m_c) - log_m_factor*sigma
+        log_m_max = np.log10(m_c) + log_m_factor*sigma
+        m_pbh_values_formation = np.sort(np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(log_m_min, log_m_max, n_steps))))
+        m_pbh_values_evolved = m_pbh_evolved_MP22(m_pbh_values_formation, t_0)
+        psi_initial = psi_LN_number_density(m_pbh_values_formation, m_c, sigma)
+        
+        log_m_pbh_v2, log_psi_present_v2 = psi_evolved_LN_number_density(m_c, sigma, t_0)
+        psi_present_direct = psi_evolved_direct(psi_initial, m_pbh_values_evolved, m_pbh_values_formation, t_0)
+        phi_initial = phi_LN(m_pbh_values_formation, m_c, sigma)
+        phi_present = phi_evolved_v2(phi_initial, m_pbh_values_evolved, m_pbh_values_formation, t_0)
+
+        # Plot initial mass distribution psi and compare to the evolved mass distribution psi calculated directly and through calculating phi first.
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.plot(m_pbh_values_formation, psi_initial, label="$t=0$")
+        ax.plot(m_pbh_values_evolved, 10**np.interp(np.log10(m_pbh_values_evolved), log_m_pbh_v2, log_psi_present_v2, left=-100, right=-100), label="Calculate $\phi$ first" , linestyle="None", marker="+")
+        ax.plot(m_pbh_values_evolved, psi_present_direct, linestyle="None", label="Calculate $\psi$ directly" , marker="x")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\psi(M)~[\mathrm{g}]^{-1}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(title="$\sigma={:.1f}$".format(sigma), fontsize="small")
+        ax.set_xlim(1e11, max(m_pbh_values_formation))
+        fig.tight_layout()
+        
+        # Plot fractional difference between the evolved mass distribution psi calculated directly and through calculating phi first.
+        frac_diff = 10**np.interp(np.log10(m_pbh_values_evolved), log_m_pbh_v2, log_psi_present_v2, left=-100, right=-100) / psi_present_direct - 1
+        print(frac_diff)
+        
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.plot(m_pbh_values_evolved, np.abs(frac_diff), linestyle="None", marker="x")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$| \psi(M, t)$ (through $\phi$ first / direct - 1) $|$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(title="$\sigma={:.1f}$".format(sigma), fontsize="small")
+        ax.set_xlim(1e11, max(m_pbh_values_formation))
+        ax.set_ylim(1e-10, 0.5)
+        fig.tight_layout()
+        
+#%% Plot constraints for extended MF (reproducing Fig. 4 of Mosbech & Picker (2022)), using direct calculation of psi
+
+if "__main__" == __name__:
+    # Constraints data for each energy bin of each instrument (extended MF)
+    
+    constraints_mono_file_lower = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_lower_monochromatic_wide.txt"))
+    constraints_mono_file_upper = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_upper_monochromatic_wide.txt"))
+        
+    M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
+    mc_values_unevolved = np.logspace(14, 17, 50)
+    mc_values_evolved = np.logspace(13, 17, 50)[5:]
+    
+    M0_values_input = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 18, 500)))
+    M_values_input = m_pbh_evolved_MP22(M0_values_input, t_0)
+
+    # Final constraint
+    constraint_lower = []
+    constraint_upper = []
+    
+    # Constraint from each energy bin
+    f_PBH_energy_bin_lower = []
+    f_PBH_energy_bin_upper = []
+    
+    normalised_unity = True    
+    sigma = 0.1
+    
+    params_LN = [sigma]
+    
+    for m_c in mc_values_unevolved:
+        
+        psi_unevolved = psi_LN_number_density(M_values_eval, m_c, sigma)
+                                
+        # Constraint from each energy bin
+        f_PBH_energy_bin_lower = []
+        for k in range(len(constraints_mono_file_lower)):
+    
+            # Constraint from a particular energy bin (delta function MF)
+            constraint_energy_bin = constraints_mono_file_lower[k]
+            
+            integrand = psi_unevolved / constraint_energy_bin
+            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
+
+            if integral == 0 or np.isnan(integral):
+                f_PBH_energy_bin_lower.append(10)
+            else:
+                f_PBH_energy_bin_lower.append(1/integral)
+
+        constraint_lower.append(min(f_PBH_energy_bin_lower))
+        
+        # Constraint from each energy bin        
+        f_PBH_energy_bin_upper = []
+        for k in range(len(constraints_mono_file_upper)):
+    
+            # Constraint from a particular energy bin (delta function MF)
+            constraint_energy_bin = constraints_mono_file_upper[k]
+            
+            integrand = psi_unevolved / constraint_energy_bin
+            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
+            
+            if integral == 0 or np.isnan(integral):
+                f_PBH_energy_bin_upper.append(10)
+            else:
+                f_PBH_energy_bin_upper.append(1/integral)
+        constraint_upper.append(min(f_PBH_energy_bin_upper))
+        
+
+    # Evolved mass function
+    constraint_lower_evolved = []
+    constraint_upper_evolved = []
+        
+    for m_c in mc_values_evolved:
+        
+        psi_initial = psi_LN_number_density(M0_values_input, m_c, sigma)
+        
+        # Evolved mass function
+        if normalised_unity:
+            psi_evolved = psi_evolved_direct_normalised(psi_initial, M_values_input, M0_values_input)
+        else:
+            psi_evolved = psi_evolved_direct(psi_initial, M_values_input, M0_values_input)
+            
+        # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
+
+        M_values_input_nozeros = M_values_input[psi_evolved > 0]
+        psi_evolved_nozeros = psi_evolved[psi_evolved > 0]
+        
+        mf_evolved_interp = 10**np.interp(np.log10(M_values_eval), np.log10(M_values_input_nozeros), np.log10(psi_evolved_nozeros), left=-100, right=-100)
+        
+        # Constraint from each energy bin
+        f_PBH_energy_bin_lower = []
+        for k in range(len(constraints_mono_file_lower)):
+    
+            # Constraint from a particular energy bin (delta function MF)
+            constraint_energy_bin = constraints_mono_file_lower[k]
+            
+            integrand = mf_evolved_interp / constraint_energy_bin
+            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
+
+            if integral == 0 or np.isnan(integral):
+                f_PBH_energy_bin_lower.append(10)
+            else:
+                f_PBH_energy_bin_lower.append(1/integral)
+
+        constraint_lower_evolved.append(min(f_PBH_energy_bin_lower))
+        
+        
+        f_PBH_energy_bin_upper = []
+        for k in range(len(constraints_mono_file_upper)):
+    
+            # Constraint from a particular energy bin (delta function MF)
+            constraint_energy_bin = constraints_mono_file_upper[k]
+            
+            integrand = mf_evolved_interp / constraint_energy_bin
+            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
+            
+            if integral == 0 or np.isnan(integral):
+                f_PBH_energy_bin_upper.append(10)
+            else:
+                f_PBH_energy_bin_upper.append(1/integral)
+        constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
+        
+    
+    # Load data from Fig. 4 of Mosbech & Picker (2022)
+    m_LN_lower, f_LN_lower = load_data("2203.05743/MP22_sigma_{:.1f}_LN_lower.csv".format(sigma))
+    m_LN_upper, f_LN_upper = load_data("2203.05743/MP22_sigma_{:.1f}_LN_upper.csv".format(sigma))
+    m_evolved_lower, f_evolved_lower = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_lower.csv".format(sigma))
+    m_evolved_upper, f_evolved_upper = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_upper.csv".format(sigma))
+   
+    fig, ax = plt.subplots(figsize=(6.5,6.5))
+    ax.fill_between(mc_values_unevolved, constraint_lower, constraint_upper, color="tab:green", alpha=0.5, label="Log-normal \n (unevolved)")
+    ax.plot(m_LN_lower, f_LN_lower, color="tab:green", linestyle="dotted")   
+    ax.plot(m_LN_upper, f_LN_upper, color="tab:green", linestyle="dotted")
+
+    ax.fill_between(mc_values_evolved, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.5, label="Evolved")
+    ax.plot(m_evolved_lower, f_evolved_lower, color="tab:purple", linestyle="dotted")   
+    ax.plot(m_evolved_upper, f_evolved_upper, color="tab:purple", linestyle="dotted")
+    ax.plot(0,0, linestyle="dotted", color="k", label="Extracted from \n Mosbech \& \n Picker (2022)")
+    ax.plot(0,0, color="k", label="Reproduced")
+    
+    ax.set_xlim(1e10, 1e18)
+    ax.set_ylim(10**(-12), 1)
+    ax.set_xlabel("$M_c~[\mathrm{g}]$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_title("$\sigma={:.1f}$".format(sigma))
+    ax.legend(fontsize="small")
+    plt.tight_layout()
+
+    print(f_evolved_lower)
+    print(f_evolved_upper)
