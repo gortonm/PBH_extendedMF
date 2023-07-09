@@ -58,17 +58,12 @@ def constraint_Carr(mc_values, m_mono, f_max, mf, params):
     """
     f_pbh = []
     
-    print(params)
-
     for m_c in mc_values:
         integral = np.trapz(mf(m_mono, m_c, *params) / f_max, m_mono)
         if integral == 0:
             f_pbh.append(10)
         else:
             f_pbh.append(1/integral)
-    if mf==mf_numeric:
-        print("m_c [in constraint_Carr] = ", mc_values)
-        print("f_pbh [in constraint_Carr] = ", f_pbh)
     return np.array(f_pbh)
 
 
@@ -256,41 +251,6 @@ if "__main__" == __name__:
         ax.plot(m_pbh_values, f_PBH_Isatis_unmodified[i],
                 label=constraints_names_unmodified[i], color=colors_evap[i])
 
-    ax.set_xlim(1e14, 1e18)
-    ax.set_ylim(10**(-10), 1)
-    ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.legend(fontsize="small")
-    plt.tight_layout()
-
-
-# %% Plot results for a monochromatic mass function, obtained using Isatis,
-# and compare to the results shown in Fig. 3 of 2201.01265.
-# Plot against the PBH formation mass.
-from approximation_checks import M_formation
-
-if "__main__" == __name__:
-
-    m_pbh_values = np.logspace(11, 21, 101)
-    constraints_names_unmodified, f_PBH_Isatis_unmodified = load_results_Isatis(
-        modified=False)
-    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
-
-    fig, ax = plt.subplots(figsize=(6, 6))
-
-    for i in range(len(constraints_names_unmodified)):
-        # Remove all constraints calculated with a value < 0.
-        f_PBH_Isatis_unmodified_i = np.array(f_PBH_Isatis_unmodified[i])
-        f_PBH_Isatis_unmodified_fixed = f_PBH_Isatis_unmodified_i[f_PBH_Isatis_unmodified_i > 0.]
-        m_pbh_values_fixed = m_pbh_values[f_PBH_Isatis_unmodified_i > 0]
-        
-        ax.plot(M_formation(m_pbh_values_fixed, M_star=1e14), f_PBH_Isatis_unmodified_fixed, label=constraints_names_unmodified[i], color=colors_evap[i])
-        ax.plot(m_pbh_values_fixed, f_PBH_Isatis_unmodified_fixed, color=colors_evap[i], linestyle="dotted")
-
-    ax.plot(0, 0, color="k", label="Formation mass")
-    ax.plot(0, 0, linestyle="dotted", color="k", label="Present mass")
     ax.set_xlim(1e14, 1e18)
     ax.set_ylim(10**(-10), 1)
     ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
