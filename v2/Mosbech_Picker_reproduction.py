@@ -1176,140 +1176,153 @@ if "__main__" == __name__:
         
     M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values_unevolved = np.logspace(14, 17, 50)
-    mc_values_evolved = np.logspace(13, 17, 50)[5:]
-    
-    M0_values_input = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 18, 500)))
+   
+    M0_values_input = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 20, 500)))
     M_values_input = m_pbh_evolved_MP22(M0_values_input, t_0)
     
     # Constraint from each energy bin
     f_PBH_energy_bin_lower = []
     f_PBH_energy_bin_upper = []
     
-    sigma = 0.5
+    sigmas = [1.5, 1.0, 0.5, 0.1]
     
-    params_LN = [sigma]        
-
-    # Evolved mass function
-    constraint_lower_evolved = []
-    constraint_upper_evolved = []
+    fig, axes = plt.subplots(nrows=2, ncols=2, figsize=(11,11))
+    axes_plotting = [axes[0][0], axes[0][1], axes[1][0], axes[1][1]]
+    
+    for i in range(len(sigmas)):
         
-    for m_c in mc_values_evolved:
+        sigma = sigmas[i]
+        params_LN = [sigma]        
         
-        psi_initial = psi_LN_number_density(M0_values_input, m_c, sigma)
-        
+        if sigma >= 1:
+            mc_values_evolved = np.logspace(10, 18, 100)
+        else:
+            mc_values_evolved = np.logspace(13, 17, 50)[5:]
+    
         # Evolved mass function
-        psi_evolved = psi_evolved_direct(psi_initial, M_values_input, M0_values_input)
+        constraint_lower_evolved = []
+        constraint_upper_evolved = []
             
-        # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
-
-        M_values_input_nozeros = M_values_input[psi_evolved > 0]
-        psi_evolved_nozeros = psi_evolved[psi_evolved > 0]
-        
-        mf_evolved_interp = 10**np.interp(np.log10(M_values_eval), np.log10(M_values_input_nozeros), np.log10(psi_evolved_nozeros), left=-100, right=-100)
-        
-        # Constraint from each energy bin
-        f_PBH_energy_bin_lower = []
-        for k in range(len(constraints_mono_file_lower)):
+        for m_c in mc_values_evolved:
+            
+            psi_initial = psi_LN_number_density(M0_values_input, m_c, sigma)
+            
+            # Evolved mass function
+            psi_evolved = psi_evolved_direct(psi_initial, M_values_input, M0_values_input)
+                
+            # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
     
-            # Constraint from a particular energy bin (delta function MF)
-            constraint_energy_bin = constraints_mono_file_lower[k]
+            M_values_input_nozeros = M_values_input[psi_evolved > 0]
+            psi_evolved_nozeros = psi_evolved[psi_evolved > 0]
             
-            integrand = mf_evolved_interp / constraint_energy_bin
-            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
-
-            if integral == 0 or np.isnan(integral):
-                f_PBH_energy_bin_lower.append(10)
-            else:
-                f_PBH_energy_bin_lower.append(1/integral)
-
-        constraint_lower_evolved.append(min(f_PBH_energy_bin_lower))
+            mf_evolved_interp = 10**np.interp(np.log10(M_values_eval), np.log10(M_values_input_nozeros), np.log10(psi_evolved_nozeros), left=-100, right=-100)
+            
+            # Constraint from each energy bin
+            f_PBH_energy_bin_lower = []
+            for k in range(len(constraints_mono_file_lower)):
         
-        
-        f_PBH_energy_bin_upper = []
-        for k in range(len(constraints_mono_file_upper)):
+                # Constraint from a particular energy bin (delta function MF)
+                constraint_energy_bin = constraints_mono_file_lower[k]
+                
+                integrand = mf_evolved_interp / constraint_energy_bin
+                integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
     
-            # Constraint from a particular energy bin (delta function MF)
-            constraint_energy_bin = constraints_mono_file_upper[k]
-            
-            integrand = mf_evolved_interp / constraint_energy_bin
-            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
-            
-            if integral == 0 or np.isnan(integral):
-                f_PBH_energy_bin_upper.append(10)
-            else:
-                f_PBH_energy_bin_upper.append(1/integral)
-        constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
-
-
-    # Evolved mass function (normalised to unity)
-    constraint_lower_evolved_normalised_unity = []
-    constraint_upper_evolved_normalised_unity = []
-        
-    for m_c in mc_values_evolved:
-        
-        psi_initial = psi_LN_number_density(M0_values_input, m_c, sigma)
-        
-        # Evolved mass function
-        psi_evolved_normalised_unity = psi_evolved_direct_normalised(psi_initial, M_values_input, M0_values_input)
-            
-        # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
-
-        M_values_input_nozeros = M_values_input[psi_evolved_normalised_unity > 0]
-        psi_evolved_normalised_unity_nozeros = psi_evolved_normalised_unity[psi_evolved_normalised_unity > 0]
-        
-        mf_evolved_normalised_unity_interp = 10**np.interp(np.log10(M_values_eval), np.log10(M_values_input_nozeros), np.log10(psi_evolved_normalised_unity_nozeros), left=-100, right=-100)
-        
-        # Constraint from each energy bin
-        f_PBH_energy_bin_lower = []
-        for k in range(len(constraints_mono_file_lower)):
+                if integral == 0 or np.isnan(integral):
+                    f_PBH_energy_bin_lower.append(10)
+                else:
+                    f_PBH_energy_bin_lower.append(1/integral)
     
-            # Constraint from a particular energy bin (delta function MF)
-            constraint_energy_bin = constraints_mono_file_lower[k]
+            constraint_lower_evolved.append(min(f_PBH_energy_bin_lower))
             
-            integrand = mf_evolved_normalised_unity_interp / constraint_energy_bin
-            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
-
-            if integral == 0 or np.isnan(integral):
-                f_PBH_energy_bin_lower.append(10)
-            else:
-                f_PBH_energy_bin_lower.append(1/integral)
-
-        constraint_lower_evolved_normalised_unity.append(min(f_PBH_energy_bin_lower))
+            
+            f_PBH_energy_bin_upper = []
+            for k in range(len(constraints_mono_file_upper)):
         
+                # Constraint from a particular energy bin (delta function MF)
+                constraint_energy_bin = constraints_mono_file_upper[k]
+                
+                integrand = mf_evolved_interp / constraint_energy_bin
+                integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
+                
+                if integral == 0 or np.isnan(integral):
+                    f_PBH_energy_bin_upper.append(10)
+                else:
+                    f_PBH_energy_bin_upper.append(1/integral)
+            constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
+    
+    
+        # Evolved mass function (normalised to unity)
+        constraint_lower_evolved_normalised_unity = []
+        constraint_upper_evolved_normalised_unity = []
+            
+        for m_c in mc_values_evolved:
+            
+            psi_initial = psi_LN_number_density(M0_values_input, m_c, sigma)
+            
+            # Evolved mass function
+            psi_evolved_normalised_unity = psi_evolved_direct_normalised(psi_initial, M_values_input, M0_values_input)
+                
+            # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
+    
+            M_values_input_nozeros = M_values_input[psi_evolved_normalised_unity > 0]
+            psi_evolved_normalised_unity_nozeros = psi_evolved_normalised_unity[psi_evolved_normalised_unity > 0]
+            
+            mf_evolved_normalised_unity_interp = 10**np.interp(np.log10(M_values_eval), np.log10(M_values_input_nozeros), np.log10(psi_evolved_normalised_unity_nozeros), left=-100, right=-100)
+            
+            # Constraint from each energy bin
+            f_PBH_energy_bin_lower = []
+            for k in range(len(constraints_mono_file_lower)):
         
-        f_PBH_energy_bin_upper = []
-        for k in range(len(constraints_mono_file_upper)):
+                # Constraint from a particular energy bin (delta function MF)
+                constraint_energy_bin = constraints_mono_file_lower[k]
+                
+                integrand = mf_evolved_normalised_unity_interp / constraint_energy_bin
+                integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
     
-            # Constraint from a particular energy bin (delta function MF)
-            constraint_energy_bin = constraints_mono_file_upper[k]
-            
-            integrand = mf_evolved_normalised_unity_interp / constraint_energy_bin
-            integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
-            
-            if integral == 0 or np.isnan(integral):
-                f_PBH_energy_bin_upper.append(10)
-            else:
-                f_PBH_energy_bin_upper.append(1/integral)
-        constraint_upper_evolved_normalised_unity.append(min(f_PBH_energy_bin_upper))
-
-
-    # Load data from Fig. 4 of Mosbech & Picker (2022)
-    m_evolved_lower, f_evolved_lower = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_lower.csv".format(sigma))
-    m_evolved_upper, f_evolved_upper = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_upper.csv".format(sigma))
-   
-    fig, ax = plt.subplots(figsize=(5,5))
-    ax.fill_between(mc_values_evolved, constraint_lower_evolved_normalised_unity, constraint_upper_evolved_normalised_unity, color="tab:cyan", alpha=0.5, label="$\psi_\mathrm{N}$")
-    ax.fill_between(mc_values_evolved, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.5, label="$\psi$")
-    ax.plot(m_evolved_lower, f_evolved_lower, color="tab:purple", linestyle="dotted", label="MP (2022)")   
-    ax.plot(m_evolved_upper, f_evolved_upper, color="tab:purple", linestyle="dotted")
+                if integral == 0 or np.isnan(integral):
+                    f_PBH_energy_bin_lower.append(10)
+                else:
+                    f_PBH_energy_bin_lower.append(1/integral)
     
-    #ax.set_xlim(1e10, 1e18)
-    ax.set_xlim(1e13, 1e16)
-    ax.set_ylim(10**(-12), 1)
-    ax.set_xlabel("$M_c~[\mathrm{g}]$")
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    #ax.set_title("$\sigma={:.1f}$".format(sigma))
-    ax.legend(fontsize="small")
+            constraint_lower_evolved_normalised_unity.append(min(f_PBH_energy_bin_lower))
+            
+            
+            f_PBH_energy_bin_upper = []
+            for k in range(len(constraints_mono_file_upper)):
+        
+                # Constraint from a particular energy bin (delta function MF)
+                constraint_energy_bin = constraints_mono_file_upper[k]
+                
+                integrand = mf_evolved_normalised_unity_interp / constraint_energy_bin
+                integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
+                
+                if integral == 0 or np.isnan(integral):
+                    f_PBH_energy_bin_upper.append(10)
+                else:
+                    f_PBH_energy_bin_upper.append(1/integral)
+            constraint_upper_evolved_normalised_unity.append(min(f_PBH_energy_bin_upper))
+    
+    
+        # Load data from Fig. 4 of Mosbech & Picker (2022)
+        m_evolved_lower, f_evolved_lower = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_lower.csv".format(sigma))
+        m_evolved_upper, f_evolved_upper = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_upper.csv".format(sigma))
+        
+        ax = axes_plotting[i]
+        
+        ax.fill_between(mc_values_evolved, constraint_lower_evolved_normalised_unity, constraint_upper_evolved_normalised_unity, color="tab:cyan", alpha=0.5, label="$\psi_\mathrm{N}$")
+        ax.fill_between(mc_values_evolved, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.5, label="$\psi$")
+        ax.plot(m_evolved_lower, f_evolved_lower, color="tab:purple", linestyle="dotted", label="MP (2022)")   
+        ax.plot(m_evolved_upper, f_evolved_upper, color="tab:purple", linestyle="dotted")
+        
+        ax.set_xlim(1e10, 1e18)
+        #ax.set_xlim(1e13, 1e16)
+        ax.set_ylim(10**(-12), 1)
+        ax.set_xlabel("$M_c~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title("$\sigma={:.1f}$".format(sigma))
+        
+        if i == 0:
+            ax.legend()
     plt.tight_layout()
