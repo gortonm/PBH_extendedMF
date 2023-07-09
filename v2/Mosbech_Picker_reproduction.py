@@ -952,7 +952,8 @@ if "__main__" == __name__:
         ax.set_ylabel("$\psi(M, t)$ $|$(indirect / direct - 1)$|$")
         ax.set_xscale("log")
         ax.set_title("$\sigma={:.1f}$".format(sigma))
-        ax.set_xlim(min(m_pbh_values_evolved), max(m_pbh_values_evolved))
+        # Choose x-axis range to ensure only the range in which both mass functions are defined is included (to avoid complications due to interpolation outside the range defined).
+        ax.set_xlim(max([min(m_pbh_values_evolved), min(m_pbh_indirect_values)]), min([max(m_pbh_values_evolved), max(m_pbh_indirect_values)]))
         ax.set_ylim(1e-6, 1)
         ax.set_yscale("log")
         fig.tight_layout()
