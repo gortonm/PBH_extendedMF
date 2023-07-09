@@ -1198,7 +1198,7 @@ if "__main__" == __name__:
         psi_initial = psi_LN_number_density(M0_values_input, m_c, sigma)
         
         # Evolved mass function
-        psi_evolved_direct_values = psi_evolved_direct(psi_initial, M_values_input, M0_values_input)
+        psi_evolved = psi_evolved_direct(psi_initial, M_values_input, M0_values_input)
             
         # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
 
@@ -1297,18 +1297,19 @@ if "__main__" == __name__:
     m_evolved_lower, f_evolved_lower = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_lower.csv".format(sigma))
     m_evolved_upper, f_evolved_upper = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_upper.csv".format(sigma))
    
-    fig, ax = plt.subplots(figsize=(6.5,6.5))
-    ax.fill_between(mc_values_evolved, constraint_lower_evolved_normalised_unity, constraint_upper_evolved_normalised_unity, color="tab:red", alpha=0.5, label="Using $\psi_\mathrm{N}$ \n (normalised to unity)")
-    ax.fill_between(mc_values_evolved, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.5, label="Using $\psi$ \n (not normalised to unity)")
-    ax.plot(m_evolved_lower, f_evolved_lower, color="tab:purple", linestyle="dotted", label="Mosbech \& Picker (2022)")   
+    fig, ax = plt.subplots(figsize=(5,5))
+    ax.fill_between(mc_values_evolved, constraint_lower_evolved_normalised_unity, constraint_upper_evolved_normalised_unity, color="tab:cyan", alpha=0.5, label="$\psi_\mathrm{N}$")
+    ax.fill_between(mc_values_evolved, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.5, label="$\psi$")
+    ax.plot(m_evolved_lower, f_evolved_lower, color="tab:purple", linestyle="dotted", label="MP (2022)")   
     ax.plot(m_evolved_upper, f_evolved_upper, color="tab:purple", linestyle="dotted")
     
-    ax.set_xlim(1e10, 1e18)
+    #ax.set_xlim(1e10, 1e18)
+    ax.set_xlim(1e13, 1e16)
     ax.set_ylim(10**(-12), 1)
     ax.set_xlabel("$M_c~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_title("$\sigma={:.1f}$".format(sigma))
+    #ax.set_title("$\sigma={:.1f}$".format(sigma))
     ax.legend(fontsize="small")
     plt.tight_layout()
