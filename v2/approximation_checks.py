@@ -273,8 +273,8 @@ if "__main__" == __name__:
         sigma = sigmas[i]
         ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in number density")
         ax.plot(m_pbh_values, phi_LN_mass_density(m_pbh_values, m_c, sigma), label="LN in mass density")
-        #ax.plot(m_pbh_values, 10*phi_LN_mass_density(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
-        #ax.plot(m_pbh_values, 0.1*phi_LN_mass_density(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        ax.plot(m_pbh_values, 2*phi_LN_mass_density(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        ax.plot(m_pbh_values, 0.5*phi_LN_mass_density(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$\phi(M) \propto \mathrm{d}n/\mathrm{d}M$")
         ax.set_xscale("log")
@@ -302,10 +302,10 @@ if "__main__" == __name__:
         # Plot of the mass density
         ax = ax_loop[i]
         sigma = sigmas[i]
-        ax.plot(m_pbh_values, psi_LN_number_density(m_pbh_values, m_c, sigma), label="LN in number density")
-        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), label="LN in mass density")
-        #ax.plot(m_pbh_values, 10*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
-        #ax.plot(m_pbh_values, 0.1*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        ax.plot(m_pbh_values, psi_LN_number_density(m_pbh_values, m_c, sigma), color="tab:green", label="LN in number density")
+        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), color="y", label="LN in mass density")
+        #ax.plot(m_pbh_values, 2*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        #ax.plot(m_pbh_values, 0.5*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$\psi(M) \propto M\mathrm{d}n/\mathrm{d}M$")
         ax.set_xscale("log")
@@ -327,21 +327,21 @@ if "__main__" == __name__:
     ax_ratio_2 = axes_ratio[1][0]
     ax_ratio_3 = axes_ratio[1][1]
     ax_ratio_loop = [ax_ratio_0, ax_ratio_1, ax_ratio_2, ax_ratio_3]
+    ax_ratio_y_lims = [(1e-2, 1e2), (1e-2, 1e2), (1e-3, 1e4), (1e-4, 1e6)]
    
     for i in range(len(ax_ratio_loop)):
         # Plot of the number density
         ax = ax_ratio_loop[i]
         sigma = sigmas[i]
-        ax.plot(m_pbh_values, abs(LN(m_pbh_values, m_c, sigma) / phi_LN_mass_density(m_pbh_values, m_c, sigma) - 1))
+        ax.plot(m_pbh_values, abs(phi_LN_mass_density(m_pbh_values, m_c, sigma)/LN(m_pbh_values, m_c, sigma)))
         ax.set_xlabel("$M~[\mathrm{g}]$")
-        ax.set_ylabel("$|\Delta\phi / \phi|$")
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_title("$\sigma={:.2f}$".format(sigma))
         ax.set_xlim(ax_x_lims[i])
-        ax.set_ylim(1e-3, 100)
+        ax.set_ylim(ax_ratio_y_lims[i])
         
-    fig_ratio.suptitle("LN in number density / LN in mass density - 1 ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
+    fig_ratio.suptitle("LN in mass density / LN in number density in $\phi$ ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
     fig_ratio.tight_layout()
 
     fig_ratio, axes_ratio = plt.subplots(2, 2, figsize=(9, 9))
@@ -360,16 +360,15 @@ if "__main__" == __name__:
         
         print("sigma={:.1f}".format(sigma))
         
-        ax.plot(m_pbh_values, abs(psi_LN_number_density(m_pbh_values, m_c, sigma) / LN(m_pbh_values, m_c, sigma) - 1))
+        ax.plot(m_pbh_values, abs(LN(m_pbh_values, m_c, sigma)/psi_LN_number_density(m_pbh_values, m_c, sigma)))
         ax.set_xlabel("$M~[\mathrm{g}]$")
-        ax.set_ylabel("$|\Delta\psi / \psi|$")
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_title("$\sigma={:.2f}$".format(sigma))
         ax.set_xlim(ax_x_lims[i])
-        ax.set_ylim(1e-3, 100)
+        ax.set_ylim(ax_ratio_y_lims[i])
 
-    fig_ratio.suptitle("LN in number density / LN in mass density - 1 ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
+    fig_ratio.suptitle("LN in mass density / LN in number density in $\psi$ ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
     fig_ratio.tight_layout()
     
     """
