@@ -1036,7 +1036,7 @@ if "__main__" == __name__:
     f_PBH_energy_bin_lower = []
     f_PBH_energy_bin_upper = []
     
-    normalised_unity = True    
+    normalised_unity = False    
     sigma = 0.1
     
     params_LN = [sigma]
@@ -1364,6 +1364,8 @@ if "__main__" == __name__:
     
     fig1, axes1 = plt.subplots(nrows=2, ncols=2, figsize=(11,11))
     axes_plotting1 = [axes1[0][0], axes1[0][1], axes1[1][0], axes1[1][1]]
+    
+    fracdiff_ylims = [(5e2, 1e4), (1e1, 1e3), (5e-1, 5e3), (1e-4, 5)]
 
     
     for i in range(len(sigmas)):
@@ -1413,6 +1415,7 @@ if "__main__" == __name__:
                     f_PBH_energy_bin_upper.append(10)
                 else:
                     f_PBH_energy_bin_upper.append(1/integral)
+                    
             constraint_upper_unevolved.append(min(f_PBH_energy_bin_upper))
     
     
@@ -1473,7 +1476,6 @@ if "__main__" == __name__:
             ax.plot(m_LN_upper, f_LN_upper, color="tab:green", linestyle="dotted")
         
         ax.set_xlim(1e10, 1e18)
-        #ax.set_xlim(1e13, 1e16)
         ax.set_ylim(10**(-12), 1)
         ax.set_xlabel("$M_c~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -1482,12 +1484,12 @@ if "__main__" == __name__:
         ax.set_title("$\sigma={:.1f}$".format(sigma))
         
         ax1 = axes_plotting1[i]
-        ax1.fill_between(mc_values_unevolved, abs(np.array(constraint_lower_unevolved_LN_psi) / np.array(constraint_lower_unevolved)), abs(np.array(constraint_upper_unevolved_LN_psi) / np.array(constraint_upper_unevolved)), color="tab:blue")
+        ax1.fill_between(mc_values_unevolved, abs(np.array(constraint_lower_unevolved) / np.array(constraint_lower_unevolved_LN_psi) - 1), abs(np.array(constraint_upper_unevolved)/np.array(constraint_upper_unevolved_LN_psi) -1), color="tab:blue")
         ax1.set_xlabel("$M_c~[\mathrm{g}]$")
-        ax1.set_ylabel("$|f_\mathrm{PBH}(\psi~\mathrm{LN}) / f_\mathrm{PBH}(\phi~\mathrm{LN})|$")
+        ax1.set_ylabel("$|f_\mathrm{PBH}(\phi~\mathrm{LN}) / f_\mathrm{PBH}(\psi~\mathrm{LN})| - 1$")
         ax1.set_xscale("log")
         ax1.set_yscale("log")
-        ax1.set_ylim(1e-6, 2)
+        ax1.set_ylim(fracdiff_ylims[i])
         ax1.set_xlim(1e14, 1e17)
         ax1.set_title("$\sigma={:.1f}$".format(sigma))
        
