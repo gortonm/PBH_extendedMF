@@ -191,9 +191,7 @@ if "__main__" == __name__:
     
     normalised_unity = False    
     sigma = 0.1
-    
-    params_LN = [sigma]
-    
+        
     # Evolved mass function
     constraint_lower_evolved = []
     constraint_upper_evolved = []
@@ -231,17 +229,58 @@ if "__main__" == __name__:
         constraint_lower_evolved.append(min(f_PBH_energy_bin_lower))
         
         
-        f_PBH_energy_bin_upper = []
-        for k in range(len(constraints_mono_file_upper)):
+#%% Plot constraints for extended MF (reproducing Fig. 4 of Mosbech & Picker (2022)), using direct calculation of psi
+# Use the middle values of the fluxes, so no range in outputs from including an error bar.
+
+if "__main__" == __name__:
+    # Constraints data for each energy bin of each instrument (extended MF)
+    
+    constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_monochromatic_wide.txt"))
+        
+    M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
+    mc_values_evolved = np.logspace(13, 17, 50)[5:]
+    
+    M0_values_input = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 18, 500)))
+    M_values_input = m_pbh_evolved_MP22(M0_values_input, t_0)
+
+    # Constraint from each energy bin
+    f_PBH_energy_bin = []
+    
+    normalised_unity = False    
+    sigma = 0.1
+        
+    # Evolved mass function
+    constraint_evolved = []
+        
+    for m_c in mc_values_evolved:
+        
+        psi_initial = psi_LN_number_density(M0_values_input, m_c, sigma)
+        
+        # Evolved mass function
+        if normalised_unity:
+            psi_evolved = psi_evolved_direct_normalised(psi_initial, M_values_input, M0_values_input)
+        else:
+            psi_evolved = psi_evolved_direct(psi_initial, M_values_input, M0_values_input)
+            
+        # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
+        M_values_input_nozeros = M_values_input[psi_evolved > 0]
+        psi_evolved_nozeros = psi_evolved[psi_evolved > 0]
+        mf_evolved_interp = 10**np.interp(np.log10(M_values_eval), np.log10(M_values_input_nozeros), np.log10(psi_evolved_nozeros), left=-100, right=-100)
+        
+        # Constraint from each energy bin
+        f_PBH_energy_bin = []
+        for k in range(len(constraints_mono_file)):
     
             # Constraint from a particular energy bin (delta function MF)
-            constraint_energy_bin = constraints_mono_file_upper[k]
+            constraint_energy_bin = constraints_mono_file[k]
             
             integrand = mf_evolved_interp / constraint_energy_bin
             integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
-            
+
             if integral == 0 or np.isnan(integral):
-                f_PBH_energy_bin_upper.append(10)
+                f_PBH_energy_bin_lower.append(10)
             else:
-                f_PBH_energy_bin_upper.append(1/integral)
-        constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
+                f_PBH_energy_bin_lower.append(1/integral)
+
+        constraint_evolved.append(min(f_PBH_energy_bin))
+        
