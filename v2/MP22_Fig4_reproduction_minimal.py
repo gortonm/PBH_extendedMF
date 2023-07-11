@@ -245,25 +245,3 @@ if "__main__" == __name__:
             else:
                 f_PBH_energy_bin_upper.append(1/integral)
         constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
-        
-    
-    # Load data from Fig. 4 of Mosbech & Picker (2022)
-    m_evolved_lower, f_evolved_lower = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_lower.csv".format(sigma))
-    m_evolved_upper, f_evolved_upper = load_data("2203.05743/MP22_sigma_{:.1f}_evolved_upper.csv".format(sigma))
-   
-    fig, ax = plt.subplots(figsize=(6.5,6.5))
-    ax.fill_between(mc_values_evolved, constraint_lower_evolved, constraint_upper_evolved, color="tab:purple", alpha=0.5, label="Evolved")
-    ax.plot(m_evolved_lower, f_evolved_lower, color="tab:purple", linestyle="dotted")   
-    ax.plot(m_evolved_upper, f_evolved_upper, color="tab:purple", linestyle="dotted")
-    ax.plot(0,0, linestyle="dotted", color="k", label="Extracted from \n Mosbech \& \n Picker (2022)")
-    ax.plot(0,0, color="k", label="Reproduced")
-    
-    ax.set_xlim(1e10, 1e18)
-    ax.set_ylim(10**(-12), 1)
-    ax.set_xlabel("$M_c~[\mathrm{g}]$")
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_title("$\sigma={:.1f}$".format(sigma))
-    ax.legend(fontsize="small")
-    plt.tight_layout()
