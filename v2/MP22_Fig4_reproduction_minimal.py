@@ -248,10 +248,10 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     # Constraints data for each energy bin of each instrument (delta-function MF)
     
-    constraints_delta_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_deltachromatic_wide.txt"))
+    constraints_delta_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_Fermi-LAT_1512.01846_monochromatic_wide.txt"))
         
     M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
-    mc_values_evolved = np.logspace(13, 17, 50)[5:]
+    mc_values_evolved = np.logspace(13, 17, 50)[10:]
     
     M_init_values_input = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 18, 500)))
     M_values_input = mass_evolved(M_init_values_input, t_0)
@@ -289,9 +289,9 @@ if "__main__" == __name__:
             integral = np.trapz(np.nan_to_num(integrand), M_values_eval)
 
             if integral == 0 or np.isnan(integral):
-                f_PBH_energy_bin_lower.append(10)
+                f_PBH_energy_bin.append(10)
             else:
-                f_PBH_energy_bin_lower.append(1/integral)
+                f_PBH_energy_bin.append(1/integral)
 
         constraint_evolved.append(min(f_PBH_energy_bin))
         
