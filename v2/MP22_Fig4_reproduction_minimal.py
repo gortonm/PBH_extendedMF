@@ -124,7 +124,7 @@ def psi_LN_number_density(m, m_c, sigma, log_m_factor=3, n_steps=1000):
     return LN(m, m_c, sigma) * m * normalisation
 
 
-def psi_evolved_direct(psi_formation, M_values, M_init_values):
+def psi_evolved(psi_formation, M_values, M_init_values):
     """
     PBH mass function (in terms of the mass density) at time t, evolved form 
     the initial MF phi_formation using Eq. 11 of Mosbech & Picker (2022).   
@@ -147,7 +147,7 @@ def psi_evolved_direct(psi_formation, M_values, M_init_values):
     return psi_formation * (M_values / M_init_values)**3
 
 
-def psi_evolved_direct_normalised(psi_formation, M_values, M_init_values):
+def psi_evolved_normalised(psi_formation, M_values, M_init_values):
     """
     PBH mass function (in terms of the mass density) at time t, evolved form 
     the initial MF phi_formation using Eq. 11 of Mosbech & Picker (2022),
@@ -168,7 +168,7 @@ def psi_evolved_direct_normalised(psi_formation, M_values, M_init_values):
         Evolved values of the PBH mass density distribution function (normalised to unity).
 
     """
-    return psi_evolved_direct(psi_formation, M_values, M_init_values) / np.trapz(psi_evolved_direct(psi_formation, M_values, M_init_values), M_values)
+    return psi_evolved(psi_formation, M_values, M_init_values) / np.trapz(psi_evolved(psi_formation, M_values, M_init_values), M_values)
 
 
 #%% Plot constraints for extended MF (reproducing Fig. 4 of Mosbech & Picker (2022)), using direct calculation of psi
@@ -198,13 +198,13 @@ if "__main__" == __name__:
         
         # Evolved mass function
         if normalised_unity:
-            psi_evolved = psi_evolved_direct_normalised(psi_initial, M_values_input, M_init_values_input)
+            psi_evolved_values = psi_evolved_normalised(psi_initial, M_values_input, M_init_values_input)
         else:
-            psi_evolved = psi_evolved_direct(psi_initial, M_values_input, M_init_values_input)
+            psi_evolved_values = psi_evolved(psi_initial, M_values_input, M_init_values_input)
             
         # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
-        M_values_input_nozeros = M_values_input[psi_evolved > 0]
-        psi_evolved_nozeros = psi_evolved[psi_evolved > 0]
+        M_values_input_nozeros = M_values_input[psi_evolved_values > 0]
+        psi_evolved_nozeros = psi_evolved_values[psi_evolved_values > 0]
         psi_evolved_interp = 10**np.interp(np.log10(M_values_eval), np.log10(M_values_input_nozeros), np.log10(psi_evolved_nozeros), left=-100, right=-100)
         
         # Constraint from each energy bin
@@ -271,13 +271,13 @@ if "__main__" == __name__:
         
         # Evolved mass function
         if normalised_unity:
-            psi_evolved = psi_evolved_direct_normalised(psi_initial, M_values_input, M_init_values_input)
+            psi_evolved_values = psi_evolved_normalised(psi_initial, M_values_input, M_init_values_input)
         else:
-            psi_evolved = psi_evolved_direct(psi_initial, M_values_input, M_init_values_input)
+            psi_evolved_values = psi_evolved(psi_initial, M_values_input, M_init_values_input)
             
         # Interpolate evolved mass function at the evolved masses at which the delta-function MF constraint is calculated
-        M_values_input_nozeros = M_values_input[psi_evolved > 0]
-        psi_evolved_nozeros = psi_evolved[psi_evolved > 0]
+        M_values_input_nozeros = M_values_input[psi_evolved_values > 0]
+        psi_evolved_nozeros = psi_evolved_values[psi_evolved_values > 0]
         psi_evolved_interp = 10**np.interp(np.log10(M_values_eval), np.log10(M_values_input_nozeros), np.log10(psi_evolved_nozeros), left=-100, right=-100)
         
         for k in range(len(constraints_delta_file)):
