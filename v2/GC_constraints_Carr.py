@@ -115,9 +115,11 @@ if "__main__" == __name__:
     # If True, use extrapolated monochromatic MF constraints down to 5e14g (using a power law fit) to calculate extended MF constraint
     include_extrapolated = True
     # Boolean determines whether to use evolved mass function.
-    evolved = False
+    evolved = True
     # Boolean determines whether to evaluate the evolved mass function at t=0.
-    t_initial = False
+    t_initial = True
+    if t_initial:
+        evolved = True
     
     t = t_0
     
@@ -133,6 +135,8 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     mc_values = np.logspace(14, 20, 120)
+    
+    print(t)
 
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
