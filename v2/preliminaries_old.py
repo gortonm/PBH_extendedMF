@@ -29,10 +29,6 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
-m_Pl = 2.176e-5    # Planck mass, in grams
-t_Pl = 5.391e-44    # Planck time, in seconds
-t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
-m_star = 7.473420349255e+14    # Formation mass of a PBH with a lifetimt equal to the age of the Universe, in grams.
 
 #%% Create .txt file with fitting function parameters.
 # Results for lognormal from Table II of 2008.03289.
@@ -188,266 +184,146 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     return m_pbh_values[np.argmax(psi_values)]
 
 
-def alpha_eff_extracted(M_init):
+def mf_numeric(m, m_p, Delta, params_CC3, custom_mp=True, normalise_to_CC3=True):
     """
-    Result for alpha_eff, extracted from Fig. 1 of Mosbech & Picker (2022).
+    Estimate the numerical mass function shown in Fig. 5 of 2009.03204 evaluated
+    at an arbitrary mass m, with peak mass m_p, using linear interpolation.
 
     Parameters
     ----------
-    M_init_values : Float
-        PBH formation mass, in grams.
-
-    Returns
-    -------
-    Float.
-        Value of alpha_eff.
-
-    """
-    M_init_extracted, alpha_eff_extracted = load_data("2203.05743/2203.05743_Fig1.csv")
-    # Value assigned at large masses equals that of the fitting function at M >~ 1e18g in Eq. 10 of Mosbech & Picker (2022), in turn from Page (1976) [see before Eq. 27].
-    alpha_eff = np.interp(M_init, M_init_extracted, alpha_eff_extracted, left=max(alpha_eff_extracted), right=2.011e-4)
-    return alpha_eff
-
-
-def mass_evolved(M_init_values, t):
-    """
-    Find the PBH mass at time t, evolved from initial masses M_init_values.
-
-    Parameters
-    ----------
-    M_init_values : Array-like
-        Initial PBH masses.
-    t : Float
-        Time (after PBH formation) at which to evaluate PBH masses.
+    m : Array-like
+        PBH mass.
+    m_p : Float
+        Peak mass.
+    Delta : Float
+        Power spectrum peak width.
+    custom_mp : Boolean
+        If True, uses the input m_p for the peak mass and rescales the masses
+        at which the mass function is evaluated. Otherwise, use the masses
+        shown in Fig. 5 of 2009.03204.
 
     Returns
     -------
     Array-like
-        PBH mass at time t.
+        Estimate for the numerical PBH mass function, evaluated at m.
 
     """
-    # Find the PBH mass at time t, evolved from initial masses M_init_values
-    M_values = []
+    print("m_p = ", m_p)
     
-    for M_init in M_init_values:
-        if M_init**3 - 3 * alpha_eff_extracted(M_init) * m_Pl**3 * (t / t_Pl) <= 0:
-            M_values.append(0)
-        else:
-            # By default, alpha_eff_mixed() takes array-like quantities as arguments.
-            # Choose the 'zeroth' entry to append a scalar to the list M_values.
-            M_values.append(np.power(M_init**3 - 3 * alpha_eff_extracted(M_init) * m_Pl**3 * (t / t_Pl), 1/3))
-    
-    return np.array(M_values)
-
-
-def psi_evolved(psi_formation, M_values, M_init_values):
-    """
-    PBH mass function (in terms of the mass density) at time t, evolved form 
-    the initial MF phi_formation using Eq. 11 of Mosbech & Picker (2022).   
-
-    Parameters
-    ----------
-    psi_formation : Array-like
-        Initial PBH mass distribution (in mass density).
-    M_values : Array-like
-        PBH masses at time t.
-    M_init_values : Array-like
-        Initial PBH masses.
-
-    Returns
-    -------
-    Array-like
-        Evolved values of the PBH mass density distribution function (not normalised to unity).
-
-    """
-    return psi_formation * (M_values / M_init_values)**3
-
-
-def psi_evolved_normalised(psi_formation, M_values, M_init_values):
-    """
-    PBH mass function (in terms of the mass density) at time t, evolved form 
-    the initial MF phi_formation using Eq. 11 of Mosbech & Picker (2022),
-    normalised to one
-
-    Parameters
-    ----------
-    psi_formation : Array-like
-        Initial PBH mass distribution (in mass density).
-    M_values : Array-like
-        PBH masses at time t.
-    M_init_values : Array-like
-        Initial PBH masses.
-
-    Returns
-    -------
-    Array-like
-        Evolved values of the PBH mass density distribution function (normalised to unity).
-
-    """
-    return psi_evolved(psi_formation, M_values, M_init_values) / np.trapz(psi_evolved(psi_formation, M_values, M_init_values), M_values)
-
-
-def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True, t=t_0):
-    """
-    Calculate constraint on f_PBH for an extended mass function, using the method from 1705.05567.
-    
-    Parameters
-    ----------
-    mc_values : Array-like
-    	Characteristic PBH masses (m_c for a (skew-)lognormal, m_p for CC3).
-    m_delta : Array-like
-    	Masses at which constraints for a delta-function PBH mass function are evaluated.
-    f_max : Array-like
-    	Constraints obtained for a monochromatic mass function.
-    psi_initial : Function
-    	Initial PBH mass function (in terms of the mass density).
-    params : Array-like
-    	Parameters of the PBH mass function.
-    evolved : Boolean
-    	If True, calculate constraints using the evolved PBH mass function.
-    t : Float
-    	Time (after PBH formation) at which to evaluate PBH masses.
-        
-    Returns
-    -------
-    f_pbh : Array-like
-        Constraints on f_PBH.
-    
-    """
-    # If delta-function mass function constraints are only calculated for PBH masses greater than 1e18g, ignore the effect of evaporation
-    if min(m_delta) > 1e18:
-        evolved = False
-    
-    if evolved:
-        # Find PBH masses at time t
-        m_init_values_input = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta)), 500)))
-        m_values_input = mass_evolved(m_init_values_input, t)
-        
-    f_pbh = []
-    
-    for m_c in mc_values:
-    
-        if evolved:
-            # Find evolved mass function at time t
-            psi_initial_values = psi_initial(m_init_values_input, m_c, *params)
-            psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
-            
-            # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
-            m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
-            psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
-            psi_evolved_interp = 10**np.interp(np.log10(m_delta), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
-            
-            integrand = psi_evolved_interp / f_max
-            integral = np.trapz(np.nan_to_num(integrand), m_delta)
-            
-        else:
-            integral = np.trapz(psi_initial(m_delta, m_c, *params) / f_max, m_delta)
-            
-        if integral == 0 or np.isnan(integral):
-            f_pbh.append(10)
-        else:
-            f_pbh.append(1/integral)
-            
-    return f_pbh
-
-
-def envelope(constraints):
-    """
-    Calculate the tightest constraint at a given mass, from a set of 
-    constraints.
-
-    Parameters
-    ----------
-    constraints : Array-like
-        Constraints on PBH abundance. All should have the same length and be
-        evaluated at the same PBH mass.
-
-    Returns
-    -------
-    tightest : Array-like
-        Tightest constraint, from the constraints given in the input.
-
-    """
-    tightest = np.ones(len(constraints[0]))
-
-    for i in range(len(constraints[0])):
-
-        constraints_values = []
-
-        for j in range(len(constraints)):
-            if constraints[j][i] <= 0:
-                constraints_values.append(1e100)
-            else:
-                constraints_values.append(abs(constraints[j][i]))
-
-        tightest[i] = min(constraints_values)
-
-    return tightest
-
-
-def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=False, wide=False):
-    """
-    Read in constraints on f_PBH, obtained using Isatis, with a monochromatic PBH mass function.
-    Parameters
-    ----------
-    mf_string : String, optional
-        The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and "CC3" (critical collapse 3), plus the value of the power spectrum width Delta. 
-    modified : Boolean, optional
-        If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
-    test_mass_range : Boolean, optional
-        If True, use data obtained using the same PBH mass range for all Delta (1000 BHs evenly spaced in log space between 1e11-1e21g, if wide=False).
-    wide : Boolean, optional
-        If True, use the 'wider' PBH mass range for all Delta (1000 BHs evenly spaced in log space between 1e11-1e22g).
-    Returns
-    -------
-    constraints_names : Array-like
-        Name of instrument and arxiv reference for constraint on PBHs.
-    f_PBH_Isatis : Array-like
-        Constraint on the fraction of dark matter in PBHs, calculated using Isatis.
-    """
-    # Choose path to Isatis.
-    if modified:
-        Isatis_path = "../../Downloads/version_finale/scripts/Isatis/"
+    # Load data from numerical MFs shown in 2009.03204 provided by Andrew Gow.
+    if Delta < 0.1:
+        log_m_data, mf_data = np.genfromtxt("./Data/psiData/psiData_Delta_k35.txt", unpack=True, skip_header=1)
     else:
-        mf_string = "GC_mono"
-        Isatis_path = "../../Downloads/version_finale_unmodified/scripts/Isatis/"
+        log_m_data, mf_data = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
+    m_data = np.exp(log_m_data)
+    
+    if custom_mp:
+        # Find peak mass of the mass function extracted from Fig. 5 of 2009.03204,
+        # and scale the masses so that the peak mass corresponds to m_p.
+        mp_data = m_data[np.argmax(mf_data)]
+        m_scaled = m_data * m_p / mp_data
+ 
+        # Estimate normalisation factor for the MF
+        
+        # Match maximum value of the numerical MF to the maximum value of the CC3 MF.
+        if normalise_to_CC3:
+            psi_max_CC3 = CC3(m_p, m_p, *params_CC3)
+            normalisation_factor = psi_max_CC3 / max(mf_data)
+        else:
+            normalisation_factor = 1 / np.trapz(mf_data, m_scaled)
+        
+        return np.interp(m, m_scaled, mf_data, 0, 0) * normalisation_factor
+    
+    else:
+        # Estimate normalisation factor for the MF
+        mf_integrated = np.trapz(mf_data, m_data)
 
-    if test_mass_range:
-        mf_string += "_test_range"
+        return np.interp(m, m_data, mf_data, 0, 0) / mf_integrated
 
-    if wide:
-        mf_string += "_wide"
+def integrand_measure(m, m_c, mf, params):
+    """
+    Approximate form of the integrand appearing in Eq. 11 of 2201.01265,
+    scaled to its maximum value.
 
-    # Load Isatis constraints data.
-    constraints_file = np.genfromtxt("%sresults_photons_%s.txt" % (
-        Isatis_path, mf_string), dtype="str", unpack=True)[1:]
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses.
+    m_c : Float
+        Characteristic PBH mass (m_c for a (skew-)lognormal, m_p for CC3).
+    mf : Function
+        PBH mass function.
+    params : Array-like
+        Parameters of the PBH mass function.
 
-    constraints_names = []
-    f_PBH_Isatis = []
+    Returns
+    -------
+    Array-like.
+        PBH mass function divided by mass cubed, scaled so that the maximum value is one.
 
-    # Create array of constraints for which the constraints are physical
-    # (i.e. the constraints are non-zero and positive).
-    for i in range(len(constraints_file)):
+    """
+    integrand = mf(m, m_c, *params) / m**3
+    return integrand / max(integrand)
 
-        constraint = [float(constraints_file[i][j])
-                      for j in range(1, len(constraints_file[i]))]
 
-        if not(all(np.array(constraint) <= 0)):
+def integrand_measure_v2(m, m_c, mf, params):
+    """
+    Approximate form of the integrand appearing in Eq. 11 of 2201.01265,
+    scaled to its maximum value.
 
-            f_PBH_Isatis.append(constraint)
+    Parameters
+    ----------
+    m : Array-like
+        PBH masses.
+    m_c : Float
+        Characteristic PBH mass (m_c for a (skew-)lognormal, m_p for CC3).
+    mf : Function
+        PBH mass function.
+    params : Array-like
+        Parameters of the PBH mass function.
 
-            # Create labels
-            # Based upon code appearing in plotting.py within Isatis.
-            temp = constraints_file[i][0].split("_")
-            temp2 = ""
-            for i in range(len(temp)-1):
-                temp2 = "".join([temp2, temp[i], '\,\,'])
-            temp2 = "".join([temp2, '\,\,[arXiv:', temp[-1], ']'])
+    Returns
+    -------
+    Array-like.
+        PBH mass function divided by mass cubed, scaled so that the maximum value is one.
 
-            constraints_names.append(temp2)
+    """
+    integrand = mf(m, m_c, *params) / m**2
+    return integrand / max(integrand)
 
-    return constraints_names, f_PBH_Isatis
 
+#%% Compare numeric MFs from Fig. 2 of 2008.03289 to those shown in Fig. 5 of 2009.03204
+if "__main__" == __name__:
+    Delta = 0
+    m_data_PS, mf_data_PS = load_data(filename="PS_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_TP, mf_data_TP = load_data(filename="TP_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_second, mf_data_second = load_data(filename="Delta_{:.1f}_numeric.csv".format(Delta), directory="./Extracted_files/2009.03204/")
+
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(m_data_PS, (mf_data_PS/m_data_PS)/max((mf_data_PS/m_data_PS)), label="PS")
+    ax.plot(m_data_TP, (mf_data_TP/m_data_TP)/max((mf_data_TP/m_data_TP)), label="TP")
+    ax.plot(m_data_second, mf_data_second, label="2009.03204")
+    ax.legend(title="$\Delta={:.0f}$".format(Delta), fontsize="small")
+    ax.set_xscale("log")
+    ax.set_xlabel("$m~[M_\odot]$")
+    ax.set_ylabel("$\psi(m) / \psi_\mathrm{max}$")
+    fig.tight_layout()
+    
+    Delta = 1
+    m_data_PS, mf_data_PS = load_data(filename="PS_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_TP, mf_data_TP = load_data(filename="TP_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_YM, mf_data_YM = load_data(filename="YM_Delta={:.1f}.csv".format(Delta), directory="./Extracted_files/2008.03289/")
+    m_data_second, mf_data_second = load_data(filename="Delta_{:.1f}_numeric.csv".format(Delta), directory="./Extracted_files/2009.03204/")
+    
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(m_data_PS, (mf_data_PS/m_data_PS)/max((mf_data_PS/m_data_PS)), label="PS")
+    ax.plot(m_data_TP, (mf_data_TP/m_data_TP)/max((mf_data_TP/m_data_TP)), label="TP")
+    ax.plot(m_data_second, mf_data_second, label="2009.03204")
+    ax.legend(title="$\Delta={:.0f}$".format(Delta), fontsize="small")
+    ax.set_xscale("log")
+    ax.set_xlabel("$m~[M_\odot]$")
+    ax.set_ylabel("$\psi(m) / \psi_\mathrm{max}$")
+    fig.tight_layout()
 
 #%% Compare SLN and CC3 MF to Fig. 5 of 2009.03204.
 
@@ -697,6 +573,106 @@ if "__main__" == __name__:
             fig2.set_tight_layout(True)
             
             
+
+#%% Plot the numerical mass function.
+ 
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+            
+    for i in range(len(Deltas)):
+        
+        m_pbh_values = np.logspace(18, 22, 1000)
+                  
+        fig1, ax1 = plt.subplots(figsize=(7, 5))
+        fig2, ax2 = plt.subplots(figsize=(7, 5))
+
+        ymin_scaled, ymax_scaled = 1e-1, 1.1
+        
+        # Choose factors so that peak masses of the CC3 and SLN MF match
+        # closely, at 1e20g (consider this range since constraints plots)
+        # indicate the constraints from the SLN and CC3 MFs are quite
+        # different at this peak mass.
+        
+        if Deltas[i] < 5:
+            m_c = 2.5e18*np.exp(ln_mc_SLN[i])
+            m_p = 2.5e18*mp_CC3[i]
+            mp_numeric = m_p
+        else:
+            m_c = 3.1e18*np.exp(ln_mc_SLN[i])
+            m_p = 2.9e18*mp_CC3[i]
+            mp_numeric = m_p
+
+        #m_c = 5.6e20*np.exp(ln_mc_SLN[i])
+        #m_p = 5.25e20*mp_CC3[i]
+
+        mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+        print("m_p (CC3) = {:.2e}".format(m_p))
+        print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
+        print("m_p (numeric) = {:.2e}".format(mp_numeric))
+
+        params_CC3 = [alphas_CC3[i], betas[i]]
+      
+        mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+        mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        mf_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i])
+        mf_numeric_test = mf_numeric(m_pbh_values, mp_numeric, Deltas[i], params_CC3)
+        
+        
+        print("Delta={:.1f}".format(Deltas[i]))
+        
+        print("Low mass tail (m = 0.1*m_p):")
+        print("SLN psi = {:.3e}".format(SLN(1e19, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])))
+        print("CC3 psi = {:.3e}".format(CC3(1e19, m_p, alpha=alphas_CC3[i], beta=betas[i])))
+        print("LN psi = {:.3e}".format(LN(1e19, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i])))
+              
+        print("High mass tail (m = 10*m_p):")
+        print("SLN psi = {:.3e}".format(SLN(1e21, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])))
+        print("CC3 psi = {:.3e}".format(CC3(1e21, m_p, alpha=alphas_CC3[i], beta=betas[i])))
+        print("LN psi = {:.3e}".format(LN(1e21, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i])))
+       
+        mf_scaled_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+        mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
+        mf_scaled_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]) / max(LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i]))
+        mf_scaled_numeric = mf_numeric(m_pbh_values, mp_numeric, Deltas[i], params_CC3) / mf_numeric(mp_numeric, mp_numeric, Deltas[i], params_CC3)
+        
+        ymin, ymax = max(mf_numeric_test) * ymin_scaled, max(mf_numeric_test) * ymax_scaled
+        xmin, xmax = min(m_pbh_values[mf_numeric_test > 0]), max(m_pbh_values[mf_numeric_test > 0])
+
+        ax1.plot(m_pbh_values, mf_scaled_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
+        ax1.plot(m_pbh_values, mf_scaled_CC3, color="g", label="CC3", linestyle="dashed")
+        ax1.plot(m_pbh_values, mf_scaled_LN, color="r", label="LN", dashes=[8, 5])
+        ax1.plot(m_pbh_values, mf_scaled_numeric, color="k", label="Numeric")
+        
+        ax2.plot(m_pbh_values, mf_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
+        ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
+        ax2.plot(m_pbh_values, mf_LN, color="r", label="LN", dashes=[8, 5])
+        ax2.plot(m_pbh_values, mf_numeric_test, color="k", label="Numeric")
+        
+        for ax in [ax1, ax2]:
+            # Show smallest PBH mass constrained by microlensing.
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.grid()
+            ax.legend(fontsize="small")
+            #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
+            ax.set_xlabel("$m~[\mathrm{g}]$")
+            ax.set_title("$\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+
+        ax1.vlines(9.9e21, ymin_scaled, ymax_scaled, color="k", linestyle="dashed")
+        ax1.set_ylabel("$\psi / \psi_\mathrm{max}$")
+        ax1.set_ylim(ymin_scaled, ymax_scaled)
+        
+        ax2.vlines(9.9e21, ymin, ymax, color="k", linestyle="dashed")
+        ax2.set_ylabel("$\psi$")
+        ax2.set_xlim(xmin, xmax)
+        ax2.set_ylim(ymin, ymax)
+
+        fig1.set_tight_layout(True)
+        fig2.set_tight_layout(True)
+        fig2.savefig("Tests/Figures/MF_numeric_Gow_Delta={:.1f}.png".format(Deltas[i]))
+            
 #%% Plot the mass function for Delta = 5.0, showing the mass range relevant
 # for the Subaru-HSC microlensing constraints.
  
@@ -821,7 +797,250 @@ if "__main__" == __name__:
     ax.set_ylim(ymin, ymax)
     
     fig.set_tight_layout(True)
+                      
+#%% Plot the approximate form of the integrand appearing in Eq. 11 of 2201.01265, given by integrand_measure()
+
+if "__main__" == __name__:
     
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    for i in range(len(Deltas)):
+        
+        if i == 6:
+            m_x = mp_SLN[i] * 1e17
+            
+            m_pbh_values = np.logspace(np.log10(m_x)-7, np.log10(m_x)+5, 1000)
+            
+            params_LN = [sigmas_LN[i]]
+            params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
+            params_CC3 = [alphas_CC3[i], betas[i]]
+            
+            fig, ax = plt.subplots(figsize=(7, 5))
+            #ax.plot(m_pbh_values, integrand_measure(m_pbh_values, mp_SLN[i] * np.exp(sigmas_LN[i]**2), LN, params_LN), color="r", label="LN")
+            ax.plot(m_pbh_values, integrand_measure(m_pbh_values, 1e17*np.exp(ln_mc_SLN[i]), SLN, params_SLN), color="b", label="SLN")
+            ax.plot(m_pbh_values, integrand_measure(m_pbh_values, 1e17*mp_CC3[i], CC3, params_CC3), color="g", label="CC3")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.grid()
+            ax.legend(fontsize="small")
+            #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
+            ax.set_xlabel("$m~[\mathrm{g}]$")
+            ax.set_ylabel("$(\psi / m^3) / \mathrm{max}(\psi / m^3)$")
+            ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+            ax.set_ylim(1e-4, 10)
+            plt.title("$\Delta={:.1f}$".format(Deltas[i]))
+            plt.tight_layout()
+
+#%% Plot the approximate form of the integrand appearing in Eq. 11 of 2201.01265, given by integrand_measure_v2()
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    for i in range(len(Deltas)):
+        
+        m_x = 40
+        
+        m_pbh_values = np.logspace(np.log10(m_x)-7, np.log10(m_x)+2, 1000)
+        
+        params_LN = [sigmas_LN[i]]
+        params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
+        params_CC3 = [alphas_CC3[i], betas[i]]
+        
+        fig, ax = plt.subplots(figsize=(7, 5))
+        ax.plot(m_pbh_values, integrand_measure_v2(m_pbh_values, mp_SLN[i] * np.exp(sigmas_LN[i]**2), LN, params_LN), color="r", label="LN")
+        ax.plot(m_pbh_values, integrand_measure_v2(m_pbh_values, 1e17*np.exp(ln_mc_SLN[i]), SLN, params_SLN), color="b", label="SLN")
+        ax.plot(m_pbh_values, integrand_measure_v2(m_pbh_values, 1e17*mp_CC3[i], CC3, params_CC3), color="g", label="CC3")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.grid()
+        ax.legend(fontsize="small")
+        #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
+        ax.set_xlabel("$m~[\mathrm{g}]$")
+        ax.set_ylabel("$(\psi / M^2) / \mathrm{max}(\psi / M^2)$")
+        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+        ax.set_ylim(1e-4, 10)
+        plt.title("$\Delta={:.1f}$".format(Deltas[i]))
+        plt.tight_layout()
+        
+
+#%% Estimate the range of masses for which the mass function is non-negligible.
+
+if "__main__" == __name__:
+    
+    # Select which range of masses to use (for convergence tests).
+
+    # If True, use cutoff in terms of the mass function scaled to its peak value.
+    MF_cutoff = True
+    # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints.
+    integrand_cutoff = False
+    # If True, use cutoff in terms of the integrand appearing in Galactic Centre photon constraints, with the mass function evolved to the present day.
+    #integrand_cutoff_present = False
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    # Minimum value of the mass function (scaled to its peak value).
+    # Set to 0.1 when comparing to Fig. 5 of 2009.03204.
+    cutoff = 1e-7
+    
+    # Name of the filename to save with mass range.
+    if MF_cutoff:
+        scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+    elif integrand_cutoff:
+        scaled_masses_filename = "integrand_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+    elif integrand_cutoff:
+        scaled_masses_filename = "integrand2_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+    
+    # Number of masses to use to estimate the mass range.
+    n_steps = 10000000
+    
+    # Number of orders of magnitude around the peak mass or characteristic mass to include in estimate
+    log_m_range = 5
+        
+    # For saving to file
+    m_lower_LN = []
+    m_upper_LN = []
+    m_lower_SLN = []
+    m_upper_SLN = []
+    m_lower_CC3 = []
+    m_upper_CC3 = []
+    
+    for i in range(len(Deltas)):
+        
+        # Assign characteristic mass values.
+        mc_LN = 1
+        m_c = 1
+        m_p = 1
+        
+        # Uncomment when comparing to Fig. 5 of 2009.03204.
+        #mc_LN = mp_SLN[i] * np.exp(sigmas_LN[i]**2)   # compute m_c for lognormal by relating it to the peak mass of the SLN MF
+        #m_c = np.exp(ln_mc_SLN[i])
+        #m_p = mp_CC3[i]
+        
+        # Assign lower and upper masses of the range.
+        m_min_LN, m_max_LN = mc_LN / 10**log_m_range, mc_LN * 10**log_m_range
+        m_min_SLN, m_max_SLN = m_c / 10**log_m_range, m_c * 10**log_m_range
+        m_min_CC3, m_max_CC3 = m_p / 10**log_m_range, m_p * 10**log_m_range
+       
+       
+        # Range of values of the PBH mass to use to estimate for the cutoff.
+        m_pbh_values_LN = np.logspace(np.log10(m_min_LN), np.log10(m_max_LN), n_steps)
+        m_pbh_values_SLN = np.logspace(np.log10(m_min_SLN), np.log10(m_max_SLN), n_steps)
+        m_pbh_values_CC3 = np.logspace(np.log10(m_min_CC3), np.log10(m_max_CC3), n_steps)
+
+        print("\nDelta = {:.1f}".format(Deltas[i]))
+        
+        if MF_cutoff: 
+            measure_LN = LN(m_pbh_values_LN, mc_LN, sigma=sigmas_LN[i]) / LN(m_peak_LN(mc_LN, sigma=sigmas_LN[i]), mc_LN, sigma=sigmas_LN[i])
+            measure_SLN = SLN(m_pbh_values_SLN, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values_SLN, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+            measure_CC3 = CC3(m_pbh_values_CC3, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
+            
+        elif integrand_cutoff:
+            params_LN = [sigmas_LN[i]]
+            params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
+            params_CC3 = [alphas_CC3[i], betas[i]]
+            
+            measure_LN = integrand_measure(m_pbh_values_LN, mc_LN, LN, params_LN)
+            measure_SLN = integrand_measure(m_pbh_values_SLN, m_c, SLN, params_SLN)
+            measure_CC3 = integrand_measure(m_pbh_values_CC3, m_p, CC3, params_CC3)
+
+        # Arrays of minimum and maximum masses for which the measure is non-negligible.
+        m_range_LN = [min(m_pbh_values_LN[measure_LN > cutoff]), max(m_pbh_values_LN[measure_LN > cutoff])]
+        m_range_SLN = [min(m_pbh_values_SLN[measure_SLN > cutoff]), max(m_pbh_values_SLN[measure_SLN > cutoff])]
+        m_range_CC3 = [min(m_pbh_values_CC3[measure_CC3 > cutoff]), max(m_pbh_values_CC3[measure_CC3 > cutoff])]
+                 
+        print("Mass range where measure > {:.1e}:".format(cutoff))
+        print("LN: ", m_range_LN)
+        print("SLN : ", m_range_SLN)
+        print("CC3 : ", m_range_CC3)
+        
+        print("Scaled mass range where measure > {:.1e}:".format(cutoff))
+        print("LN: ", np.array(m_range_LN) / mc_LN)
+        print("SLN : ", np.array(m_range_SLN) / m_c)
+        print("CC3 : ", np.array(m_range_CC3) / m_p)
+        
+        m_lower_LN.append(m_range_LN[0] / mc_LN)
+        m_upper_LN.append(m_range_LN[1] / mc_LN)
+        m_lower_SLN.append(m_range_SLN[0] / m_c)
+        m_upper_SLN.append(m_range_SLN[1] / m_c)
+        m_lower_CC3.append(m_range_CC3[0] / m_p)
+        m_upper_CC3.append(m_range_CC3[1] / m_p)
+        
+    file_header = "Cutoff={:.1e} \nDelta \t M_min / M_c (LN) \t M_max / M_c (LN) \t M_min / M_c (SLN) \t M_max / M_c (SLN) \t M_min / M_p (CC3) \t M_max / M_p (CC3)".format(cutoff)
+    mass_ranges = [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3]
+    
+
+    np.savetxt(scaled_masses_filename, np.column_stack(mass_ranges), delimiter="\t\t ", header=file_header, fmt="%.4e")        
+
+
+#%% Estimate the range of masses for which the mass function is non-negligible (numeric MF only)
+
+if "__main__" == __name__:
+    
+    # Select which range of masses to use (for convergence tests).
+
+    # If True, use cutoff in terms of the mass function scaled to its peak value.
+    MF_cutoff = True
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    # Minimum value of the mass function (scaled to its peak value).
+    # Set to 0.1 when comparing to Fig. 5 of 2009.03204.
+    cutoff = 1e-4
+    
+    # Name of the filename to save with mass range.
+    scaled_masses_filename = "MF_numeric_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
+
+    # Number of masses to use to estimate the mass range.
+    n_steps = 10000000
+    
+    # Number of orders of magnitude around the peak mass or characteristic mass to include in estimate
+    log_m_range = 5
+    
+    # For saving to file
+    m_lower_numeric = []
+    m_upper_numeric = []
+    
+    for i in range(len(Deltas)):
+        
+        params_CC3 = [alphas_CC3[i], betas[i]]
+        
+        # Assign characteristic mass values.
+        m_p = 1
+                
+        # Assign lower and upper masses of the range.
+        m_min_numeric, m_max_numeric = m_p / 10**log_m_range, m_p * 10**log_m_range
+       
+        # Range of values of the PBH mass to use to estimate for the cutoff.
+        m_pbh_values_numeric = np.logspace(np.log10(m_min_numeric), np.log10(m_max_numeric), n_steps)
+
+        print("\nDelta = {:.1f}".format(Deltas[i]))
+        
+        if MF_cutoff: 
+            measure_numeric = mf_numeric(m_pbh_values_numeric, m_p, Deltas[i], params_CC3) / mf_numeric(m_p, m_p, Deltas[i], params_CC3)
+            
+        # Arrays of minimum and maximum masses for which the measure is non-negligible.
+        m_range_numeric = [min(m_pbh_values_numeric[measure_numeric > cutoff]), max(m_pbh_values_numeric[measure_numeric > cutoff])]
+                 
+        print("Mass range where measure > {:.1e}:".format(cutoff))
+        print("Numeric: ", m_range_numeric)
+        
+        print("Scaled mass range where measure > {:.1e}:".format(cutoff))
+        print("Numeric: ", np.array(m_range_numeric) / m_p)
+        
+        m_lower_numeric.append(m_range_numeric[0] / m_p)
+        m_upper_numeric.append(m_range_numeric[1] / m_p)
+        
+    file_header = "Cutoff={:.1e} \nDelta \t M_min / M_p (numeric) \t M_max / M_p (numeric)".format(cutoff)
+    mass_ranges = [Deltas, m_lower_numeric, m_upper_numeric]
+    
+    np.savetxt(scaled_masses_filename, np.column_stack(mass_ranges), delimiter="\t\t ", header=file_header, fmt="%.4e")        
+        
+
         
 #%% Proportion of values in the energy range constrained by the instruments shown in Fig. 2 of 2201.01265 above 5 GeV (which Hazma cannot calculate secondary spectra for
     
