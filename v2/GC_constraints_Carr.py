@@ -9,8 +9,7 @@ Created on Sat Apr  8 14:45:28 2023
 # function calculated in 2008.03289, using the method from 1705.05567.
 
 import numpy as np
-from preliminaries import mf_numeric, load_data, LN, SLN, CC3
-from extended_MF_checks import constraint_Carr, load_results_Isatis, envelope
+from preliminaries import load_data, LN, SLN, CC3, constraint_Carr, load_results_Isatis, envelope
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -48,20 +47,49 @@ if "__main__" == __name__:
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
     constraints_names, f_max = load_results_Isatis(modified=True)
 
+    # Boolean determines whether to use extended mass function.
+    evolved = False
 
     for j in range(len(Deltas)):
+        params_LN = [sigmas_LN[j]]
+        params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
-        params_numerical = [Deltas[j], params_CC3]
-        f_pbh_numeric = []
-                
-        for i in range(len(constraints_names)):            
-            # Calculate constraint using method from 1705.05567, and plot.
-            f_pbh_numeric.append(constraint_Carr(mc_values, m_mono_values, f_max[i], mf_numeric, params_numerical))
         
-        f_pbh_numeric_envelope = envelope(f_pbh_numeric) 
+        # Returns the envelope of Galactic Centre photon constraints from different instruments.
+        f_pbh_LN_envelope = []
+        f_pbh_SLN_envelope = []
+        f_pbh_CC3_envelope = []
+        
+        for m_c in mc_values:
+            mc_values_input = [m_c]
+            
+            # Constraint from each energy bin
+            f_pbh_energy_bin_LN = []
+            f_pbh_energy_bin_SLN = []
+            f_pbh_energy_bin_CC3 = []
+                
+            for i in range(len(constraints_names)):            
+                # Calculate constraint using method from 1705.05567, and plot.
+                f_pbh_energy_bin_LN.append(constraint_Carr(mc_values, m_mono_values, f_max[i], LN, params_LN, evolved)[0])
+                f_pbh_energy_bin_SLN.append(constraint_Carr(mc_values, m_mono_values, f_max[i], SLN, params_SLN, evolved)[0])
+                f_pbh_energy_bin_CC3.append(constraint_Carr(mc_values, m_mono_values, f_max[i], CC3, params_CC3, evolved)[0])
+                
+            f_pbh_LN_envelope.append(min(f_pbh_energy_bin_LN))
+            f_pbh_SLN_envelope.append(min(f_pbh_energy_bin_SLN))
+            f_pbh_CC3_envelope.append(min(f_pbh_energy_bin_CC3))
 
-        data_filename_numeric = "./Data/numeric_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
-        np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric_envelope], delimiter="\t")
+        if evolved == False:
+            data_filename_LN = "./Data-tests/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_SLN = "./Data-tests/SLN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_CC3 = "./Data-tests/CC3_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+        else:
+            data_filename_LN = "./Data/LN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_SLN = "./Data/SLN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_CC3 = "./Data/CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            
+        np.savetxt(data_filename_LN, [mc_values, f_pbh_LN_envelope], delimiter="\t")
+        np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN_envelope], delimiter="\t")
+        np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3_envelope], delimiter="\t")
 
 
 #%% Constraints from 2302.04408 (MW diffuse SPI with NFW template)
@@ -71,7 +99,7 @@ if "__main__" == __name__:
     # If True, plot extrapolated monochromatic MF constraints down to 5e14g
     plot_extrapolate = False
     # If True, use extrapolated monochromatic MF constraints down to 5e14g (using a power law fit) to calculate extended MF constraint
-    include_extrapolated = False
+    include_extrapolated = True
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -129,7 +157,6 @@ if "__main__" == __name__:
             data_filename_LN = "./Data/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
             data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
             data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
-            data_filename_numeric = "./Data/numeric_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
                       
         else:
             f_max_total = f_max
@@ -138,19 +165,15 @@ if "__main__" == __name__:
             data_filename_LN = "./Data/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_numeric = "./Data/numeric_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
-        params_numerical = [Deltas[j], params_CC3]
         
         f_pbh_LN = constraint_Carr(mc_values, m_mono_total, f_max_total, LN, params_LN)
         f_pbh_SLN = constraint_Carr(mc_values, m_mono_total, f_max_total, SLN, params_SLN)
         f_pbh_CC3 = constraint_Carr(mc_values, m_mono_total, f_max_total, CC3, params_CC3)
-        f_pbh_numeric = constraint_Carr(mc_values, m_mono_total, f_max_total, mf_numeric, params_numerical)
         
         np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-        np.savetxt(data_filename_numeric, [mc_values, f_pbh_numeric], delimiter="\t")
