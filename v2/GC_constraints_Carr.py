@@ -9,7 +9,7 @@ Created on Sat Apr  8 14:45:28 2023
 # function calculated in 2008.03289, using the method from 1705.05567.
 
 import numpy as np
-from preliminaries import load_data, LN, SLN, CC3, constraint_Carr, load_results_Isatis, envelope
+from preliminaries import load_data, LN, SLN, CC3, constraint_Carr, load_results_Isatis
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -32,6 +32,8 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
+t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
+
 
 #%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT.
 
@@ -47,8 +49,20 @@ if "__main__" == __name__:
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
     constraints_names, f_max = load_results_Isatis(modified=True)
 
-    # Boolean determines whether to use extended mass function.
-    evolved = False
+    # Boolean determines whether to use evolved mass function.
+    evolved = True
+    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    t_initial = True
+
+    t = t_0 
+    
+    if not evolved:
+        data_folder = "./Data-tests/unevolved"
+    elif t_initial:
+        data_folder = "./Data-tests/t_initial"
+        t = 0
+    else:
+        data_folder = "./Data"
 
     for j in range(len(Deltas)):
         params_LN = [sigmas_LN[j]]
@@ -79,13 +93,13 @@ if "__main__" == __name__:
             f_pbh_CC3_envelope.append(min(f_pbh_energy_bin_CC3))
 
         if evolved == False:
-            data_filename_LN = "./Data-tests/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-            data_filename_SLN = "./Data-tests/SLN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-            data_filename_CC3 = "./Data-tests/CC3_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_CC3 = data_folder + "/CC3_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
         else:
-            data_filename_LN = "./Data/LN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_SLN = "./Data/SLN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_CC3 = "./Data/CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_CC3 = data_folder + "CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
             
         np.savetxt(data_filename_LN, [mc_values, f_pbh_LN_envelope], delimiter="\t")
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN_envelope], delimiter="\t")
@@ -100,6 +114,20 @@ if "__main__" == __name__:
     plot_extrapolate = False
     # If True, use extrapolated monochromatic MF constraints down to 5e14g (using a power law fit) to calculate extended MF constraint
     include_extrapolated = True
+    # Boolean determines whether to use evolved mass function.
+    evolved = False
+    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    t_initial = False
+    
+    t = t_0
+    
+    if not evolved:
+        data_folder = "./Data-tests/unevolved"
+    elif t_initial:
+        data_folder = "./Data-tests/t_initial"
+        t = 0
+    else:
+        data_folder = "./Data"
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -154,25 +182,25 @@ if "__main__" == __name__:
             f_max_total = np.concatenate((f_max_extrapolated, f_max))
             m_mono_total = np.concatenate((m_mono_extrapolated, m_mono_values))
             
-            data_filename_LN = "./Data/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
-            data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
-            data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
                       
         else:
             f_max_total = f_max
             m_mono_total = m_mono_values
             
-            data_filename_LN = "./Data/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_SLN = "./Data/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_CC3 = "./Data/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
         
-        f_pbh_LN = constraint_Carr(mc_values, m_mono_total, f_max_total, LN, params_LN)
-        f_pbh_SLN = constraint_Carr(mc_values, m_mono_total, f_max_total, SLN, params_SLN)
-        f_pbh_CC3 = constraint_Carr(mc_values, m_mono_total, f_max_total, CC3, params_CC3)
+        f_pbh_LN = constraint_Carr(mc_values, m_mono_total, f_max_total, LN, params_LN, evolved, t)
+        f_pbh_SLN = constraint_Carr(mc_values, m_mono_total, f_max_total, SLN, params_SLN, evolved, t)
+        f_pbh_CC3 = constraint_Carr(mc_values, m_mono_total, f_max_total, CC3, params_CC3, evolved, t)
         
         np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
