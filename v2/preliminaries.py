@@ -320,7 +320,7 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     
     if evolved:
         # Find PBH masses at time t
-        m_init_values_input = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, 1000)))
+        m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), 1000), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, 1000))))
         m_values_input = mass_evolved(m_init_values_input, t)
         
     f_pbh = []
@@ -884,8 +884,9 @@ if "__main__" == __name__:
     
     # Maximum mass that the Korwar & Profumo (2023) delta-function MF constraint is calculated at
     m_delta_max_KP23 = 3e17
-    m_pbh_values_formation = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(m_delta_max_KP23)+4, 1000)))
+    m_pbh_values_formation = np.concatenate((np.logspace(np.log10(m_star) - 3, np.log10(m_star)), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(m_delta_max_KP23)+4, 1000)))
     m_pbh_values_evolved = mass_evolved(m_pbh_values_formation, t_0)
+    m_pbh_values_evolved_t_zero = mass_evolved(m_pbh_values_formation, 0)
     m_c = 1e17
     
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -912,9 +913,12 @@ if "__main__" == __name__:
             
         psi_evolved_values = psi_evolved(psi_initial, m_pbh_values_evolved, m_pbh_values_formation)
         psi_evolved_normalised_values = psi_evolved_normalised(psi_initial, m_pbh_values_evolved, m_pbh_values_formation)
+        psi_t_zero = psi_evolved_normalised(psi_initial, m_pbh_values_evolved_t_zero, m_pbh_values_formation)
+        psi_t_zero_interp = 10**np.interp(np.log10(m_pbh_values_evolved), np.log10(m_pbh_values_evolved_t_zero), np.log10(psi_t_zero))
 
         fig, ax = plt.subplots(figsize=(6, 6))
         ax.plot(m_pbh_values_formation, psi_initial, label="$t=0$", color="tab:blue")
+        ax.plot(m_pbh_values_evolved, psi_t_zero_interp, label="$t=0$ (normalised, \n evolved MF calculation test)", color="tab:green", linestyle="dashed")
         ax.plot(m_pbh_values_evolved, psi_evolved_normalised_values, linestyle="dashed", label="$t=t_0$ (normalised)", color="tab:orange")
         ax.plot(m_pbh_values_evolved, psi_evolved_values, label="$t=t_0$", linestyle="dotted", color="grey")
 
@@ -930,13 +934,16 @@ if "__main__" == __name__:
         elif plot_CC3:
             ax.set_title("CC3, $\Delta={:.1f}$, $M_p$={:.1e}g".format(Deltas[i], m_c), fontsize="small")
 
-        ax.legend()
+        ax.legend(fontsize="x-small")
         ax.set_xlim(1e11, max(m_pbh_values_formation))
         fig.tight_layout()
         
         fig, ax = plt.subplots(figsize=(6, 6))        
-        ratio_evolved = psi_evolved_values/psi_initial
-        ratio_evolved_normalised = psi_evolved_normalised_values/psi_initial
+        psi_initial_interp = 10**np.interp(np.log10(m_pbh_values_evolved), np.log10(m_pbh_values_formation), np.log10(psi_initial))
+        ratio_evolved = psi_evolved_values/psi_initial_interp
+        ratio_evolved_normalised = psi_evolved_normalised_values/psi_initial_interp
+        ratio_t_zero = psi_t_zero_interp/psi_initial_interp
+        ax.plot(m_pbh_values_evolved, abs(ratio_t_zero-1), label="$t=0$ (normalised, \n evolved MF calculation test)", color="tab:green")
         ax.plot(m_pbh_values_evolved, abs(ratio_evolved_normalised-1), label="Normalised $\psi_\mathrm{N}$", color="tab:orange")
         ax.plot(m_pbh_values_evolved, abs(ratio_evolved-1), label="Unnormalised $\psi$", color="grey")
         ax.set_xlabel("$M~[\mathrm{g}]$")
@@ -953,6 +960,6 @@ if "__main__" == __name__:
 
         ax.set_xlim(min(m_pbh_values_formation), max(m_pbh_values_evolved))
         ax.set_ylim(5e-6, 1)
-        ax.legend(fontsize="small")
+        ax.legend(fontsize="x-small")
         fig.tight_layout()
 
