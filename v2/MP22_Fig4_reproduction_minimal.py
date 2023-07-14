@@ -247,7 +247,7 @@ if "__main__" == __name__:
     M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values_evolved = np.logspace(13, 17, 50)[5:]
     
-    M_init_values_input = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 18, 500)))
+    M_init_values_input = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 18, 1000)))
     M_values_input = mass_evolved(M_init_values_input, t_0)
     
     normalised_unity = False    
@@ -318,7 +318,7 @@ if "__main__" == __name__:
     M_values_eval = np.logspace(10, 18, 100)   # masses at which the constraint is evaluated for a delta-function MF
     mc_values_evolved = np.logspace(13, 17, 50)[10:]
     
-    M_init_values_input = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 18, 500)))
+    M_init_values_input = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 18, 1000)))
     M_values_input = mass_evolved(M_init_values_input, t_0)
     
     normalised_unity = True    
