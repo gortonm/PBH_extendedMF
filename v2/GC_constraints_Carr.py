@@ -9,7 +9,7 @@ Created on Sat Apr  8 14:45:28 2023
 # function calculated in 2008.03289, using the method from 1705.05567.
 
 import numpy as np
-from preliminaries import load_data, LN, SLN, CC3, constraint_Carr, load_results_Isatis
+from preliminaries import load_data, LN, SLN, CC3, constraint_Carr, load_results_Isatis, envelope
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -50,11 +50,13 @@ if "__main__" == __name__:
     constraints_names, f_max = load_results_Isatis(modified=True)
 
     # Boolean determines whether to use evolved mass function.
-    evolved = True
+    evolved = False
     # Boolean determines whether to evaluate the evolved mass function at t=0.
     t_initial = True
+    if t_initial:
+        evolved = True
 
-    t = t_0 
+    t = t_0
     
     if not evolved:
         data_folder = "./Data-tests/unevolved"
@@ -63,34 +65,45 @@ if "__main__" == __name__:
         t = 0
     else:
         data_folder = "./Data"
-
+    
     for j in range(len(Deltas)):
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
         
-        # Returns the envelope of Galactic Centre photon constraints from different instruments.
-        f_pbh_LN_envelope = []
-        f_pbh_SLN_envelope = []
-        f_pbh_CC3_envelope = []
-        
-        for m_c in mc_values:
-            mc_values_input = [m_c]
-            
-            # Constraint from each energy bin
-            f_pbh_energy_bin_LN = []
-            f_pbh_energy_bin_SLN = []
-            f_pbh_energy_bin_CC3 = []
-                
-            for i in range(len(constraints_names)):            
-                # Calculate constraint using method from 1705.05567, and plot.
-                f_pbh_energy_bin_LN.append(constraint_Carr(mc_values, m_mono_values, f_max[i], LN, params_LN, evolved)[0])
-                f_pbh_energy_bin_SLN.append(constraint_Carr(mc_values, m_mono_values, f_max[i], SLN, params_SLN, evolved)[0])
-                f_pbh_energy_bin_CC3.append(constraint_Carr(mc_values, m_mono_values, f_max[i], CC3, params_CC3, evolved)[0])
-                
-            f_pbh_LN_envelope.append(min(f_pbh_energy_bin_LN))
-            f_pbh_SLN_envelope.append(min(f_pbh_energy_bin_SLN))
-            f_pbh_CC3_envelope.append(min(f_pbh_energy_bin_CC3))
+        # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
+        # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
+        constraints_names, f_max = load_results_Isatis(mf_string="GC_mono_wide", modified=True)
+        constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+
+        for i in range(len(constraints_names)):
+            # Calculate constraint using method from 1705.05567.
+
+            # Constraints data for each energy bin of each instrument.
+            constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % (constraints_names_short[i])))
+            # Constraints for an extended MF, from each instrument.
+            energy_bin_constraints_LN = []
+            energy_bin_constraints_SLN = []
+            energy_bin_constraints_CC3 = []
+
+            for k in range(len(constraints_mono_file)):
+
+                # Constraint from a particular energy bin
+                constraint_energy_bin = constraints_mono_file[k]
+
+                # Calculate constraint on f_PBH from each bin
+                f_PBH_k_LN = constraint_Carr(mc_values, m_mono_values, constraint_energy_bin, LN, params_LN, evolved, t)
+                f_PBH_k_SLN = constraint_Carr(mc_values, m_mono_values, constraint_energy_bin, SLN, params_SLN, evolved, t)
+                f_PBH_k_CC3 = constraint_Carr(mc_values, m_mono_values, constraint_energy_bin, CC3, params_CC3, evolved, t)
+
+                energy_bin_constraints_LN.append(f_PBH_k_LN)
+                energy_bin_constraints_SLN.append(f_PBH_k_SLN)
+                energy_bin_constraints_CC3.append(f_PBH_k_CC3)
+
+            # Calculate constraint using method from 1705.05567, and plot.
+            f_PBH_Carr_LN = envelope(energy_bin_constraints_LN)
+            f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
+            f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
 
         if evolved == False:
             data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
@@ -99,11 +112,11 @@ if "__main__" == __name__:
         else:
             data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_CC3 = data_folder + "CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_CC3 = data_folder + "/CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
             
-        np.savetxt(data_filename_LN, [mc_values, f_pbh_LN_envelope], delimiter="\t")
-        np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN_envelope], delimiter="\t")
-        np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3_envelope], delimiter="\t")
+        np.savetxt(data_filename_LN, [mc_values, f_PBH_Carr_LN], delimiter="\t")
+        np.savetxt(data_filename_SLN, [mc_values, f_PBH_Carr_SLN], delimiter="\t")
+        np.savetxt(data_filename_CC3, [mc_values, f_PBH_Carr_CC3], delimiter="\t")
 
 
 #%% Constraints from 2302.04408 (MW diffuse SPI with NFW template)
@@ -136,8 +149,6 @@ if "__main__" == __name__:
     
     mc_values = np.logspace(14, 20, 120)
     
-    print(t)
-
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
     m_mono_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
