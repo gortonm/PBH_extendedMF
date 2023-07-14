@@ -320,8 +320,7 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     
     if evolved:
         # Find PBH masses at time t
-        #m_init_values_input = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta)), 500)))
-        m_init_values_input = np.logspace(np.log10(min(m_delta))-2,  np.log10(max(m_delta))+2, 10000)
+        m_init_values_input = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, 1000)))
         m_values_input = mass_evolved(m_init_values_input, t)
         
     f_pbh = []
@@ -331,9 +330,7 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
         if evolved:
             # Find evolved mass function at time t
             psi_initial_values = psi_initial(m_init_values_input, m_c, *params)
-            print("psi_initial[200:220] = ", psi_initial_values[2000:220])
             psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
-            print("psi_evolved[200:220] = ", psi_evolved_values[2000:220])
            
             # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
             m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
@@ -884,18 +881,35 @@ if "__main__" == __name__:
     # Initial PBH mass values includes values close to the initial mass of a PBH with lifetime equal to the age of the Universe,
     # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
     #m_pbh_values_formation = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 20, 500)))
-    m_pbh_values_formation = np.concatenate((np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(3e17), 500)))
+    
+    # Maximum mass that the Korwar & Profumo (2023) delta-function MF constraint is calculated at
+    m_delta_max_KP23 = 3e17
+    m_pbh_values_formation = np.concatenate((np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(m_delta_max_KP23)+4, 500)))
     m_pbh_values_evolved = mass_evolved(m_pbh_values_formation, t_0)
-    m_c = 1e16
+    m_c = 1e17
     
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
+    plot_LN = False
+    plot_SLN = False
+    plot_CC3 = True
+
     for i in range(len(Deltas)):      
 
-        sigma_SLN = sigmas_SLN[i]
-        alpha_SLN = alphas_SLN[i]
-        
-        psi_initial = SLN(m_pbh_values_formation, m_c, sigma_SLN, alpha_SLN)
+        if plot_LN:
+            sigma_LN = sigmas_LN[i]
+            psi_initial = LN(m_pbh_values_formation, m_c, sigma_LN)
+            
+        elif plot_SLN:
+            sigma_SLN = sigmas_SLN[i]
+            alpha_SLN = alphas_SLN[i]
+            psi_initial = SLN(m_pbh_values_formation, m_c, sigma_SLN, alpha_SLN)
+            
+        elif plot_CC3:
+            alpha_CC3 = alphas_CC3[i]
+            beta = betas[i]
+            psi_initial = CC3(m_pbh_values_formation, m_c, alpha_CC3, beta)           
+            
         psi_evolved_values = psi_evolved(psi_initial, m_pbh_values_evolved, m_pbh_values_formation)
         psi_evolved_normalised_values = psi_evolved_normalised(psi_initial, m_pbh_values_evolved, m_pbh_values_formation)
 
@@ -908,22 +922,37 @@ if "__main__" == __name__:
         ax.set_ylabel("$\psi(M)~[\mathrm{g}]^{-1}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
-        ax.legend(title="SLN, $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+        
+        if plot_LN:
+            ax.set_title("LN, $\Delta={:.1f}$, $M_c$={:.1e}g".format(Deltas[i], m_c), fontsize="small")            
+        elif plot_SLN:
+            ax.set_title("SLN, $\Delta={:.1f}$, $M_c$={:.1e}g".format(Deltas[i], m_c), fontsize="small")
+        elif plot_CC3:
+            ax.set_title("CC3, $\Delta={:.1f}$, $M_p$={:.1e}g".format(Deltas[i], m_c), fontsize="small")
+
+        ax.legend()
         ax.set_xlim(1e11, max(m_pbh_values_formation))
         fig.tight_layout()
         
         fig, ax = plt.subplots(figsize=(6, 6))        
         ratio_evolved = psi_evolved_values/psi_initial
         ratio_evolved_normalised = psi_evolved_normalised_values/psi_initial
-        ax.plot(m_pbh_values_evolved, abs(ratio_evolved-1), label="Unnormalised $\psi$", color="tab:orange")
-        ax.plot(m_pbh_values_evolved, abs(ratio_evolved_normalised-1), label="Normalised $\psi_\mathrm{N}$", color="grey")
+        ax.plot(m_pbh_values_evolved, abs(ratio_evolved_normalised-1), label="Normalised $\psi_\mathrm{N}$", color="tab:orange")
+        ax.plot(m_pbh_values_evolved, abs(ratio_evolved-1), label="Unnormalised $\psi$", color="grey")
         ax.set_xlabel("$M~[\mathrm{g}]$")
         ax.set_ylabel("$|\psi(M, t_0) / \psi(M_i, t_i) - 1|$")
         ax.set_xscale("log")
         ax.set_yscale("log")
-        ax.set_title("SLN, $\Delta={:.1f}$".format(Deltas[i]))
+        
+        if plot_LN:
+            ax.set_title("LN, $\Delta={:.1f}$, $M_c$={:.1e}g".format(Deltas[i], m_c), fontsize="small")            
+        elif plot_SLN:
+            ax.set_title("SLN, $\Delta={:.1f}$, $M_c$={:.1e}g".format(Deltas[i], m_c), fontsize="small")
+        elif plot_CC3:
+            ax.set_title("CC3, $\Delta={:.1f}$, $M_p$={:.1e}g".format(Deltas[i], m_c), fontsize="small")
+
         ax.set_xlim(min(m_pbh_values_formation), max(m_pbh_values_evolved))
-        ax.set_ylim(1e-4, 1)
+        ax.set_ylim(5e-6, 1)
         ax.legend(fontsize="small")
         fig.tight_layout()
 
