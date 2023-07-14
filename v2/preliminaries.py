@@ -884,7 +884,7 @@ if "__main__" == __name__:
     
     # Maximum mass that the Korwar & Profumo (2023) delta-function MF constraint is calculated at
     m_delta_max_KP23 = 3e17
-    m_pbh_values_formation = np.concatenate((np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(m_delta_max_KP23)+4, 500)))
+    m_pbh_values_formation = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(m_delta_max_KP23)+4, 1000)))
     m_pbh_values_evolved = mass_evolved(m_pbh_values_formation, t_0)
     m_c = 1e17
     
