@@ -279,7 +279,7 @@ if "__main__" == __name__:
     
     for j in range(len(Deltas)):
         
-        fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
         
         ax0 = axes[0][0]
         ax1 = axes[0][1]
@@ -302,6 +302,10 @@ if "__main__" == __name__:
                 data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
                 data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
                 data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                
+                mc_KP23_SLN_unevolved, f_PBH_KP23_SLN_unevolved = np.genfromtxt("./Data-tests/unevolved/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j]), delimiter="\t")
+                mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved = np.genfromtxt("./Data-tests/unevolved/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j]), delimiter="\t")
+                mc_KP23_LN_unevolved, f_PBH_KP23_LN_unevolved = np.genfromtxt("./Data-tests/unevolved/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j]), delimiter="\t")
                
             else:
                 data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower) 
@@ -324,7 +328,14 @@ if "__main__" == __name__:
             ax3.set_title("CC3")
             
             if k == 0:
-                ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="No constraint")
+                mp_SLN_unevolved = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_unevolved]
+                mp_LN_unevolved = mc_KP23_LN_unevolved * np.exp(-sigmas_LN[j]**2)
+                ax1.plot(mp_LN, f_PBH_KP23_LN_unevolved, color="r", linestyle="None", marker="x")
+                ax2.plot(mp_SLN_unevolved, f_PBH_KP23_SLN_unevolved, color="b", linestyle="None", marker="x")
+                ax3.plot(mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved, color="g", linestyle="None", marker="x")
+                ax1.plot(0, 0, color="k", label="No constraint at $m < 10^{16}~\mathrm{g}$ [evolved MF]")
+                ax1.plot(0, 0, linestyle="None", marker="x", color="k", label="No constraint at $m < 10^{16}~\mathrm{g}$ [unevolved MF]")
+                
             else:
                 ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(slope_PL_lower))
                 f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_mono_extrapolated_lower / min(m_mono_extrapolated_upper), slope_PL_lower)
