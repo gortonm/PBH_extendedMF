@@ -653,24 +653,27 @@ if "__main__" == __name__:
             #m_c = 3.1e18*np.exp(ln_mc_SLN[i])
             #m_p = 2.9e18*mp_CC3[i]
             
-            m_c = 5.6e20*np.exp(ln_mc_SLN[i])
+            mc_SLN = 5.6e20*np.exp(ln_mc_SLN[i])
             m_p = 5.25e20*mp_CC3[i]
-
+            mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
+            
             mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
             print("m_p (CC3) = {:.2e}".format(m_p))
             print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
-         
-            mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+
+            mf_LN = LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i])
+            mf_SLN = SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
             mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
 
-            mf_scaled_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+            mf_scaled_SLN = SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
             mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
 
             ymin, ymax = CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymin_scaled, CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymax_scaled
 
             ax1.plot(m_pbh_values, mf_scaled_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
             ax1.plot(m_pbh_values, mf_scaled_CC3, color="g", label="CC3", linestyle="dashed")
-            
+
+            ax2.plot(m_pbh_values, mf_LN, color="r", label="LN", dashes=[6, 2])            
             ax2.plot(m_pbh_values, mf_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
             ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
             
