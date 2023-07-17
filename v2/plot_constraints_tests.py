@@ -34,7 +34,7 @@ mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 plt.style.use('tableau-colorblind10')
 
-#%%
+#%% Tests evaluating the mass functions at the initial time (or unevolved mass functions), and comparing to results obtained before June 2023.
 
 if "__main__" == __name__:
     
@@ -42,7 +42,7 @@ if "__main__" == __name__:
     plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = not plot_GC_Isatis
-    # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
+    # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 1e11g using a power-law fit
     include_extrapolated = True
     if not plot_KP23:
         include_extrapolated = False
@@ -107,9 +107,9 @@ if "__main__" == __name__:
             mp_GC_CC3_t_init, f_PBH_GC_CC3_t_init = np.genfromtxt("./Data-tests/t_initial/CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
             mc_GC_LN_t_init, f_PBH_GC_LN_t_init = np.genfromtxt("./Data-tests/t_initial/LN_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
             
-            mc_GC_SLN_unevolved, f_PBH_GC_SLN_unevolved = np.genfromtxt("./Data-tests/unevolved/SLN_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            mp_GC_CC3_unevolved, f_PBH_GC_CC3_unevolved = np.genfromtxt("./Data-tests/unevolved/CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            mc_GC_LN_unevolved, f_PBH_GC_LN_unevolved = np.genfromtxt("./Data-tests/unevolved/LN_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+            mc_GC_SLN_unevolved, f_PBH_GC_SLN_unevolved = np.genfromtxt("./Data-tests/unevolved/SLN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[i]), delimiter="\t")
+            mp_GC_CC3_unevolved, f_PBH_GC_CC3_unevolved = np.genfromtxt("./Data-tests/unevolved/CC3_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[i]), delimiter="\t")
+            mc_GC_LN_unevolved, f_PBH_GC_LN_unevolved = np.genfromtxt("./Data-tests/unevolved/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[i]), delimiter="\t")
 
 
             # Estimate peak mass of skew-lognormal MF
@@ -119,9 +119,9 @@ if "__main__" == __name__:
             mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
             
             ax0.plot(mp_SLN_evap_old, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax0.plot(mc_values, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
+            ax0.plot(mc_values_old, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
             ax1.plot(mp_SLN_evap_old, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax1.plot(mc_values, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
+            ax1.plot(mc_values_old, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
 
             ax0.plot(mp_GC_SLN_t_init, f_PBH_GC_SLN_t_init, color=colors[2], linestyle="None", marker="x")
             ax0.plot(mp_GC_CC3_t_init, f_PBH_GC_CC3_t_init, color=colors[3], linestyle="None", marker="x")
@@ -133,11 +133,11 @@ if "__main__" == __name__:
             ax1.plot(mp_GC_SLN_unevolved, f_PBH_GC_SLN_unevolved, color=colors[2], linestyle="None", marker="+")
             ax1.plot(mp_GC_CC3_unevolved, f_PBH_GC_CC3_unevolved, color=colors[3], linestyle="None", marker="+")
                                                                    
-            ax0.plot(mc_values * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2], label="LN")
+            ax0.plot(mc_values_old * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2], label="LN")
             ax0.plot(mc_GC_LN_t_init * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN_t_init, color=colors[1], linestyle="None", marker="+")
             ax0.plot(mc_GC_LN_unevolved * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN_unevolved, color=colors[1], linestyle="None", marker="x")
 
-            ax1.plot(mc_values * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
+            ax1.plot(mc_values_old * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
             
             ax0.plot(0, 0, linestyle="None", color="k", marker="x", label="Test: $t=0$")
             ax0.plot(0, 0, linestyle="None", color="k", marker="+", label="Test: unevolved")
@@ -261,3 +261,5 @@ if "__main__" == __name__:
             else:
                 fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23.pdf".format(Deltas[i]))
                 fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23.png".format(Deltas[i]))
+                
+
