@@ -273,9 +273,9 @@ if "__main__" == __name__:
     mc_values = np.logspace(14, 20, 120)
 
     # Array of power law exponents to use at masses below 1e15g
-    slopes_PL_lower = [2, 3, 4]
+    slopes_PL_lower = [0, 2, 3, 4]
     
-    linestyles = ["dashed", "dashdot", "dotted"]
+    linestyles = ["solid", "dashed", "dashdot", "dotted"]
     
     for j in range(len(Deltas)):
         
@@ -285,30 +285,35 @@ if "__main__" == __name__:
         ax1 = axes[0][1]
         ax2 = axes[1][0]
         ax3 = axes[1][1]
+        
+        m_mono_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+                            
+        # Power-law slope to use between 1e15g and 1e16g (motivated by mass-dependence of the positron spectrum emitted over energy)
+        slope_PL_upper = 2.0
+        
+        m_mono_extrapolated_upper = np.logspace(15, 16, 11)
+        m_mono_extrapolated_lower = np.logspace(11, 15, 41)
+        f_max_extrapolated_upper = min(f_max) * np.power(m_mono_extrapolated_upper / min(m_mono_values), slope_PL_upper)
             
         for k, slope_PL_lower in enumerate(slopes_PL_lower):
             
-            data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower) 
-    
-            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+            if k == 0:
+                data_folder = "./Data/"
+                data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+               
+            else:
+                data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower) 
+                data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+                data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+                data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
             
             mc_KP23_LN_evolved, f_PBH_KP23_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_KP23_SLN_evolved, f_PBH_KP23_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
             mp_KP23_CC3_evolved, f_PBH_KP23_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
             mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_evolved]
             mp_LN = mc_KP23_LN_evolved * np.exp(-sigmas_LN[j]**2)
-            
-            m_mono_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
-                                
-            # Power-law slope to use between 1e15g and 1e16g (motivated by mass-dependence of the positron spectrum emitted over energy)
-            slope_PL_upper = 2.0
-            
-            m_mono_extrapolated_upper = np.logspace(15, 16, 11)
-            m_mono_extrapolated_lower = np.logspace(11, 15, 41)
-            f_max_extrapolated_upper = min(f_max) * np.power(m_mono_extrapolated_upper / min(m_mono_values), slope_PL_upper)
-            f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_mono_extrapolated_lower / min(m_mono_extrapolated_upper), slope_PL_lower)
                         
             ax1.plot(mp_LN, f_PBH_KP23_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
             ax2.plot(mp_SLN, f_PBH_KP23_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
@@ -318,8 +323,12 @@ if "__main__" == __name__:
             ax2.set_title("SLN")
             ax3.set_title("CC3")
             
-            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(slope_PL_lower))
-            ax0.plot(m_mono_extrapolated_lower, f_max_extrapolated_lower, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(slope_PL_lower))
+            if k == 0:
+                ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="No constraint")
+            else:
+                ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(slope_PL_lower))
+                f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_mono_extrapolated_lower / min(m_mono_extrapolated_upper), slope_PL_lower)
+                ax0.plot(m_mono_extrapolated_lower, f_max_extrapolated_lower, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(slope_PL_lower))
             
         ax0.plot(np.concatenate((m_mono_extrapolated_upper, m_mono_values)), np.concatenate((f_max_extrapolated_upper, f_max)), color=(0.5294, 0.3546, 0.7020))
         ax0.set_xlabel("$m$ [g]")
