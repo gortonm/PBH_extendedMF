@@ -71,7 +71,7 @@ if "__main__" == __name__:
     ax.set_yscale("log")
     ax.set_xlim(1e-5, 5)
     ax.set_ylim(1e10, 1e25)
-    
+    fig.tight_layout()
     
     # Plot the primary and total electron/positron spectrum at different BH masses.
     
@@ -96,12 +96,15 @@ if "__main__" == __name__:
     ax.set_yscale("log")
     ax.set_xlim(5.11e-4, 10)
     ax.set_ylim(1e16, 1e24)
+    fig.tight_layout()
 
 
 #%%
 if "__main__" == __name__:
 
-    # Plot the integral of primary and total photon spectrum over energy.
+    m_pbh_values = np.logspace(11, 21, 1000)    
+
+    # Plot the integral of primary and total photon spectrum over energy (Hazma secondary spectrum and calculations).
     integral_primary = []
     integral_secondary = []
     
@@ -125,9 +128,10 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     ax.set_xlim(1e16, 1e19)
     ax.set_ylim(2e15, 1e19)
+    fig.tight_layout()
+
     
-    
-    # Plot the integral of energy * primary and total photon spectrum over energy.
+    # Plot the integral of energy * primary and total photon spectrum over energy (Hazma secondary spectrum and calculations).
     integral_primary = []
     integral_secondary = []
     
@@ -151,11 +155,14 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     ax.set_xlim(2e13, 1e19)
     ax.set_ylim(1e10, 1e23)
+    fig.tight_layout()
 
 #%%
 if "__main__" == __name__:
+    
+    m_pbh_values = np.logspace(11, 21, 1000)
 
-    # Plot the integral of primary and total electron spectrum over energy.
+    # Plot the integral of primary and total electron spectrum over energy (Hazma secondary spectrum and calculations).
     integral_primary = []
     integral_secondary = []
     
@@ -166,22 +173,26 @@ if "__main__" == __name__:
         integral_primary.append(np.trapz(spectrum_primary, energies_primary))
         integral_secondary.append(np.trapz(spectrum_tot, energies_tot))
     
-    fit_m_square = integral_primary[500] * np.power(m_pbh_values/m_pbh_values[500], -1)
-    
+    fit_inv_m = integral_primary[500] * np.power(m_pbh_values/m_pbh_values[500], -1)
+    fit_m_square_low_m = integral_primary[400] * np.power(m_pbh_values/m_pbh_values[400], -2)
+   
     fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(m_pbh_values, integral_secondary, color=colors[0], label="Total")
     ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[0], label="Primary emission only")
-    ax.plot(m_pbh_values, fit_m_square, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit")
+    ax.plot(m_pbh_values, fit_inv_m, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit")
+    ax.plot(m_pbh_values, fit_m_square_low_m, color=colors[2], linestyle="dotted", label="$m^{-2}$ fit")
     ax.set_xlabel("$m~[\mathrm{g}]$")
     ax.set_ylabel("$\mathrm{d} N_e/\mathrm{d}t~[\mathrm{s}^{-1}]$")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.legend(fontsize="small")
-    ax.set_xlim(1e14, 1e17)
-    ax.set_ylim(1e18, 1.5e22)
+    ax.set_title("Secondary spectrum calcualted using Hazma \n (Integration range $10^{-6}~\mathrm{GeV} \leq E \leq 5~\mathrm{GeV}$)", fontsize="small")
+    ax.set_xlim(2e13, 1e17)
+    ax.set_ylim(1e18, 1e24)
+    fig.tight_layout()
+
     
-    
-    # Plot the integral of energy * primary and total electron spectrum over energy.
+    # Plot the integral of energy * primary and total electron spectrum over energy (Hazma secondary spectrum and calculations).
     integral_primary = []
     integral_secondary = []
     
@@ -205,7 +216,70 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     ax.set_xlim(1e14, 1e18)
     ax.set_ylim(1e13, 1e22)
+    fig.tight_layout()
+
+
+#%%
+if "__main__" == __name__:
     
+    m_pbh_values = np.logspace(11, 15, 41)
+
+    # Plot the integral of primary and total electron spectrum over energy (PYTHIA secondary spectrum and calculations).
+    integral_primary = []
+    integral_secondary = []
+    
+    for i in range(len(m_pbh_values)):
+        energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_{:.0f}/".format(i+1) + "instantaneous_primary_spectra.txt", col=7)
+        energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_{:.0f}/".format(i+1) + "instantaneous_secondary_spectra.txt", col=2)
+                
+        integral_primary.append(np.trapz(spectrum_primary, energies_primary))
+        integral_secondary.append(np.trapz(spectrum_tot, energies_tot))
+    
+    fit_m_square = integral_primary[-1] * np.power(m_pbh_values/m_pbh_values[-1], -1)
+    fit_m_square_low_m = integral_secondary[-1] * np.power(m_pbh_values/m_pbh_values[-1], -2)
+   
+    fig, ax = plt.subplots(figsize=(6.5, 5))
+    ax.plot(m_pbh_values, integral_secondary, color=colors[0], label="Total")
+    ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[0], label="Primary emission only")
+    ax.plot(m_pbh_values, fit_m_square, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit")
+    ax.plot(m_pbh_values, fit_m_square_low_m, color=colors[2], linestyle="dotted", label="$m^{-2}$ fit")
+    ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_ylabel("$\mathrm{d} N_e/\mathrm{d}t~[\mathrm{s}^{-1}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend(fontsize="small")
+    ax.set_title("Secondary spectrum calcualted using PYTHIA \n (Integration range $10^{-6}~\mathrm{GeV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
+    ax.set_xlim(1e11, 1e15)
+    fig.tight_layout()
+    
+    # Plot the integral of energy * primary and total electron spectrum over energy (PYTHIA secondary spectrum and calculations).
+    integral_primary = []
+    integral_secondary = []
+    
+    for i in range(len(m_pbh_values)):
+        energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_{:.0f}/".format(i+1) + "instantaneous_primary_spectra.txt", col=7)
+        energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_{:.0f}/".format(i+1) + "instantaneous_secondary_spectra.txt", col=2)
+                
+        integral_primary.append(np.trapz(spectrum_primary*energies_primary, energies_primary))
+        integral_secondary.append(np.trapz(spectrum_tot*energies_tot, energies_tot))
+    
+    fit_m_square = integral_primary[-1] * np.power(m_pbh_values/m_pbh_values[-1], -2)
+    
+    fig, ax = plt.subplots(figsize=(6.5, 5))
+    ax.plot(m_pbh_values, integral_secondary, color=colors[0], label="Total")
+    ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[0], label="Primary emission only")
+    ax.plot(m_pbh_values, fit_m_square, color=colors[1], linestyle="dotted", label="$m^{-2}$ fit")
+    ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_ylabel(r"$\int \tilde{Q}_e(E) E \mathrm{d}E~[\mathrm{GeV} \cdot \mathrm{s}^{-1}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend(fontsize="small")
+    ax.set_xlim(1e11, 1e15)
+    #ax.set_ylim(1e13, 1e22)
+    fig.tight_layout()
+
+
+
     
 #%% Plot the photon spectrum for different PBH masses
 
@@ -297,8 +371,8 @@ if "__main__" == __name__:
     ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (5e16, 1e23), (1e13, 1e25)]
     ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (5e-30, 5e-20)]
 
-
     for i in range(len(ax_loop)):
+                
         # Plot of the mass density
         ax = ax_loop[i]
         sigma = sigmas[i]
@@ -317,6 +391,43 @@ if "__main__" == __name__:
     ax0.legend()
     fig.suptitle("Mass density distribution ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
     fig.tight_layout()
+
+
+    fig, axes = plt.subplots(2, 2, figsize=(9, 9))
+    ax0 = axes[0][0]
+    ax1 = axes[0][1]
+    ax2 = axes[1][0]
+    ax3 = axes[1][1]
+    ax_loop = [ax0, ax1, ax2, ax3]
+    
+    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (5e16, 1e23), (1e13, 1e25)]
+    ax_y_lims = [(1e-30, 1e-19), (1e-30, 1e-19), (1e-30, 1e-19), (5e-30, 5e-20)]
+
+    for i in range(len(ax_loop)):
+        
+        # Plot of the mass density
+        ax = ax_loop[i]
+        sigma = sigmas[i]
+        
+        m_c = m_p * np.exp(sigma**2)
+        
+        ax.plot(m_pbh_values, psi_LN_number_density(m_pbh_values, m_p, sigma), color="tab:green", label="LN in number density")
+        ax.plot(m_pbh_values, LN(m_pbh_values, m_c, sigma), color="y", label="LN in mass density", linestyle="dotted")
+        #ax.plot(m_pbh_values, 2*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        #ax.plot(m_pbh_values, 0.5*LN(m_pbh_values, m_c, sigma), color="tab:orange", linestyle="dotted")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\psi(M) \propto M\mathrm{d}n/\mathrm{d}M$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_title("$\sigma={:.2f}$".format(sigma))
+        ax.set_xlim(ax_x_lims[i])
+        ax.set_ylim(ax_y_lims[i])
+
+    ax0.legend(fontsize="small")
+    fig.suptitle("Mass density distribution ($M_p={:.1e}~".format(m_p) + "\mathrm{g})$")
+    fig.tight_layout()
+
+
     
     
     # Plot the ratio of the mass distributions.
@@ -370,6 +481,40 @@ if "__main__" == __name__:
 
     fig_ratio.suptitle("LN in mass density / LN in number density in $\psi$ ($M_c={:.1e}~".format(m_c) + "\mathrm{g})$")
     fig_ratio.tight_layout()
+    
+    
+    
+    fig_ratio, axes_ratio = plt.subplots(2, 2, figsize=(9, 9))
+    ax_ratio_0 = axes_ratio[0][0]
+    ax_ratio_1 = axes_ratio[0][1]
+    ax_ratio_2 = axes_ratio[1][0]
+    ax_ratio_3 = axes_ratio[1][1]
+    ax_ratio_loop = [ax_ratio_0, ax_ratio_1, ax_ratio_2, ax_ratio_3]
+    
+    ax_x_lims = [(1e18, 5e21), (1e18, 5e21), (5e16, 1e23), (1e13, 1e25)]
+
+    for i in range(len(ax_ratio_loop)):        
+        # Plot of the mass density
+        ax = ax_ratio_loop[i]
+        sigma = sigmas[i]
+        
+        m_c = m_p * np.exp(sigma**2)
+        
+        print("sigma={:.1f}".format(sigma))
+        
+        ax.plot(m_pbh_values, abs(LN(m_pbh_values, m_c, sigma)/psi_LN_number_density(m_pbh_values, m_p, sigma)) - 1)
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$|\Delta\psi /\psi|$")
+        ax.set_xscale("log")
+        ax.set_title("$\sigma={:.2f}$".format(sigma))
+        ax.set_xlim(ax_x_lims[i])
+        ax.set_ylim(-0.1, 0.1)
+
+    fig_ratio.suptitle("(LN in mass density / LN in number density in $\psi$) - 1 ($M_p={:.1e}~".format(m_p) + "\mathrm{g})$", fontsize="small")
+    fig_ratio.tight_layout()
+
+    
+    
     
     """
     # Plot both MFs with the same peak mass
