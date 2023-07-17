@@ -263,3 +263,86 @@ if "__main__" == __name__:
                 fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23.png".format(Deltas[i]))
                 
 
+#%% Tests of the results obtained using different power-law slopes in f_max at low masses (Korwar & Profumo (2023))
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    mc_values = np.logspace(14, 20, 120)
+
+    # Array of power law exponents to use at masses below 1e15g
+    slopes_PL_lower = [2, 3, 4]
+    
+    linestyles = ["dashed", "dashdot", "dotted"]
+    
+    for j in range(len(Deltas)):
+        
+        fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+        
+        ax0 = axes[0][0]
+        ax1 = axes[0][1]
+        ax2 = axes[1][0]
+        ax3 = axes[1][1]
+            
+        for k, slope_PL_lower in enumerate(slopes_PL_lower):
+            
+            data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower) 
+    
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+            
+            mc_KP23_LN_evolved, f_PBH_KP23_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_KP23_SLN_evolved, f_PBH_KP23_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_KP23_CC3_evolved, f_PBH_KP23_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_evolved]
+            mp_LN = mc_KP23_LN_evolved * np.exp(-sigmas_LN[j]**2)
+            
+            m_mono_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+                                
+            # Power-law slope to use between 1e15g and 1e16g (motivated by mass-dependence of the positron spectrum emitted over energy)
+            slope_PL_upper = 2.0
+            
+            m_mono_extrapolated_upper = np.logspace(15, 16, 11)
+            m_mono_extrapolated_lower = np.logspace(11, 15, 41)
+            f_max_extrapolated_upper = min(f_max) * np.power(m_mono_extrapolated_upper / min(m_mono_values), slope_PL_upper)
+            f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_mono_extrapolated_lower / min(m_mono_extrapolated_upper), slope_PL_lower)
+                        
+            ax1.plot(mp_LN, f_PBH_KP23_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
+            ax2.plot(mp_SLN, f_PBH_KP23_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
+            ax3.plot(mp_KP23_CC3_evolved, f_PBH_KP23_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
+            
+            ax1.set_title("LN")
+            ax2.set_title("SLN")
+            ax3.set_title("CC3")
+            
+            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(slope_PL_lower))
+            ax0.plot(m_mono_extrapolated_lower, f_max_extrapolated_lower, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(slope_PL_lower))
+            
+        ax0.plot(np.concatenate((m_mono_extrapolated_upper, m_mono_values)), np.concatenate((f_max_extrapolated_upper, f_max)), color=(0.5294, 0.3546, 0.7020))
+        ax0.set_xlabel("$m$ [g]")
+        ax0.set_ylabel("$f_\mathrm{max}$")
+        ax0.set_xscale("log")
+        ax0.set_yscale("log")
+        ax0.set_xlim(min(m_mono_extrapolated_lower), 1e18)
+        ax0.set_ylim(min(f_max_extrapolated_lower), 1)
+        
+        for ax in [ax1, ax2, ax3]:
+            if Deltas[j] < 5:
+                ax.set_xlim(1e16, 1e18)
+            else:
+                ax.set_xlim(1e16, 2e18)
+               
+            ax.set_ylim(1e-6, 1)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+
+        ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
+        ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
+        fig.tight_layout()
+        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
+
