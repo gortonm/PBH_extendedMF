@@ -170,10 +170,10 @@ if "__main__" == __name__:
         energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "GC_mono_{:.0f}/".format(i+1) + "instantaneous_primary_spectra.txt", col=7)
         energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "GC_mono_{:.0f}/".format(i+1) + "instantaneous_secondary_spectra.txt", col=2)
                 
-        integral_primary.append(np.trapz(spectrum_primary, energies_primary))
-        integral_secondary.append(np.trapz(spectrum_tot, energies_tot))
+        integral_primary.append(np.trapz(spectrum_primary, energies_primary) / 2)
+        integral_secondary.append(np.trapz(spectrum_tot, energies_tot) / 2)
     
-    fit_inv_m = integral_primary[500] * np.power(m_pbh_values/m_pbh_values[500], -1)
+    fit_inv_m = integral_primary[400] * np.power(m_pbh_values/m_pbh_values[400], -1)
     fit_m_square_low_m = integral_primary[400] * np.power(m_pbh_values/m_pbh_values[400], -2)
    
     fig, ax = plt.subplots(figsize=(6.5, 5))
@@ -186,7 +186,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.legend(fontsize="small")
-    ax.set_title("Secondary spectrum calcualted using Hazma \n (Integration range $10^{-6}~\mathrm{GeV} \leq E \leq 5~\mathrm{GeV}$)", fontsize="small")
+    ax.set_title("Secondary spectrum calcualted using Hazma \n (Integration range $511~\mathrm{keV} \leq E \leq 5~\mathrm{GeV}$)", fontsize="small")
     ax.set_xlim(2e13, 1e17)
     ax.set_ylim(1e18, 1e24)
     fig.tight_layout()
@@ -229,11 +229,11 @@ if "__main__" == __name__:
     integral_secondary = []
     
     for i in range(len(m_pbh_values)):
-        energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_{:.0f}/".format(i+1) + "instantaneous_primary_spectra.txt", col=7)
-        energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_{:.0f}/".format(i+1) + "instantaneous_secondary_spectra.txt", col=2)
+        energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_oldtables_{:.0f}/".format(i+1) + "instantaneous_primary_spectra.txt", col=7)
+        energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_oldtables_{:.0f}/".format(i+1) + "instantaneous_secondary_spectra.txt", col=2)
                 
-        integral_primary.append(np.trapz(spectrum_primary, energies_primary))
-        integral_secondary.append(np.trapz(spectrum_tot, energies_tot))
+        integral_primary.append(np.trapz(spectrum_primary, energies_primary) / 2)
+        integral_secondary.append(np.trapz(spectrum_tot, energies_tot) / 2)
     
     fit_m_square = integral_primary[-1] * np.power(m_pbh_values/m_pbh_values[-1], -1)
     fit_m_square_low_m = integral_secondary[-1] * np.power(m_pbh_values/m_pbh_values[-1], -2)
@@ -248,7 +248,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.legend(fontsize="small")
-    ax.set_title("Secondary spectrum calcualted using PYTHIA \n (Integration range $10^{-6}~\mathrm{GeV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
+    ax.set_title("Secondary spectrum calcualted using PYTHIA \n (Integration range $511~\mathrm{keV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
     ax.set_xlim(1e11, 1e15)
     fig.tight_layout()
     
