@@ -15,7 +15,7 @@ import matplotlib as mpl
 from preliminaries import load_data, m_max_SLN, load_results_Isatis, envelope
 
 # Specify the plot style
-mpl.rcParams.update({'font.size': 24, 'font.family':'serif'})
+mpl.rcParams.update({'font.size': 20, 'font.family':'serif'})
 mpl.rcParams['xtick.major.size'] = 7
 mpl.rcParams['xtick.major.width'] = 1
 mpl.rcParams['xtick.minor.size'] = 3
@@ -298,7 +298,7 @@ if "__main__" == __name__:
         for k, slope_PL_lower in enumerate(slopes_PL_lower):
             
             if k == 0:
-                data_folder = "./Data/"
+                data_folder = "./Data-old/"
                 data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
                 data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
                 data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
@@ -365,4 +365,3 @@ if "__main__" == __name__:
         ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
-
