@@ -43,7 +43,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     mc_values = np.logspace(14, 20, 120)
-    m_mono_values = np.logspace(11, 22, 1000)
+    m_delta_values_loaded = np.logspace(11, 22, 1000)
 
     # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
     # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
@@ -55,7 +55,12 @@ if "__main__" == __name__:
     t_initial = True
     if t_initial:
         evolved = True
-
+    
+    # If True, use extrapolated monochromatic MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint
+    include_extrapolated = True
+    # If True, plot extrapolated monochromatic MF constraints down to 1e11g
+    plot_extrapolated = False
+    
     t = t_0
     
     if not evolved:
@@ -66,6 +71,14 @@ if "__main__" == __name__:
     else:
         data_folder = "./Data"
     
+    
+    if include_extrapolated:
+        # Power-law slope to use
+        slope_PL_lower = 0.0
+        m_delta_extrapolated = np.logspace(11, 13, 21)
+        data_folder = "./Data-tests/PL_slope_{:.0f}.txt".format(slope_PL_lower)
+
+    
     for j in range(len(Deltas)):
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
@@ -73,38 +86,68 @@ if "__main__" == __name__:
         
         # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
         # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
-        constraints_names, f_max = load_results_Isatis(mf_string="GC_mono_wide", modified=True)
         constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
-        for i in range(len(constraints_names)):
+
+        for i in range(len(constraints_names_short)):
             # Calculate constraint using method from 1705.05567.
 
-            # Constraints data for each energy bin of each instrument.
-            constraints_mono_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % (constraints_names_short[i])))
-            # Constraints for an extended MF, from each instrument.
-            energy_bin_constraints_LN = []
-            energy_bin_constraints_SLN = []
-            energy_bin_constraints_CC3 = []
+            # Delta-function mass function constraint for each energy bin of each instrument.
+            constraints_delta_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % (constraints_names_short[i])))
 
-            for k in range(len(constraints_mono_file)):
+            # Constraints at each value of the characteristic mass (for LN and SLN) or peak mass (for CC3)
+            mc_constraints_LN = []
+            mc_constraints_SLN = []
+            mc_constraints_CC3 = []
+            
+            for m_c in mc_values:
+                
+                mc_values_input = [m_c]
+                
+                # Constraints for an extended MF, from each energy bin of the k'th instrument
+                energy_bin_constraints_LN = []
+                energy_bin_constraints_SLN = []
+                energy_bin_constraints_CC3 = []
 
-                # Constraint from a particular energy bin
-                constraint_energy_bin = constraints_mono_file[k]
+                for k in range(len(constraints_delta_file)):
+                                                                
+                    # Delta-function mass function constraint from a particular energy bin
+                    f_max_k_loaded = constraints_delta_file[k]
+                    
+                    if include_extrapolated:
+                        f_max_k_loaded_truncated = f_max_k_loaded[m_delta_values_loaded > 1e13]
+                        f_max_extrapolated = min(f_max_k_loaded_truncated) * np.power(m_delta_extrapolated / 1e13, slope_PL_lower)
+                        f_max_k = np.concatenate((f_max_extrapolated, f_max_k_loaded_truncated))
+                        m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
+                    else:
+                        f_max_k = f_max_k_loaded
+                        m_delta_values = m_delta_values_loaded
+                    
+                    if plot_extrapolated:
+                        if i == 0 and k == 0:      
+                            fig, ax = plt.subplots(figsize=(5, 5))
+                            ax.plot(m_delta_extrapolated, f_max_extrapolated, linestyle="dashed", color="tab:blue")
+                            ax.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_k_loaded_truncated, color="tab:blue")
+                            ax.set_xlabel("$M~[\mathrm{g}]$")
+                            ax.set_ylabel("$f_\mathrm{max}$")
+                            ax.set_xscale("log")
+                            ax.set_yscale("log")
+                            fig.tight_layout()
+                            
+                    # Calculate constraint on f_PBH from each bin
+                    f_PBH_k_LN = constraint_Carr(mc_values_input, m_delta_values, f_max_k, LN, params_LN, evolved, t)
+                    f_PBH_k_SLN = constraint_Carr(mc_values_input, m_delta_values, f_max_k, SLN, params_SLN, evolved, t)
+                    f_PBH_k_CC3 = constraint_Carr(mc_values_input, m_delta_values, f_max_k, CC3, params_CC3, evolved, t)
 
-                # Calculate constraint on f_PBH from each bin
-                f_PBH_k_LN = constraint_Carr(mc_values, m_mono_values, constraint_energy_bin, LN, params_LN, evolved, t)
-                f_PBH_k_SLN = constraint_Carr(mc_values, m_mono_values, constraint_energy_bin, SLN, params_SLN, evolved, t)
-                f_PBH_k_CC3 = constraint_Carr(mc_values, m_mono_values, constraint_energy_bin, CC3, params_CC3, evolved, t)
-
-                energy_bin_constraints_LN.append(f_PBH_k_LN)
-                energy_bin_constraints_SLN.append(f_PBH_k_SLN)
-                energy_bin_constraints_CC3.append(f_PBH_k_CC3)
-
-            # Calculate constraint using method from 1705.05567, and plot.
-            f_PBH_Carr_LN = envelope(energy_bin_constraints_LN)
-            f_PBH_Carr_SLN = envelope(energy_bin_constraints_SLN)
-            f_PBH_Carr_CC3 = envelope(energy_bin_constraints_CC3)
-
+                mc_constraints_LN.append(f_PBH_k_LN)
+                mc_constraints_SLN.append(f_PBH_k_SLN)
+                mc_constraints_CC3.append(f_PBH_k_CC3)
+                    
+        # Set f_PBH to the tightest constraint of all the energy bins
+        f_PBH_Carr_LN = envelope(mc_constraints_LN)
+        f_PBH_Carr_SLN = envelope(mc_constraints_SLN)
+        f_PBH_Carr_CC3 = envelope(mc_constraints_CC3)
+            
         if evolved == False:
             data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
             data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
@@ -117,20 +160,21 @@ if "__main__" == __name__:
         np.savetxt(data_filename_LN, [mc_values, f_PBH_Carr_LN], delimiter="\t")
         np.savetxt(data_filename_SLN, [mc_values, f_PBH_Carr_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_PBH_Carr_CC3], delimiter="\t")
-
+            
 
 #%% Constraints from 2302.04408 (MW diffuse SPI with NFW template)
 
 if "__main__" == __name__:
-    
-    # If True, plot extrapolated monochromatic MF constraints down to 5e14g
+    # If True, use extrapolated monochromatic MF constraints down to 1e15g (using a power law fit) to calculate extended MF constraint
+    include_extrapolated_upper = True
+    # If True, use extrapolated monochromatic MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint
+    include_extrapolated = False
+    # If True, plot extrapolated monochromatic MF constraints down to 1e11g
     plot_extrapolate = False
-    # If True, use extrapolated monochromatic MF constraints down to 5e14g (using a power law fit) to calculate extended MF constraint
-    include_extrapolated = True
     # Boolean determines whether to use evolved mass function.
-    evolved = True
+    evolved = False
     # Boolean determines whether to evaluate the evolved mass function at t=0.
-    t_initial = True
+    t_initial = False
     if t_initial:
         evolved = True
     
@@ -142,7 +186,7 @@ if "__main__" == __name__:
         data_folder = "./Data-tests/t_initial"
         t = 0
     else:
-        data_folder = "./Data"
+        data_folder = "./Data-tests"
 
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -150,57 +194,46 @@ if "__main__" == __name__:
     mc_values = np.logspace(14, 20, 120)
     
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
-    # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
     m_mono_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
-
-    # Plot extrapolated delta function MF constraints down to 5e14g
-
-    if plot_extrapolate:
-        
-        # Estimate slope of constraints, using the data from 1e16g < m < a few times 3e16g
-        
-        # Maximum PBH mass for which the constraint shown in Figs. 1-2 of 2302.04408 is well-approximated by a power law.
-        m_mono_max = 2e16
-        m_mono_truncated = m_mono_values[m_mono_values < m_mono_max]
-        f_max_truncated = f_max[m_mono_values < m_mono_max]
-        
-        # Estimated power-law slope
-        slope_PL = (np.log10(max(f_max_truncated)) - np.log10(min(f_max_truncated))) / (np.log10(max(m_mono_truncated)) - np.log10(min(m_mono_truncated)))
-        print("Maximum delta-function PBH mass used = {:.2e}".format(m_mono_max))
-        print("Approximate power law slope = {:.2f}".format(slope_PL))
-        print("Length of truncated arrays = {:.0f}".format(len(m_mono_truncated)))
-        
-        m_mono_extrapolated = np.logspace(np.log10(5e14), 16, 100)
-        f_max_extrapolated = min(f_max) * np.power(m_mono_extrapolated / min(m_mono_values), slope_PL)
-        
-        f_max_total = np.concatenate((f_max_extrapolated, f_max))
-        m_mono_total = np.concatenate((m_mono_extrapolated, m_mono_values))
-        
-        fig, ax = plt.subplots()
-        ax.plot(m_mono_total, f_max_total, color=(0.5294, 0.3546, 0.7020), linestyle="dashed")
-        ax.set_xlabel("$m$ [g]")
-        ax.set_ylabel("$f_\mathrm{PBH}$")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_xlim(min(m_mono_total), 1e18)
-        ax.set_ylim(1e-8, 1)
-        fig.tight_layout()
-
     
-    for j in range(len(Deltas)):
-                
-        if include_extrapolated:
-            # Estimate f_max at PBH masses below 1e16g.
-            slope_PL = 2.0
-            m_mono_extrapolated = np.logspace(np.log10(5e14), 16, 100)
-            f_max_extrapolated = min(f_max) * np.power(m_mono_extrapolated / min(m_mono_values), slope_PL)
-            f_max_total = np.concatenate((f_max_extrapolated, f_max))
-            m_mono_total = np.concatenate((m_mono_extrapolated, m_mono_values))
-            
-            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
-            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
-            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[j])
+    if include_extrapolated:
+
+        # Power-law slope to use between 1e15g and 1e16g.
+        slope_PL_upper = 2.0
+        # Power-law slope to use at lower masses
+        slope_PL_lower = 4.0
+        
+        m_mono_extrapolated_upper = np.logspace(15, 16, 11)
+        m_mono_extrapolated_lower = np.logspace(11, 15, 41)
+        
+        f_max_extrapolated_upper = min(f_max) * np.power(m_mono_extrapolated_upper / min(m_mono_values), slope_PL_upper)
+        f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_mono_extrapolated_lower / min(m_mono_extrapolated_upper), slope_PL_lower)
+    
+        f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max))
+        m_mono_total = np.concatenate((m_mono_extrapolated_lower, m_mono_extrapolated_upper, m_mono_values))
+    
+        data_folder += "/PL_slope_{:.0f}".format(slope_PL_lower)
+        
+    elif include_extrapolated_upper:
+        # Power-law slope to use between 1e15g and 1e16g.
+        slope_PL_upper = 2.0
+        m_mono_extrapolated_upper = np.logspace(15, 16, 11)
+        
+        f_max_extrapolated_upper = min(f_max) * np.power(m_mono_extrapolated_upper / min(m_mono_values), slope_PL_upper)
+        f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max))
+    
+    
+    for j in range(len(Deltas)):                
+        if include_extrapolated:                     
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
                       
+        elif include_extrapolated_upper:
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[j])
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[j])
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[j])           
+            
         else:
             f_max_total = f_max
             m_mono_total = m_mono_values
