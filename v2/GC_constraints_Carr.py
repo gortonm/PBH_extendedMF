@@ -42,7 +42,7 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = np.logspace(14, 20, 120)[0:3]
+    mc_values = np.logspace(14, 20, 120)[50:53]
     m_delta_values_loaded = np.logspace(11, 22, 1000)
 
     # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
@@ -88,7 +88,7 @@ if "__main__" == __name__:
         
         # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
 
-        for i in range(len(constraints_names_short[0:2])):
+        for i in range(len(constraints_names_short[2:4])):
             print("\ni = ", i)
             # Calculate constraint using method from 1705.05567.
 
@@ -110,7 +110,7 @@ if "__main__" == __name__:
                 energy_bin_constraints_SLN = []
                 energy_bin_constraints_CC3 = []
 
-                for k in range(len(constraints_delta_file[0:2])):
+                for k in range(len(constraints_delta_file[0:3])):
                                                                 
                     # Delta-function mass function constraint from a particular energy bin
                     f_max_k_loaded = constraints_delta_file[k]
