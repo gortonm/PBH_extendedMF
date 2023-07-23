@@ -83,12 +83,12 @@ if "__main__" == __name__:
 
     for j in range(len(Deltas[0:1])):
         params_LN = [sigmas_LN[j]]
-        params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
-        params_CC3 = [alphas_CC3[j], betas[j]]
         
         # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
+        mc_constraints_LN = []
 
         for i in range(len(constraints_names_short[2:4])):
+            
             print("\ni = ", i)
             # Calculate constraint using method from 1705.05567.
 
@@ -96,65 +96,60 @@ if "__main__" == __name__:
             constraints_delta_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % (constraints_names_short[i])))
 
             # Extended MF constraints at each value of the characteristic mass (for LN and SLN) or peak mass (for CC3)
-            mc_constraints_LN = []
-            mc_constraints_SLN = []
-            mc_constraints_CC3 = []
+            instrument_constraints_LN = []
             
             for m_c in mc_values:
-                print("m_c = {:.2e}g".format(m_c))
+                print("\t m_c = {:.1e}g".format(m_c))
                 
                 mc_values_input = [m_c]
                 
-                # Extended MF constraints from each energy bin of the k'th instrument
+                # Extended MF constraints from each energy bin of the i'th instrument, at a given value of m_c
                 energy_bin_constraints_LN = []
-                energy_bin_constraints_SLN = []
-                energy_bin_constraints_CC3 = []
 
                 for k in range(len(constraints_delta_file[0:3])):
                                                                 
                     # Delta-function mass function constraint from a particular energy bin
                     f_max_k_loaded = constraints_delta_file[k]
                     
-                    if include_extrapolated:
-                        f_max_k_loaded_truncated = f_max_k_loaded[m_delta_values_loaded > 1e13]
-                        f_max_extrapolated = min(f_max_k_loaded_truncated) * np.power(m_delta_extrapolated / 1e13, slope_PL_lower)
-                        f_max_k = np.concatenate((f_max_extrapolated, f_max_k_loaded_truncated))
-                        m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
-                    else:
-                        f_max_k = f_max_k_loaded
-                        m_delta_values = m_delta_values_loaded
+                    f_max_k = f_max_k_loaded
+                    m_delta_values = m_delta_values_loaded
                     
-                    """
-                    if plot_extrapolated:
-                        if i == 0 and k == 0:      
-                            fig, ax = plt.subplots(figsize=(5, 5))
-                            ax.plot(m_delta_extrapolated, f_max_extrapolated, linestyle="dashed", color="tab:blue")
-                            ax.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_k_loaded_truncated, color="tab:blue")
-                            ax.set_xlabel("$M~[\mathrm{g}]$")
-                            ax.set_ylabel("$f_\mathrm{max}$")
-                            ax.set_xscale("log")
-                            ax.set_yscale("log")
-                            fig.tight_layout()
-                    """
-                    # Extended MF constraint from a particular energy bin
+                    # Extended MF constraint from the k'th energy bin
                     f_PBH_k_LN = constraint_Carr(mc_values_input, m_delta_values, f_max_k, LN, params_LN, evolved, t)[0]
-                    f_PBH_k_SLN = constraint_Carr(mc_values_input, m_delta_values, f_max_k, SLN, params_SLN, evolved, t)[0]
-                    f_PBH_k_CC3 = constraint_Carr(mc_values_input, m_delta_values, f_max_k, CC3, params_CC3, evolved, t)[0]
-                    print("k = ", k)
-                    print("f_PBH_k_LN = ", f_PBH_k_LN)
+                    print("\t\t k = ", k)
+                    print("\t\t f_PBH_k_LN = ", f_PBH_k_LN)
 
-                # Extended MF constraints from the k'th instrument at the given value of m_c
-                mc_constraints_LN.append(f_PBH_k_LN)
-                mc_constraints_SLN.append(f_PBH_k_SLN)
-                mc_constraints_CC3.append(f_PBH_k_CC3)
+                    energy_bin_constraints_LN.append(f_PBH_k_LN)
         
-        print("mc_constraints_LN = ", mc_constraints_LN)
+                print("\t energy_bin_constraints_LN = ", energy_bin_constraints_LN)
+                    
+                # Extended MF constraint from i'th instrument at a given value of m_c
+                instrument_constraints_LN.append(min(energy_bin_constraints_LN))
+                
+            mc_constraints_LN.append(instrument_constraints_LN)
+            print("instrument_constraints_LN = ", instrument_constraints_LN)
         # Set f_PBH to the tightest constraint from the instruments
-        """
+        
         f_PBH_Carr_LN = envelope(mc_constraints_LN)
-        f_PBH_Carr_SLN = envelope(mc_constraints_SLN)
-        f_PBH_Carr_CC3 = envelope(mc_constraints_CC3)
-        """    
+        print("mc_constraints_LN =", mc_constraints_LN)
+        print("f_PBH_Carr_LN = ", f_PBH_Carr_LN)
+        
+        
+        """
+        if plot_extrapolated:
+            if i == 0 and k == 0:      
+                fig, ax = plt.subplots(figsize=(5, 5))
+                ax.plot(m_delta_extrapolated, f_max_extrapolated, linestyle="dashed", color="tab:blue")
+                ax.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_k_loaded_truncated, color="tab:blue")
+                ax.set_xlabel("$M~[\mathrm{g}]$")
+                ax.set_ylabel("$f_\mathrm{max}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                fig.tight_layout()
+        """
+
+
+            
         if evolved == False:
             data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
             data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
@@ -164,9 +159,9 @@ if "__main__" == __name__:
             data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_CC3 = data_folder + "/CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
             
-        np.savetxt(data_filename_LN, [mc_values, mc_constraints_LN], delimiter="\t")
-        np.savetxt(data_filename_SLN, [mc_values, mc_constraints_SLN], delimiter="\t")
-        np.savetxt(data_filename_CC3, [mc_values, mc_constraints_CC3], delimiter="\t")
+        np.savetxt(data_filename_LN, [mc_values, f_PBH_Carr_LN], delimiter="\t")
+        np.savetxt(data_filename_SLN, [mc_values, f_PBH_Carr_SLN], delimiter="\t")
+        np.savetxt(data_filename_CC3, [mc_values, f_PBH_Carr_CC3], delimiter="\t")
 
 
 #%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
