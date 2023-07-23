@@ -42,7 +42,7 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = np.logspace(14, 20, 120)[50:53]
+    mc_values = np.logspace(14, 20, 120)[30:33]
     m_delta_values_loaded = np.logspace(11, 22, 1000)
 
     # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
