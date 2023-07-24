@@ -126,8 +126,8 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.legend(fontsize="small")
-    ax.set_xlim(1e16, 1e19)
-    ax.set_ylim(2e15, 1e19)
+    ax.set_xlim(2e13, 1e19)
+    ax.set_ylim(2e15, 1e23)
     fig.tight_layout()
 
     
@@ -216,6 +216,69 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     ax.set_xlim(1e14, 1e18)
     ax.set_ylim(1e13, 1e22)
+    fig.tight_layout()
+
+
+#%%
+if "__main__" == __name__:
+
+    m_pbh_values = np.logspace(11, 15, 41)
+
+    # Plot the integral of primary and total photon spectrum over energy (PYTHIA secondary spectrum and calculations).
+    integral_primary = []
+    integral_secondary = []
+    
+    for i in range(len(m_pbh_values)):
+        energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_oldtables_{:.0f}/".format(i+1) + "instantaneous_primary_spectra.txt", col=1)
+        energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_oldtables_{:.0f}/".format(i+1) + "instantaneous_secondary_spectra.txt", col=1)
+
+        integral_primary.append(np.trapz(spectrum_primary, energies_primary))
+        integral_secondary.append(np.trapz(spectrum_tot, energies_tot))
+    
+    fit_m_inv = integral_secondary[20] * np.power(m_pbh_values/m_pbh_values[20], -1)
+    fit_m_square = integral_secondary[20] * np.power(m_pbh_values/m_pbh_values[20], -2)
+    
+    fig, ax = plt.subplots(figsize=(6.5, 5))
+    ax.plot(m_pbh_values, integral_secondary, color=colors[0], label="Total")
+    ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[0], label="Primary emission only")
+    ax.plot(m_pbh_values, fit_m_inv, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit")
+    ax.plot(m_pbh_values, fit_m_square, color=colors[2], linestyle="dotted", label="$m^{-2}$ fit")
+    ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_ylabel("$\mathrm{d} N_\gamma/\mathrm{d}t~[\mathrm{s}^{-1}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend(fontsize="small")
+    ax.set_xlim(1e11, 1e15)
+    ax.set_ylim(1e20, 1e28)
+    ax.set_title("Secondary spectrum calcualted using PYTHIA \n (Integration range $511~\mathrm{keV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
+    fig.tight_layout()
+
+    
+    # Plot the integral of energy * primary and total photon spectrum over energy (Hazma secondary spectrum and calculations).
+    integral_primary = []
+    integral_secondary = []
+    
+    for i in range(len(m_pbh_values)):
+        energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_oldtables_{:.0f}/".format(i+1) + "instantaneous_primary_spectra.txt", col=1)
+        energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "PYTHIA_lowmass_oldtables_{:.0f}/".format(i+1) + "instantaneous_secondary_spectra.txt", col=1)
+                
+        integral_primary.append(np.trapz(spectrum_primary*energies_primary, energies_primary))
+        integral_secondary.append(np.trapz(spectrum_tot*energies_tot, energies_tot))
+    
+    #fit_m_square = integral_primary[500] * np.power(m_pbh_values/m_pbh_values[500], -2)
+    
+    fig, ax = plt.subplots(figsize=(6.5, 5))
+    ax.plot(m_pbh_values, integral_secondary, color=colors[0], label="Total")
+    ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[0], label="Primary emission only")
+    #ax.plot(m_pbh_values, fit_m_square, color=colors[1], linestyle="dotted", label="$m^{-2}$ fit")
+    ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_ylabel(r"$\int \tilde{Q}_\gamma(E) E \mathrm{d}E~[\mathrm{GeV} \cdot \mathrm{s}^{-1}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend(fontsize="small")
+    ax.set_xlim(1e11, 1e15)
+    ax.set_ylim(1e18, 1e29)
+    ax.set_title("Secondary spectrum calcualted using PYTHIA \n (Integration range $511~\mathrm{keV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
     fig.tight_layout()
 
 
