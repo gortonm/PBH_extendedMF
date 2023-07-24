@@ -450,3 +450,121 @@ if "__main__" == __name__:
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
+
+#%% Tests of the results obtained using different power-law slopes in f_max at low masses (Galactic Centre photon constraints)
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    mc_values = np.logspace(14, 20, 120)
+
+    # Array of power law exponents to use at masses below 1e15g
+    slopes_PL_lower = [0, 2, 3, 4]
+    
+    style_markers = ["x", "--", "-.", ":"]
+    
+    for j in range(len(Deltas)):
+        
+        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
+        
+        ax0 = axes[0][0]
+        ax1 = axes[0][1]
+        ax2 = axes[1][0]
+        ax3 = axes[1][1]
+        
+        m_delta_values_loaded = np.logspace(11, 21, 1000)
+        constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
+        colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+        constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+                                   
+        m_delta_extrapolated = np.logspace(11, 13, 21)
+        
+        
+        for k, slope_PL_lower in enumerate(slopes_PL_lower):
+            data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower)
+            
+            f_PBH_instrument_LN = []
+            f_PBH_instrument_SLN = []
+            f_PBH_instrument_CC3 = []
+                
+            
+            for i in range(len(constraints_names)):
+                
+                # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
+                f_max_allpositive = []
+        
+                for f_max in f_max_Isatis[i]:
+                    if f_max == -1:
+                        f_max_allpositive.append(1e100)
+                    else:
+                        f_max_allpositive.append(f_max)
+                
+                # Extrapolate f_max at masses below 1e13g using a power-law
+                f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
+                f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, slope_PL_lower)
+                f_max_i = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+                m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
+
+                ax0.plot(m_delta_extrapolated, f_max_extrapolated, style_markers[k], color=colors_evap[i])
+                ax0.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_loaded_truncated, color=colors_evap[i])
+
+                # Load constraints for an evolved extended mass function obtained from each instrument
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                    
+                mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+                mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                
+                # Compile constraints from all instruments
+                f_PBH_instrument_LN.append(f_PBH_LN_evolved)
+                f_PBH_instrument_SLN.append(f_PBH_SLN_evolved)
+                f_PBH_instrument_CC3.append(f_PBH_CC3_evolved)
+                
+            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_values]
+            mp_LN = mc_values * np.exp(-sigmas_LN[j]**2)
+            mp_CC3 = mc_values
+            
+            # Plot the tightest constraint (of the different instruments) for each peak mass
+            
+            ax1.plot(mp_LN, envelope(f_PBH_instrument_LN), style_markers[k], color="r", marker="None")
+            ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN), style_markers[k], color="b", marker="None")
+            ax3.plot(mp_CC3, envelope(f_PBH_instrument_CC3), style_markers[k], color="g", marker="None")
+            
+            
+            if k == 0:
+                print(envelope(f_PBH_instrument_LN))
+            
+            ax1.set_title("LN")
+            ax2.set_title("SLN")
+            ax3.set_title("CC3")
+
+            ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(slope_PL_lower))            
+            ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(slope_PL_lower))
+                
+            ax0.set_xlim(1e11, 1e18)
+            ax0.set_ylim(10**(-15), 1)
+            ax0.set_xlabel("m$~[\mathrm{g}]$")
+            ax0.set_ylabel("$f_\mathrm{max}$")
+            ax0.set_xscale("log")
+            ax0.set_yscale("log")
+            
+            for ax in [ax1, ax2, ax3]:
+                if Deltas[j] < 5:
+                    ax.set_xlim(1e16, 3e17)
+                else:
+                    ax.set_xlim(1e16, 1e18)
+                   
+                ax.set_ylim(1e-4, 1)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+    
+            ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
+            ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
+            fig.tight_layout()
+            fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
