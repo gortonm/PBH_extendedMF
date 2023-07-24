@@ -524,20 +524,18 @@ if "__main__" == __name__:
                 f_PBH_instrument_SLN.append(f_PBH_SLN_evolved)
                 f_PBH_instrument_CC3.append(f_PBH_CC3_evolved)
                 
+                print("f_PBH_LN_evolved[0] =", f_PBH_LN_evolved[0])
+                
             mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_values]
             mp_LN = mc_values * np.exp(-sigmas_LN[j]**2)
             mp_CC3 = mc_values
             
             # Plot the tightest constraint (of the different instruments) for each peak mass
-            
-            ax1.plot(mp_LN, envelope(f_PBH_instrument_LN), style_markers[k], color="r", marker="None")
-            ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN), style_markers[k], color="b", marker="None")
-            ax3.plot(mp_CC3, envelope(f_PBH_instrument_CC3), style_markers[k], color="g", marker="None")
-            
-            
-            if k == 0:
-                print(envelope(f_PBH_instrument_LN))
-            
+            ax1.plot(mp_LN, envelope(f_PBH_instrument_LN), style_markers[k], color="r")
+            ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN), style_markers[k], color="b")
+            ax3.plot(mp_CC3, envelope(f_PBH_instrument_CC3), style_markers[k], color="g")
+            print("envelope(f_PBH_instrument_LN)[0] =", envelope(f_PBH_instrument_LN)[0])
+                        
             ax1.set_title("LN")
             ax2.set_title("SLN")
             ax3.set_title("CC3")
@@ -553,6 +551,7 @@ if "__main__" == __name__:
             ax0.set_yscale("log")
             
             for ax in [ax1, ax2, ax3]:
+                
                 if Deltas[j] < 5:
                     ax.set_xlim(1e16, 3e17)
                 else:
