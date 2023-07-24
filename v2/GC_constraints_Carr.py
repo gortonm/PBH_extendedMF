@@ -82,6 +82,7 @@ if "__main__" == __name__:
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
     for j in range(len(Deltas)):
+        print("j =", j)
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
@@ -92,6 +93,7 @@ if "__main__" == __name__:
         mc_constraints_CC3 = []
 
         for i in range(len(constraints_names_short)):
+            print("\t i =", i)
 
             # Delta-function MF constraints for each energy bin of each instrument.
             constraints_delta_file = np.transpose(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % (constraints_names_short[i])))
@@ -102,6 +104,7 @@ if "__main__" == __name__:
             instrument_constraints_CC3 = []
             
             for m_c in mc_values:
+                print("\t\t m_c = {:.1e}".format(m_c))
                 
                 mc_values_input = [m_c]
                 
@@ -111,6 +114,7 @@ if "__main__" == __name__:
                 energy_bin_constraints_CC3 = []
 
                 for k in range(len(constraints_delta_file)):
+                    print("\t\t\t k =", k)
                                                                 
                     # Delta-function mass function constraint from a particular energy bin
                     f_max_k_loaded = constraints_delta_file[k]
@@ -175,7 +179,7 @@ if "__main__" == __name__:
         np.savetxt(data_filename_CC3, [mc_values, f_PBH_Carr_CC3], delimiter="\t")
 
 
-#%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
+#%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Calculated using f_max as the minimum constraint over each energy bin.
 
 if "__main__" == __name__:
 
@@ -312,6 +316,87 @@ if "__main__" == __name__:
         np.savetxt(data_filename_CC3, [mc_values, f_PBH_Carr_CC3], delimiter="\t")
 
 
+#%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # If True, plot extrapolated monochromatic MF constraints down to 1e11g
+    plot_extrapolate = False
+    # Boolean determines whether to use evolved mass function.
+    evolved = False
+    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    t_initial = True
+    if t_initial:
+        evolved = True
+    
+    m_delta_values = np.logspace(11, 21, 1000)
+    constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    
+    mc_values = np.logspace(14, 20, 120)
+    
+    t = t_0
+    
+    if not evolved:
+        data_folder = "./Data-tests/unevolved"
+    elif t_initial:
+        data_folder = "./Data-tests/t_initial"
+        t = 0
+    else:
+        data_folder = "./Data"
+
+    for j in range(len(Deltas)):
+        params_LN = [sigmas_LN[j]]
+        params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+        params_CC3 = [alphas_CC3[j], betas[j]]
+
+        for i in range(len(constraints_names)):
+            
+            # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
+            f_max_allpositive = []
+    
+            for f_max in f_max_Isatis[i]:
+                if f_max == -1:
+                    f_max_allpositive.append(1e100)
+                else:
+                    f_max_allpositive.append(f_max)
+                  
+            f_PBH_i_LN = (constraint_Carr(mc_values, m_delta_values, f_max_allpositive, LN, params_LN, evolved, t))
+            f_PBH_i_SLN = (constraint_Carr(mc_values, m_delta_values, f_max_allpositive, SLN, params_SLN, evolved, t))
+            f_PBH_i_CC3 = (constraint_Carr(mc_values, m_delta_values, f_max_allpositive, CC3, params_CC3, evolved, t))
+      
+            if evolved == False:
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+            else:
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+    
+            np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
+            np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
+            np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
+
+    if plot_extrapolate:
+        fig, ax = plt.subplots(figsize=(8, 8))
+    
+        for i in range(len(constraints_names)):
+            ax.plot(m_delta_values, f_max_allpositive, label=constraints_names[i], color=colors_evap[i])
+    
+        ax.set_xlim(1e14, 1e18)
+        ax.set_ylim(10**(-10), 1)
+        ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(fontsize="small")
+        fig.tight_layout()
+   
 
 #%% Constraints from 2302.04408 (MW diffuse SPI with NFW template)
 
