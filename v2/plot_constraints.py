@@ -40,13 +40,11 @@ plt.style.use('tableau-colorblind10')
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = False
+    plot_GC_Isatis = True
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = not plot_GC_Isatis
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
     include_extrapolated = True
-    if not plot_KP23:
-        include_extrapolated = False
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['tab:grey', 'r', 'b', 'g', 'k']
@@ -87,20 +85,36 @@ if "__main__" == __name__:
             f_PBH_mono_evap = envelope(f_PBHs_GC_mono)
             m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
-            mc_values_evap = np.logspace(14, 19, 100)
+            mc_values_evap = np.logspace(14, 20, 120)
             
             # Load constraints from Galactic Centre photons.
-            fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_LN = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            
+            slope_PL_lower = 2
+            constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+            data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower)
+            
+            f_PBH_instrument_LN = []
+            f_PBH_instrument_SLN = []
+            f_PBH_instrument_CC3 = []
 
-            constraints_names_evap, f_PBHs_GC_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
-            constraints_names_evap, f_PBHs_GC_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
-            constraints_names, f_PBHs_GC_LN = load_results_Isatis(mf_string=fname_base_LN, modified=True)
-   
-            f_PBH_GC_SLN = envelope(f_PBHs_GC_SLN)
-            f_PBH_GC_CC3 = envelope(f_PBHs_GC_CC3)
-            f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
+            for k in range(len(constraints_names_short)):
+                # Load constraints for an evolved extended mass function obtained from each instrument
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+                    
+                mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+                mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                
+                # Compile constraints from all instruments
+                f_PBH_instrument_LN.append(f_PBH_LN_evolved)
+                f_PBH_instrument_SLN.append(f_PBH_SLN_evolved)
+                f_PBH_instrument_CC3.append(f_PBH_CC3_evolved)
+ 
+            f_PBH_GC_LN = envelope(f_PBH_instrument_LN)
+            f_PBH_GC_SLN = envelope(f_PBH_instrument_SLN)
+            f_PBH_GC_CC3 = envelope(f_PBH_instrument_CC3)
            
             # Estimate peak mass of skew-lognormal MF
             mp_SLN_evap = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_evap]
@@ -116,26 +130,23 @@ if "__main__" == __name__:
         
         elif plot_KP23:
             
-            if include_extrapolated:
-                fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$ \n $f_".format(Deltas[i]) + "\mathrm{max}(m)$" + " extrapolated below " + "$m=10^{16}" + "~\mathrm{g}$", fontsize="small")
-            else:
-                fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$".format(Deltas[i]))
+            slope_PL_lower = 2
+            data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower) 
+            
+            fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$ \n $f_".format(Deltas[i]) + "\mathrm{max}(m)$" + " extrapolated below " + "$m=10^{16}" + "~\mathrm{g}$", fontsize="small")
            
             # Monochromatic MF constraints
             m_mono_evap, f_PBH_mono_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
             m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
-            # Load constraints from Galactic Centre 511 keV line emission (from 2302.04408).            
-            if include_extrapolated:
-                mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
-                mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
-                mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
+            
+            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
                
-            else:
-                mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-                mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-                mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-
             # Estimate peak mass of skew-lognormal MF
             mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
             mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
