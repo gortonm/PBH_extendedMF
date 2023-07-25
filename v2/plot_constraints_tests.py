@@ -388,6 +388,9 @@ if "__main__" == __name__:
     else:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
+    LN = False
+    SLN = False
+    CC3 = True
         
     for j in range(len(Deltas)):
         
@@ -395,21 +398,26 @@ if "__main__" == __name__:
         
         # Load constraints from Galactic Centre photons
         mc_values_old = np.logspace(14, 19, 100)
+        
         fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         fname_base_LN = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-
+        
         constraints_names_evap, f_PBH_SLN_unevolved = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
         constraints_names_evap, f_PBH_CC3_unevolved = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
         constraints_names, f_PBH_LN_unevolved = load_results_Isatis(mf_string=fname_base_LN, modified=True)
-
+        
         mp_SLN_unevolved = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_values_old]
         mp_LN_unevolved = mc_values_old * np.exp(-sigmas_LN[j]**2)
-
-
+        
         for i in range(len(constraints_names)):
-            ax.plot(mp_LN_unevolved, f_PBH_LN_unevolved[i], label=constraints_names[i], color=colors_evap[i])
-            
+            if LN:
+                ax.plot(mp_LN_unevolved, f_PBH_LN_unevolved[i], label=constraints_names[i], color=colors_evap[i])
+            elif SLN:
+                ax.plot(mp_SLN_unevolved, f_PBH_SLN_unevolved[i], label=constraints_names[i], color=colors_evap[i])
+            elif CC3:
+                ax.plot(mc_values_old, f_PBH_CC3_unevolved[i], label=constraints_names[i], color=colors_evap[i])
+                
             # Load and plot results for the unevolved mass functions
             data_filename_LN_unevolved_approx = "./Data-tests/unevolved" + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
             data_filename_SLN_unevolved_approx = "./Data-tests/unevolved" + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
@@ -422,7 +430,12 @@ if "__main__" == __name__:
             mp_SLN_unevolved_approx = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_unevolved_approx]
             mp_LN_unevolved_approx = mc_LN_unevolved_approx * np.exp(-sigmas_LN[j]**2)
             
-            ax.plot(mp_LN_unevolved_approx, f_PBH_LN_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")
+            if LN:
+                ax.plot(mp_LN_unevolved_approx, f_PBH_LN_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")
+            elif SLN:
+                ax.plot(mp_SLN_unevolved_approx, f_PBH_SLN_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")
+            elif CC3:
+                ax.plot(mp_CC3_unevolved_approx, f_PBH_SLN_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")                
 
             # Load and plot results for the 'evolved' mass functions evaluated at the initial time t_init = 0
             data_filename_LN_t_init_approx = "./Data-tests/t_initial" + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
@@ -436,8 +449,13 @@ if "__main__" == __name__:
             mp_SLN_t_init_approx = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_t_init_approx]
             mp_LN_t_init_approx = mc_LN_t_init_approx * np.exp(-sigmas_LN[j]**2)
             
-            ax.plot(mp_LN_t_init_approx, f_PBH_LN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
-
+            if LN:
+                ax.plot(mp_LN_t_init_approx, f_PBH_LN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
+            elif SLN:
+                ax.plot(mp_SLN_t_init_approx, f_PBH_SLN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
+            elif CC3:
+                ax.plot(mp_CC3_t_init_approx, f_PBH_CC3_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
+               
         ax.plot(0, 0, linestyle="None", color="k", marker="x", label="Test (approximate): $t=0$")
         ax.plot(0, 0, linestyle="None", color="k", marker="+", label="Test (approximate): unevolved")
         ax.set_xlim(1e14, 1e18)
@@ -461,9 +479,9 @@ if "__main__" == __name__:
     mc_values = np.logspace(14, 20, 120)
 
     # Array of power law exponents to use at masses below 1e15g
-    slopes_PL_lower = [0, 2, 3, 4]
+    slopes_PL_lower = [0, 2, 4]
     
-    style_markers = ["x", "--", "-.", ":"]
+    style_markers = ["--", "+", "x"]
     
     for j in range(len(Deltas)):
         
@@ -543,7 +561,7 @@ if "__main__" == __name__:
             ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(slope_PL_lower))            
             ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(slope_PL_lower))
                 
-            ax0.set_xlim(1e11, 1e18)
+            ax0.set_xlim(1e11, 3e17)
             ax0.set_ylim(10**(-15), 1)
             ax0.set_xlabel("m$~[\mathrm{g}]$")
             ax0.set_ylabel("$f_\mathrm{max}$")
@@ -563,7 +581,7 @@ if "__main__" == __name__:
                 ax.set_xscale("log")
                 ax.set_yscale("log")
     
-            ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
-            ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
+            ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")        
+            ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")
             fig.tight_layout()
             fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
