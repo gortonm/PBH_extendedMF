@@ -435,7 +435,7 @@ if "__main__" == __name__:
             elif SLN:
                 ax.plot(mp_SLN_unevolved_approx, f_PBH_SLN_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")
             elif CC3:
-                ax.plot(mp_CC3_unevolved_approx, f_PBH_SLN_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")                
+                ax.plot(mp_CC3_unevolved_approx, f_PBH_CC3_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")                
 
             # Load and plot results for the 'evolved' mass functions evaluated at the initial time t_init = 0
             data_filename_LN_t_init_approx = "./Data-tests/t_initial" + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
@@ -454,10 +454,13 @@ if "__main__" == __name__:
             elif SLN:
                 ax.plot(mp_SLN_t_init_approx, f_PBH_SLN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
             elif CC3:
-                ax.plot(mp_CC3_t_init_approx, f_PBH_CC3_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
+                ax.plot(mp_CC3_t_init_approx, f_PBH_CC3_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")
+                
+            print(f_PBH_LN_unevolved_approx[0:5])
+            print(f_PBH_LN_t_init_approx[0:5])
                
-        ax.plot(0, 0, linestyle="None", color="k", marker="x", label="Test (approximate): $t=0$")
-        ax.plot(0, 0, linestyle="None", color="k", marker="+", label="Test (approximate): unevolved")
+        ax.plot(0, 0, linestyle="None", color="k", marker="+", label="Test (approximate): $t=0$")
+        ax.plot(0, 0, linestyle="None", color="k", marker="x", label="Test (approximate): unevolved")
         ax.set_xlim(1e14, 1e18)
         ax.set_ylim(10**(-10), 1)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
