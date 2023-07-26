@@ -323,10 +323,10 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    # Boolean determines whether to use evolved mass function.
+    # Boolean determines whether to useFalse evolved mass function.
     evolved = False
     # Boolean determines whether to evaluate the evolved mass function at t=0.
-    t_initial = True
+    t_initial = False
     if t_initial:
         evolved = True
     
@@ -429,11 +429,11 @@ if "__main__" == __name__:
     # If True, use extrapolated monochromatic MF constraints down to 1e15g (using a power law fit) to calculate extended MF constraint
     include_extrapolated_upper = True
     # If True, use extrapolated monochromatic MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint
-    include_extrapolated = False
+    include_extrapolated = True
     # If True, plot extrapolated monochromatic MF constraints down to 1e11g
     plot_extrapolate = False
     # Boolean determines whether to use evolved mass function.
-    evolved = False
+    evolved = True
     # Boolean determines whether to evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
@@ -462,7 +462,7 @@ if "__main__" == __name__:
         # Power-law slope to use between 1e15g and 1e16g.
         slope_PL_upper = 2.0
         # Power-law slope to use at lower masses
-        slope_PL_lower = 4.0
+        slope_PL_lower = 3.0
         
         m_mono_extrapolated_upper = np.logspace(15, 16, 11)
         m_mono_extrapolated_lower = np.logspace(11, 15, 41)
@@ -502,6 +502,84 @@ if "__main__" == __name__:
             data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            
+        params_LN = [sigmas_LN[j]]
+        params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+        params_CC3 = [alphas_CC3[j], betas[j]]
+        
+        f_pbh_LN = constraint_Carr(mc_values, m_mono_total, f_max_total, LN, params_LN, evolved, t)
+        f_pbh_SLN = constraint_Carr(mc_values, m_mono_total, f_max_total, SLN, params_SLN, evolved, t)
+        f_pbh_CC3 = constraint_Carr(mc_values, m_mono_total, f_max_total, CC3, params_CC3, evolved, t)
+        
+        np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
+        np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
+        np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
+
+
+#%% Prospective cnstraints from 2101.01370 (proposed white dwarf microlensing survey)
+
+if "__main__" == __name__:
+    # If True, use extrapolated monochromatic MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint
+    include_extrapolated = True
+    # If True, plot extrapolated monochromatic MF constraints down to 1e11g
+    evolved = True
+    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    t_initial = False
+    if t_initial:
+        evolved = True
+    
+    # If True, plot the projected constraints for an NFW profile
+    # If False, plot the projected constraints for an Einasto profile
+    NFW = True
+    t = t_0
+    
+    if not evolved:
+        data_folder = "./Data-tests/unevolved"
+    elif t_initial:
+        data_folder = "./Data-tests/t_initial"
+        t = 0
+    else:
+        data_folder = "./Data-tests"
+
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    mc_values = np.logspace(14, 20, 120)
+    
+    # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
+    if NFW:
+        m_mono_values, f_max = load_data("2101.01370/2101.01370_Fig9_GC_Einasto.csv")
+        profile_string = "NFW"
+        
+    else:
+        m_mono_values, f_max = load_data("2101.01370/2101.01370_Fig9_GC_Einasto.csv")
+        profile_string = "Einasto"
+    
+    if include_extrapolated:
+
+        # Power-law slope to use at lower masses
+        slope_PL_lower = 3.0
+        
+        m_mono_extrapolated = np.logspace(11, 15, 41)
+        f_max_extrapolated = min(f_max) * np.power(m_mono_extrapolated / min(m_mono_values), slope_PL_lower)
+    
+        f_max_total = np.concatenate((f_max_extrapolated, f_max))
+        m_mono_total = np.concatenate((m_mono_extrapolated, m_mono_values))
+        data_folder += "/PL_slope_{:.0f}".format(slope_PL_lower)
+    
+    for j in range(len(Deltas)):                
+        if include_extrapolated:                     
+            data_filename_LN = data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + "extrapolated_slope{:.0f}.txt".format(slope_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + "extrapolated_slope{:.0f}.txt".format( slope_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + "extrapolated_slope{:.0f}.txt".format(slope_PL_lower)
+                                  
+        else:
+            f_max_total = f_max
+            m_mono_total = m_mono_values
+            
+            data_filename_LN = data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt".format(slope_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt".format( slope_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt".format(slope_PL_lower)
             
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
