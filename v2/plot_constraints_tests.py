@@ -390,12 +390,13 @@ if "__main__" == __name__:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
     LN = False
-    SLN = False
-    CC3 = True
+    SLN = True
+    CC3 = False
         
     for j in range(len(Deltas)):
         
         fig, ax = plt.subplots(figsize=(8, 8))
+        fig1, ax1 = plt.subplots(figsize=(5,5))
         
         # Load constraints from Galactic Centre photons
         mc_values_old = np.logspace(14, 19, 100)
@@ -452,14 +453,17 @@ if "__main__" == __name__:
             
             if LN:
                 ax.plot(mp_LN_t_init_approx, f_PBH_LN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
+                ax1.plot(mp_LN_unevolved, np.interp(mp_LN_unevolved, mp_LN_unevolved_approx, f_PBH_SLN_unevolved_approx) / f_PBH_LN_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
             elif SLN:
-                ax.plot(mp_SLN_t_init_approx, f_PBH_SLN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
+                ax.plot(mp_SLN_t_init_approx, f_PBH_SLN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")   
+                ax1.plot(mp_SLN_unevolved, np.interp(mp_SLN_unevolved, mp_SLN_unevolved_approx, f_PBH_SLN_unevolved_approx) / f_PBH_SLN_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
             elif CC3:
                 ax.plot(mp_CC3_t_init_approx, f_PBH_CC3_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")
+                ax1.plot(mc_values_old, np.interp(mc_values_old, mp_CC3_unevolved_approx, f_PBH_CC3_unevolved_approx) / f_PBH_CC3_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
                 
             print(f_PBH_LN_unevolved_approx[0:5])
             print(f_PBH_LN_t_init_approx[0:5])
-               
+            
         ax.plot(0, 0, linestyle="None", color="k", marker="+", label="Test (approximate): $t=0$")
         ax.plot(0, 0, linestyle="None", color="k", marker="x", label="Test (approximate): unevolved")
         ax.set_xlim(1e14, 1e18)
@@ -471,6 +475,13 @@ if "__main__" == __name__:
         ax.legend(fontsize="x-small")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
+        
+        ax1.set_xlim(1e14, 1e18)
+        ax1.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax1.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
+        ax1.set_xscale("log")
+        ax1.set_title("Approximate / full - 1 ($\Delta={:.1f}$)".format(Deltas[j]), fontsize="small")
+        fig1.tight_layout()
 
 
 #%% Tests of the results obtained using different power-law slopes in f_max at low masses (Galactic Centre photon constraints)
