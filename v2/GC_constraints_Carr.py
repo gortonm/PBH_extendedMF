@@ -516,7 +516,7 @@ if "__main__" == __name__:
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
 
 
-#%% Prospective cnstraints from 2101.01370 (proposed white dwarf microlensing survey)
+#%% Prospective cnstraints from 2101.01370 (GECCO)
 
 if "__main__" == __name__:
     # If True, use extrapolated monochromatic MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint
@@ -548,7 +548,7 @@ if "__main__" == __name__:
     
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     if NFW:
-        m_mono_values, f_max = load_data("2101.01370/2101.01370_Fig9_GC_Einasto.csv")
+        m_mono_values, f_max = load_data("2101.01370/2101.01370_Fig9_GC_NFW.csv")
         profile_string = "NFW"
         
     else:
@@ -558,7 +558,7 @@ if "__main__" == __name__:
     if include_extrapolated:
 
         # Power-law slope to use at lower masses
-        slope_PL_lower = 3.0
+        slope_PL_lower = 0.0
         
         m_mono_extrapolated = np.logspace(11, 15, 41)
         f_max_extrapolated = min(f_max) * np.power(m_mono_extrapolated / min(m_mono_values), slope_PL_lower)
@@ -577,9 +577,9 @@ if "__main__" == __name__:
             f_max_total = f_max
             m_mono_total = m_mono_values
             
-            data_filename_LN = data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt".format(slope_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt".format( slope_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt".format(slope_PL_lower)
+            data_filename_LN = data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
+            data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
+            data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
             
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
