@@ -35,7 +35,7 @@ mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 plt.style.use('tableau-colorblind10')
 
-#%%
+#%% Existing constraints
 
 if "__main__" == __name__:
     
@@ -63,7 +63,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
         
     for i in range(len(Deltas)):
-                
+                        
         fig, axes = plt.subplots(1, 3, figsize=(17, 5.5))
         ax0 = axes[0]
         ax1 = axes[1]
@@ -173,7 +173,7 @@ if "__main__" == __name__:
         else:
             xmin_evap, xmax_evap = 1e16, 7e17
             xmin_HSC, xmax_HSC = 9e18, 1e29
-            ymin, ymax = 3e-6, 1
+            ymin, ymax = 1e-4, 1
             
             if plot_KP23:
                 xmin_evap, xmax_evap = 1e16, 2e18
@@ -215,3 +215,115 @@ if "__main__" == __name__:
             else:
                 fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23.pdf".format(Deltas[i]))
                 fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23.png".format(Deltas[i]))
+                
+#%% Prospective constraints
+
+if "__main__" == __name__:
+        
+    # Choose colors to match those from Fig. 5 of 2009.03204
+    colors = ['silver', 'r', 'b', 'g', 'k']
+    
+    # Parameters used for convergence tests in Galactic Centre constraints.
+    cutoff = 1e-4
+    delta_log_m = 1e-3
+    E_number = 500    
+                
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+        
+    for i in range(len(Deltas)):
+                        
+        fig, axes = plt.subplots(1, 3, figsize=(17, 5.5))
+        ax0 = axes[0]
+        ax1 = axes[1]
+        ax2 = axes[2]
+        
+        # Load prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].
+        mc_micro_SLN, f_PBH_micro_SLN = np.genfromtxt("./Data/SLN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        mp_micro_CC3, f_PBH_micro_CC3 = np.genfromtxt("./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        mc_micro_LN, f_PBH_micro_LN = np.genfromtxt("./Data/LN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        
+        # Load prospective extended MF constraints from GECCO. 
+        slope_PL_lower = 2
+        data_folder = "./Data-tests/PL_slope_{:.0f}/".format(slope_PL_lower) 
+        
+        data_filename_LN_NFW = data_folder + "LN_2101.01370_Carr_Delta={:.1f}_NFW_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower) 
+        data_filename_SLN_NFW = data_folder + "SLN_2101.01370_Carr_Delta={:.1f}_NFW_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower) 
+        data_filename_CC3_NFW = data_folder + "CC3_2101.01370_Carr_Delta={:.1f}_NFW_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower) 
+        mc_GECCO_LN_NFW, f_PBH_GECCO_LN_NFW = np.genfromtxt(data_filename_LN_NFW, delimiter="\t")
+        mc_GECCO_SLN_NFW, f_PBH_GECCO_SLN_NFW = np.genfromtxt(data_filename_SLN_NFW, delimiter="\t")
+        mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW = np.genfromtxt(data_filename_CC3_NFW, delimiter="\t")
+           
+        data_filename_LN_Einasto = data_folder + "LN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower) 
+        data_filename_SLN_Einasto = data_folder + "SLN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower) 
+        data_filename_CC3_Einasto = data_folder + "CC3_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower) 
+        mc_GECCO_LN_Einasto, f_PBH_GECCO_LN_Einasto = np.genfromtxt(data_filename_LN_Einasto, delimiter="\t")
+        mc_GECCO_SLN_Einasto, f_PBH_GECCO_SLN_Einasto = np.genfromtxt(data_filename_SLN_Einasto, delimiter="\t")
+        mp_GECCO_CC3_Einasto, f_PBH_GECCO_CC3_Einasto = np.genfromtxt(data_filename_CC3_Einasto, delimiter="\t")
+        
+        
+        # Estimate peak mass of skew-lognormal MF
+        mp_GECCO_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_GECCO_SLN_NFW]
+        mp_micro_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_micro_SLN]
+        
+
+        # Load delta-function MF constraints
+        m_mono_evap, f_PBH_mono_evap = load_data("1905.06066/1905.06066_Fig8_finite+wave.csv")
+        m_mono_micro_NFW, f_PBH_mono_micro_NFW = load_data("2101.01370/2101.01370_Fig9_GC_NFW.csv")
+        m_mono_micro_Einasto, f_PBH_mono_micro_Einasto = load_data("2101.01370/2101.01370_Fig9_GC_Einasto.csv")
+        
+        
+        # Plot constraints
+        
+        for ax in [ax0, ax1, ax2]:
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
+            ax.plot(m_mono_micro_NFW, f_PBH_mono_micro_NFW, color=colors[0], linewidth=2)
+            ax.plot(m_mono_micro_Einasto, f_PBH_mono_micro_Einasto, color=colors[0], linewidth=2)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+
+        
+        ax0.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_Einasto, color=colors[2], linestyle=(0, (5, 7)))
+        ax0.plot(mp_GECCO_CC3_Einasto, f_PBH_GECCO_CC3_Einasto, color=colors[3], linestyle="dashed")
+        ax1.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_Einasto, color=colors[2], linestyle=(0, (5, 7)))
+        ax1.plot(mp_GECCO_CC3_Einasto, f_PBH_GECCO_CC3_Einasto, color=colors[3], linestyle="dashed")
+        ax0.plot(mc_GECCO_LN_Einasto * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_Einasto, color=colors[1], dashes=[6, 2], label="LN")
+        ax1.plot(mc_GECCO_LN_Einasto * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_Einasto, color=colors[1], dashes=[6, 2])
+        
+        ax0.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_NFW, color=colors[2], linestyle=(0, (5, 7)))
+        ax0.plot(mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW, color=colors[3], linestyle="dashed")
+        ax1.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_NFW, color=colors[2], linestyle=(0, (5, 7)))
+        ax1.plot(mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW, color=colors[3], linestyle="dashed")
+        ax0.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2], label="LN")
+        ax1.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2])
+        
+      
+        
+        # Set axis limits
+        xmin_evap, xmax_evap = 1e16, 2e18
+        xmin_micro, xmax_micro = 1e20, 5e23
+        ymin, ymax = 1e-5, 1
+
+        ax0.plot(mp_micro_SLN, f_PBH_micro_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
+        ax0.plot(mp_micro_CC3, f_PBH_micro_CC3, color=colors[3], label="CC3", linestyle="dashed")
+        ax0.plot(mc_micro_LN * np.exp(-sigmas_LN[i]**2), f_PBH_micro_LN, color=colors[1], dashes=[6, 2])
+        ax2.plot(mp_micro_SLN, f_PBH_micro_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
+        ax2.plot(mp_micro_CC3, f_PBH_micro_CC3, color=colors[3], label="CC3", linestyle="dashed")
+        ax2.plot(mc_micro_LN * np.exp(-sigmas_LN[i]**2), f_PBH_micro_LN, color=colors[1], dashes=[6, 2])
+                  
+        ax0.set_xlim(xmin_evap, xmax_micro)
+        ax0.set_ylim(ymin, ymax)
+        ax1.set_xlim(xmin_evap, xmax_evap)
+        ax1.set_ylim(ymin, ymax)
+        ax2.set_xlim(xmin_micro, xmax_micro)
+        ax2.set_ylim(4e-3, 1)
+       
+        ax0.legend(fontsize="xx-small")
+        
+        plt.suptitle("Prospective constraints, $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+        fig.tight_layout()
+        fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.pdf".format(Deltas[i]))
+        fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.png".format(Deltas[i]))
+            
