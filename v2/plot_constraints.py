@@ -47,7 +47,7 @@ if "__main__" == __name__:
     include_extrapolated = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
-    colors = ['tab:grey', 'r', 'b', 'g', 'k']
+    colors = ['silver', 'r', 'b', 'g', 'k']
     
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
@@ -86,6 +86,14 @@ if "__main__" == __name__:
             m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
             mc_values_evap = np.logspace(14, 20, 120)
+            
+            for ax in [ax0, ax1, ax2]:
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
+                ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
             
             # Load constraints from Galactic Centre photons.
             
@@ -138,6 +146,14 @@ if "__main__" == __name__:
             # Monochromatic MF constraints
             m_mono_evap, f_PBH_mono_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
             m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+            
+            for ax in [ax0, ax1, ax2]:
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
+                ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
 
             data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
             data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
@@ -193,14 +209,6 @@ if "__main__" == __name__:
         ax2.set_xlim(xmin_HSC, xmax_HSC)
         ax2.set_ylim(4e-3, 1)
        
-        for ax in [ax0, ax1, ax2]:
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linestyle="dotted", linewidth=2)
-            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linestyle="dotted", linewidth=2)
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-
         ax0.legend(fontsize="xx-small")
         fig.tight_layout()
         
@@ -296,7 +304,7 @@ if "__main__" == __name__:
         ax0.plot(mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW, color=colors[3], linestyle="dashed")
         ax1.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_NFW, color=colors[2], linestyle=(0, (5, 7)))
         ax1.plot(mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW, color=colors[3], linestyle="dashed")
-        ax0.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2], label="LN")
+        ax0.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2])
         ax1.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2])
         
       
