@@ -678,3 +678,88 @@ if "__main__" == __name__:
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
+#%% Check how the Subaru-HSC microlensing constraints for extended MFs change when using different power law extrapolations below ~1e22g in the delta-function MF constraint
+if "__main__" == __name__:
+
+    mc_subaru = 10**np.linspace(17, 29, 1000)
+    
+    # Constraints for monochromatic MF.
+    m_subaru_mono_loaded, f_max_subaru_mono_loaded = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+    
+    # Mass function parameter values, from 2009.03204.
+    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+        
+    slopes_PL_lower = [-2, -4]
+    markers = [":", "--"]
+    
+    for i in range(len(Deltas)):
+        
+        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
+        
+        ax0 = axes[0][0]
+        ax1 = axes[0][1]
+        ax2 = axes[1][0]
+        ax3 = axes[1][1]
+        
+        for k, slope_PL_lower in enumerate(slopes_PL_lower):
+        
+            data_filename_SLN = "./Data-tests/PL_slope_{:.0f}/SLN_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
+            data_filename_CC3 = "./Data-tests/PL_slope_{:.0f}/CC3_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
+            data_filename_LN = "./Data-tests/PL_slope_{:.0f}/LN_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
+            
+            mc_LN, f_PBH_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_SLN, f_PBH_SLN = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mp_CC3, f_PBH_CC3 = np.genfromtxt(data_filename_LN, delimiter="\t")
+            
+            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_SLN]
+            mp_LN = mc_LN * np.exp(-sigmas_LN[i]**2)
+                        
+            ax1.plot(mp_LN, f_PBH_LN, markers[k], color="r")
+            ax2.plot(mp_SLN, f_PBH_SLN, markers[k], color="b")
+            ax3.plot(mp_CC3, f_PBH_CC3, markers[k], color="g")
+
+            m_subaru_mono_extrapolated = np.logspace(18, np.log10(min(m_subaru_mono_loaded)), 50)
+            f_max_subaru_mono_extrapolated = f_max_subaru_mono_loaded[0] * np.power(m_subaru_mono_extrapolated / min(m_subaru_mono_loaded), slope_PL_lower)
+            ax0.plot(m_subaru_mono_extrapolated, f_max_subaru_mono_extrapolated, markers[k], color="tab:blue", label="{:.0f}".format(slope_PL_lower))
+            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(slope_PL_lower))
+
+        ax0.plot(m_subaru_mono_loaded, f_max_subaru_mono_loaded, color="tab:blue")
+        ax0.set_xlabel(r"$m~[\mathrm{g}]$")
+        ax0.set_ylabel(r"$f_\mathrm{max}$")
+        ax0.set_xscale("log")
+        ax0.set_yscale("log")
+        ax0.set_xlim(1e18, 1e29)
+        ax0.set_ylim(1e-3, 1e4)
+        
+        # Plot the constraints obtained with no power-law extrapolation:
+        data_filename_SLN = "./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
+        data_filename_CC3 = "./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
+        data_filename_LN = "./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
+        
+        mc_LN, f_PBH_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+        mc_SLN, f_PBH_SLN = np.genfromtxt(data_filename_LN, delimiter="\t")
+        mp_CC3, f_PBH_CC3 = np.genfromtxt(data_filename_LN, delimiter="\t")
+        
+        mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_SLN]
+        mp_LN = mc_LN * np.exp(-sigmas_LN[i]**2)
+                    
+        ax1.plot(mp_LN, f_PBH_LN, color="r", marker="None")
+        ax2.plot(mp_SLN, f_PBH_SLN, color="b", marker="None")
+        ax3.plot(mp_CC3, f_PBH_CC3, color="g", marker="None")
+    
+        for ax in [ax1, ax2, ax3]:
+            if Deltas[i] < 5:
+                ax.set_xlim(1e21, 1e29)
+            else:
+                ax.set_xlim(1e19, 1e29)
+               
+            ax.set_ylim(1e-3, 1)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+
+        ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")        
+        ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")
+        fig.tight_layout()
+        fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))

@@ -216,19 +216,98 @@ for i in range(len(Deltas)):
     params_SLN = [sigmas_SLN[i], alphas_SL[i]]
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
-    params_numeric = [Deltas[i], params_CC3]
     
     f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
     f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
     f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
-    f_pbh_numeric = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, mf_numeric, params_numeric)
     
     data_filename_SLN = "./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     data_filename_CC3 = "./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     data_filename_LN = "./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
-    data_filename_numeric = "./Data/numeric_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     
     np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
     np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
     np.savetxt(data_filename_LN, [mc_subaru, f_pbh_LN], delimiter="\t")
-    np.savetxt(data_filename_numeric, [mc_subaru, f_pbh_numeric], delimiter="\t")
+
+
+#%% Calculate constraints for extended MFs from 2009.03204.
+# Delta-function MF constraint is the prospective constraint from Fig. 8 of 1905.06066.
+
+mc_values = 10**np.linspace(17, 29, 1000)
+
+# Constraints for deltachromatic MF.
+m_delta, f_max_delta = load_data("./1905.06066/1905.06066_Fig8_finite+wave.csv")
+
+# Mass function parameter values, from 2009.03204.
+[Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SL, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+for i in range(len(Deltas)):
+
+    # Calculate constraints for extended MF from microlensing.
+    params_SLN = [sigmas_SLN[i], alphas_SL[i]]
+    params_CC3 = [alphas_CC[i], betas[i]]
+    params_LN = [sigmas_LN[i]]
+    
+    f_pbh_LN = constraint_Carr(mc_values, m_delta, f_max_delta, LN, params_LN)
+    f_pbh_SLN = constraint_Carr(mc_values, m_delta, f_max_delta, SLN, params_SLN)
+    f_pbh_CC3 = constraint_Carr(mc_values, m_delta, f_max_delta, CC3, params_CC3)
+    
+    data_filename_SLN = "./Data/SLN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i])
+    data_filename_CC3 = "./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i])
+    data_filename_LN = "./Data/LN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i])
+    
+    np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
+    np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
+    np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")
+    
+    
+
+#%% Calculate constraints for extended MFs from 2009.03204.
+# Calculate how constraints are affected by including a power-law extrapolation below 9e21g
+mc_subaru = 10**np.linspace(17, 29, 1000)
+
+# Constraints for monochromatic MF.
+m_subaru_mono_loaded, f_max_subaru_mono_loaded = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+
+# Mass function parameter values, from 2009.03204.
+[Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SL, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+slope_PL_lower = -4
+m_subaru_mono_extrapolated = np.logspace(18, np.log10(min(m_subaru_mono_loaded)), 50)
+f_max_subaru_mono_extrapolated = f_max_subaru_mono_loaded[0] * np.power(m_subaru_mono_extrapolated / min(m_subaru_mono_loaded), slope_PL_lower)
+
+m_subaru_mono = np.concatenate((m_subaru_mono_extrapolated, m_subaru_mono_loaded))
+f_max_subaru_mono = np.concatenate((f_max_subaru_mono_extrapolated, f_max_subaru_mono_loaded))
+
+fig, ax = plt.subplots(figsize=(5,5))
+ax.plot(m_subaru_mono_loaded, f_max_subaru_mono_loaded, color="tab:blue")
+ax.plot(m_subaru_mono_extrapolated, f_max_subaru_mono_extrapolated, color="tab:blue", linestyle="dashed")
+ax.set_xlabel(r"$m~[\mathrm{g}]$")
+ax.set_ylabel(r"$f_\mathrm{max}$")
+ax.set_xscale("log")
+ax.set_yscale("log")
+ax.set_xlim(1e18, 1e29)
+ax.set_ylim(1e-3, 10)
+ax.set_title("PL extrapolation (exponent = {:.0f})".format(slope_PL_lower))
+fig.tight_layout()
+
+
+for i in range(len(Deltas)):
+
+    # Calculate constraints for extended MF from microlensing.
+    params_SLN = [sigmas_SLN[i], alphas_SL[i]]
+    params_CC3 = [alphas_CC[i], betas[i]]
+    params_LN = [sigmas_LN[i]]
+        
+    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
+    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
+    f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
+    
+    data_filename_SLN = "./Data-tests/PL_slope_{:.0f}/SLN_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
+    data_filename_CC3 = "./Data-tests/PL_slope_{:.0f}/CC3_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
+    data_filename_LN = "./Data-tests/PL_slope_{:.0f}/LN_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
+    
+    np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
+    np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
+    np.savetxt(data_filename_LN, [mc_subaru, f_pbh_LN], delimiter="\t")
+    
