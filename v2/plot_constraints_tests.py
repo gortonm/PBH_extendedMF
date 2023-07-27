@@ -37,29 +37,10 @@ plt.style.use('tableau-colorblind10')
 #%% Tests evaluating the mass functions at the initial time (or unevolved mass functions), and comparing to results obtained before June 2023.
 
 if "__main__" == __name__:
-    
-    # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = True
-    # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = not plot_GC_Isatis
-    # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 1e11g using a power-law fit
-    include_extrapolated = False
-    if not plot_KP23:
-        include_extrapolated = False
-    
+        
     # Choose colors to match those from Fig. 5 of 2009.03204
-    colors = ['tab:grey', 'r', 'b', 'g', 'k']
-    
-    # Parameters used for convergence tests in Galactic Centre constraints.
-    cutoff = 1e-4
-    delta_log_m = 1e-3
-    E_number = 500    
-    
-    if E_number < 1e3:
-        energies_string = "E{:.0f}".format(E_number)
-    else:
-        energies_string = "E{:.0f}".format(np.log10(E_number))
-            
+    colors = ['silver', 'r', 'b', 'g', 'k']
+                    
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
         
@@ -75,155 +56,79 @@ if "__main__" == __name__:
         mp_Subaru_CC3, f_PBH_Carr_CC3 = np.genfromtxt("./Data-old/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data-old/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         
-        if plot_GC_Isatis:
-            
-            plt.suptitle("Galactic Centre photon constraints (Isatis), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
-            
-            # Monochromatic MF constraints
-            m_mono_evap = np.logspace(11, 21, 1000)
-
-            constraints_names_evap, f_PBHs_GC_mono = load_results_Isatis(modified=True)
-            f_PBH_mono_evap = envelope(f_PBHs_GC_mono)
-            m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
-
-            mc_values = np.logspace(14, 20, 120)
-            
-            # Load constraints from Galactic Centre photons
-            mc_values_old = np.logspace(14, 19, 100)
-            fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_LN = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-
-            constraints_names_evap, f_PBHs_GC_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
-            constraints_names_evap, f_PBHs_GC_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
-            constraints_names, f_PBHs_GC_LN = load_results_Isatis(mf_string=fname_base_LN, modified=True)
-   
-            f_PBH_GC_SLN = envelope(f_PBHs_GC_SLN)
-            f_PBH_GC_CC3 = envelope(f_PBHs_GC_CC3)
-            f_PBH_GC_LN = envelope(f_PBHs_GC_LN)
-            
-            
-            mc_GC_SLN_t_init, f_PBH_GC_SLN_t_init = np.genfromtxt("./Data-tests/t_initial/SLN_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            mp_GC_CC3_t_init, f_PBH_GC_CC3_t_init = np.genfromtxt("./Data-tests/t_initial/CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            mc_GC_LN_t_init, f_PBH_GC_LN_t_init = np.genfromtxt("./Data-tests/t_initial/LN_GC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-            
-            mc_GC_SLN_unevolved, f_PBH_GC_SLN_unevolved = np.genfromtxt("./Data-tests/unevolved/SLN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[i]), delimiter="\t")
-            mp_GC_CC3_unevolved, f_PBH_GC_CC3_unevolved = np.genfromtxt("./Data-tests/unevolved/CC3_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[i]), delimiter="\t")
-            mc_GC_LN_unevolved, f_PBH_GC_LN_unevolved = np.genfromtxt("./Data-tests/unevolved/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[i]), delimiter="\t")
-
-
-            # Estimate peak mass of skew-lognormal MF
-            mp_SLN_evap_old = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_old]
-            mp_GC_SLN_t_init = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_GC_SLN_t_init]
-            mp_GC_SLN_unevolved = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_GC_SLN_unevolved]
-            mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
-            
-            ax0.plot(mp_SLN_evap_old, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax0.plot(mc_values_old, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-            ax1.plot(mp_SLN_evap_old, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax1.plot(mc_values_old, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-            
-            ax0.plot(mp_GC_SLN_t_init, f_PBH_GC_SLN_t_init, color=colors[2], linestyle="None", marker="x")
-            ax0.plot(mp_GC_CC3_t_init, f_PBH_GC_CC3_t_init, color=colors[3], linestyle="None", marker="x")
-            ax1.plot(mp_GC_SLN_t_init, f_PBH_GC_SLN_t_init, color=colors[2], linestyle="None", marker="x")
-            ax1.plot(mp_GC_CC3_t_init, f_PBH_GC_CC3_t_init, color=colors[3], linestyle="None", marker="x")
-            
-            ax0.plot(mp_GC_SLN_unevolved, f_PBH_GC_SLN_unevolved, color=colors[2], linestyle="None", marker="+")
-            ax0.plot(mp_GC_CC3_unevolved, f_PBH_GC_CC3_unevolved, color=colors[3], linestyle="None", marker="+")
-            ax1.plot(mp_GC_SLN_unevolved, f_PBH_GC_SLN_unevolved, color=colors[2], linestyle="None", marker="+")
-            ax1.plot(mp_GC_CC3_unevolved, f_PBH_GC_CC3_unevolved, color=colors[3], linestyle="None", marker="+")
-                                                                   
-            ax0.plot(mc_values_old * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2], label="LN")
-            #ax0.plot(mc_GC_LN_t_init * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN_t_init, color=colors[1], linestyle="None", marker="+")
-            ax0.plot(mc_GC_LN_unevolved * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN_unevolved, color=colors[1], linestyle="None", marker="x")
-
-            ax1.plot(mc_values_old * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
-            
-            ax0.plot(0, 0, linestyle="None", color="k", marker="x", label="Test: $t=0$")
-            ax0.plot(0, 0, linestyle="None", color="k", marker="+", label="Test: unevolved")
-
+        fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$".format(Deltas[i]))
         
-        elif plot_KP23:
+        
+        # Monochromatic MF constraints
+        m_mono_evap, f_PBH_mono_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+        m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+        
+        for ax in [ax0, ax1, ax2]:
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
+            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
             
-            if include_extrapolated:
-                fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$ \n $f_".format(Deltas[i]) + "\mathrm{max}(m)$" + " extrapolated below " + "$m=10^{16}" + "~\mathrm{g}$", fontsize="small")
-            else:
-                fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$".format(Deltas[i]))
-           
-            # Monochromatic MF constraints
-            m_mono_evap, f_PBH_mono_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
-            m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
-            # Load constraints from Galactic Centre 511 keV line emission (from 2302.04408).            
-            if include_extrapolated:
-                mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data-old/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
-                mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data-old/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
-                mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-old/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
+        # Load constraints from Galactic Centre 511 keV line emission (from 2302.04408).            
+        mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data-old/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data-old/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-old/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
 
-                mc_KP23_SLN_t_init, f_PBH_KP23_SLN_t_init = np.genfromtxt("./Data-tests/t_initial/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[i]), delimiter="\t")
-                mp_KP23_CC3_t_init, f_PBH_KP23_CC3_t_init = np.genfromtxt("./Data-tests/t_initial/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[i]), delimiter="\t")
-                mc_KP23_LN_t_init, f_PBH_KP23_LN_t_init = np.genfromtxt("./Data-tests/t_initial/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[i]), delimiter="\t")
-                
-                mc_KP23_SLN_unevolved, f_PBH_KP23_SLN_unevolved = np.genfromtxt("./Data-tests/unevolved/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[i]), delimiter="\t")
-                mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved = np.genfromtxt("./Data-tests/unevolved/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[i]), delimiter="\t")
-                mc_KP23_LN_unevolved, f_PBH_KP23_LN_unevolved = np.genfromtxt("./Data-tests/unevolved/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_upper.txt".format(Deltas[i]), delimiter="\t")
+        mc_KP23_SLN_t_init, f_PBH_KP23_SLN_t_init = np.genfromtxt("./Data-tests/t_initial/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        mp_KP23_CC3_t_init, f_PBH_KP23_CC3_t_init = np.genfromtxt("./Data-tests/t_initial/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        mc_KP23_LN_t_init, f_PBH_KP23_LN_t_init = np.genfromtxt("./Data-tests/t_initial/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        
+        mc_KP23_SLN_unevolved, f_PBH_KP23_SLN_unevolved = np.genfromtxt("./Data-tests/unevolved/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved = np.genfromtxt("./Data-tests/unevolved/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        mc_KP23_LN_unevolved, f_PBH_KP23_LN_unevolved = np.genfromtxt("./Data-tests/unevolved/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
 
-            else:
-                mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data-old/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-                mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data-old/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-                mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-old/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
 
-            # Estimate peak mass of skew-lognormal MF
-            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
-            mp_KP23_SLN_t_init = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_t_init]
-            mp_KP23_SLN_unevolved = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_unevolved]
+        # Estimate peak mass of skew-lognormal MF
+        mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+        mp_KP23_SLN_t_init = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_t_init]
+        mp_KP23_SLN_unevolved = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_unevolved]
 
-            mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
-            
-            ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
-            ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
-            ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2], label="LN")
-            ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2])
+        mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
+        
+        ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)))
+        ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
+        ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)))
+        ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
+        ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2], label="LN")
+        ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2])
 
-            ax0.plot(mp_KP23_SLN_t_init, f_PBH_KP23_SLN_t_init, color=colors[2], linestyle="None", marker="x")
-            ax0.plot(mp_KP23_CC3_t_init, f_PBH_KP23_CC3_t_init, color=colors[3], linestyle="None", marker="x")
-            ax1.plot(mp_KP23_SLN_t_init, f_PBH_KP23_SLN_t_init, color=colors[2], linestyle="None", marker="x")
-            ax1.plot(mp_KP23_CC3_t_init, f_PBH_KP23_CC3_t_init, color=colors[3], linestyle="None", marker="x")
-            ax0.plot(mc_KP23_LN_t_init * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN_t_init, color=colors[1], linestyle="None", marker="x")
-            ax1.plot(mc_KP23_LN_t_init * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN_t_init, color=colors[1], linestyle="None", marker="x")
+        ax0.plot(mp_KP23_SLN_t_init, f_PBH_KP23_SLN_t_init, color=colors[2], linestyle="None", marker="x")
+        ax0.plot(mp_KP23_CC3_t_init, f_PBH_KP23_CC3_t_init, color=colors[3], linestyle="None", marker="x")
+        ax1.plot(mp_KP23_SLN_t_init, f_PBH_KP23_SLN_t_init, color=colors[2], linestyle="None", marker="x")
+        ax1.plot(mp_KP23_CC3_t_init, f_PBH_KP23_CC3_t_init, color=colors[3], linestyle="None", marker="x")
+        ax0.plot(mc_KP23_LN_t_init * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN_t_init, color=colors[1], linestyle="None", marker="x")
+        ax1.plot(mc_KP23_LN_t_init * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN_t_init, color=colors[1], linestyle="None", marker="x")
 
-            ax0.plot(mp_KP23_SLN_unevolved, f_PBH_KP23_SLN_unevolved, color=colors[2], linestyle="None", marker="+")
-            ax0.plot(mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved, color=colors[3], linestyle="None", marker="+")
-            ax1.plot(mp_KP23_SLN_unevolved, f_PBH_KP23_SLN_unevolved, color=colors[2], linestyle="None", marker="+")
-            ax1.plot(mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved, color=colors[3], linestyle="None", marker="+")
-            ax0.plot(mc_KP23_LN_unevolved * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN_unevolved, color=colors[1], linestyle="None", marker="+")
-            ax1.plot(mc_KP23_LN_unevolved * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN_unevolved, color=colors[1], linestyle="None", marker="+")
+        ax0.plot(mp_KP23_SLN_unevolved, f_PBH_KP23_SLN_unevolved, color=colors[2], linestyle="None", marker="+")
+        ax0.plot(mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved, color=colors[3], linestyle="None", marker="+")
+        ax1.plot(mp_KP23_SLN_unevolved, f_PBH_KP23_SLN_unevolved, color=colors[2], linestyle="None", marker="+")
+        ax1.plot(mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved, color=colors[3], linestyle="None", marker="+")
+        ax0.plot(mc_KP23_LN_unevolved * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN_unevolved, color=colors[1], linestyle="None", marker="+")
+        ax1.plot(mc_KP23_LN_unevolved * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN_unevolved, color=colors[1], linestyle="None", marker="+")
 
-            ax0.plot(0, 0, linestyle="None", color="k", marker="x", label="Test: $t=0$")
-            ax0.plot(0, 0, linestyle="None", color="k", marker="+", label="Test: unevolved")
-           
-            mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data-old/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        ax0.plot(0, 0, linestyle="None", color="k", marker="x", label="Test: $t=0$")
+        ax0.plot(0, 0, linestyle="None", color="k", marker="+", label="Test: unevolved")
+       
+        mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data-old/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
 
         # Set axis limits
         if Deltas[i] < 5:
-            xmin_evap, xmax_evap = 1e16, 2.5e17
             xmin_HSC, xmax_HSC = 1e21, 1e29
-            ymin, ymax = 1e-4, 1
-            
-            if plot_KP23:
-                xmin_evap, xmax_evap = 1e16, 7e17
-                ymin, ymax = 1e-5, 1
+            xmin_evap, xmax_evap = 1e16, 7e17
+            ymin, ymax = 1e-5, 1
         
         else:
-            xmin_evap, xmax_evap = 1e16, 7e17
             xmin_HSC, xmax_HSC = 9e18, 1e29
-            ymin, ymax = 3e-6, 1
-            
-            if plot_KP23:
-                xmin_evap, xmax_evap = 1e16, 2e18
-                ymin, ymax = 1e-5, 1
+            xmin_evap, xmax_evap = 1e16, 2e18
+            ymin, ymax = 1e-5, 1
 
         ax0.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
         ax0.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
@@ -238,30 +143,9 @@ if "__main__" == __name__:
         ax1.set_ylim(ymin, ymax)
         ax2.set_xlim(xmin_HSC, xmax_HSC)
         ax2.set_ylim(4e-3, 1)
-       
-        for ax in [ax0, ax1, ax2]:
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linestyle="dotted", linewidth=2)
-            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linestyle="dotted", linewidth=2)
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-
         ax0.legend(fontsize="xx-small")
         fig.tight_layout()
-        
-        if plot_GC_Isatis:
-            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_GC_Isatis.pdf".format(Deltas[i]))
-            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_GC_Isatis.png".format(Deltas[i]))
-            
-        elif plot_KP23:
-            if include_extrapolated:
-                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23_extrapolated.pdf".format(Deltas[i]))
-                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23_extrapolated.png".format(Deltas[i]))
-            else:
-                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23.pdf".format(Deltas[i]))
-                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_KP23.png".format(Deltas[i]))
-                
+                        
 
 #%% Tests of the results obtained using different power-law slopes in f_max at low masses (Korwar & Profumo (2023))
 
@@ -676,7 +560,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Array of power law exponents to use at masses below 1e15g
-    slopes_PL_lower = [0, 2]
+    slopes_PL_lower = [0, 2, 4]
     
     linestyles = ["dashed", "dashdot", "dotted"]
     
