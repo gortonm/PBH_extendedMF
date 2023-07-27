@@ -516,15 +516,15 @@ if "__main__" == __name__:
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
 
 
-#%% Prospective cnstraints from 2101.01370 (GECCO)
+#%% Prospective constraints from 2101.01370 (GECCO)
 
 if "__main__" == __name__:
     # If True, use extrapolated monochromatic MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint
-    include_extrapolated = True
+    include_extrapolated = False
     # If True, plot extrapolated monochromatic MF constraints down to 1e11g
-    evolved = True
+    evolved = False
     # Boolean determines whether to evaluate the evolved mass function at t=0.
-    t_initial = False
+    t_initial = True
     if t_initial:
         evolved = True
     
@@ -544,7 +544,7 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = np.logspace(14, 20, 120)
+    mc_values = np.logspace(14, 21, 130)
     
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     if NFW:
@@ -558,7 +558,7 @@ if "__main__" == __name__:
     if include_extrapolated:
 
         # Power-law slope to use at lower masses
-        slope_PL_lower = 0.0
+        slope_PL_lower = 2.0
         
         m_mono_extrapolated = np.logspace(11, 15, 41)
         f_max_extrapolated = min(f_max) * np.power(m_mono_extrapolated / min(m_mono_values), slope_PL_lower)

@@ -615,9 +615,7 @@ if "__main__" == __name__:
     CC3 = False
     
     profile_string = "NFW"
-    
-    mc_values = np.logspace(14, 20, 120)
-        
+            
     for j in range(len(Deltas)):
         
         fig, ax = plt.subplots(figsize=(8, 8))                                                
@@ -677,10 +675,8 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = np.logspace(14, 20, 120)
-
     # Array of power law exponents to use at masses below 1e15g
-    slopes_PL_lower = [0, 2, 4]
+    slopes_PL_lower = [0, 2]
     
     linestyles = ["dashed", "dashdot", "dotted"]
     
@@ -703,15 +699,15 @@ if "__main__" == __name__:
             data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
             data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
             
-            mc_KP23_LN_evolved, f_PBH_KP23_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
-            mc_KP23_SLN_evolved, f_PBH_KP23_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
-            mp_KP23_CC3_evolved, f_PBH_KP23_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
-            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_evolved]
-            mp_LN = mc_KP23_LN_evolved * np.exp(-sigmas_LN[j]**2)
+            mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
+            mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
                         
-            ax1.plot(mp_LN, f_PBH_KP23_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
-            ax2.plot(mp_SLN, f_PBH_KP23_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
-            ax3.plot(mp_KP23_CC3_evolved, f_PBH_KP23_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
+            ax1.plot(mp_LN, f_PBH_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
+            ax2.plot(mp_SLN, f_PBH_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
+            ax3.plot(mp_CC3_evolved, f_PBH_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
             
             ax1.set_title("LN")
             ax2.set_title("SLN")
@@ -745,6 +741,7 @@ if "__main__" == __name__:
         ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
+
 
 #%% Check how the Subaru-HSC microlensing constraints for extended MFs change when using different power law extrapolations below ~1e22g in the delta-function MF constraint
 if "__main__" == __name__:
