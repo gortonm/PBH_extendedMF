@@ -602,7 +602,75 @@ if "__main__" == __name__:
             fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
 
-#%% Tests of the results obtained using different power-law slopes in f_max at low masses (Prospective evaporation constraints from GECCO [2101.01370])
+#%% Compare results obtained at t=0 and the unevolved MF (prospective evaporation constraints from GECCO [2101.01370]).
+# CHECK PASSED: Differences are < 5% in the range of peak masses of interest, even for Delta = 5.
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+            
+    LN = False
+    SLN = True
+    CC3 = False
+    
+    profile_string = "NFW"
+    
+    mc_values = np.logspace(14, 20, 120)
+        
+    for j in range(len(Deltas)):
+        
+        fig, ax = plt.subplots(figsize=(8, 8))                                                
+        # Load and plot results for the unevolved mass functions
+        data_filename_LN_unevolved = "./Data-tests/unevolved" + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
+        data_filename_SLN_unevolved = "./Data-tests/unevolved" + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
+        data_filename_CC3_unevolved = "./Data-tests/unevolved" + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
+
+        mc_LN_unevolved, f_PBH_LN_unevolved = np.genfromtxt(data_filename_LN_unevolved, delimiter="\t")
+        mc_SLN_unevolved, f_PBH_SLN_unevolved = np.genfromtxt(data_filename_SLN_unevolved, delimiter="\t")
+        mp_CC3_unevolved, f_PBH_CC3_unevolved = np.genfromtxt(data_filename_CC3_unevolved, delimiter="\t")
+        
+        mp_SLN_unevolved = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_unevolved]
+        mp_LN_unevolved = mc_LN_unevolved * np.exp(-sigmas_LN[j]**2)
+        
+        ax.plot(mp_LN_unevolved, f_PBH_LN_unevolved, linestyle="None", marker="x", color="r", label="Test (approximate): unevolved")
+        ax.plot(mp_SLN_unevolved, f_PBH_SLN_unevolved, linestyle="None", marker="x", color="b")
+        ax.plot(mp_CC3_unevolved, f_PBH_CC3_unevolved, linestyle="None", marker="x", color="g")                
+
+        # Load and plot results for the 'evolved' mass functions evaluated at the initial time t_init = 0
+        data_filename_LN_t_init = "./Data-tests/t_initial" + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
+        data_filename_SLN_t_init = "./Data-tests/t_initial" + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
+        data_filename_CC3_t_init = "./Data-tests/t_initial" + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
+
+        mc_LN_t_init, f_PBH_LN_t_init = np.genfromtxt(data_filename_LN_t_init, delimiter="\t")
+        mc_SLN_t_init, f_PBH_SLN_t_init = np.genfromtxt(data_filename_SLN_t_init, delimiter="\t")
+        mp_CC3_t_init, f_PBH_CC3_t_init = np.genfromtxt(data_filename_CC3_t_init, delimiter="\t")
+        
+        mp_SLN_t_init = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_t_init]
+        mp_LN_t_init = mc_LN_t_init * np.exp(-sigmas_LN[j]**2)
+        
+        ax.plot(mp_LN_t_init, f_PBH_LN_t_init, marker="+", linestyle="None", color="r", label="Test (approximate): $t=0$")    
+        ax.plot(mp_SLN_t_init, f_PBH_SLN_t_init, marker="+", linestyle="None", color="b")   
+        ax.plot(mp_CC3_t_init, f_PBH_CC3_t_init, marker="+", linestyle="None", color="g")
+               
+            
+        if Deltas[j] < 5:
+            ax.set_xlim(1e16, 2e18)
+        else:
+            ax.set_xlim(1e16, 5e18)
+           
+        ax.set_xlim(1e16, 1e19)
+        ax.set_ylim(1e-6, 1)
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(fontsize="x-small")
+        fig.tight_layout()
+        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
+
+
+#%% Tests of the results obtained using different power-law slopes in f_max at low masses (prospective evaporation constraints from GECCO [2101.01370])
 
 if "__main__" == __name__:
     
