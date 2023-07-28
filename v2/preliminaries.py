@@ -657,7 +657,7 @@ if "__main__" == __name__:
             m_p = 5.25e20*mp_CC3[i]
             mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
             
-            mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+            mp_SLN_est = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
             print("m_p (CC3) = {:.2e}".format(m_p))
             print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
 
@@ -665,7 +665,7 @@ if "__main__" == __name__:
             mf_SLN = SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
             mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
 
-            mf_scaled_SLN = SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
+            mf_scaled_SLN = SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
             mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
 
             ymin, ymax = CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymin_scaled, CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymax_scaled
@@ -701,77 +701,243 @@ if "__main__" == __name__:
             
             
 #%% Plot the mass function for Delta = 5.0, showing the mass range relevant
-# for the Subaru-HSC microlensing constraints.
+# for the Korwar & Profumo (2023) constraints.
  
 if "__main__" == __name__:
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    
-    if i==5:
-                   
-        m_pbh_values = np.logspace(17, 24, 100)
-        #m_pbh_values = np.logspace(20, 26, 100)
-        fig1, ax1 = plt.subplots(figsize=(6, 6))
-        fig2, ax2 = plt.subplots(figsize=(6, 6))
+    for i in range(len(Deltas)):
+        
+        if i == 6:
+           
+            m_pbh_values_init = np.logspace(14, 21, 100)
+            fig, ax = plt.subplots(figsize=(6, 6))
+            
+            # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
+            mc_SLN = 1.02e19
+            m_p = 1.5e18
+            mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
+            
+            mp_SLN_est = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+            print("m_p (CC3) = {:.2e}".format(m_p))
+            print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
 
-        ymin_scaled, ymax_scaled = 1e-4, 5
-        
-        # Choose factors so that peak masses of the CC3 and SLN MF match
-        # closely, at 1e20g (consider this range since constraints plots)
-        # indicate the constraints from the SLN and CC3 MFs are quite
-        # different at this peak mass.
-        m_c = 3.1e18*np.exp(ln_mc_SLN[i])
-        m_p = 2.9e18*mp_CC3[i]
-        
-        #m_c = 5.6e20*np.exp(ln_mc_SLN[i])
-        #m_p = 5.25e20*mp_CC3[i]
+            mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
+            mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+            mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
+            
+            m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
+            mf_LN_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
+            mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
+            mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
 
-        mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
-        print("m_p (CC3) = {:.2e}".format(m_p))
-        print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
-     
-        mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-        mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
-        
-        mf_scaled_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / max(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]))
-        mf_scaled_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i])
-        
-        ymin, ymax = CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymin_scaled, CC3(m_p, m_p, alpha=alphas_CC3[i], beta=betas[i]) * ymax_scaled
-
-        ax1.plot(m_pbh_values, mf_scaled_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
-        ax1.plot(m_pbh_values, mf_scaled_CC3, color="g", label="CC3", linestyle="dashed")
-        #ax1.plot(m_pbh_values, mf_scaled_numeric, color="k", label="Numeric")
-        
-        ax2.plot(m_pbh_values, mf_SLN, color="b", label="SLN", linestyle=(0, (5, 7)))
-        ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
-        #ax2.plot(m_pbh_values, mf_numeric_test, color="k", label="CC3")
-        
-        for ax in [ax1, ax2]:
+            ax.plot(m_pbh_values_evolved, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])            
+            ax.plot(m_pbh_values_evolved, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
+            ax.plot(m_pbh_values_evolved, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
+            
             # Show smallest PBH mass constrained by microlensing.
             ax.set_xscale("log")
             ax.set_yscale("log")
-            ax.grid()
             ax.legend(fontsize="small")
-            #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
             ax.set_xlabel("$m~[\mathrm{g}]$")
-            ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-            ax.set_title("$\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+            ax.set_xlim(min(m_pbh_values_evolved), max(m_pbh_values_evolved))
+            ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+            ax.set_ylabel("$\psi_\mathrm{N}$")
 
-        ax1.vlines(9.9e21, ymin_scaled, ymax_scaled, color="k", linestyle="dashed")
-        ax1.set_ylabel("$\psi / \psi_\mathrm{max}$")
-        ax1.set_ylim(ymin_scaled, ymax_scaled)
+            fig.tight_layout()
+            
+            
+#%% Plot the mass function for Delta = 0 and 5, showing the mass range relevant
+# for the Galactic Centre photon constraints from Isatis (1e14g)
+ 
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    for i in range(len(Deltas)):
         
-        ax2.vlines(9.9e21, ymin, ymax, color="k", linestyle="dashed")
-        ax2.set_ylabel("$\psi$")
-        ax2.set_ylim(ymin, ymax)
+        if i == 0 or i == 6:
+           
+            m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
+            fig, ax = plt.subplots(figsize=(6, 6))
+            
+            # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
+            mc_SLN = 1.53e14
+            m_p = 1e14
+            mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
+            
+            mp_SLN_est = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+            print("m_p (CC3) = {:.2e}".format(m_p))
+            print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
 
-        fig1.set_tight_layout(True)
-        fig2.set_tight_layout(True)
+            mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
+            mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+            mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
+            
+            m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
+            mf_LN_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
+            mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
+            mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
+
+            ax.plot(m_pbh_values_evolved, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])            
+            ax.plot(m_pbh_values_evolved, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
+            ax.plot(m_pbh_values_evolved, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
+            
+            # Show smallest PBH mass constrained by microlensing.
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.legend(fontsize="small")
+            ax.set_xlabel("$m~[\mathrm{g}]$")
+            ax.set_xlim(min(m_pbh_values_evolved), max(m_pbh_values_evolved))
+            ax.set_ylim(1e-30, 1e-10)
+            ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+            ax.set_ylabel("$\psi_\mathrm{N}$")
+
+            fig.tight_layout()
 
 
-#%% Plot the integrand appearing in Eq. 12 of 1705.05567, for the microlensing constraint from Subaru-HSC
+#%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
+# for the Galactic Centre photon constraints from Isatis (1e16g)
+ 
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    for i in range(len(Deltas)):
+        
+        if i == 5:
+           
+            m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
+            fig, ax = plt.subplots(figsize=(6, 6))
+            
+            # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
+            #mc_SLN = 6.8e16   # for Delta = 5
+            #mc_SLN = 3.24e16    # for Delta = 2
+            mc_SLN = 1.53e16   # for Delta = 0
+            m_p = 1e16
+            mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
+            
+            mp_SLN_est = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+            print("m_p (CC3) = {:.2e}".format(m_p))
+            print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
+
+            mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
+            mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+            mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
+            
+            m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
+            mf_LN_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
+            mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
+            mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
+
+            ax.plot(m_pbh_values_evolved, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])            
+            ax.plot(m_pbh_values_evolved, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
+            ax.plot(m_pbh_values_evolved, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
+            
+            # Show smallest PBH mass constrained by microlensing.
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.legend(fontsize="small")
+            ax.set_xlabel("$m~[\mathrm{g}]$")
+            ax.set_xlim(1e13, 1e18)
+            ax.set_ylim(1e-23, 1e-17)
+            ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+            ax.set_ylabel("$\psi_\mathrm{N}$")
+
+            fig.tight_layout()
+
+
+#%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
+# for the prospective microlensing constraints (m ~ 1e22g)
+ 
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    """
+    # for Delta = 0
+    i=0
+    
+    # gives m_p = 1e22g
+    mc_SLN = 2.45e20*np.exp(ln_mc_SLN[i])
+    m_p = 2.45e20*mp_CC3[i]
+    
+    # gives m_p = 1e25g
+    mc_SLN = 2.45e23*np.exp(ln_mc_SLN[i])
+    m_p = 2.45e23*mp_CC3[i]
+    """
+    
+    # for Delta = 2
+    
+    i=5
+    
+    # gives m_p = 1e20g
+    mc_SLN = 2.46e18*np.exp(ln_mc_SLN[i])
+    m_p = 2.465e18*mp_CC3[i]
+
+    # gives m_p = 1e22g
+    #mc_SLN = 2.46e20*np.exp(ln_mc_SLN[i])
+    #m_p = 2.465e20*mp_CC3[i]
+    
+    # gives m_p = 1e25g
+    #mc_SLN = 2.46e23*np.exp(ln_mc_SLN[i])
+    #m_p = 2.465e23*mp_CC3[i]
+
+    
+    """ 
+    #for Delta = 5
+    i=6
+    
+    mc_SLN = 3.1e17*np.exp(ln_mc_SLN[i])
+    m_p = 2.9e17*mp_CC3[i]
+
+    #mc_SLN = 3.1e18*np.exp(ln_mc_SLN[i])
+    #m_p = 2.9e18*mp_CC3[i]
+    
+    #mc_SLN = 5.6e23*np.exp(ln_mc_SLN[i])
+    #m_p = 5.25e23*mp_CC3[i]
+    """
+           
+    m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(np.log10(m_p)-3, np.log10(m_p)+3, 100))))
+    fig, ax = plt.subplots(figsize=(6, 6))
+    mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
+    
+    mp_SLN_est = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
+    print("m_p (CC3) = {:.2e}".format(m_p))
+    print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
+
+    mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
+    mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+    mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
+    
+    m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
+    mf_LN_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
+    mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
+    mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
+
+    ax.plot(m_pbh_values_evolved, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])            
+    ax.plot(m_pbh_values_evolved, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
+    ax.plot(m_pbh_values_evolved, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
+    
+    # Show smallest PBH mass constrained by microlensing.
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.legend(fontsize="small")
+    ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_xlim(1e13, 1e18)
+    ax.set_ylim(1e-23, 1e-17)
+    ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+    ax.set_ylabel("$\psi_\mathrm{N}$")
+
+    fig.tight_layout()
+
+
+#%% Plot the integrand appearing in Eq. 12 of 1705.05567, for different delta-function MF constraints
  
 if "__main__" == __name__:
     
@@ -779,36 +945,90 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     
-    i = 6        
-    # Constraints for monochromatic MF.
-    m_pbh_values, f_max_subaru = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
-               
+    # Constraints for monochromatic MF
+    
+    # Subaru-HSC microlensing constraint
+    #m_pbh_values, f_max = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+    
+    # Prospective white dwarf microlensing constraint
+    #m_pbh_values, f_max = load_data("./1905.06066/1905.06066_Fig8_finite+wave.csv")
+     
+    # Korwar & Profumo (2023) 511 keV line constraints
+    m_pbh_values, f_max = load_data("./2302.04408/2302.04408_MW_diffuse_SPI.csv")
+         
     fig, ax = plt.subplots(figsize=(6, 6))
     
     # Choose factors so that peak masses of the CC3 and SLN MF match
     # closely, at 1e20g (consider this range since constraints plots)
     # indicate the constraints from the SLN and CC3 MFs are quite
     # different at this peak mass.
-    m_c = 3.1e18*np.exp(ln_mc_SLN[i])
-    m_p = 2.9e18*mp_CC3[i]
     
-    #m_c = 5.6e20*np.exp(ln_mc_SLN[i])
-    #m_p = 5.25e20*mp_CC3[i]
+    """
+    # for Delta = 0
+    i=0
+    
+    # gives m_p = 1e22g
+    m_c = 2.45e20*np.exp(ln_mc_SLN[i])
+    m_p = 2.45e20*mp_CC3[i]
+    
+    # gives m_p = 1e25g
+    m_c = 2.45e23*np.exp(ln_mc_SLN[i])
+    m_p = 2.45e23*mp_CC3[i]
+    """
+    
+    # for Delta = 2
+    
+    i=5
+    
+    # gives m_p = 1e16g
+    m_c = 2.46e14*np.exp(ln_mc_SLN[i])
+    m_p = 2.465e14*mp_CC3[i]
 
+    # gives m_p = 1e18g
+    #m_c = 2.46e16*np.exp(ln_mc_SLN[i])
+    #m_p = 2.465e16*mp_CC3[i]
+    
+    # gives m_p = 1e20g
+    #m_c = 2.46e18*np.exp(ln_mc_SLN[i])
+    #m_p = 2.465e18*mp_CC3[i]
+
+    # gives m_p = 1e22g
+    #m_c = 2.46e20*np.exp(ln_mc_SLN[i])
+    #m_p = 2.465e20*mp_CC3[i]
+    
+    # gives m_p = 1e25g
+    #m_c = 2.46e23*np.exp(ln_mc_SLN[i])
+    #m_p = 2.465e23*mp_CC3[i]
+
+    
+    """ 
+    #for Delta = 5
+    i=6
+    
+    m_c = 3.1e17*np.exp(ln_mc_SLN[i])
+    m_p = 2.9e17*mp_CC3[i]
+
+    #m_c = 3.1e18*np.exp(ln_mc_SLN[i])
+    #m_p = 2.9e18*mp_CC3[i]
+    
+    #m_c = 5.6e23*np.exp(ln_mc_SLN[i])
+    #m_p = 5.25e23*mp_CC3[i]
+    """
+    
     mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
     print("m_p (CC3) = {:.2e}".format(m_p))
     print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
  
     mf_SLN = SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
     mf_CC3 = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
-    #mf_numeric_test = mf_numeric(m_pbh_values, m_p, Delta=Deltas[i])
+    mf_LN = LN(m_pbh_values, m_p*np.exp(sigmas_LN[i]**2), sigma=sigmas_LN[i])
     
     ymin, ymax = 1e-26, 2.5e-23
     xmin, xmax = 9e21, 1e25
 
-    ax.plot(m_pbh_values, mf_SLN / f_max_subaru, color="b", label="SLN", linestyle=(0, (5, 7)))
-    ax.plot(m_pbh_values, mf_CC3 / f_max_subaru, color="g", label="CC3", linestyle="dashed")
-    #ax.plot(m_pbh_values, mf_numeric_test / f_max_subaru, color="k", label="Numeric")
+    ax.plot(m_pbh_values, mf_SLN / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
+    ax.plot(m_pbh_values, mf_CC3 / f_max, color="g", label="CC3", linestyle="dashed")
+    ax.plot(m_pbh_values, mf_LN / f_max, color="r", label="LN", dashes=[6, 2])
             
     # Show smallest PBH mass constrained by microlensing.
     #ax.set_xscale("log")
