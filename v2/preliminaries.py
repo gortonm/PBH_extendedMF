@@ -809,15 +809,15 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if i == 5:
+        if i == 6:
            
-            m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
+            m_pbh_values_init = np.sort(np.concatenate((np.logspace(np.log10(m_star)-5, np.log10(m_star), 100), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
             fig, ax = plt.subplots(figsize=(6, 6))
             
             # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
-            #mc_SLN = 6.8e16   # for Delta = 5
+            mc_SLN = 6.8e16   # for Delta = 5
             #mc_SLN = 3.24e16    # for Delta = 2
-            mc_SLN = 1.53e16   # for Delta = 0
+            #mc_SLN = 1.53e16   # for Delta = 0
             m_p = 1e16
             mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
             
@@ -833,6 +833,12 @@ if "__main__" == __name__:
             mf_LN_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
             mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
             mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
+
+
+            ax.plot(m_pbh_values_init, mf_LN_init, color="r", linestyle="dotted")            
+            ax.plot(m_pbh_values_init, mf_SLN_init, color="b", linestyle="dotted")
+            ax.plot(m_pbh_values_init, mf_CC3_init, color="g", linestyle="dotted")
+
 
             ax.plot(m_pbh_values_evolved, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])            
             ax.plot(m_pbh_values_evolved, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
