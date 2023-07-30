@@ -40,7 +40,7 @@ plt.style.use('tableau-colorblind10')
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = True
+    plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = not plot_GC_Isatis
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
@@ -76,6 +76,29 @@ if "__main__" == __name__:
         
         if plot_GC_Isatis:
             
+            """
+            """
+            mc_values_GC = np.logspace(14, 19, 100)
+            # Load constraints from Galactic Centre photons.
+            fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+            
+            constraints_names_GC, f_PBHs_GC_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
+            constraints_names_GC, f_PBHs_GC_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
+            
+            f_PBH_GC_SLN = envelope(f_PBHs_GC_SLN)
+            f_PBH_GC_CC3 = envelope(f_PBHs_GC_CC3)
+                        
+            # Estimate peak mass of skew-lognormal MF
+            mp_SLN_GC = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
+            
+            ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2])
+            ax0.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3])
+            ax1.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2])
+            ax1.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3])
+            """
+            """
+            
             plt.suptitle("Galactic Centre photon constraints (Isatis), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
             
             # Monochromatic MF constraints
@@ -86,15 +109,7 @@ if "__main__" == __name__:
             m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
             mc_values_evap = np.logspace(14, 20, 120)
-            
-            for ax in [ax0, ax1, ax2]:
-                ax.set_xlabel("$m_p~[\mathrm{g}]$")
-                ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
-                ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
-                ax.set_ylabel("$f_\mathrm{PBH}$")
-                ax.set_xscale("log")
-                ax.set_yscale("log")
-            
+                        
             # Load constraints from Galactic Centre photons.
             
             slope_PL_lower = 2
@@ -127,14 +142,23 @@ if "__main__" == __name__:
             # Estimate peak mass of skew-lognormal MF
             mp_SLN_evap = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_evap]
             mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
-            
-            ax0.plot(mp_SLN_evap, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax0.plot(mc_values_evap, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-            ax1.plot(mp_SLN_evap, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax1.plot(mc_values_evap, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-                                                                    
-            ax0.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2], label="LN")
-            ax1.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
+                        
+            for ax in [ax0, ax1, ax2]:                
+                ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
+                ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
+                
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")                
+                ax.plot(mp_SLN_evap, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
+                ax.plot(mc_values_evap, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
+                ax.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                
+                ax.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
+                ax.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
+                ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2])
+
         
         elif plot_KP23:
             
@@ -147,14 +171,6 @@ if "__main__" == __name__:
             m_mono_evap, f_PBH_mono_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
             m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
             
-            for ax in [ax0, ax1, ax2]:
-                ax.set_xlabel("$m_p~[\mathrm{g}]$")
-                ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
-                ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
-                ax.set_ylabel("$f_\mathrm{PBH}$")
-                ax.set_xscale("log")
-                ax.set_yscale("log")
-
             data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
             data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
             data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
@@ -167,14 +183,21 @@ if "__main__" == __name__:
             mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
             mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
             
-            ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
-            ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)))
-            ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
-            ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2], label="LN")
-            ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2])
-            
-            mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+            for ax in [ax0, ax1, ax2]:
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
+                ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                
+                ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)))
+                ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
+                ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2])
+                
+                ax.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
+                ax.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
+                ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2])
 
         # Set axis limits
         if Deltas[i] < 5:
@@ -190,18 +213,17 @@ if "__main__" == __name__:
             xmin_evap, xmax_evap = 1e16, 7e17
             xmin_HSC, xmax_HSC = 9e18, 1e29
             ymin, ymax = 1e-4, 1
-            
+            """
+            """
+            xmin_GC, xmax_GC = 1e16, 7e17
+            xmin_HSC, xmax_HSC = 9e18, 1e29
+            ymin, ymax = 3e-6, 1
+            """
+            """
             if plot_KP23:
                 xmin_evap, xmax_evap = 1e16, 2e18
                 ymin, ymax = 1e-5, 1
 
-        ax0.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
-        ax0.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
-        ax0.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], dashes=[6, 2])
-        ax2.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
-        ax2.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
-        ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], dashes=[6, 2])
-                  
         ax0.set_xlim(xmin_evap, xmax_HSC)
         ax0.set_ylim(ymin, ymax)
         ax1.set_xlim(xmin_evap, xmax_evap)
@@ -292,36 +314,31 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
 
-        
-        ax0.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_Einasto, color=colors[2], linestyle=(0, (5, 7)))
-        ax0.plot(mp_GECCO_CC3_Einasto, f_PBH_GECCO_CC3_Einasto, color=colors[3], linestyle="dashed")
-        ax1.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_Einasto, color=colors[2], linestyle=(0, (5, 7)))
-        ax1.plot(mp_GECCO_CC3_Einasto, f_PBH_GECCO_CC3_Einasto, color=colors[3], linestyle="dashed")
-        ax0.plot(mc_GECCO_LN_Einasto * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_Einasto, color=colors[1], dashes=[6, 2], label="LN")
-        ax1.plot(mc_GECCO_LN_Einasto * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_Einasto, color=colors[1], dashes=[6, 2])
-        
-        """ Uncomment to plot NFW results
-        ax0.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_NFW, color=colors[2], linestyle=(0, (5, 7)))
-        ax0.plot(mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW, color=colors[3], linestyle="dashed")
-        ax1.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_NFW, color=colors[2], linestyle=(0, (5, 7)))
-        ax1.plot(mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW, color=colors[3], linestyle="dashed")
-        ax0.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2])
-        ax1.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2])
-        """
-      
-        
-        # Set axis limits
-        xmin_evap, xmax_evap = 1e16, 2e18
-        xmin_micro, xmax_micro = 1e20, 5e23
-        ymin, ymax = 1e-5, 1
+            # plot Einasto profile results
+            ax.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_Einasto, color=colors[2], linestyle=(0, (5, 7)))
+            ax.plot(mp_GECCO_CC3_Einasto, f_PBH_GECCO_CC3_Einasto, color=colors[3], linestyle="dashed")
+            ax.plot(mc_GECCO_LN_Einasto * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_Einasto, color=colors[1], dashes=[6, 2])
+            
+            """
+            #Uncomment to plot NFW results
+            ax.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_NFW, color=colors[2], linestyle=(0, (5, 7)))
+            ax.plot(mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW, color=colors[3], linestyle="dashed")
+            ax.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2], label="LN")
+            """
+            ax.plot(mp_micro_SLN, f_PBH_micro_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
+            ax.plot(mp_micro_CC3, f_PBH_micro_CC3, color=colors[3], label="CC3", linestyle="dashed")
+            ax.plot(mc_micro_LN * np.exp(-sigmas_LN[i]**2), f_PBH_micro_LN, color=colors[1], dashes=[6, 2], label="LN")
 
-        ax0.plot(mp_micro_SLN, f_PBH_micro_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
-        ax0.plot(mp_micro_CC3, f_PBH_micro_CC3, color=colors[3], label="CC3", linestyle="dashed")
-        ax0.plot(mc_micro_LN * np.exp(-sigmas_LN[i]**2), f_PBH_micro_LN, color=colors[1], dashes=[6, 2])
-        ax2.plot(mp_micro_SLN, f_PBH_micro_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
-        ax2.plot(mp_micro_CC3, f_PBH_micro_CC3, color=colors[3], label="CC3", linestyle="dashed")
-        ax2.plot(mc_micro_LN * np.exp(-sigmas_LN[i]**2), f_PBH_micro_LN, color=colors[1], dashes=[6, 2])
-                  
+        # Set axis limits
+        if Deltas[i] < 5:
+            xmin_evap, xmax_evap = 1e16, 2e18
+            xmin_micro, xmax_micro = 2e20, 5e23
+            ymin, ymax = 1e-5, 1
+        else:
+            xmin_evap, xmax_evap = 1e16, 5e18
+            xmin_micro, xmax_micro = 2e17, 5e23
+            ymin, ymax = 1e-5, 1
+
         ax0.set_xlim(xmin_evap, xmax_micro)
         ax0.set_ylim(ymin, ymax)
         ax1.set_xlim(xmin_evap, xmax_evap)
@@ -379,17 +396,8 @@ if "__main__" == __name__:
         m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
         mc_values_evap = np.logspace(14, 20, 120)
-        
-        for ax in [ax0, ax1, ax2]:
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
-            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-        
+                
         # Load constraints from Galactic Centre photons.
-        
         slope_PL_lower = 2
         constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
         data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower)
@@ -420,15 +428,7 @@ if "__main__" == __name__:
         # Estimate peak mass of skew-lognormal MF
         mp_SLN_evap = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_evap]
         mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
-        
-        ax0.plot(mp_SLN_evap, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
-        ax0.plot(mc_values_evap, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-        ax1.plot(mp_SLN_evap, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
-        ax1.plot(mc_values_evap, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
-                                                                
-        ax0.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2], label="LN")
-        ax1.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
-                
+                        
         slope_PL_lower = 2
         data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower) 
                
@@ -436,14 +436,6 @@ if "__main__" == __name__:
         m_mono_evap, f_PBH_mono_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
         m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
         
-        for ax in [ax0, ax1, ax2]:
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], linewidth=2, alpha=0.5)
-            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-
         data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
         data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
         data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[i], slope_PL_lower)
@@ -456,15 +448,27 @@ if "__main__" == __name__:
         mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
         mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
         
-        ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)), alpha=0.5)
-        ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed", alpha=0.5)
-        ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)), alpha=0.5)
-        ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed", alpha=0.5)
-        ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2], alpha=0.5)
-        ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2], alpha=0.5)
-        
-        mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        for ax in [ax0, ax1, ax2]:
+            
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
+            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            
+            ax.plot(mp_SLN_evap, f_PBH_GC_SLN, color=colors[2], linestyle=(0, (5, 7)))
+            ax.plot(mc_values_evap, f_PBH_GC_CC3, color=colors[3], linestyle="dashed")
+            ax.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), f_PBH_GC_LN, color=colors[1], dashes=[6, 2])
 
+            ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], linestyle=(0, (5, 7)), alpha=0.5)
+            ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
+            ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2], alpha=0.5)
+            
+            ax.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
+            ax.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
+            ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2], alpha=0.5)
+        
         # Set axis limits
         if Deltas[i] < 5:
             xmin_HSC, xmax_HSC = 1e21, 1e29            
@@ -475,14 +479,7 @@ if "__main__" == __name__:
             xmin_HSC, xmax_HSC = 9e18, 1e29
             xmin_evap, xmax_evap = 1e16, 2e18
             ymin, ymax = 1e-5, 1
-    
-        ax0.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
-        ax0.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
-        ax0.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], dashes=[6, 2], alpha=0.5)
-        ax2.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], linestyle=(0, (5, 7)))
-        ax2.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], linestyle="dashed")
-        ax2.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], dashes=[6, 2], alpha=0.5)
-                  
+                      
         ax0.set_xlim(xmin_evap, xmax_HSC)
         ax0.set_ylim(ymin, ymax)
         ax1.set_xlim(xmin_evap, xmax_evap)
