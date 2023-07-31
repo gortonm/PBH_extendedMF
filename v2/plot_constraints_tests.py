@@ -59,14 +59,14 @@ if "__main__" == __name__:
         fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$".format(Deltas[i]))
         
         
-        # Monochromatic MF constraints
-        m_mono_evap, f_PBH_mono_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
-        m_mono_Subaru, f_PBH_mono_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+        # Delta-function MF constraints
+        m_delta_evap, f_PBH_delta_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+        m_delta_Subaru, f_PBH_delta_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
         
         for ax in [ax0, ax1, ax2]:
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.plot(m_mono_evap, f_PBH_mono_evap, color=colors[0], label="Delta function", linewidth=2)
-            ax.plot(m_mono_Subaru, f_PBH_mono_Subaru, color=colors[0], linewidth=2)
+            ax.plot(m_delta_evap, f_PBH_delta_evap, color=colors[0], label="Delta function", linewidth=2)
+            ax.plot(m_delta_Subaru, f_PBH_delta_Subaru, color=colors[0], linewidth=2)
             ax.set_ylabel("$f_\mathrm{PBH}$")
             ax.set_xscale("log")
             ax.set_yscale("log")
@@ -147,7 +147,7 @@ if "__main__" == __name__:
         fig.tight_layout()
                         
 
-#%% Tests of the results obtained using different power-law slopes in f_max at low masses (Korwar & Profumo (2023))
+#%% Tests of the results obtained using different power-law exponents in f_max at low masses (Korwar & Profumo (2023))
 
 if "__main__" == __name__:
     
@@ -157,7 +157,7 @@ if "__main__" == __name__:
     mc_values = np.logspace(14, 20, 120)
 
     # Array of power law exponents to use at masses below 1e15g
-    slopes_PL_lower = [0, 2, 3, 4]
+    exponents_PL_lower = [0, 2, 3, 4]
     
     linestyles = ["solid", "dashed", "dashdot", "dotted"]
     
@@ -170,16 +170,16 @@ if "__main__" == __name__:
         ax2 = axes[1][0]
         ax3 = axes[1][1]
         
-        m_mono_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+        m_delta_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
                             
-        # Power-law slope to use between 1e15g and 1e16g (motivated by mass-dependence of the positron spectrum emitted over energy)
-        slope_PL_upper = 2.0
+        # Power-law exponent to use between 1e15g and 1e16g (motivated by mass-dependence of the positron spectrum emitted over energy)
+        exponent_PL_upper = 2.0
         
-        m_mono_extrapolated_upper = np.logspace(15, 16, 11)
-        m_mono_extrapolated_lower = np.logspace(11, 15, 41)
-        f_max_extrapolated_upper = min(f_max) * np.power(m_mono_extrapolated_upper / min(m_mono_values), slope_PL_upper)
+        m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+        m_delta_extrapolated_lower = np.logspace(11, 15, 41)
+        f_max_extrapolated_upper = min(f_max) * np.power(m_delta_extrapolated_upper / min(m_delta_values), exponent_PL_upper)
             
-        for k, slope_PL_lower in enumerate(slopes_PL_lower):
+        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
             
             if k == 0:
                 data_folder = "./Data-old/"
@@ -192,10 +192,10 @@ if "__main__" == __name__:
                 mc_KP23_LN_unevolved, f_PBH_KP23_LN_unevolved = np.genfromtxt("./Data-tests/unevolved/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j]), delimiter="\t")
                 """
             else:
-                data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower) 
-                data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
-                data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
-                data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+                data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+                data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             
             mc_KP23_LN_evolved, f_PBH_KP23_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_KP23_SLN_evolved, f_PBH_KP23_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
@@ -222,16 +222,16 @@ if "__main__" == __name__:
                 ax1.plot(0, 0, linestyle="None", marker="x", color="k", label="No constraint at $m < 10^{16}~\mathrm{g}$ [unevolved MF]")
                 """
             else:
-                ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(slope_PL_lower))
-                f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_mono_extrapolated_lower / min(m_mono_extrapolated_upper), slope_PL_lower)
-                ax0.plot(m_mono_extrapolated_lower, f_max_extrapolated_lower, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(slope_PL_lower))
+                ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
+                f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+                ax0.plot(m_delta_extrapolated_lower, f_max_extrapolated_lower, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
             
-        ax0.plot(np.concatenate((m_mono_extrapolated_upper, m_mono_values)), np.concatenate((f_max_extrapolated_upper, f_max)), color=(0.5294, 0.3546, 0.7020))
+        ax0.plot(np.concatenate((m_delta_extrapolated_upper, m_delta_values)), np.concatenate((f_max_extrapolated_upper, f_max)), color=(0.5294, 0.3546, 0.7020))
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
         ax0.set_xscale("log")
         ax0.set_yscale("log")
-        ax0.set_xlim(min(m_mono_extrapolated_lower), 1e18)
+        ax0.set_xlim(min(m_delta_extrapolated_lower), 1e18)
         ax0.set_ylim(min(f_max_extrapolated_lower), 1)
         
         for ax in [ax1, ax2, ax3]:
@@ -246,8 +246,8 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
 
-        ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
-        ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
+        ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
+        ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
@@ -274,8 +274,8 @@ if "__main__" == __name__:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
     LN = False
-    SLN = True
-    CC3 = False
+    SLN = False
+    CC3 = True
         
     for j in range(len(Deltas)):
         
@@ -368,7 +368,7 @@ if "__main__" == __name__:
         fig1.tight_layout()
 
 
-#%% Tests of the results obtained using different power-law slopes in f_max at low masses (Galactic Centre photon constraints)
+#%% Tests of the results obtained using different power-law exponents in f_max at low masses (Galactic Centre photon constraints)
 
 if "__main__" == __name__:
     
@@ -378,7 +378,7 @@ if "__main__" == __name__:
     mc_values = np.logspace(14, 20, 120)
 
     # Array of power law exponents to use at masses below 1e15g
-    slopes_PL_lower = [0, 2, 4]
+    exponents_PL_lower = [0, 2, 4]
     
     style_markers = ["--", "+", "x"]
     
@@ -399,8 +399,8 @@ if "__main__" == __name__:
         m_delta_extrapolated = np.logspace(11, 13, 21)
         
         
-        for k, slope_PL_lower in enumerate(slopes_PL_lower):
-            data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower)
+        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
             
             f_PBH_instrument_LN = []
             f_PBH_instrument_SLN = []
@@ -420,7 +420,7 @@ if "__main__" == __name__:
                 
                 # Extrapolate f_max at masses below 1e13g using a power-law
                 f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
-                f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, slope_PL_lower)
+                f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
                 f_max_i = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
                 m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
 
@@ -457,8 +457,8 @@ if "__main__" == __name__:
             ax2.set_title("SLN")
             ax3.set_title("CC3")
 
-            ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(slope_PL_lower))            
-            ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(slope_PL_lower))
+            ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))            
+            ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))
                 
             ax0.set_xlim(1e11, 3e17)
             ax0.set_ylim(10**(-15), 1)
@@ -480,8 +480,8 @@ if "__main__" == __name__:
                 ax.set_xscale("log")
                 ax.set_yscale("log")
     
-            ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")        
-            ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")
+            ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")        
+            ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")
             fig.tight_layout()
             fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
@@ -552,7 +552,7 @@ if "__main__" == __name__:
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
 
-#%% Tests of the results obtained using different power-law slopes in f_max at low masses (prospective evaporation constraints from GECCO [2101.01370])
+#%% Tests of the results obtained using different power-law exponents in f_max at low masses (prospective evaporation constraints from GECCO [2101.01370])
 
 if "__main__" == __name__:
     
@@ -560,7 +560,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Array of power law exponents to use at masses below 1e15g
-    slopes_PL_lower = [0, 2, 4]
+    exponents_PL_lower = [0, 2, 4]
     
     linestyles = ["dashed", "dashdot", "dotted"]
     
@@ -573,15 +573,15 @@ if "__main__" == __name__:
         ax2 = axes[1][0]
         ax3 = axes[1][1]
         
-        m_mono_values, f_max = load_data("2101.01370/2101.01370_Fig9_GC_Einasto.csv")
-        m_mono_extrapolated = np.logspace(11, 15, 41)
+        m_delta_values, f_max = load_data("2101.01370/2101.01370_Fig9_GC_Einasto.csv")
+        m_delta_extrapolated = np.logspace(11, 15, 41)
                 
-        for k, slope_PL_lower in enumerate(slopes_PL_lower):
+        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
             
-            data_folder = "./Data-tests/PL_slope_{:.0f}".format(slope_PL_lower) 
-            data_filename_LN = data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_slope{:.0f}.txt".format(Deltas[j], slope_PL_lower)
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+            data_filename_LN = data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             
             mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
@@ -597,16 +597,16 @@ if "__main__" == __name__:
             ax2.set_title("SLN")
             ax3.set_title("CC3")
             
-            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(slope_PL_lower))
-            f_max_extrapolated = min(f_max) * np.power(m_mono_extrapolated / min(m_mono_values), slope_PL_lower)
-            ax0.plot(m_mono_extrapolated, f_max_extrapolated, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(slope_PL_lower))
+            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
+            f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
+            ax0.plot(m_delta_extrapolated, f_max_extrapolated, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
             
-        ax0.plot(np.concatenate((m_mono_extrapolated, m_mono_values)), np.concatenate((f_max_extrapolated, f_max)), color=(0.5294, 0.3546, 0.7020))
+        ax0.plot(np.concatenate((m_delta_extrapolated, m_delta_values)), np.concatenate((f_max_extrapolated, f_max)), color=(0.5294, 0.3546, 0.7020))
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
         ax0.set_xscale("log")
         ax0.set_yscale("log")
-        ax0.set_xlim(min(m_mono_extrapolated), 1e18)
+        ax0.set_xlim(min(m_delta_extrapolated), 1e18)
         ax0.set_ylim(min(f_max_extrapolated), 1)
         
         for ax in [ax1, ax2, ax3]:
@@ -621,8 +621,8 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
 
-        ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
-        ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
+        ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
+        ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
@@ -632,13 +632,13 @@ if "__main__" == __name__:
 
     mc_subaru = 10**np.linspace(17, 29, 1000)
     
-    # Constraints for monochromatic MF.
-    m_subaru_mono_loaded, f_max_subaru_mono_loaded = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+    # Constraints for Delta-function MF.
+    m_subaru_delta_loaded, f_max_subaru_delta_loaded = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
     
     # Mass function parameter values, from 2009.03204.
     [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
         
-    slopes_PL_lower = [-2, -4]
+    exponents_PL_lower = [-2, -4]
     markers = [":", "--"]
     
     for i in range(len(Deltas)):
@@ -650,11 +650,11 @@ if "__main__" == __name__:
         ax2 = axes[1][0]
         ax3 = axes[1][1]
         
-        for k, slope_PL_lower in enumerate(slopes_PL_lower):
+        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
         
-            data_filename_SLN = "./Data-tests/PL_slope_{:.0f}/SLN_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
-            data_filename_CC3 = "./Data-tests/PL_slope_{:.0f}/CC3_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
-            data_filename_LN = "./Data-tests/PL_slope_{:.0f}/LN_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
+            data_filename_SLN = "./Data-tests/PL_exp_{:.0f}/SLN_HSC_Carr_Delta={:.1f}.txt".format(exponent_PL_lower, Deltas[i])
+            data_filename_CC3 = "./Data-tests/PL_exp_{:.0f}/CC3_HSC_Carr_Delta={:.1f}.txt".format(exponent_PL_lower, Deltas[i])
+            data_filename_LN = "./Data-tests/PL_exp_{:.0f}/LN_HSC_Carr_Delta={:.1f}.txt".format(exponent_PL_lower, Deltas[i])
             
             mc_LN, f_PBH_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_SLN, f_PBH_SLN = np.genfromtxt(data_filename_LN, delimiter="\t")
@@ -667,12 +667,12 @@ if "__main__" == __name__:
             ax2.plot(mp_SLN, f_PBH_SLN, markers[k], color="b")
             ax3.plot(mp_CC3, f_PBH_CC3, markers[k], color="g")
 
-            m_subaru_mono_extrapolated = np.logspace(18, np.log10(min(m_subaru_mono_loaded)), 50)
-            f_max_subaru_mono_extrapolated = f_max_subaru_mono_loaded[0] * np.power(m_subaru_mono_extrapolated / min(m_subaru_mono_loaded), slope_PL_lower)
-            ax0.plot(m_subaru_mono_extrapolated, f_max_subaru_mono_extrapolated, markers[k], color="tab:blue", label="{:.0f}".format(slope_PL_lower))
-            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(slope_PL_lower))
+            m_subaru_delta_extrapolated = np.logspace(18, np.log10(min(m_subaru_delta_loaded)), 50)
+            f_max_subaru_delta_extrapolated = f_max_subaru_delta_loaded[0] * np.power(m_subaru_delta_extrapolated / min(m_subaru_delta_loaded), exponent_PL_lower)
+            ax0.plot(m_subaru_delta_extrapolated, f_max_subaru_delta_extrapolated, markers[k], color="tab:blue", label="{:.0f}".format(exponent_PL_lower))
+            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
 
-        ax0.plot(m_subaru_mono_loaded, f_max_subaru_mono_loaded, color="tab:blue")
+        ax0.plot(m_subaru_delta_loaded, f_max_subaru_delta_loaded, color="tab:blue")
         ax0.set_xlabel(r"$m~[\mathrm{g}]$")
         ax0.set_ylabel(r"$f_\mathrm{max}$")
         ax0.set_xscale("log")
@@ -708,7 +708,7 @@ if "__main__" == __name__:
             ax.set_xscale("log")
             ax.set_yscale("log")
 
-        ax0.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")        
-        ax1.legend(fontsize="x-small", title="PL slope in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")
+        ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")        
+        ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))

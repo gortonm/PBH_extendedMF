@@ -44,12 +44,12 @@ filepath = './Extracted_files/'
 mc_subaru = 10**np.linspace(-15, -4, 100)
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("2002.12778/Subaru-HSC_2002.12778_mono.csv")
-m_subaru_mono_Smyth, f_max_subaru_mono_Smyth = load_data("1910.01285/Subaru-HSC_1910.01285.csv")
+m_subaru_delta, f_max_subaru_delta = load_data("2002.12778/Subaru-HSC_2002.12778_mono.csv")
+m_subaru_delta_Smyth, f_max_subaru_delta_Smyth = load_data("1910.01285/Subaru-HSC_1910.01285.csv")
 mc_subaru_LN, f_pbh_subaru_LN = load_data("2002.12778/Subaru-HSC_2002.12778_LN.csv")
 
 # Convert 1910.01285 constraint masses from grams to solar masses
-m_subaru_mono_Smyth /= 1.989e33
+m_subaru_delta_Smyth /= 1.989e33
 
 sigma = 2
 
@@ -57,8 +57,8 @@ if "__main__" == __name__:
 
     # Compare constraints from Subaru-HSC for a monochromatic MF.
     fig, ax = plt.subplots(figsize=(6,6))
-    ax.plot(m_subaru_mono, f_max_subaru_mono, label='Extracted (2002.12778)')
-    ax.plot(m_subaru_mono_Smyth, f_max_subaru_mono_Smyth, linewidth=7, alpha=0.5, linestyle='dotted', label='Extracted (1910.01285)')
+    ax.plot(m_subaru_delta, f_max_subaru_delta, label='Extracted (2002.12778)')
+    ax.plot(m_subaru_delta_Smyth, f_max_subaru_delta_Smyth, linewidth=7, alpha=0.5, linestyle='dotted', label='Extracted (1910.01285)')
     ax.set_xlabel('$M_\mathrm{PBH}~[M_\odot]$')
     ax.set_ylabel('$f_\mathrm{PBH}$')
     ax.set_xscale('log')
@@ -72,7 +72,7 @@ if "__main__" == __name__:
     f_pbh_subaru = []
     params = [sigma]
 
-    f_pbh_subaru = constraint_Carr(mc_subaru, m_subaru_mono_Smyth, f_max_subaru_mono_Smyth, LN, params)
+    f_pbh_subaru = constraint_Carr(mc_subaru, m_subaru_delta_Smyth, f_max_subaru_delta_Smyth, LN, params)
 
     fig, ax = plt.subplots(figsize=(6,6))
     ax.plot(mc_subaru_LN, f_pbh_subaru_LN, label='Extracted (2002.12778)')
@@ -97,11 +97,11 @@ if "__main__" == __name__:
 mc_subaru = 10**np.linspace(20, 29, 1000)
 
 # Load data files
-m_subaru_mono_Croon, f_max_mono_Croon = load_data("2007.12697/Subaru-HSC_2007.12697_dx=10.csv")
+m_subaru_delta_Croon, f_max_delta_Croon = load_data("2007.12697/Subaru-HSC_2007.12697_dx=10.csv")
 
 # Load comparison constraint from PBHbounds
 PBHbounds = np.transpose(np.genfromtxt("./../../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
-m_subaru_mono_PBHbounds, f_max_subaru_mono_PBHbounds = np.transpose(np.genfromtxt("./../../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
+m_subaru_delta_PBHbounds, f_max_subaru_delta_PBHbounds = np.transpose(np.genfromtxt("./../../PBHbounds/PBHbounds/bounds/HSC.txt", delimiter=" ", skip_header=1))
 
 sigma = 0.1
 
@@ -109,12 +109,12 @@ if "__main__" == __name__:
     # Calculate constraints for extended MF from microlensing.
     params = [sigma]
     
-    f_pbh_subaru = constraint_Carr(mc_subaru, m_subaru_mono_Croon, f_max_mono_Croon, LN, params)
+    f_pbh_subaru = constraint_Carr(mc_subaru, m_subaru_delta_Croon, f_max_delta_Croon, LN, params)
     
     fig, ax = plt.subplots(figsize=(6,6.5))
     ax.plot(mc_subaru, f_pbh_subaru, label="Calculated")
-    ax.plot(m_subaru_mono_Croon, f_max_mono_Croon, linestyle='dotted', label="Monochromatic (Croon et al. (2020))")
-    ax.plot(m_subaru_mono_PBHbounds * 1.989e33, f_max_subaru_mono_PBHbounds, linestyle='dotted', linewidth=2, label="Monochromatic (PBHbounds)")
+    ax.plot(m_subaru_delta_Croon, f_max_delta_Croon, linestyle='dotted', label="Monochromatic (Croon et al. (2020))")
+    ax.plot(m_subaru_delta_PBHbounds * 1.989e33, f_max_subaru_delta_PBHbounds, linestyle='dotted', linewidth=2, label="Monochromatic (PBHbounds)")
     ax.set_xlabel(r'$M_\mathrm{PBH}~[\mathrm{g}]$')
     ax.set_ylabel(r'$f_\mathrm{PBH}$')
     ax.set_xscale('log')
@@ -132,7 +132,7 @@ if "__main__" == __name__:
 # normal mass function. Monochromatic MF constraints from 2007.12697.
 
 # Load data files
-m_subaru_mono_Croon, f_max_mono_Croon = load_data("2007.12697/Subaru-HSC_2007.12697_dx=10.csv")
+m_subaru_delta_Croon, f_max_delta_Croon = load_data("2007.12697/Subaru-HSC_2007.12697_dx=10.csv")
 
 # Range of characteristic masses
 mc_subaru = 10**np.linspace(20, 29, 100)
@@ -142,8 +142,8 @@ if "__main__" == __name__:
     sigma = 0.5
     params_LN = [sigma]
     params_SLN = [sigma, 0]
-    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_mono_Croon, f_max_mono_Croon, SLN, params_SLN)
-    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_mono_Croon, f_max_mono_Croon, LN, params_LN)
+    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_delta_Croon, f_max_delta_Croon, SLN, params_SLN)
+    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_delta_Croon, f_max_delta_Croon, LN, params_LN)
 
     fig, ax = plt.subplots(figsize=(5.5, 5.5))
     ax.plot(mc_subaru, f_pbh_SLN, label=r"Skew-lognormal ($\alpha={:.0f}$, $\sigma={:.1f}$)".format(params_SLN[1], sigma))
@@ -166,11 +166,11 @@ if "__main__" == __name__:
 # normal mass function. Monochromatic MF constraints from 1910.01285.
 
 # Load data files
-m_subaru_mono, f_max_subaru_mono = load_data("2002.12778/Subaru-HSC_2002.12778_mono.csv")
+m_subaru_delta, f_max_subaru_delta = load_data("2002.12778/Subaru-HSC_2002.12778_mono.csv")
 mc_subaru_LN, f_pbh_subaru_LN = load_data("2002.12778/Subaru-HSC_2002.12778_LN.csv")
 
 # Convert from solar masses to grams
-m_subaru_mono *= 1.989e33
+m_subaru_delta *= 1.989e33
 mc_subaru_LN *= 1.989e33
 
 # Range of characteristic masses
@@ -182,8 +182,8 @@ if "__main__" == __name__:
     params_LN = [sigma]
     params_SLN = [sigma, 0]
     
-    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
-    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
+    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, SLN, params_SLN)
+    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, LN, params_LN)
 
     fig, ax = plt.subplots(figsize=(5.5, 5.5))
     ax.plot(mc_subaru, f_pbh_SLN, label=r"Skew-lognormal ($\alpha={:.0f}$, $\sigma={:.1f}$)".format(params_SLN[1], sigma))
@@ -205,7 +205,7 @@ if "__main__" == __name__:
 mc_subaru = 10**np.linspace(17, 29, 1000)
 
 # Constraints for monochromatic MF.
-m_subaru_mono, f_max_subaru_mono = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+m_subaru_delta, f_max_subaru_delta = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
 # Mass function parameter values, from 2009.03204.
 [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SL, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -217,9 +217,9 @@ for i in range(len(Deltas)):
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
     
-    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
-    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
-    f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
+    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, LN, params_LN)
+    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, SLN, params_SLN)
+    f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, CC3, params_CC3)
     
     data_filename_SLN = "./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
     data_filename_CC3 = "./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
@@ -267,28 +267,28 @@ for i in range(len(Deltas)):
 mc_subaru = 10**np.linspace(17, 29, 1000)
 
 # Constraints for monochromatic MF.
-m_subaru_mono_loaded, f_max_subaru_mono_loaded = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+m_subaru_delta_loaded, f_max_subaru_delta_loaded = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
 # Mass function parameter values, from 2009.03204.
 [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SL, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
-slope_PL_lower = -4
-m_subaru_mono_extrapolated = np.logspace(18, np.log10(min(m_subaru_mono_loaded)), 50)
-f_max_subaru_mono_extrapolated = f_max_subaru_mono_loaded[0] * np.power(m_subaru_mono_extrapolated / min(m_subaru_mono_loaded), slope_PL_lower)
+exponent_PL_lower = -2
+m_subaru_delta_extrapolated = np.logspace(18, np.log10(min(m_subaru_delta_loaded)), 50)
+f_max_subaru_delta_extrapolated = f_max_subaru_delta_loaded[0] * np.power(m_subaru_delta_extrapolated / min(m_subaru_delta_loaded), exponent_PL_lower)
 
-m_subaru_mono = np.concatenate((m_subaru_mono_extrapolated, m_subaru_mono_loaded))
-f_max_subaru_mono = np.concatenate((f_max_subaru_mono_extrapolated, f_max_subaru_mono_loaded))
+m_subaru_delta = np.concatenate((m_subaru_delta_extrapolated, m_subaru_delta_loaded))
+f_max_subaru_delta = np.concatenate((f_max_subaru_delta_extrapolated, f_max_subaru_delta_loaded))
 
 fig, ax = plt.subplots(figsize=(5,5))
-ax.plot(m_subaru_mono_loaded, f_max_subaru_mono_loaded, color="tab:blue")
-ax.plot(m_subaru_mono_extrapolated, f_max_subaru_mono_extrapolated, color="tab:blue", linestyle="dashed")
+ax.plot(m_subaru_delta_loaded, f_max_subaru_delta_loaded, color="tab:blue")
+ax.plot(m_subaru_delta_extrapolated, f_max_subaru_delta_extrapolated, color="tab:blue", linestyle="dashed")
 ax.set_xlabel(r"$m~[\mathrm{g}]$")
 ax.set_ylabel(r"$f_\mathrm{max}$")
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.set_xlim(1e18, 1e29)
 ax.set_ylim(1e-3, 10)
-ax.set_title("PL extrapolation (exponent = {:.0f})".format(slope_PL_lower))
+ax.set_title("PL extrapolation (exponent = {:.0f})".format(exponent_PL_lower))
 fig.tight_layout()
 
 
@@ -299,13 +299,13 @@ for i in range(len(Deltas)):
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
         
-    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, LN, params_LN)
-    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, SLN, params_SLN)
-    f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_mono, f_max_subaru_mono, CC3, params_CC3)
+    f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, LN, params_LN)
+    f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, SLN, params_SLN)
+    f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, CC3, params_CC3)
     
-    data_filename_SLN = "./Data-tests/PL_slope_{:.0f}/SLN_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
-    data_filename_CC3 = "./Data-tests/PL_slope_{:.0f}/CC3_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
-    data_filename_LN = "./Data-tests/PL_slope_{:.0f}/LN_HSC_Carr_Delta={:.1f}.txt".format(slope_PL_lower, Deltas[i])
+    data_filename_SLN = "./Data-tests/PL_exp_{:.0f}/SLN_HSC_Carr_Delta={:.1f}.txt".format(exponent_PL_lower, Deltas[i])
+    data_filename_CC3 = "./Data-tests/PL_exp_{:.0f}/CC3_HSC_Carr_Delta={:.1f}.txt".format(exponent_PL_lower, Deltas[i])
+    data_filename_LN = "./Data-tests/PL_exp_{:.0f}/LN_HSC_Carr_Delta={:.1f}.txt".format(exponent_PL_lower, Deltas[i])
     
     np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
     np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
