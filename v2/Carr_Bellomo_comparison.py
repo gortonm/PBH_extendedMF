@@ -107,21 +107,34 @@ from scipy.optimize import fsolve
 
 
 def g_test_CMB(m, alpha):
+    """
+    Function encoding mass-dependence of CMB constraints
+    """
     return np.power(m, 2+alpha)
 
 
 def m_eq_CMB(mu, alpha, sigma):
+    """
+    Equivalent mass for CMB constraints
+    """
     return mu * np.exp( (2+alpha) * sigma**2  / 2)
     
     
-def g_integral(mu, sigma, m_min = 1e10, m_max = 1e20, n_steps=10000):
+def g_integral_CMB(mu, sigma, m_min = 1e10, m_max = 1e20, n_steps=10000):
+    """
+    Integral used when calculating the equivalent mass (RHS of Eq. 2.5 or 2.6 of Bellomo et al. (2018))
+    """
+    
     m_pbh_values = np.logspace(np.log10(m_min), np.log10(m_max), n_steps)
     
     return np.trapz(LN(m_pbh_values, mu, sigma) * g_test_CMB(m_pbh_values, alpha), m_pbh_values)
 
 
-def meq_finder(m_eq, mu, sigma, alpha, m_min = 1e10, m_max = 1e20, n_steps=10000):
-    return g_test_CMB(m_eq, alpha) - g_integral(mu, sigma, m_min, m_max, n_steps)
+def meq_finder_CMB(m_eq, mu, sigma, alpha, m_min = 1e10, m_max = 1e20, n_steps=10000):
+    """
+    Function to solve for the equivalent mass.
+    """
+    return g_test_CMB(m_eq, alpha) - g_integral_CMB(mu, sigma, m_min, m_max, n_steps)
 
 
 if "__main__" == __name__:
@@ -137,36 +150,73 @@ if "__main__" == __name__:
     print("Exact M_eq = {:.8e} g".format(m_eq_CMB(m_c, alpha, sigma)))
     
     # Estimate M_eq numerically
-    print("Numeric M_eq = {:.8e} g".format(fsolve(meq_finder, m_c, args=(m_c, sigma, alpha))[0]))
+    print("Numeric M_eq = {:.8e} g".format(fsolve(meq_finder_CMB, m_c, args=(m_c, sigma, alpha))[0]))
 
 
 #%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
 # Obtained using the method from Bellomo et al. (2018) [1709.07467].
 
+from scipy.special import erf
+from scipy.optimize import fsolve
+
 def g_GC_photons(m_pbh_values, instrument_index):
     g_values = []
     f_max_values = f_max_Isatis[instrument_index]
     
-    f_max_truncated_lower = f_max_values[m_delta_values_loaded < 1e13]
-    m_delta_truncated_lower = m_delta_values_loaded[m_delta_values_loaded < 1e13]
-    
+    f_max_truncated_lower = np.array(f_max_values)[np.array(m_delta_values_loaded) < 1e13]
+    m_delta_truncated_lower = np.array(m_delta_values_loaded)[np.array(m_delta_values_loaded) < 1e13]
+        
     for m in m_pbh_values:
         if m > 1e13:
-            g_values.append(np.interp(m, f_max_truncated_lower, f_max_truncated_lower))
+            g_values.append(np.interp(m, m_delta_truncated_lower, f_max_truncated_lower))
         
         else:
             g_values.append(f_max_truncated_lower * (m / min(m_delta_truncated_lower))**2)
     
+    #print("len(g_values) = ", len(g_values))
     return g_values
 
 
+def g_integral_lower(m_c, sigma):
+    return (m_c**2 / 2) * np.exp(2*sigma**2) * (erf((np.log(1e13 / m_c) + 2*sigma**2) / (np.sqrt(2) * sigma)) + 1)
+
+
+def g_integral(m_c, sigma, instrument_index, m_max, n_steps=10000):
+    """
+    Integral used when calculating the equivalent mass (RHS of Eq. 2.5 or 2.6 of Bellomo et al. (2018))
+    """
+    print("m_c = ", m_c)
+    print("sigma = ", sigma)
+    print("m_max = ", m_max)
+    m_pbh_values = np.logspace(13, np.log10(m_max), n_steps)
+    integrand_upper = LN(m_pbh_values, m_c, sigma) * g_GC_photons(m_pbh_values, instrument_index)
+    print("len(integrand_upper) = ", len(integrand_upper))
+    print("len(g_integral output) = ", len(np.trapz(integrand_upper, m_pbh_values) + g_integral_lower(m_c, sigma)))
+    print("len(m_pbh_values) = ", len(m_pbh_values))
+    print("len(np.trapz(integrand_upper, m_pbh_values)) = ", len(np.trapz(integrand_upper, m_pbh_values)))
+    print("g_integral_lower(m_c, sigma) = ", g_integral_lower(m_c, sigma) )
+    return np.trapz(integrand_upper, m_pbh_values) + g_integral_lower(m_c, sigma)
+
+def meq_finder(m_eq, instrument_index, m_max, n_steps=10000):
+    """
+    Function to solve for the equivalent mass.
+    """
+    print("len(meq_finder output) = ", len( g_GC_photons(m_eq, instrument_index) - g_integral(m_c, sigma, instrument_index, m_max, n_steps)))
+    return g_GC_photons(m_eq, instrument_index) - g_integral(m_c, sigma, instrument_index, m_max, n_steps)
+
+def f_EMD(m_eq):
+    
+    return np.interp(m_eq, m_delta_values, f_max_i)
+
 if "__main__" == __name__:
     
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    sigma = 0.5
     
     # Boolean determines whether to useFalse evolved mass function.
     evolved = True
+    
+    # Boolean determines whether to use the full mass range where f_max is known or only the range where |f_max| < 1
+    all_fmax = False
         
     m_delta_values_loaded = np.logspace(11, 21, 1000)
     constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
@@ -185,37 +235,34 @@ if "__main__" == __name__:
     exponent_PL_lower = 2.0
     m_delta_extrapolated = np.logspace(11, 13, 21)
     data_folder += "/PL_exp_{:.0f}/".format(exponent_PL_lower)
-
-    for j in range(len(Deltas)):
-        params_LN = [sigmas_LN[j]]
-        params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
-        params_CC3 = [alphas_CC3[j], betas[j]]
         
-        for i in range(len(constraints_names)):
-            
-            # Only include PBH masses and values of f_max where |f_max| < 1
-            f_max_truncated = []
-            m_delta_loaded_truncated = []
-    
+    for i in range(len(constraints_names)):
+        f_max_truncated = []
+        m_delta_loaded_truncated = []
+
+        if all_fmax:
             for k, f_max in enumerate(f_max_Isatis[i]):
-                if abs(f_max) < 1:
+                if f_max < 0:
                     f_max_truncated.append(f_max)
                     m_delta_loaded_truncated.append(m_delta_values_loaded[k])
-            
-            # Extrapolate f_max at masses below 1e13g using a power-law
-            f_max_loaded_truncated = np.array(f_max_truncated)[m_delta_values_loaded > 1e13]
-            f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
-            f_max_i = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
-            m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
-                        
-            f_PBH_i_LN = constraint_Carr(mc_values, m_delta_values, f_max_i, LN, params_LN, evolved, t)
-            f_PBH_i_SLN = constraint_Carr(mc_values, m_delta_values, f_max_i, SLN, params_SLN, evolved, t)
-            f_PBH_i_CC3 = constraint_Carr(mc_values, m_delta_values, f_max_i, CC3, params_CC3, evolved, t)
-      
-            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-    
-            np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
-            np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
-            np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
+        else:
+            for k, f_max in enumerate(f_max_Isatis[i]):
+                if f_max < 0 or f_max > 1:
+                    f_max_truncated.append(f_max)
+                    m_delta_loaded_truncated.append(m_delta_values_loaded[k])
+                    
+        m_max = max(m_delta_loaded_truncated)
+        print("m_max = {:.8e} g".format(m_max))
+        # Extrapolate f_max at masses below 1e13g using a power-law
+        f_max_loaded_truncated = np.array(f_max_truncated)[np.array(m_delta_loaded_truncated) > 1e13]
+        f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
+        f_max_i = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+        m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
+                                
+        f_EMD_values = []
+        for m_c in mc_values:
+            m_eq_estimate = fsolve(meq_finder, m_c, args=(i, m_max))[0]
+            f_EMD_values.append(f_EMD(m_eq_estimate))
+  
+        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Bellomo_sigma={:.1f}_approx.txt".format(sigma)
+        np.savetxt(data_filename_LN, [mc_values, f_EMD_values], delimiter="\t")
