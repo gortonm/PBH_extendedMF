@@ -158,15 +158,16 @@ from scipy.optimize import fsolve
 def g_GC_photons(m, m_delta_values, f_max_i):
                 
     if m > 1e13:
-        return np.interp(m, m_delta_values, f_max_i)
+        return 1 / np.interp(m, m_delta_values, f_max_i)
     
     else:
-        return f_max_i[0] * (m / min(m_delta_values))**(-2)
+        return (1 / f_max_i[0]) * np.power(m / 1e13, -2)
     
 
 def g_integral_lower(m_c, sigma, f_max_i):
-    proportionality_constant = f_max_i[0] * np.power(1e13, -2)
-    return proportionality_constant * (m_c**2 / 2) * np.exp(2*sigma**2) * (erf((np.log(1e13 / m_c) + 2*sigma**2) / (np.sqrt(2) * sigma)) + 1)
+    proportionality_constant = (1 / f_max_i[0]) * np.power(1/1e13, -2)
+    #return proportionality_constant * (m_c**(-2) / 2) * np.exp(2*sigma**2) * (erf((np.log(1e13 / m_c) + 2*sigma**2) / (np.sqrt(2) * sigma)) + 1)
+    return proportionality_constant * (m_c**(-2) / 2) * np.exp(2*sigma**2) * (erf((np.log(1e13 / m_c) + 2*sigma**2) / (np.sqrt(2) * sigma)) - erf((np.log(1e11 / m_c) + 2*sigma**2) / (np.sqrt(2) * sigma)))
 
 
 def g_integral(m_c, sigma, m_max, m_delta_values, f_max_i, n_steps=10000):
@@ -194,6 +195,7 @@ def g_integral(m_c, sigma, m_max, m_delta_values, f_max_i, n_steps=10000):
 
     #print("integral (upper) =", np.trapz(integrand_upper, m_pbh_values))
     #print("integral (lower) =", g_integral_lower(m_c, sigma, f_max_i))
+    #print("integral (lower) / k =", g_integral_lower(m_c, sigma, f_max_i) / ((1 / f_max_i[0]) * np.power(1/1e13, -2)))
 
     return np.trapz(integrand_upper, m_pbh_values) + g_integral_lower(m_c, sigma, f_max_i)
 
