@@ -156,6 +156,7 @@ from scipy.optimize import fsolve
 
 def m_eq_func(m, f_max_allpositive, m_delta_allpositive, m_c, sigma):
     return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(LN(m_delta_allpositive, m_c, sigma) / f_max_allpositive, m_delta_allpositive)
+    #return 10**np.interp(np.log10(m), np.log10(m_delta_allpositive), np.log10(1/f_max_allpositive)) - np.trapz(LN(m_delta_allpositive, m_c, sigma) / f_max_allpositive, m_delta_allpositive)
 
 if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(8,8))
@@ -165,20 +166,31 @@ if "__main__" == __name__:
     constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     mc_values = np.logspace(14, 20, 120)
+    
+    all_fmax = False
 
     for i in range(len(constraints_names)):
         
         f_max_i = np.array(f_max_Isatis[i])
         
-        f_max_allpositive = f_max_i[f_max_i > 0.]
-        m_delta_allpositive = m_delta_values_loaded[f_max_i > 0.]
+        if all_fmax:
+            f_max_allpositive = f_max_i[f_max_i > 0.]
+            m_delta_allpositive = m_delta_values_loaded[f_max_i > 0.]
+        
+        else:
+            f_max_allpositive_intermed = f_max_i[f_max_i > 0.]
+            m_delta_allpositive_intermed = m_delta_values_loaded[f_max_i > 0.]
             
+            f_max_allpositive = f_max_allpositive_intermed[f_max_allpositive_intermed <= 1.]
+            m_delta_allpositive = m_delta_allpositive_intermed[f_max_allpositive_intermed <= 1.]
+           
         f_PBH_Bellomo = []
                 
         for m_c in mc_values:
-            m_eq_estimate = fsolve(m_eq_func, m_c/100, args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))
+            m_eq_estimate = fsolve(m_eq_func, m_c/1000, args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))
             f_PBH_Bellomo.append(np.interp(m_eq_estimate, m_delta_allpositive, f_max_allpositive))
-            
+            #f_PBH_Bellomo.append(10**np.interp(np.log10(m_eq_estimate), np.log10(m_delta_allpositive), np.log10(f_max_allpositive)))
+           
         ax.plot(mc_values, f_PBH_Bellomo, color=colors_evap[i])
         
         f_PBH_Carr = constraint_Carr(mc_values, m_delta_allpositive, f_max_allpositive, LN, params=[sigma], evolved=False)      
@@ -191,7 +203,89 @@ if "__main__" == __name__:
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_title("No power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma))
+    if all_fmax:
+        ax.set_title("No power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma), fontsize="small")
+    else:
+        ax.set_title("No power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma) + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+    ax.legend(fontsize="small")
+    fig.tight_layout()
+    ax.set_xlim(1e14, 1e18)
+    ax.set_ylim(1e-12, 1)
+    fig.tight_layout()
+    
+
+#%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
+# Obtained using the method from Bellomo et al. (2018) [1709.07467].
+# Extrapolate using a power-law in g(M) to M < 1e11g
+
+from scipy.optimize import fsolve
+
+
+def m_eq_func(m, f_max_i_input, m_delta_input, m_c, sigma):
+    return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(LN(m_delta_input, m_c, sigma) / f_max_i_input, m_delta_input)
+
+if "__main__" == __name__:
+    fig, ax = plt.subplots(figsize=(8,8))
+    sigma = 1.84859
+                
+    m_delta_values_loaded = np.logspace(11, 21, 1000)
+    constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    mc_values = np.logspace(14, 20, 120)
+    
+    # Power-law exponent to use
+    exponent_PL_lower = 2.0
+    m_delta_extrapolated = np.logspace(11, 13, 21)
+    
+    all_fmax = True
+
+    for i in range(len(constraints_names)):
+        
+        f_max_i = np.array(f_max_Isatis[i])
+        
+        f_max_allpositive_intermed = []
+        m_delta_allpositive_intermed = []
+        
+        if all_fmax:
+            for k, f_max in enumerate(f_max_i):
+                if f_max > 0:
+                    f_max_allpositive_intermed.append(f_max)
+                    m_delta_allpositive_intermed.append(m_delta_values_loaded[k])
+        else:
+            for k, f_max in enumerate(f_max_i):
+                if 0 < f_max <= 1:
+                    f_max_allpositive_intermed.append(f_max)
+                    m_delta_allpositive_intermed.append(m_delta_values_loaded[k])    
+                    
+        f_max_loaded_truncated = np.array(f_max_allpositive_intermed)[np.array(m_delta_allpositive_intermed) > 1e13]
+        m_delta_loaded_truncated = np.array(m_delta_allpositive_intermed)[np.array(m_delta_allpositive_intermed) > 1e13]
+        f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
+        f_max_i_input = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+        m_delta_input = np.concatenate((m_delta_extrapolated, m_delta_loaded_truncated))
+        
+        
+        f_PBH_Bellomo = []
+                
+        for m_c in mc_values:
+            m_eq_estimate = fsolve(m_eq_func, m_c/1000, args=(f_max_i_input, m_delta_input, m_c, sigma))
+            f_PBH_Bellomo.append(np.interp(m_eq_estimate, m_delta_input, f_max_i_input))
+           
+        ax.plot(mc_values, f_PBH_Bellomo, color=colors_evap[i])
+        
+        f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params=[sigma], evolved=False)      
+        ax.plot(mc_values, f_PBH_Carr, color=colors_evap[i], linestyle="None", marker="x")
+    
+    ax.plot(0,0, color="k", label="Bellomo et al. (2018) method")
+    ax.plot(0,0, color="k", label="Carr et al. (2017) method", marker="x", linestyle="None")
+
+    ax.set_xlabel("$m_c~[\mathrm{g}]$")                
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    if all_fmax:
+        ax.set_title("Power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma), fontsize="small")
+    else:
+        ax.set_title("Power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma) + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
     ax.legend(fontsize="small")
     fig.tight_layout()
     ax.set_xlim(1e14, 1e18)
