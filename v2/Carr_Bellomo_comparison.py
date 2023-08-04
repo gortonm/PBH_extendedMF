@@ -173,7 +173,6 @@ if "__main__" == __name__:
     ax.plot(0,0, color="k", label="Bellomo et al. (2018) method")
     ax.plot(0,0, color="k", label="Carr et al. (2017) method", marker="x", linestyle="None")
 
-    ax.set_xlabel("$m_c~[\mathrm{g}]$")                
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -193,10 +192,12 @@ if "__main__" == __name__:
     if use_LN:
         ax.set_xlim(1e14, 1e19)
         ax.set_ylim(1e-12, 1)
+        ax.set_xlabel("$m_c~[\mathrm{g}]$")                
         
     elif use_CC3:
         ax.set_xlim(1e14, 1e18)
         ax.set_ylim(1e-10, 1)
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")                
         
     fig.tight_layout()
     
@@ -285,7 +286,6 @@ if "__main__" == __name__:
     ax.plot(0,0, color="k", label="Bellomo et al. (2018) method")
     ax.plot(0,0, color="k", label="Carr et al. (2017) method", marker="x", linestyle="None")
 
-    ax.set_xlabel("$m_c~[\mathrm{g}]$")                
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -305,9 +305,11 @@ if "__main__" == __name__:
     if use_LN:
         ax.set_xlim(1e14, 1e19)
         ax.set_ylim(1e-12, 1)
+        ax.set_xlabel("$m_c~[\mathrm{g}]$")                
         
     elif use_CC3:
         ax.set_xlim(1e14, 1e18)
         ax.set_ylim(1e-10, 1)
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")                
         
     fig.tight_layout()
