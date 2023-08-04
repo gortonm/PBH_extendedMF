@@ -45,7 +45,7 @@ def findroot(f, a, b, args, tolerance=1e-5, n_max=10000):
         c = 10**((np.log10(a) + np.log10(b)) / 2)
         #if f(c, *args) == 0 or (b - a) / 2 < tolerance:
         if f(c, *args) == 0 or (np.log10(b) - np.log10(a)) / 2 < tolerance:
-            print(n)
+            #print(n)
             return c
             break
         n += 1
@@ -204,10 +204,10 @@ if "__main__" == __name__:
 
 #%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
 # Obtained using the method from Bellomo et al. (2018) [1709.07467].
-# Extrapolate using a power-law in g(M) to M < 1e11g
+# Extrapolate using a power-law in g(M) to M < 1e13g
 
-use_LN = False
-use_CC3 = True
+use_LN = True
+use_CC3 = False
 
 def m_eq_func(m, f_max_i_input, m_delta_input, m_c, sigma):
     if use_LN:
@@ -232,9 +232,12 @@ if "__main__" == __name__:
     
     # Power-law exponent to use
     exponent_PL_lower = 2.0
-    m_delta_extrapolated = np.logspace(11, 13, 21)
+    m_delta_extrapolated = np.logspace(9, 13, 410)
+    #m_delta_extrapolated = np.logspace(11, 13, 41)
+   
+    all_fmax = False
     
-    all_fmax = True
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
     for i in range(len(constraints_names)):
         
@@ -278,6 +281,12 @@ if "__main__" == __name__:
         
         if use_LN:
             f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params=[sigma], evolved=False)
+            
+            # Load and plot constraints calculated in GC_photon_constraints.py
+            data_filename_LN = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower) + "/LN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta=5.0_approx_unevolved.txt"
+            mc_LN_unevolved, f_PBH_LN_unevolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+            ax.plot(mc_LN_unevolved, f_PBH_LN_unevolved, color="k", alpha=0.3, marker="+")
+            
         elif use_CC3:
             f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params=[alpha, beta], evolved=False)
             
@@ -285,15 +294,17 @@ if "__main__" == __name__:
     
     ax.plot(0,0, color="k", label="Bellomo et al. (2018) method")
     ax.plot(0,0, color="k", label="Carr et al. (2017) method", marker="x", linestyle="None")
+    ax.plot(0,0, color="k", alpha=0.5, label="Carr et al. (2017) method \n From GC_constraints_Carr.py", marker="+")
 
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
     if all_fmax:
         if use_LN:
-            ax.set_title("No power law extrapolation \n Unevolved LN ($\Delta=5$)", fontsize="small")
+            ax.set_title("Power law extrapolation \n Unevolved LN ($\Delta=5$)", fontsize="small")
+        
         elif use_CC3:
-            ax.set_title("No power law extrapolation \n Unevolved CC3 ($\Delta=5$)", fontsize="small")
+            ax.set_title("Power law extrapolation \n Unevolved CC3 ($\Delta=5$)", fontsize="small")
     else:
         if use_LN:
             ax.set_title("Power law extrapolation \n Unevolved LN ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
