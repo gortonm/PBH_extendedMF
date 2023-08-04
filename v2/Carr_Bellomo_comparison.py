@@ -7,9 +7,9 @@ Created on Wed Aug  2 13:54:26 2023
 """
 # Script to compare results obtained using the methods from Carr et al. (2017) [1705.05567] and Bellomo et al. (2018) [1709.07467]
 import numpy as np
-from preliminaries import load_data, LN, SLN, CC3, constraint_Carr, load_results_Isatis, envelope
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from preliminaries import *
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24, 'font.family':'serif'})
@@ -34,7 +34,6 @@ m_Pl = 2.176e-5    # Planck mass, in grams
 t_Pl = 5.391e-44    # Planck time, in seconds
 t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 m_star = 7.473420349255e+14    # Formation mass of a PBH with a lifetimt equal to the age of the Universe, in grams.
-
 
 #%%
 
@@ -113,7 +112,33 @@ if "__main__" == __name__:
 use_LN = False
 use_CC3 = True
 
-def m_eq_func(m, f_max_allpositive, m_delta_allpositive, m_c, *args):
+def m_eq_func(m, f_max_allpositive, m_delta_allpositive, m_c, evolved=True, t=t_0):
+    
+    # Calculate initial masses and evolved masses
+    if evolved:
+        # Find PBH masses at time t
+        m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_allpositive)), np.log10(m_star), 1000), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_allpositive))+4, 1000))))
+        m_values_input = mass_evolved(m_init_values_input, t)
+        
+        if use_LN:
+            psi_initial_values = LN(m_init_values_input, m_c, sigma)
+            
+        elif use_CC3:
+            psi_initial_values = CC3(m_init_values_input, m_c, alpha, beta)
+            
+        # Calculate evolved MF
+        psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
+        
+        # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
+        m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
+        psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
+        psi_evolved_interp = 10**np.interp(np.log10(m_delta_allpositive), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
+        
+        integrand = psi_evolved_interp / f_max_allpositive
+        integral = np.trapz(np.nan_to_num(integrand), m_delta_allpositive)
+        
+        return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - integral
+    
     if use_LN:
         return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(LN(m_delta_allpositive, m_c, sigma) / f_max_allpositive, m_delta_allpositive)
     elif use_CC3:
@@ -209,12 +234,39 @@ if "__main__" == __name__:
 use_LN = True
 use_CC3 = False
 
-def m_eq_func(m, f_max_i_input, m_delta_input, m_c, sigma):
-    if use_LN:
-        return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(LN(m_delta_input, m_c, sigma) / f_max_i_input, m_delta_input)
-    elif use_CC3:
-        return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(CC3(m_delta_input, m_c, alpha, beta) / f_max_i_input, m_delta_input)       
+def m_eq_func(m, f_max_i_input, m_delta_input, m_c, sigma, evolved=True, t=t_0):
+    
+    # Calculate initial masses and evolved masses
+    if evolved:
+        # Find PBH masses at time t
+        m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_input)), np.log10(m_star), 1000), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_input))+4, 1000))))
+        m_values_input = mass_evolved(m_init_values_input, t)
+        
+        if use_LN:
+            psi_initial_values = LN(m_init_values_input, m_c, sigma)
+            
+        elif use_CC3:
+            psi_initial_values = CC3(m_init_values_input, m_c, alpha, beta)
+            
+        # Calculate evolved MF
+        psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
+        
+        # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
+        m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
+        psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
+        psi_evolved_interp = 10**np.interp(np.log10(m_delta_input), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
+        
+        integrand = psi_evolved_interp / f_max_i_input
+        integral = np.trapz(np.nan_to_num(integrand), m_delta_input)
+        
+        return np.interp(m, m_delta_input, 1/f_max_i_input) - integral
 
+    else:
+        if use_LN:
+            return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(LN(m_delta_input, m_c, sigma) / f_max_i_input, m_delta_input)
+        elif use_CC3:
+            return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(CC3(m_delta_input, m_c, alpha, beta) / f_max_i_input, m_delta_input)       
+    
 if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(8,8))
     
