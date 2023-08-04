@@ -59,8 +59,6 @@ def findroot(f, a, b, args, tolerance=1e-5, n_max=10000):
 
 
 #%% Tests of the method from Bellomo et al. (2018) [1709.07467].
-from scipy.optimize import fsolve
-
 
 def g_test_CMB(m, alpha):
     """
@@ -112,22 +110,31 @@ if "__main__" == __name__:
 #%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
 # Obtained using the method from Bellomo et al. (2018) [1709.07467].
 
-from scipy.optimize import fsolve
+use_LN = False
+use_CC3 = True
 
-def m_eq_func(m, f_max_allpositive, m_delta_allpositive, m_c, sigma):
-    return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(LN(m_delta_allpositive, m_c, sigma) / f_max_allpositive, m_delta_allpositive)
-    #return 10**np.interp(np.log10(m), np.log10(m_delta_allpositive), np.log10(1/f_max_allpositive)) - np.trapz(LN(m_delta_allpositive, m_c, sigma) / f_max_allpositive, m_delta_allpositive)
+def m_eq_func(m, f_max_allpositive, m_delta_allpositive, m_c, *args):
+    if use_LN:
+        return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(LN(m_delta_allpositive, m_c, sigma) / f_max_allpositive, m_delta_allpositive)
+    elif use_CC3:
+        return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(CC3(m_delta_allpositive, m_c, alpha, beta) / f_max_allpositive, m_delta_allpositive)
 
 if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(8,8))
-    sigma = 1.84859
+    
+    if use_LN:
+        sigma = 1.84859
+        
+    elif use_CC3:
+        alpha = 13.9
+        beta = 0.0206
                 
     m_delta_values_loaded = np.logspace(11, 21, 1000)
     constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     mc_values = np.logspace(14, 20, 120)
     
-    all_fmax = False
+    all_fmax = True
 
     for i in range(len(constraints_names)):
         
@@ -147,14 +154,20 @@ if "__main__" == __name__:
         f_PBH_Bellomo = []
                 
         for m_c in mc_values:
-            #m_eq_estimate = fsolve(m_eq_func, m_c/1000, args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))[0]
-            m_eq_estimate = findroot(m_eq_func, min(m_delta_allpositive), max(m_delta_allpositive), args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))
+            if use_LN:
+                m_eq_estimate = findroot(m_eq_func, min(m_delta_allpositive), max(m_delta_allpositive), args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))
+            elif use_CC3:
+                m_eq_estimate = findroot(m_eq_func, min(m_delta_allpositive), max(m_delta_allpositive), args=(f_max_allpositive, m_delta_allpositive, m_c, alpha, beta))
+
             f_PBH_Bellomo.append(np.interp(m_eq_estimate, m_delta_allpositive, f_max_allpositive))
-            #f_PBH_Bellomo.append(10**np.interp(np.log10(m_eq_estimate), np.log10(m_delta_allpositive), np.log10(f_max_allpositive)))
            
         ax.plot(mc_values, f_PBH_Bellomo, color=colors_evap[i])
         
-        f_PBH_Carr = constraint_Carr(mc_values, m_delta_allpositive, f_max_allpositive, LN, params=[sigma], evolved=False)      
+        if use_LN:
+            f_PBH_Carr = constraint_Carr(mc_values, m_delta_allpositive, f_max_allpositive, LN, params=[sigma], evolved=False)
+        elif use_CC3:
+            f_PBH_Carr = constraint_Carr(mc_values, m_delta_allpositive, f_max_allpositive, CC3, params=[alpha, beta], evolved=False)
+            
         ax.plot(mc_values, f_PBH_Carr, color=colors_evap[i], linestyle="None", marker="x")
     
     ax.plot(0,0, color="k", label="Bellomo et al. (2018) method")
@@ -165,13 +178,26 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     if all_fmax:
-        ax.set_title("No power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma), fontsize="small")
+        if use_LN:
+            ax.set_title("No power law extrapolation \n Unevolved LN ($\Delta=5$)", fontsize="small")
+        elif use_CC3:
+            ax.set_title("No power law extrapolation \n Unevolved CC3 ($\Delta=5$)", fontsize="small")
     else:
-        ax.set_title("No power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma) + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+        if use_LN:
+            ax.set_title("Power law extrapolation \n Unevolved LN ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+        elif use_CC3:
+            ax.set_title("Power law extrapolation \n Unevolved CC3 ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
     ax.legend(fontsize="small")
     fig.tight_layout()
-    ax.set_xlim(1e14, 1e19)
-    ax.set_ylim(1e-12, 1)
+    
+    if use_LN:
+        ax.set_xlim(1e14, 1e19)
+        ax.set_ylim(1e-12, 1)
+        
+    elif use_CC3:
+        ax.set_xlim(1e14, 1e18)
+        ax.set_ylim(1e-10, 1)
+        
     fig.tight_layout()
     
 
@@ -179,15 +205,24 @@ if "__main__" == __name__:
 # Obtained using the method from Bellomo et al. (2018) [1709.07467].
 # Extrapolate using a power-law in g(M) to M < 1e11g
 
-from scipy.optimize import fsolve
-
+use_LN = False
+use_CC3 = True
 
 def m_eq_func(m, f_max_i_input, m_delta_input, m_c, sigma):
-    return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(LN(m_delta_input, m_c, sigma) / f_max_i_input, m_delta_input)
+    if use_LN:
+        return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(LN(m_delta_input, m_c, sigma) / f_max_i_input, m_delta_input)
+    elif use_CC3:
+        return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(CC3(m_delta_input, m_c, alpha, beta) / f_max_i_input, m_delta_input)       
 
 if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(8,8))
-    sigma = 1.84859
+    
+    if use_LN:
+        sigma = 1.84859
+        
+    elif use_CC3:
+        alpha = 13.9
+        beta = 0.0206
                 
     m_delta_values_loaded = np.logspace(11, 21, 1000)
     constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
@@ -198,7 +233,7 @@ if "__main__" == __name__:
     exponent_PL_lower = 2.0
     m_delta_extrapolated = np.logspace(11, 13, 21)
     
-    all_fmax = False
+    all_fmax = True
 
     for i in range(len(constraints_names)):
         
@@ -231,13 +266,20 @@ if "__main__" == __name__:
         f_PBH_Bellomo = []
                 
         for m_c in mc_values:
-            m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_i_input, m_delta_input, m_c, sigma))
-            #m_eq_estimate = fsolve(m_eq_func, m_c/1000, args=(f_max_i_input, m_delta_input, m_c, sigma))
+            if use_LN:
+                m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_i_input, m_delta_input, m_c, sigma))
+            elif use_CC3:
+                m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_i_input, m_delta_input, m_c, alpha, beta))
+               
             f_PBH_Bellomo.append(np.interp(m_eq_estimate, m_delta_input, f_max_i_input))
            
         ax.plot(mc_values, f_PBH_Bellomo, color=colors_evap[i])
         
-        f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params=[sigma], evolved=False)      
+        if use_LN:
+            f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params=[sigma], evolved=False)
+        elif use_CC3:
+            f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params=[alpha, beta], evolved=False)
+            
         ax.plot(mc_values, f_PBH_Carr, color=colors_evap[i], linestyle="None", marker="x")
     
     ax.plot(0,0, color="k", label="Bellomo et al. (2018) method")
@@ -248,11 +290,24 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     if all_fmax:
-        ax.set_title("Power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma), fontsize="small")
+        if use_LN:
+            ax.set_title("No power law extrapolation \n Unevolved LN ($\Delta=5$)", fontsize="small")
+        elif use_CC3:
+            ax.set_title("No power law extrapolation \n Unevolved CC3 ($\Delta=5$)", fontsize="small")
     else:
-        ax.set_title("Power law extrapolation \n Unevolved LN ($\sigma = {:.1f}$)".format(sigma) + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+        if use_LN:
+            ax.set_title("Power law extrapolation \n Unevolved LN ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+        elif use_CC3:
+            ax.set_title("Power law extrapolation \n Unevolved CC3 ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
     ax.legend(fontsize="small")
     fig.tight_layout()
-    ax.set_xlim(1e14, 1e19)
-    ax.set_ylim(1e-12, 1)
+    
+    if use_LN:
+        ax.set_xlim(1e14, 1e19)
+        ax.set_ylim(1e-12, 1)
+        
+    elif use_CC3:
+        ax.set_xlim(1e14, 1e18)
+        ax.set_ylim(1e-10, 1)
+        
     fig.tight_layout()
