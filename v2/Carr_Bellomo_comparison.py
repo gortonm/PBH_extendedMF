@@ -36,66 +36,26 @@ t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 m_star = 7.473420349255e+14    # Formation mass of a PBH with a lifetimt equal to the age of the Universe, in grams.
 
 
-#%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
-# Obtained using the method from Carr et al. (2017) [1705.05567].
+#%%
 
-if "__main__" == __name__:
-    
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+def findroot(f, a, b, args, tolerance=1e-5, n_max=10000):
+    n = 1
+    while n <= n_max:
+        #c = (a + b) / 2
+        c = 10**((np.log10(a) + np.log10(b)) / 2)
+        #if f(c, *args) == 0 or (b - a) / 2 < tolerance:
+        if f(c, *args) == 0 or (np.log10(b) - np.log10(a)) / 2 < tolerance:
+            print(n)
+            return c
+            break
+        n += 1
         
-    # Boolean determines whether to use the full mass range where f_max is known or only the range where |f_max| < 1
-    all_fmax = True
-        
-    m_delta_values_loaded = np.logspace(11, 21, 1000)
-    constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
-    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
-    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-    
-    mc_values = np.logspace(14, 20, 120)
-    
-    t = t_0
-    if all_fmax:
-        data_folder = "./Data-tests/Carr_Bellomo_comparison/full_m_range"
-    else:
-        data_folder = "./Data-tests/Carr_Bellomo_comparison/truncated_m_range"
-        
-    # Power-law exponent to uses
-    exponent_PL_lower = 2.0
-    m_delta_extrapolated = np.logspace(11, 13, 21)
-    data_folder += "/PL_exp_{:.0f}/".format(exponent_PL_lower)
-
-    sigma = 1.84859
-    evolved = False
-        
-    for i in range(len(constraints_names)):
-        f_max_allpositive = []
-        m_delta_loaded_allpositive = []
-
-        if all_fmax:
-            for k, f_max in enumerate(f_max_Isatis[i]):
-                if f_max > 0:
-                    f_max_allpositive.append(f_max)
-                    m_delta_loaded_allpositive.append(m_delta_values_loaded[k])
+        # set new interval
+        if np.sign(f(c, *args)) == np.sign(f(a, *args)):
+            a = c
         else:
-            for k, f_max in enumerate(f_max_Isatis[i]):
-                if 0 < f_max <= 1:
-                    f_max_allpositive.append(f_max)
-                    m_delta_loaded_allpositive.append(m_delta_values_loaded[k])
-                    
-        m_max = max(m_delta_loaded_allpositive)
-        print("m_max = {:.8e} g".format(m_max))
-        
-        # Extrapolate f_max at masses below 1e13g using a power-law
-        f_max_loaded_truncated = np.array(f_max_allpositive)[np.array(m_delta_loaded_allpositive) > 1e13]
-        m_delta_loaded_truncated = np.array(m_delta_loaded_allpositive)[np.array(m_delta_loaded_allpositive) > 1e13]
-        f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
-        f_max_i = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
-        m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_loaded_truncated))
-                            
-        f_PBH_i_LN = constraint_Carr(mc_values, m_delta_values, f_max_i, LN, [sigma], evolved, t)      
-        data_filename_LN = data_folder + "LN_GC_%s" % constraints_names_short[i] + "_Carrs_sigma={:.1f}_approx.txt".format(sigma)
-        np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
+            b = c
+    print("Method failed")
 
 
 #%% Tests of the method from Bellomo et al. (2018) [1709.07467].
@@ -146,8 +106,8 @@ if "__main__" == __name__:
     print("Exact M_eq = {:.8e} g".format(m_eq_CMB(m_c, alpha, sigma)))
     
     # Estimate M_eq numerically
-    print("Numeric M_eq = {:.8e} g".format(fsolve(meq_finder_CMB, m_c, args=(m_c, sigma, alpha))[0]))
-
+    #print("Numeric M_eq = {:.8e} g".format(fsolve(meq_finder_CMB, m_c, args=(m_c, sigma, alpha))[0]))
+    print("Numeric M_eq = {:.8e} g".format(findroot(meq_finder_CMB, m_min, m_max, args=(m_c, sigma, alpha))))
 
 #%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
 # Obtained using the method from Bellomo et al. (2018) [1709.07467].
@@ -187,7 +147,8 @@ if "__main__" == __name__:
         f_PBH_Bellomo = []
                 
         for m_c in mc_values:
-            m_eq_estimate = fsolve(m_eq_func, m_c/1000, args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))[0]
+            #m_eq_estimate = fsolve(m_eq_func, m_c/1000, args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))[0]
+            m_eq_estimate = findroot(m_eq_func, min(m_delta_allpositive), max(m_delta_allpositive), args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))
             f_PBH_Bellomo.append(np.interp(m_eq_estimate, m_delta_allpositive, f_max_allpositive))
             #f_PBH_Bellomo.append(10**np.interp(np.log10(m_eq_estimate), np.log10(m_delta_allpositive), np.log10(f_max_allpositive)))
            
@@ -237,7 +198,7 @@ if "__main__" == __name__:
     exponent_PL_lower = 2.0
     m_delta_extrapolated = np.logspace(11, 13, 21)
     
-    all_fmax = True
+    all_fmax = False
 
     for i in range(len(constraints_names)):
         
@@ -270,7 +231,8 @@ if "__main__" == __name__:
         f_PBH_Bellomo = []
                 
         for m_c in mc_values:
-            m_eq_estimate = fsolve(m_eq_func, m_c/1000, args=(f_max_i_input, m_delta_input, m_c, sigma))
+            m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_i_input, m_delta_input, m_c, sigma))
+            #m_eq_estimate = fsolve(m_eq_func, m_c/1000, args=(f_max_i_input, m_delta_input, m_c, sigma))
             f_PBH_Bellomo.append(np.interp(m_eq_estimate, m_delta_input, f_max_i_input))
            
         ax.plot(mc_values, f_PBH_Bellomo, color=colors_evap[i])
