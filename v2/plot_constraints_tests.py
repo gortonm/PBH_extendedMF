@@ -182,7 +182,7 @@ if "__main__" == __name__:
         for k, exponent_PL_lower in enumerate(exponents_PL_lower):
             
             if k == 0:
-                data_folder = "./Data-old/"
+                data_folder = "./Data-tests/upper_PL_exp_2"
                 data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
                 data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
                 data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
@@ -712,3 +712,85 @@ if "__main__" == __name__:
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
+
+
+#%% Plot constraints from 2302.04408 (MW diffuse SPI with NFW template).
+# Convergence test with number of masses in preliminaries.py and range of masses included in power-law extrapolation of the delta-function MF constraint.
+# Consider the evolved MFs only, with PL extrapolation.
+
+if "__main__" == __name__:
+
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    plot_LN = False
+    plot_SLN = True
+    plot_CC3 = False
+    
+    mc_values = np.logspace(14, 20, 120)
+        
+    # Power-law exponent to use between 1e11g and 1e15g.
+    exponent_PL_lower = 2.0
+    
+    log_m_min_values = [7, 9, 11]
+    n_steps_values = [1000, 10000, 100000]
+    
+    markers = ["x", "+", "1"]
+    colors = ['#006BA4', '#FF800E', '#ABABAB', '#595959', '#5F9ED1', '#C85200']
+
+    for j in range(len(Deltas)):
+        
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax1 = ax.twinx()
+
+        for k, log_m_min in enumerate(log_m_min_values):
+            
+            ax.plot(0, 0, markers[k], color="k", label="{:.0e}g".format(10**log_m_min))
+                     
+            for l, n_steps in enumerate(n_steps_values):
+                
+                if k == 0:
+                    ax1.plot(0, 0, color=colors[l], label="{:.0f}".format(n_steps))                   
+                
+                data_folder = "./Data-tests/PL_exp_{:.0f}/log_m_min={:.0f}/log_n_steps={:.0f}".format(exponent_PL_lower, log_m_min, np.log10(n_steps))
+                            
+                data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                    
+                mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+                mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                
+                if plot_CC3:
+                    data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                    ax.plot(mp_CC3_evolved, f_PBH_CC3_evolved, markers[k], color=colors[l])
+                    
+                elif plot_LN:
+                    data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                    mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+                    mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
+                    ax.plot(mp_LN, f_PBH_LN_evolved, markers[k], color=colors[l])
+                    
+                elif plot_SLN:
+                    data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                    mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                    mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
+                    ax.plot(mp_SLN, f_PBH_SLN_evolved, markers[k], color=colors[l])
+      
+        if Deltas[j] < 5:
+            ax.set_xlim(1e16, 1e18)
+        else:
+            ax.set_xlim(1e16, 2e18)
+        ax.set_ylim(1e-6, 1)
+
+        ax.legend(fontsize="x-small", title="Min mass in $f_\mathrm{max}$")
+        ax1.legend(fontsize="x-small", title="Number of steps")
+        ax1.set_yticks([])
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        fig.tight_layout()
+        fig.suptitle("Convergence test ($\Delta={:.1f}$)".format(Deltas[j]))
