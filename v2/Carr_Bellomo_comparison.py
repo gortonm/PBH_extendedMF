@@ -112,47 +112,50 @@ if "__main__" == __name__:
 use_LN = False
 use_CC3 = True
 
-def m_eq_func(m, f_max_allpositive, m_delta_allpositive, m_c, evolved=True, t=t_0):
-    
-    # Calculate initial masses and evolved masses
-    if evolved:
-        # Find PBH masses at time t
-        m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_allpositive)), np.log10(m_star), 1000), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_allpositive))+4, 1000))))
-        m_values_input = mass_evolved(m_init_values_input, t)
-        
-        if use_LN:
-            psi_initial_values = LN(m_init_values_input, m_c, sigma)
-            
-        elif use_CC3:
-            psi_initial_values = CC3(m_init_values_input, m_c, alpha, beta)
-            
-        # Calculate evolved MF
-        psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
-        
-        # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
-        m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
-        psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
-        psi_evolved_interp = 10**np.interp(np.log10(m_delta_allpositive), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
-        
-        integrand = psi_evolved_interp / f_max_allpositive
-        integral = np.trapz(np.nan_to_num(integrand), m_delta_allpositive)
-        
-        return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - integral
+def integral_over_g(m_delta_allpositive, m_c, params, t=t_0):
+    # Find PBH masses at time t
+    m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_allpositive)), np.log10(m_star), 1000), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_allpositive))+4, 1000))))
+    m_values_input = mass_evolved(m_init_values_input, t)
     
     if use_LN:
-        return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(LN(m_delta_allpositive, m_c, sigma) / f_max_allpositive, m_delta_allpositive)
+        psi_initial_values = LN(m_init_values_input, m_c, *params)
+        
     elif use_CC3:
-        return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(CC3(m_delta_allpositive, m_c, alpha, beta) / f_max_allpositive, m_delta_allpositive)
+        psi_initial_values = CC3(m_init_values_input, m_c, *params)
+        
+    # Calculate evolved MF
+    psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
+    
+    # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
+    m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
+    psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
+    psi_evolved_interp = 10**np.interp(np.log10(m_delta_allpositive), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
+    
+    integrand = psi_evolved_interp / f_max_allpositive
+    return np.trapz(np.nan_to_num(integrand), m_delta_allpositive)
+
+def m_eq_func(m, f_max_allpositive, m_delta_allpositive, m_c, evolved=True, t=t_0):
+    
+    if evolved:
+        return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - integral
+    
+    else:
+        if use_LN:
+            return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(LN(m_delta_allpositive, m_c, sigma) / f_max_allpositive, m_delta_allpositive)
+        elif use_CC3:
+            return np.interp(m, m_delta_allpositive, 1/f_max_allpositive) - np.trapz(CC3(m_delta_allpositive, m_c, alpha, beta) / f_max_allpositive, m_delta_allpositive)
 
 if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(8,8))
     
     if use_LN:
         sigma = 1.84859
+        params = [sigma]
         
     elif use_CC3:
         alpha = 13.9
         beta = 0.0206
+        params = [alpha, beta]
                 
     m_delta_values_loaded = np.logspace(11, 21, 1000)
     constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
@@ -160,6 +163,12 @@ if "__main__" == __name__:
     mc_values = np.logspace(14, 20, 120)
     
     all_fmax = True
+    evolved = True
+    
+    if evolved:
+        title_part = "Evolved"
+    else:
+        title_part = "Unevolved"
 
     for i in range(len(constraints_names)):
         
@@ -179,6 +188,10 @@ if "__main__" == __name__:
         f_PBH_Bellomo = []
                 
         for m_c in mc_values:
+            
+            if evolved:
+                integral = integral_over_g(m_delta_allpositive, m_c, params)
+            
             if use_LN:
                 m_eq_estimate = findroot(m_eq_func, min(m_delta_allpositive), max(m_delta_allpositive), args=(f_max_allpositive, m_delta_allpositive, m_c, sigma))
             elif use_CC3:
@@ -189,9 +202,9 @@ if "__main__" == __name__:
         ax.plot(mc_values, f_PBH_Bellomo, color=colors_evap[i])
         
         if use_LN:
-            f_PBH_Carr = constraint_Carr(mc_values, m_delta_allpositive, f_max_allpositive, LN, params=[sigma], evolved=False)
+            f_PBH_Carr = constraint_Carr(mc_values, m_delta_allpositive, f_max_allpositive, LN, params, evolved)
         elif use_CC3:
-            f_PBH_Carr = constraint_Carr(mc_values, m_delta_allpositive, f_max_allpositive, CC3, params=[alpha, beta], evolved=False)
+            f_PBH_Carr = constraint_Carr(mc_values, m_delta_allpositive, f_max_allpositive, CC3, params, evolved)
             
         ax.plot(mc_values, f_PBH_Carr, color=colors_evap[i], linestyle="None", marker="x")
     
@@ -203,14 +216,14 @@ if "__main__" == __name__:
     ax.set_yscale("log")
     if all_fmax:
         if use_LN:
-            ax.set_title("No power law extrapolation \n Unevolved LN ($\Delta=5$)", fontsize="small")
+            ax.set_title("No power law extrapolation \n " + title_part + " LN ($\Delta=5$)", fontsize="small")
         elif use_CC3:
-            ax.set_title("No power law extrapolation \n Unevolved CC3 ($\Delta=5$)", fontsize="small")
+            ax.set_title("No power law extrapolation \n " + title_part + " CC3 ($\Delta=5$)", fontsize="small")
     else:
         if use_LN:
-            ax.set_title("Power law extrapolation \n Unevolved LN ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+            ax.set_title("Power law extrapolation \n " + title_part + "  LN ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
         elif use_CC3:
-            ax.set_title("Power law extrapolation \n Unevolved CC3 ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+            ax.set_title("Power law extrapolation \n " + title_part + "  CC3 ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
     ax.legend(fontsize="small")
     fig.tight_layout()
     
@@ -231,51 +244,54 @@ if "__main__" == __name__:
 # Obtained using the method from Bellomo et al. (2018) [1709.07467].
 # Extrapolate using a power-law in g(M) to M < 1e13g
 
-use_LN = True
-use_CC3 = False
+use_LN = False
+use_CC3 = True
 
-def m_eq_func(m, f_max_i_input, m_delta_input, m_c, sigma, evolved=True, t=t_0):
+def integral_over_g(m_delta_input, m_c, params, t=t_0):
+    # Find PBH masses at time t
+    m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_input)), np.log10(m_star), 1000), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_input))+4, 1000))))
+    m_values_input = mass_evolved(m_init_values_input, t)
     
-    # Calculate initial masses and evolved masses
-    if evolved:
-        # Find PBH masses at time t
-        m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_input)), np.log10(m_star), 1000), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_input))+4, 1000))))
-        m_values_input = mass_evolved(m_init_values_input, t)
+    if use_LN:
+        psi_initial_values = LN(m_init_values_input, m_c, *params)
         
-        if use_LN:
-            psi_initial_values = LN(m_init_values_input, m_c, sigma)
-            
-        elif use_CC3:
-            psi_initial_values = CC3(m_init_values_input, m_c, alpha, beta)
-            
-        # Calculate evolved MF
-        psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
+    elif use_CC3:
+        psi_initial_values = CC3(m_init_values_input, m_c, *params)
         
-        # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
-        m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
-        psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
-        psi_evolved_interp = 10**np.interp(np.log10(m_delta_input), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
-        
-        integrand = psi_evolved_interp / f_max_i_input
-        integral = np.trapz(np.nan_to_num(integrand), m_delta_input)
-        
+    # Calculate evolved MF
+    psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
+    
+    # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
+    m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
+    psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
+    psi_evolved_interp = 10**np.interp(np.log10(m_delta_input), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
+    
+    integrand = psi_evolved_interp / f_max_i_input
+    return np.trapz(np.nan_to_num(integrand), m_delta_input)
+    
+
+def m_eq_func(m, f_max_i_input, m_delta_input, m_c, params):
+    
+    if evolved:        
         return np.interp(m, m_delta_input, 1/f_max_i_input) - integral
 
     else:
         if use_LN:
-            return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(LN(m_delta_input, m_c, sigma) / f_max_i_input, m_delta_input)
+            return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(LN(m_delta_input, m_c, *params) / f_max_i_input, m_delta_input)
         elif use_CC3:
-            return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(CC3(m_delta_input, m_c, alpha, beta) / f_max_i_input, m_delta_input)       
+            return np.interp(m, m_delta_input, 1/f_max_i_input) - np.trapz(CC3(m_delta_input, m_c, *params) / f_max_i_input, m_delta_input)       
     
 if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(8,8))
     
     if use_LN:
         sigma = 1.84859
+        params = [sigma]
         
     elif use_CC3:
         alpha = 13.9
         beta = 0.0206
+        params = [alpha, beta]
                 
     m_delta_values_loaded = np.logspace(11, 21, 1000)
     constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
@@ -287,7 +303,13 @@ if "__main__" == __name__:
     m_delta_extrapolated = np.logspace(9, 13, 410)
     #m_delta_extrapolated = np.logspace(11, 13, 41)
    
-    all_fmax = False
+    evolved = True
+    all_fmax = True
+    
+    if evolved:
+        title_init = "Power law extrapolation \n Evolved"
+    else:
+        title_init = "Power law extrapolation \n Unevolved"
     
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
@@ -322,17 +344,21 @@ if "__main__" == __name__:
         f_PBH_Bellomo = []
                 
         for m_c in mc_values:
+            
+            if evolved:
+                integral = integral_over_g(m_delta_input, m_c, params)
+            
             if use_LN:
-                m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_i_input, m_delta_input, m_c, sigma))
+                m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_i_input, m_delta_input, m_c, params))
             elif use_CC3:
-                m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_i_input, m_delta_input, m_c, alpha, beta))
+                m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_i_input, m_delta_input, m_c, params))
                
             f_PBH_Bellomo.append(np.interp(m_eq_estimate, m_delta_input, f_max_i_input))
            
         ax.plot(mc_values, f_PBH_Bellomo, color=colors_evap[i])
         
         if use_LN:
-            f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params=[sigma], evolved=False)
+            f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params, evolved)
             
             # Load and plot constraints calculated in GC_photon_constraints.py
             data_filename_LN = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower) + "/LN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta=5.0_approx_unevolved.txt"
@@ -340,7 +366,7 @@ if "__main__" == __name__:
             ax.plot(mc_LN_unevolved, f_PBH_LN_unevolved, color="k", alpha=0.3, marker="+")
             
         elif use_CC3:
-            f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, LN, params=[alpha, beta], evolved=False)
+            f_PBH_Carr = constraint_Carr(mc_values, m_delta_input, f_max_i_input, CC3, params, evolved)
             
         ax.plot(mc_values, f_PBH_Carr, color=colors_evap[i], linestyle="None", marker="x")
     
@@ -353,15 +379,21 @@ if "__main__" == __name__:
     ax.set_yscale("log")
     if all_fmax:
         if use_LN:
-            ax.set_title("Power law extrapolation \n Unevolved LN ($\Delta=5$)", fontsize="small")
+            ax.set_title(title_init + " LN ($\Delta=5$)", fontsize="small")
         
         elif use_CC3:
-            ax.set_title("Power law extrapolation \n Unevolved CC3 ($\Delta=5$)", fontsize="small")
+            
+            # Load and plot constraints calculated in GC_photon_constraints.py
+            data_filename_LN = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta=5.0_approx.txt"
+            mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+            ax.plot(mc_LN_evolved, f_PBH_LN_evolved, color="k", alpha=0.3, marker="+")
+            
+            ax.set_title(title_init + " CC3 ($\Delta=5$)", fontsize="small")
     else:
         if use_LN:
-            ax.set_title("Power law extrapolation \n Unevolved LN ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+            ax.set_title(title_init + " LN ($\Delta=5$), mass range only where $f_\mathrm{max} < 1$", fontsize="small")
         elif use_CC3:
-            ax.set_title("Power law extrapolation \n Unevolved CC3 ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
+            ax.set_title(title_init + " CC3 ($\Delta=5$)" + ", mass range only where $f_\mathrm{max} < 1$", fontsize="small")
     ax.legend(fontsize="small")
     fig.tight_layout()
     
