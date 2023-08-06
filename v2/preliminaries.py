@@ -865,9 +865,18 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    linestyles = ["solid", "solid", "solid", "solid", "solid", "dashed", "dotted"]
+    plot_LN = False
+    plot_SLN = False
+    plot_CC3 = True
     
-    fig, ax = plt.subplots(figsize=(6, 6))
+    if plot_LN:
+        colors = ["grey", "lime", "lime", "lime", "lime", "tab:red", "pink"]
+    elif plot_SLN:
+        colors = ["grey", "lime", "lime", "lime", "lime", "tab:blue", "cyan"]
+    elif plot_CC3:
+        colors = ["grey", "lime", "lime", "lime", "lime", "tab:green", "lime"]
+
+    fig, ax = plt.subplots(figsize=(7, 7))
 
     for i in [0, 5, 6]:
 
@@ -897,9 +906,15 @@ if "__main__" == __name__:
         mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
         mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
 
-        #ax.plot(m_pbh_values_evolved, mf_LN_evolved, linestyle=linestyles[i], color="r", label="${:.0f}$".format(Deltas[i]))            
-        #ax.plot(m_pbh_values_evolved, mf_SLN_evolved, linestyle=linestyles[i], color="b", label="${:.0f}$".format(Deltas[i]))  
-        ax.plot(m_pbh_values_evolved, mf_CC3_evolved, linestyle=linestyles[i], color="g", label="${:.0f}$".format(Deltas[i]))  
+        if plot_LN:
+            ax.plot(m_pbh_values_init, mf_LN_init, color=colors[i], linestyle="dotted")
+            ax.plot(m_pbh_values_evolved, mf_LN_evolved, color=colors[i], label="${:.0f}$".format(Deltas[i]))
+        elif plot_SLN:
+            ax.plot(m_pbh_values_init, mf_SLN_init, color=colors[i], linestyle="dotted")
+            ax.plot(m_pbh_values_evolved, mf_SLN_evolved, color=colors[i], label="${:.0f}$".format(Deltas[i]))
+        elif plot_CC3:
+            ax.plot(m_pbh_values_init, mf_CC3_init, color=colors[i], linestyle="dotted")
+            ax.plot(m_pbh_values_evolved, mf_CC3_evolved,  color=colors[i], label="${:.0f}$".format(Deltas[i]))  
         
     # Show smallest PBH mass constrained by microlensing.
     ax.set_xscale("log")
@@ -908,11 +923,15 @@ if "__main__" == __name__:
     ax.set_xlabel("$m~[\mathrm{g}]$")
     ax.set_xlim(1e13, 1e18)
     ax.set_ylim(1e-23, 1e-15)
-    ax.set_title("CC3, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+    if plot_CC3:
+        ax.set_title("CC3, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+    elif plot_SLN:
+        ax.set_title("SLN, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+    elif plot_LN:
+        ax.set_title("LN, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
     ax.set_ylabel("$\psi_\mathrm{N}$")
 
     fig.tight_layout()
-
 
 
 #%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
