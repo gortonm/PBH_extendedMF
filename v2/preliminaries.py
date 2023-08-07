@@ -865,8 +865,8 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    plot_LN = True
-    plot_SLN = False
+    plot_LN = False
+    plot_SLN = True
     plot_CC3 = False
     
     if plot_LN:
@@ -878,8 +878,10 @@ if "__main__" == __name__:
 
     fig0, ax0 = plt.subplots(figsize=(7, 7))
     fig1, ax1 = plt.subplots(figsize=(7, 7))
+    
+    f_Mi_denominator = []
 
-    for i in [0, 5, 6]:
+    for i in [5, 6]:
 
         m_pbh_values_init = np.sort(np.concatenate((np.logspace(np.log10(m_star)-5, np.log10(m_star), 100), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
                                
@@ -912,25 +914,53 @@ if "__main__" == __name__:
         mf_CC3_evolved_unnormalised = psi_evolved(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
 
         if plot_LN:
+                        
             ax0.plot(m_pbh_values_init, mf_LN_init, color=colors[i], linestyle="dotted")
             ax0.plot(m_pbh_values_evolved, mf_LN_evolved, color=colors[i], label="${:.0f}$".format(Deltas[i]))
             
             ax1.plot(m_pbh_values_init, mf_LN_init, color=colors[i], linestyle="dotted")
             ax1.plot(m_pbh_values_evolved, mf_LN_evolved_unnormalised, color=colors[i], label="${:.0f}$".format(Deltas[i]))
+            
+            if i == 5:
+                f_Mi_denominator = mf_LN_init
+                mf_evolved_Delta2 = mf_LN_evolved_unnormalised
+            elif i == 6:
+                f_Mi = mf_LN_init / f_Mi_denominator
+                ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
+                #ax1.plot(m_pbh_values_init, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
 
         elif plot_SLN:
+                          
             ax0.plot(m_pbh_values_init, mf_SLN_init, color=colors[i], linestyle="dotted")
             ax0.plot(m_pbh_values_evolved, mf_SLN_evolved, color=colors[i], label="${:.0f}$".format(Deltas[i]))
             
             ax1.plot(m_pbh_values_init, mf_SLN_init, color=colors[i], linestyle="dotted")
             ax1.plot(m_pbh_values_evolved, mf_SLN_evolved_unnormalised, color=colors[i], label="${:.0f}$".format(Deltas[i]))
+            
+            if i == 5:
+                f_Mi_denominator = mf_SLN_init
+                mf_evolved_Delta2 = mf_SLN_evolved_unnormalised
+            elif i == 6:
+                f_Mi = mf_SLN_init / f_Mi_denominator
+                ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
+                #ax1.plot(m_pbh_values_init, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
 
         elif plot_CC3:
+                      
             ax0.plot(m_pbh_values_init, mf_CC3_init, color=colors[i], linestyle="dotted")
             ax0.plot(m_pbh_values_evolved, mf_CC3_evolved,  color=colors[i], label="${:.0f}$".format(Deltas[i]))  
             
             ax1.plot(m_pbh_values_init, mf_CC3_init, color=colors[i], linestyle="dotted")
             ax1.plot(m_pbh_values_evolved, mf_CC3_evolved_unnormalised, color=colors[i], label="${:.0f}$".format(Deltas[i]))
+            
+            if i == 5:
+                f_Mi_denominator = mf_CC3_init
+                mf_evolved_Delta2 = mf_CC3_evolved_unnormalised
+            elif i == 6:
+                f_Mi = mf_CC3_init / f_Mi_denominator
+                ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
+                #ax1.plot(m_pbh_values_init, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
+            
         
     # Show smallest PBH mass constrained by microlensing.
     for ax in [ax0, ax1]:
