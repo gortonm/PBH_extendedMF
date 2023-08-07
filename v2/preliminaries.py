@@ -865,8 +865,8 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    plot_LN = False
-    plot_SLN = True
+    plot_LN = True
+    plot_SLN = False
     plot_CC3 = False
     
     if plot_LN:
@@ -926,7 +926,7 @@ if "__main__" == __name__:
                 mf_evolved_Delta2 = mf_LN_evolved_unnormalised
             elif i == 6:
                 f_Mi = mf_LN_init / f_Mi_denominator
-                ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
+                #ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
                 #ax1.plot(m_pbh_values_init, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
 
         elif plot_SLN:
@@ -942,7 +942,7 @@ if "__main__" == __name__:
                 mf_evolved_Delta2 = mf_SLN_evolved_unnormalised
             elif i == 6:
                 f_Mi = mf_SLN_init / f_Mi_denominator
-                ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
+                #ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
                 #ax1.plot(m_pbh_values_init, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
 
         elif plot_CC3:
@@ -958,7 +958,7 @@ if "__main__" == __name__:
                 mf_evolved_Delta2 = mf_CC3_evolved_unnormalised
             elif i == 6:
                 f_Mi = mf_CC3_init / f_Mi_denominator
-                ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
+                #ax1.plot(m_pbh_values_evolved, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
                 #ax1.plot(m_pbh_values_init, f_Mi*mf_evolved_Delta2, color="k", linestyle="dashed")
             
         
@@ -976,6 +976,8 @@ if "__main__" == __name__:
             ax.set_title("SLN, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
         elif plot_LN:
             ax.set_title("LN, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+            
+        ax.vlines(m_star, 1e-23, 1e-15, color="k", linestyle="dotted")
     
     ax0.set_ylabel("$\psi_\mathrm{N}$")
     ax1.set_ylabel("$\psi$")
