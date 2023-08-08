@@ -809,15 +809,15 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if i == 6:
+        if i == 0:
            
             m_pbh_values_init = np.sort(np.concatenate((np.logspace(np.log10(m_star)-5, np.log10(m_star), 100), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
             fig, ax = plt.subplots(figsize=(6, 6))
             
             # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
-            mc_SLN = 6.8e16   # for Delta = 5
+            #mc_SLN = 6.8e16   # for Delta = 5
             #mc_SLN = 3.24e16    # for Delta = 2
-            #mc_SLN = 1.53e16   # for Delta = 0
+            mc_SLN = 1.53e16   # for Delta = 0
             m_p = 1e16
             mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
             
@@ -865,14 +865,14 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    plot_LN = True
+    plot_LN = False
     plot_SLN = False
-    plot_CC3 = False
+    plot_CC3 = True
     
     if plot_LN:
         colors = ["grey", "lime", "lime", "lime", "lime", "tab:red", "pink"]
     elif plot_SLN:
-        colors = ["grey", "lime", "lime", "lime", "lime", "tab:blue", "cyan"]
+        colors = ["grey", "lime", "lime", "lime", "lime", "tab:blue", "deepskyblue"]
     elif plot_CC3:
         colors = ["grey", "lime", "lime", "lime", "lime", "tab:green", "lime"]
 
@@ -984,6 +984,106 @@ if "__main__" == __name__:
     
     fig0.tight_layout()
     fig1.tight_layout()
+    
+
+
+#%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
+# for the Galactic Centre photon constraints from Isatis (1e16g)
+ 
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    plot_LN = False
+    plot_SLN = True
+    plot_CC3 = False
+    
+    if plot_LN:
+        colors = ["grey", "lime", "lime", "lime", "lime", "tab:red", "pink"]
+    elif plot_SLN:
+        colors = ["grey", "lime", "lime", "lime", "lime", "tab:blue", "deepskyblue"]
+    elif plot_CC3:
+        colors = ["grey", "lime", "lime", "lime", "lime", "tab:green", "lime"]
+
+    fig0, ax0 = plt.subplots(figsize=(7, 7))
+    fig1, ax1 = plt.subplots(figsize=(7, 7))
+    
+    f_Mi_denominator = []
+
+    m_pbh_values_init = np.sort(np.concatenate((np.logspace(np.log10(m_star)-5, np.log10(m_star), 100), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
+                               
+    # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
+    mc_SLN_D5 = 6.8e16   # for Delta = 5
+    mc_SLN_D2 = 3.24e16    # for Delta = 2
+        
+    m_p = 1e16
+    mc_LN_D2 = m_p * np.exp(+sigmas_LN[5]**2)
+    mc_LN_D5 = m_p * np.exp(+sigmas_LN[6]**2)
+   
+    mp_SLN_est_D2 = m_max_SLN(mc_SLN_D2, sigmas_SLN[5], alpha=alphas_SLN[5], log_m_factor=4, n_steps=1000)
+    mp_SLN_est_D5 = m_max_SLN(mc_SLN_D5, sigmas_SLN[6], alpha=alphas_SLN[6], log_m_factor=4, n_steps=1000)
+
+    print("m_p (CC3) = {:.2e}".format(m_p))
+    print("m_p (SLN, D=2) = {:.2e}".format(mp_SLN_est_D2))
+    print("m_p (SLN, D=5) = {:.2e}".format(mp_SLN_est_D5))
+    
+    m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
+
+    if plot_LN:
+        mf_init_D2 = LN(m_pbh_values_init, mc_LN_D2, sigma=sigmas_LN[5])
+        mf_init_D5 = LN(m_pbh_values_init, mc_LN_D5, sigma=sigmas_LN[6])
+            
+    elif plot_SLN:
+        mf_init_D2 = SLN(m_pbh_values_init, mc_SLN_D2, sigma=sigmas_SLN[5], alpha=alphas_SLN[5])
+        mf_init_D5 = SLN(m_pbh_values_init, mc_SLN_D5, sigma=sigmas_SLN[6], alpha=alphas_SLN[6])
+       
+    elif plot_CC3:
+        mf_init_D2 = CC3(m_pbh_values_init, mc_LN_D2, alpha=alphas_CC3[5], beta=betas[5])
+        mf_init_D5 = CC3(m_pbh_values_init, mc_LN_D5, alpha=alphas_CC3[6], beta=betas[6])
+ 
+    ratio_init = mf_init_D5 / mf_init_D2
+
+    mf_evolved_D2 = psi_evolved(mf_init_D2, m_pbh_values_evolved, m_pbh_values_init)
+    mf_evolved_D5 = psi_evolved(mf_init_D5, m_pbh_values_evolved, m_pbh_values_init)
+    
+    ratio_evolved = mf_evolved_D5 / mf_evolved_D2
+            
+    ax0.plot(m_pbh_values_evolved, ratio_evolved, color=colors[-1], label="Evolved \n (plotted against evolved mass)")
+    ax0.plot(m_pbh_values_init, ratio_init, color=colors[-2], linestyle="dotted", label="Initial \n (plotted against initial mass)")
+    ax0.set_xlabel("$M~[\mathrm{g}]$")
+    
+    ax1.plot(m_pbh_values_init, ratio_evolved, color=colors[-1], label="Evolved")
+    ax1.plot(m_pbh_values_init, ratio_init, color=colors[-2], linestyle="dotted", label="Initial")
+    ax1.vlines(m_star, 1e-3, 1e3, color="k", linestyle="dotted")
+    ax1.set_xlabel("$M_i~[\mathrm{g}]$")
+                
+    # Show smallest PBH mass constrained by microlensing.
+    for ax in [ax0, ax1]:
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(1e13, 1e18)
+        ax.set_ylim(1e-3, 1e3)
+        if plot_CC3:
+            ax.set_title("CC3, $M_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+        elif plot_SLN:
+            ax.set_title("SLN, $M_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+        elif plot_LN:
+            ax.set_title("LN, $M_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+            
+        ax.set_ylabel("$\psi(\Delta=5) / \psi(\Delta=2)$")
+        ax.legend(fontsize="x-small")
+    
+    fig0.tight_layout()
+    fig1.tight_layout()
+    
+    fig2, ax2 = plt.subplots(figsize=(8,8))
+    ax2.plot(m_pbh_values_evolved, ratio_init / ratio_evolved)
+    ax2.plot(m_pbh_values_init, ratio_init / ratio_evolved)
+    ax2.set_xscale("log")
+    ax2.set_xlabel("$M~[\mathrm{g}]$")
+    ax2.set_ylabel("$[\psi(\Delta=5) / \psi(\Delta=2)]_\mathrm{init} / [\psi(\Delta=5) / \psi(\Delta=2)]$")
+    fig2.tight_layout()
 
 
 #%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
