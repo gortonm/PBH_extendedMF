@@ -1220,7 +1220,11 @@ if "__main__" == __name__:
         
         f_max = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
         m_pbh_values = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
-    
+        
+        #Uncomment to check how the evolved MF integrand would appear if there is no cutoff below 1e15g.
+        m_pbh_values_upper = m_pbh_values
+        f_max_upper = f_max
+        
     elif plot_GC_Isatis:
         
         if Delta == 2:
@@ -1352,17 +1356,6 @@ if "__main__" == __name__:
     ax.plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
     ax.plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
     
-    # Minimum and maximum masses for which the evolved CC3 MF for Delta = 2 is larger than the evolved Delta = 5 MF, for a peak mass M_p = 1e16g
-    m_min_CC3 = 1.13e15
-    m_max_CC3 = 7.33e16
-    
-    integral_lower = np.trapz(mf_CC3_evolved[m_pbh_values<m_min_CC3] / f_max[m_pbh_values<m_min_CC3], m_pbh_values[m_pbh_values<m_min_CC3])
-    integral_upper = np.trapz(mf_CC3_evolved[m_pbh_values<m_max_CC3] / f_max[m_pbh_values<m_max_CC3], m_pbh_values[m_pbh_values<m_max_CC3])
-    integral_total = np.trapz(mf_CC3_evolved / f_max, m_pbh_values)
-    print("\n Evolved MFs")
-    print("Integral (M < 1.13e15g) / total integral [CC3] = {:.3f}".format(integral_lower / integral_total))
-    print("Integral (1.13e15g < M < 7.3316g) / total integral [CC3] = {:.3f}".format((integral_upper - integral_lower) / integral_total))
-    
     if plot_KP23:
         ax.plot(m_pbh_values_upper, SLN(m_pbh_values_upper, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max_upper, color="b", linestyle="dotted")
         ax.plot(m_pbh_values_upper, CC3(m_pbh_values_upper, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max_upper, color="g", linestyle="dotted")
@@ -1373,7 +1366,6 @@ if "__main__" == __name__:
         ax.plot(m_delta_values_loaded, CC3(m_delta_values_loaded, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max_loaded, color="g", linestyle="dotted")
         ax.plot(m_delta_values_loaded, LN(m_delta_values_loaded, mc_LN, sigma=sigmas_LN[i]) / f_max_loaded, color="r", linestyle="dotted")
 
-    
     # Show smallest PBH mass constrained by microlensing.
     #ax.set_xscale("log")
     #ax.set_yscale("log")
@@ -1382,13 +1374,92 @@ if "__main__" == __name__:
     #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
     ax.set_xlabel("$m~[\mathrm{g}]$")
     #ax.set_xlim(xmin, xmax)
-    ax.set_title("$\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
+    if plot_KP23:
+        ax.set_xlim(0, 1e16)
+        ax.set_ylim(0, 7e-12)
+        ax.set_title("KP '23, $\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="x-small")
+
+    elif plot_GC_Isatis:
+        ax.set_xlim(0, 5e15)
+        if Delta == 2:
+            ax.set_ylim(0, 5e-12)
+
+        elif Delta == 5:
+            ax.set_ylim(0, 1e-11)
+        ax.set_title("GC Isatis constraints, $\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="x-small")
 
     ax.set_ylabel("$\psi_\mathrm{N} / f_\mathrm{max}$")
     #ax.set_ylim(ymin, ymax)
     
     fig.set_tight_layout(True)
     
+
+
+    # Minimum and maximum masses for which the evolved CC3 MF for Delta = 2 is larger than the evolved Delta = 5 MF, for a peak mass M_p = 1e16g
+    #m_min_CC3 = 1.13e15
+    
+    m_min = 1.1e15   # Initial PBH mass that has lost more than 10% of its mass over its lifetime
+    m_max = 7.33e16
+    m_min_CC3 = m_min
+    m_max_CC3 = m_max
+        
+    integral_lower = np.trapz(mf_CC3_evolved[m_pbh_values<m_min_CC3] / f_max[m_pbh_values<m_min_CC3], m_pbh_values[m_pbh_values<m_min_CC3])
+    integral_upper = np.trapz(mf_CC3_evolved[m_pbh_values<m_max_CC3] / f_max[m_pbh_values<m_max_CC3], m_pbh_values[m_pbh_values<m_max_CC3])
+    integral_total = np.trapz(mf_CC3_evolved / f_max, m_pbh_values)
+    print("\n Evolved MFs")
+    print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, integral_lower / integral_total))
+    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, m_max_CC3, (integral_upper - integral_lower) / integral_total))
+
+    integral_lower = np.trapz(mf_SLN_evolved[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
+    integral_upper = np.trapz(mf_SLN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
+    integral_total = np.trapz(mf_SLN_evolved / f_max, m_pbh_values)
+    print("\n Evolved MFs")
+    print("Integral (M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, integral_lower / integral_total))
+    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
+
+    integral_lower = np.trapz(mf_LN_evolved[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
+    integral_upper = np.trapz(mf_LN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
+    integral_total = np.trapz(mf_LN_evolved / f_max, m_pbh_values)
+    print("\n Evolved MFs")
+    print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
+    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
+
+    # For initial MFs, restrict the mass range to that loaded from the data itself    
+    if plot_KP23:
+        # for initial MFs, restrict the mass range to that loaded from the data itslf
+        f_max = f_max_upper
+        m_pbh_values = m_pbh_values_upper
+        
+    elif plot_GC_Isatis:
+        f_max = f_max_loaded
+        m_pbh_values = m_delta_values_loaded
+    
+    m_pbh_values_lower = m_pbh_values[m_pbh_values<m_min_CC3]
+    m_pbh_values_upper = m_pbh_values[m_pbh_values<m_max_CC3]
+    integral_lower = np.trapz(CC3(m_pbh_values_lower, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max[m_pbh_values<m_min_CC3], m_pbh_values_lower)
+    integral_upper = np.trapz(CC3(m_pbh_values_upper, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max[m_pbh_values<m_max_CC3], m_pbh_values_upper)
+    integral_total = np.trapz(CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max, m_pbh_values)
+    print("\n init MFs")
+    print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, integral_lower / integral_total))
+    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, m_max_CC3, (integral_upper - integral_lower) / integral_total))
+    
+    m_pbh_values_lower = m_pbh_values[m_pbh_values<m_min]
+    m_pbh_values_upper = m_pbh_values[m_pbh_values<m_max]
+    integral_lower = np.trapz(SLN(m_pbh_values_lower, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max[m_pbh_values<m_min], m_pbh_values_lower)
+    integral_upper = np.trapz(SLN(m_pbh_values_upper, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max[m_pbh_values<m_max], m_pbh_values_upper)
+    integral_total = np.trapz(SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max, m_pbh_values)
+    print("\n init MFs")
+    print("Integral (M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, integral_lower / integral_total))
+    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
+    
+    integral_lower = np.trapz(LN(m_pbh_values_lower, mc_LN, sigma=sigmas_LN[i]) / f_max[m_pbh_values<m_min], m_pbh_values_lower)
+    integral_upper = np.trapz(LN(m_pbh_values_upper, mc_LN, sigma=sigmas_LN[i]) / f_max[m_pbh_values<m_max], m_pbh_values_upper)
+    integral_total = np.trapz(LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i]) / f_max, m_pbh_values)
+    print("\n init MFs")
+    print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
+    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
+
+        
     #%% Plot the mass functions, for different Delta and peak masses
      
     if "__main__" == __name__:
@@ -1709,7 +1780,7 @@ if "__main__" == __name__:
         ax.plot(m_delta_extrapolated, f_max_extrapolated, color=colors_evap[i])
         ax.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_loaded_truncated, color=colors_evap[i])
         
-        if i > 1:
+        if i == 1 or i ==2:
             ax1.plot(m_delta_extrapolated, 1/f_max_extrapolated, color=colors_evap[i])
             ax1.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], 1/f_max_loaded_truncated, color=colors_evap[i])
             
