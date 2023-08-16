@@ -40,7 +40,7 @@ plt.style.use('tableau-colorblind10')
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = True
+    plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = not plot_GC_Isatis
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
@@ -77,7 +77,7 @@ if "__main__" == __name__:
         if plot_GC_Isatis:
             
             
-            """  # Plot constraints obtained with unevolved MF
+            # Plot constraints obtained with unevolved MF
             mc_values_GC = np.logspace(14, 19, 100)
             # Load constraints from Galactic Centre photons.
             fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
@@ -92,14 +92,13 @@ if "__main__" == __name__:
             # Estimate peak mass of skew-lognormal MF
             mp_SLN_GC = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
             
-            ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], alpha=0.3)
-            ax0.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], alpha=0.3)
-            ax1.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], alpha=0.3)
-            ax1.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], alpha=0.3)
+            ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], alpha=0.4)
+            ax0.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], alpha=0.4)
+            ax1.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], alpha=0.4)
+            ax1.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], alpha=0.4)
             
-            """
             
-            plt.suptitle("Galactic Centre photon constraints (Isatis), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+            plt.suptitle("Existing constraints (showing Galactic Centre photon constraints (Isatis)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
             
             # Monochromatic MF constraints
             m_delta_evap = np.logspace(11, 21, 1000)
@@ -180,7 +179,7 @@ if "__main__" == __name__:
             exponent_PL_lower = 2
             data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
             
-            fig.suptitle("511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+            fig.suptitle("Existing constraints (showing 511 keV line constraints (Korwar \& Profumo 2023)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
             
             # Monochromatic MF constraints
             m_delta_evap, f_PBH_delta_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
@@ -215,7 +214,7 @@ if "__main__" == __name__:
                 ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2])
 
             # Plot constraint obtained with unevolved MF
-            """
+            
             mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data-old/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
             mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data-old/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
             mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-old/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
@@ -224,14 +223,13 @@ if "__main__" == __name__:
             mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
             mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
         
+            ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.4)
+            ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.4)
+            ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.4)
+            ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.4)
+            ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
+            ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
             
-            ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.3)
-            ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.3)
-            ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.3)
-            ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.3)
-            ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.3)
-            ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.3)
-            """
 
         # Set axis limits
         if Deltas[i] < 5:
@@ -542,4 +540,60 @@ if "__main__" == __name__:
        
         ax0.legend(fontsize="xx-small")
         fig.tight_layout()
+        
+
+#%% Plot constraints for different Delta on the same plot
+
+if "__main__" == __name__:
+            
+    exponent_PL_lower = 2
+    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+        
+    # Monochromatic MF constraints
+    m_delta_evap, f_PBH_delta_evap = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+    
+    colors=["tab:blue", "tab:orange", "tab:green"]
+    
+    fig, ax = plt.subplots(figsize=(6,6))
+    
+    for i, Delta_index in enumerate([0, 5, 6]):
+        
+        data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
+        data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
+        data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
+    
+        mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+        mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+        mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+        
+        # Estimate peak mass of skew-lognormal MF
+        mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+
+        ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[i], linestyle=(0, (5, 7)), label="{:.0f}".format(Deltas[Delta_index]))
+        #ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[i], linestyle="dashed")
+        #ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2])
+
+        # Plot constraint obtained with unevolved MF
+        mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data-old/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[Delta_index]), delimiter="\t")
+        mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data-old/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[Delta_index]), delimiter="\t")
+        mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-old/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[Delta_index]), delimiter="\t")
+                          
+        # Estimate peak mass of skew-lognormal MF
+        mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+    
+        ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[i], alpha=0.4)
+        #ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[i], alpha=0.4)
+        # ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
+        
+
+    ax.set_xlabel("$m_p~[\mathrm{g}]$")
+    ax.plot(m_delta_evap, f_PBH_delta_evap, color="tab:gray", label="Delta func.", linewidth=2)
+    ax.legend(title="$\Delta$", fontsize="x-small")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e16, 5e18)
+    ax.set_ylim(1e-5, 1)
+    fig.suptitle("511 keV line constraints (Korwar \& Profumo 2023))\n SLN", fontsize="x-small")
+    fig.tight_layout()
         
