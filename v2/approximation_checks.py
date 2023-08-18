@@ -115,12 +115,14 @@ if "__main__" == __name__:
         integral_primary.append(np.trapz(spectrum_primary, energies_primary))
         integral_secondary.append(np.trapz(spectrum_tot, energies_tot))
     
-    fit_m_square = integral_primary[500] * np.power(m_pbh_values/m_pbh_values[500], -1)
+    fit_inv_m = integral_primary[600] * np.power(m_pbh_values/m_pbh_values[600], -1)
+    fit_m_square = integral_primary[600] * np.power(m_pbh_values/m_pbh_values[600], -2)
     
     fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(m_pbh_values, integral_secondary, color=colors[0], label="Total")
     ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[0], label="Primary emission only")
-    ax.plot(m_pbh_values, fit_m_square, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit")
+    ax.plot(m_pbh_values, fit_inv_m, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit")
+    ax.plot(m_pbh_values, fit_m_square, color=colors[1], linestyle="dotted", label="$m^{-2}$ fit")
     ax.set_xlabel("$m~[\mathrm{g}]$")
     ax.set_ylabel("$\mathrm{d} N_\gamma/\mathrm{d}t~[\mathrm{s}^{-1}]$")
     ax.set_xscale("log")
