@@ -40,7 +40,7 @@ plt.style.use('tableau-colorblind10')
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = False
+    plot_GC_Isatis = True
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = not plot_GC_Isatis
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
@@ -575,7 +575,7 @@ if "__main__" == __name__:
         mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
 
         #ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[i], linestyle=(0, (5, 7)), label="{:.0f}".format(Deltas[Delta_index]))
-        # ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[i], linestyle="dashed", label="{:.0f}".format(Deltas[Delta_index]))
+        #ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[i], linestyle="dashed", label="{:.0f}".format(Deltas[Delta_index]))
         ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_KP23_LN, color=colors[i], dashes=[6, 2], label="{:.0f}".format(Deltas[Delta_index]))
 
         # Plot constraint obtained with unevolved MF
@@ -588,7 +588,7 @@ if "__main__" == __name__:
     
         #ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[i], alpha=0.4)
         #ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[i], alpha=0.4)
-        ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_KP23_LN, color=colors[i], alpha=0.4)
+        #ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_KP23_LN, color=colors[i], alpha=0.4)
         
 
     ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -598,6 +598,74 @@ if "__main__" == __name__:
     ax.set_yscale("log")
     ax.set_xlim(1e16, 2e18)
     ax.set_ylim(1e-5, 1)
-    fig.suptitle("511 keV line constraints (Korwar \& Profumo 2023)\n LN", fontsize="x-small")
+    fig.suptitle("Korwar \& Profumo 2023 constraints (LN)", fontsize="small")
     fig.tight_layout()
+        
+    
+#%% Plot the most stringent GC photon constraint
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    
+    # Parameters used for convergence tests in Galactic Centre constraints.
+    cutoff = 1e-4
+    delta_log_m = 1e-3
+    E_number = 500    
+    
+    if E_number < 1e3:
+        energies_string = "E{:.0f}".format(E_number)
+    else:
+        energies_string = "E{:.0f}".format(np.log10(E_number))
+    
+    plot_LN = False
+    plot_SLN = True
+    plot_CC3 = False
+        
+    for i in range(len(Deltas)):
+        
+        fig, ax = plt.subplots(figsize=(8, 8))
+        # Load constraints from Galactic Centre photons.
+        
+        exponent_PL_lower = 2
+        constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+        data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+        
+        f_PBH_instrument_LN = []
+        f_PBH_instrument_SLN = []
+        f_PBH_instrument_CC3 = []
+
+        for k in range(len(constraints_names_short)):
+            # Load constraints for an evolved extended mass function obtained from each instrument
+            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+                
+            mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+            
+            # Estimate peak mass of skew-lognormal MF
+            mp_SLN_evap = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
+            
+            if plot_LN:
+                ax.plot(mc_LN_evolved * np.exp(-sigmas_LN[i]**2), f_PBH_LN_evolved, color=colors_evap[k], marker="x", label=constraints_names_short[k])
+            elif plot_SLN:
+                ax.plot(mp_SLN_evap, f_PBH_SLN_evolved, color=colors_evap[k], marker="x", label=constraints_names_short[k])
+            elif plot_CC3:
+                ax.plot(mp_CC3_evolved, f_PBH_CC3_evolved, color=colors_evap[k], marker="x", label=constraints_names_short[k])
+
+        ax.set_xlim(1e16, 1e18)
+        ax.set_ylim(10**(-6), 1)
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(fontsize="x-small")
+        fig.tight_layout()
+        fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
         
