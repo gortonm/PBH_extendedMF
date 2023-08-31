@@ -282,7 +282,7 @@ if "__main__" == __name__:
     # If True, plot extrapolated delta-function MF constraints down to 1e11g.
     plot_extrapolate = False
     # Boolean determines whether to use evolved mass function.
-    evolved = True
+    evolved = False
     # Boolean determines whether to evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
@@ -326,17 +326,17 @@ if "__main__" == __name__:
 
     elif include_extrapolated_upper:
 
-        # Power-law exponent to use between 1e15g and 1e16g.
+        # Power-law exponent to use between 5e14g and 1e16g.
         exponent_PL_upper = 2.0
         
-        m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+        m_delta_extrapolated_upper = np.logspace(np.log10(5e14), 16, 11)
         
         f_max_extrapolated_upper = min(f_max) * np.power(m_delta_extrapolated_upper / min(m_delta_values), exponent_PL_upper)
     
         f_max_total = np.concatenate((f_max_extrapolated_upper, f_max))
         m_delta_total = np.concatenate((m_delta_extrapolated_upper, m_delta_values))
     
-        data_folder += "/upper_PL_exp_{:.0f}".format(exponent_PL_lower)
+        data_folder += "/upper_PL_exp_{:.0f}".format(exponent_PL_upper)
 
            
     else:
