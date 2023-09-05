@@ -329,7 +329,7 @@ if "__main__" == __name__:
         
         
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses 
-# Constraints from 2202.07483 (Voyager-1 electron / positron detections).
+# Constraints from 1807.03075 (Voyager-1 electron / positron detections).
 
 if "__main__" == __name__:
     
@@ -344,15 +344,27 @@ if "__main__" == __name__:
     linestyles = ["solid", "dashed", "dashdot", "dotted"]
     
     # Boolean determines which propagation model to load data from
-    prop_A = True
+    prop_A = False
     prop_B = not prop_A
     
+    with_bkg = False
+    
     if prop_A:
-        m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
         prop_string = "prop_A"
-    elif prop_B:  
-        m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
+        if with_bkg:
+            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+        else:
+            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
+
+    elif prop_B:
         prop_string = "prop_B"
+        if with_bkg:
+            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
+        else:
+            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
+        
+    if not with_bkg:
+        prop_string += "_nobkg"
     
     for j in range(len(Deltas)):
         
