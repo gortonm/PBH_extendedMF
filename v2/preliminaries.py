@@ -1038,22 +1038,23 @@ if "__main__" == __name__:
     
     
 #%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
-# for the Korwar & Profumo (2023) constraints.
+# for the Korwar & Profumo (2023) or Galactic Centre photon constraints.
  
 if "__main__" == __name__:
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    plot_LN = True
+    plot_LN = False
     plot_SLN = False
-    plot_CC3 = False
+    plot_CC3 = True
     
-    plot_KP23 = True
+    plot_KP23 = False
     plot_GC_Isatis = False
+    plot_BC19 = True
     
     # Peak mass (in grams)
-    m_p = 2e17
+    m_p = 2e18
     
     if plot_KP23:
         if plot_LN:
@@ -1111,8 +1112,16 @@ if "__main__" == __name__:
             if m_p == 1e16:
                 m_min_values = [1.37e15, 0, 0, 0, 0, 3.7e12, 1.70e12]
                 m_max_values = [1.29e16, 0, 0, 0, 0, 2.81e15, 2.28e15]
-        
-        
+
+    elif plot_BC19:
+        if plot_LN:
+            colors = ["k", "lime", "lime", "lime", "lime", "tab:red", "pink"]
+    
+        elif plot_SLN:
+            colors = ["grey", "lime", "lime", "lime", "lime", "tab:blue", "deepskyblue"]
+            
+        elif plot_CC3:
+            colors = ["k", "lime", "lime", "lime", "lime", "mediumseagreen", "lime"]
 
     if plot_KP23:    
         # Korwar & Profumo (2023) 511 keV line constraints
@@ -1139,6 +1148,28 @@ if "__main__" == __name__:
         # Galactic Centre photon constraints from Isatis
         m_delta_values_loaded = np.logspace(11, 21, 1000)
         constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
+        
+    elif plot_BC19:
+        # Boolean determines which propagation model to load data from
+        prop_A = True
+        prop_B = not prop_A
+        
+        with_bkg = True
+        
+        if prop_A:
+            prop_string = "prop_A"
+            if with_bkg:
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+            else:
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
+
+        elif prop_B:
+            prop_string = "prop_B"
+            if with_bkg:
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
+            else:
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
+
 
     fig0, ax0 = plt.subplots(figsize=(7,7))
     fig1, ax1 = plt.subplots(figsize=(7,7))
@@ -1216,7 +1247,15 @@ if "__main__" == __name__:
             elif i ==0:
                 mc_SLN = 2*1.53e17   # for Delta = 0
 
-                                
+        elif m_p == 2e18:        
+            # Choose peak masses corresponding to 2e18g
+            if i == 6:
+                mc_SLN = 2*6.8e18   # for Delta = 5
+            elif i == 5:
+                mc_SLN = 1.99*3.24e18    # for Delta = 2
+            elif i ==0:
+                mc_SLN = 2*1.53e18   # for Delta = 0
+                        
         mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
         mp_SLN_est = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
         print("m_p (CC3) = {:.2e}".format(m_p))
@@ -1261,8 +1300,9 @@ if "__main__" == __name__:
             
             integral_total = np.trapz(10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(mf_CC3_evolved)) / f_max, m_pbh_values)
             print("1 / total integral [CC3] = {:.2e}".format(1 / integral_total))
-
-        ax2.plot(m_pbh_values, f_max / (min(f_max_loaded) * np.power(m_pbh_values / min(m_delta_values_loaded), exponent_PL_upper)), color=(0.5294, 0.3546, 0.7020))
+        
+        if plot_KP23:
+            ax2.plot(m_pbh_values, f_max / (min(f_max_loaded) * np.power(m_pbh_values / min(m_delta_values_loaded), exponent_PL_upper)), color=(0.5294, 0.3546, 0.7020))
 
         if m_p == 1e15:
             ax0.vlines(m_min_values[i], 1e-20, 1e-15, color=colors[i], linestyle="dotted")
@@ -1294,16 +1334,17 @@ if "__main__" == __name__:
             ax1.vlines(m_min_values[i], 5e-18, 2e-14, color=colors[i], linestyle="dotted")
             ax1.vlines(m_max_values[i], 5e-18, 2e-14, color=colors[i], linestyle="dotted")
 
-        ax2.vlines(m_min_values[i], 0.9, 50, color=colors[i], label="{:.0f}".format(Deltas[i]), linestyle="dotted")
-        ax2.vlines(m_max_values[i], 0.9, 50, color=colors[i], linestyle="dotted")
-
         ax3.set_xscale("log")
         ax3.set_yscale("log")
         ax3.legend(fontsize="small")
         ax3.set_xlabel("$m~[\mathrm{g}]$")
-        ax3.set_xlim(5e14, 1.1*max(np.array(m_max_values)[np.array(m_min_values)>0.]))
-        ax3.vlines(m_min_values[i], 1e-5, 5, color=colors[i], label="{:.0f}".format(Deltas[i]), linestyle="dotted")
-        ax3.vlines(m_max_values[i], 1e-5, 5, color=colors[i], linestyle="dotted")
+        
+        if m_p < 2e18:
+            ax2.vlines(m_min_values[i], 0.9, 50, color=colors[i], label="{:.0f}".format(Deltas[i]), linestyle="dotted")
+            ax2.vlines(m_max_values[i], 0.9, 50, color=colors[i], linestyle="dotted")
+            ax3.vlines(m_min_values[i], 1e-5, 5, color=colors[i], label="{:.0f}".format(Deltas[i]), linestyle="dotted")
+            ax3.vlines(m_max_values[i], 1e-5, 5, color=colors[i], linestyle="dotted")
+            ax3.set_xlim(5e14, 1.1*max(np.array(m_max_values)[np.array(m_min_values)>0.]))
 
         if plot_CC3:
             ax3.set_title("CC3, $(\Delta={:.0f}, m_p = {:.1e}".format(Deltas[i], m_p)+"~\mathrm{g})$", fontsize="small")
@@ -1327,7 +1368,8 @@ if "__main__" == __name__:
         ax.set_yscale("log")
         ax.legend(fontsize="small", title="$\Delta$")
         ax.set_xlabel("$m~[\mathrm{g}]$")
-        ax.set_xlim(0.9*min(np.array(m_min_values)[np.array(m_min_values)>0.]), 1.1*max(np.array(m_max_values)[np.array(m_min_values)>0.]))
+        if m_p < 2e18:
+            ax.set_xlim(0.9*min(np.array(m_min_values)[np.array(m_min_values)>0.]), 1.1*max(np.array(m_max_values)[np.array(m_min_values)>0.]))
         
         if plot_CC3:
             ax.set_title("CC3, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
@@ -1568,9 +1610,10 @@ if "__main__" == __name__:
  
 if "__main__" == __name__:
     
-    plot_KP23 = True
-    plot_GC_Isatis = False 
-    Delta = 5
+    plot_KP23 = False
+    plot_GC_Isatis = False
+    plot_BC19 = False
+    Delta = 2
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -1657,6 +1700,28 @@ if "__main__" == __name__:
 
         m_pbh_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
 
+    elif plot_BC19:
+        # Boolean determines which propagation model to load data from
+        prop_A = False
+        prop_B = not prop_A
+        
+        with_bkg = False
+        
+        if prop_A:
+            prop_string = "prop_A"
+            if with_bkg:
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+            else:
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
+
+        elif prop_B:
+            prop_string = "prop_B"
+            if with_bkg:
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
+            else:
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
+
+
     fig, ax = plt.subplots(figsize=(6, 6))
     
     # Choose factors so that peak masses of the CC3 and SLN MF match
@@ -1675,6 +1740,10 @@ if "__main__" == __name__:
         # gives m_p = 1e18g
         #m_c = 2.45e16*np.exp(ln_mc_SLN[i])
         #m_p = 2.45e16*mp_CC3[i]
+        
+        # gives m_p = 2e18g
+        m_c = 2*3.1e16*np.exp(ln_mc_SLN[i])
+        m_p = 2*2.9e16*mp_CC3[i]   
         
         # gives m_p = 1e22g
         #m_c = 2.45e20*np.exp(ln_mc_SLN[i])
@@ -1696,6 +1765,10 @@ if "__main__" == __name__:
         #m_c = 2.46e16*np.exp(ln_mc_SLN[i])
         #m_p = 2.465e16*mp_CC3[i]
         
+        # gives m_p = 2e18g
+        m_c = 2*3.1e16*np.exp(ln_mc_SLN[i])
+        m_p = 2*2.9e16*mp_CC3[i]   
+        
         # gives m_p = 1e20g
         #m_c = 2.46e18*np.exp(ln_mc_SLN[i])
         #m_p = 2.465e18*mp_CC3[i]
@@ -1714,8 +1787,8 @@ if "__main__" == __name__:
         i=6
         
         # gives m_p = 1e16g
-        m_c = 3.05e14*np.exp(ln_mc_SLN[i])
-        m_p = 2.85e14*mp_CC3[i]
+        #m_c = 3.05e14*np.exp(ln_mc_SLN[i])
+        #m_p = 2.85e14*mp_CC3[i]
         
         # gives m_p = 2e17g
         #m_c = 2*6.8e17
@@ -1723,6 +1796,10 @@ if "__main__" == __name__:
         # gives m_p = 1e18g
         #m_c = 3.1e16*np.exp(ln_mc_SLN[i])
         #m_p = 2.9e16*mp_CC3[i]   
+        
+        # gives m_p = 2e18g
+        m_c = 2*3.1e16*np.exp(ln_mc_SLN[i])
+        m_p = 2*2.9e16*mp_CC3[i]   
      
         # gives m_p = 1e19g
         #m_c = 3.1e17*np.exp(ln_mc_SLN[i])
@@ -1770,6 +1847,11 @@ if "__main__" == __name__:
         ax.plot(m_delta_values_loaded, CC3(m_delta_values_loaded, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max_loaded_FermiLAT, color="g", linestyle="dotted")
         ax.plot(m_delta_values_loaded, LN(m_delta_values_loaded, mc_LN, sigma=sigmas_LN[i]) / f_max_loaded_FermiLAT, color="r", linestyle="dotted")
 
+    elif plot_BC19:
+        ax.plot(m_pbh_values, SLN(m_pbh_values, m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max, color="b", linestyle="dotted")
+        ax.plot(m_pbh_values, CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max, color="g", linestyle="dotted")
+        ax.plot(m_pbh_values, LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i]) / f_max, color="r", linestyle="dotted")
+
     # Show smallest PBH mass constrained by microlensing.
     #ax.set_xscale("log")
     #ax.set_yscale("log")
@@ -1811,8 +1893,11 @@ if "__main__" == __name__:
     axes[0].plot(m_pbh_values, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
     axes[0].plot(m_pbh_values, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])
     axes[0].plot(m_pbh_values, psinorm_fit, linestyle="dotted", color="k", label="$m^3$ fit")
-
-    axes[0].set_ylim(1e-23, 1e-15)
+    
+    if m_p > 1e17:
+        axes[0].set_ylim(1e-24, 3e-21)
+    else:
+        axes[0].set_ylim(1e-23, 1e-15)
     axes[0].set_xscale("log")
     axes[0].set_yscale("log")
     axes[0].set_ylabel("$\psi_\mathrm{N}~[\mathrm{g}^{-1}]$")
@@ -1846,6 +1931,19 @@ if "__main__" == __name__:
         axes[1].legend(fontsize="xx-small")
         axes[1].set_ylim(1, 1e14)
         
+    else:
+        if with_bkg:
+            linestyle = "dashed"
+        else:
+            linestyle = "solid"
+        if prop_A:
+            axes[1].plot(m_pbh_values, 1 / f_max, color="b", linestyle=linestyle)
+        elif prop_B:
+            axes[1].plot(m_pbh_values, 1 / f_max, color="r", linestyle=linestyle)
+
+        axes[1].set_ylim(1, 1e9)
+        axes[2].set_ylim(1e-20, 1e-14)
+      
     axes[1].set_ylabel("$1/f_\mathrm{max}$")
     axes[1].set_xscale("log")
     axes[1].set_yscale("log")
@@ -1861,14 +1959,22 @@ if "__main__" == __name__:
 
     elif plot_GC_Isatis:
         fig.suptitle("GC photon constraints, $\Delta={:.0f}$".format(Delta))
-  
+        
+    elif plot_BC19:
+        fig.suptitle("Voyager 1 electron/positron constraints \n $\Delta={:.0f}$".format(Delta), fontsize="small")
+
     axes[0].legend(fontsize="xx-small")
     axes[0].set_yscale("log")
     axes[1].set_yscale("log")
     axes[2].set_yscale("linear")
 
     for ax in axes:
-        ax.set_xlim(1e13, 1e16)
+        
+        if plot_KP23 or plot_GC_Isatis:
+            ax.set_xlim(1e13, 1e16)
+        else:
+            ax.set_xlim(5e14, 1e18)
+
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.grid('on')
