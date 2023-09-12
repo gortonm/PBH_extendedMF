@@ -1040,21 +1040,48 @@ if "__main__" == __name__:
 #%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
 # for the Korwar & Profumo (2023) or Galactic Centre photon constraints.
  
+def findroot(f, a, b, args, tolerance=1e-9, n_max=10000):
+    n = 1
+    while n <= n_max:
+        #c = (a + b) / 2
+        c = 10**((np.log10(a) + np.log10(b)) / 2)
+        #if f(c, *args) == 0 or (b - a) / 2 < tolerance:
+        if f(c, *args) == 0 or (np.log10(b) - np.log10(a)) / 2 < tolerance:
+            #print(n)
+            return c
+            break
+        n += 1
+        
+        # set new interval
+        if np.sign(f(c, *args)) == np.sign(f(a, *args)):
+            a = c
+        else:
+            b = c
+    print("Method failed")
+
+def m_min_finder(m_min, mf_interp, m_pbh_values, integral_total, threshold):
+    integral_lower = np.trapz(mf_interp[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
+    return integral_lower / integral_total - threshold
+
+def m_max_finder(m_max, mf_interp, m_pbh_values, integral_total, threshold):
+    integral_upper = np.trapz(mf_interp[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
+    return integral_upper / integral_total - (1-threshold)
+
 if "__main__" == __name__:
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    plot_LN = False
+    plot_LN = True
     plot_SLN = False
-    plot_CC3 = True
+    plot_CC3 = False
     
     plot_KP23 = True
     plot_GC_Isatis = False
     plot_BC19 = False
     
     # Peak mass (in grams)
-    m_p = 1e16
+    m_p = 2e16
     
     file_string = ""
     
@@ -1092,6 +1119,11 @@ if "__main__" == __name__:
                 #m_max_values = [2.2e17, 0, 0, 0, 0, 1.15e17, 1.7e16]
                 m_min_values = [5.18e16, 0, 0, 0, 0, 7.94e15, 2.51e14]
                 m_max_values = [2.92e17, 0, 0, 0, 0, 2.18e17, 1.06e17]
+                
+            else:
+                m_min_values = 1e14 * np.ones(7)
+                m_max_values = 1e17 * np.ones(7)
+              
    
         elif plot_SLN:
             file_string += "_SLN"
@@ -1262,64 +1294,72 @@ if "__main__" == __name__:
         mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
         
         if plot_LN:
-            ax0.plot(m_pbh_values_evolved, mf_LN_evolved, color=colors[i], label="${:.0f}$".format(Deltas[i]))
-            ax1.plot(m_pbh_values, 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(mf_LN_evolved)) / f_max, color=colors[i], label="${:.0f}$".format(Deltas[i]))
-
-            # Plot fractional difference between evolved mass functions, and a log-normal.
-            ax3.plot(m_pbh_values_evolved, np.abs(mf_LN_evolved/LN(m_pbh_values_evolved, mc_LN, sigma=sigmas_LN[i]) - 1), color=colors[i])
-                        
-            integral_total = np.trapz(10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(mf_LN_evolved)) / f_max, m_pbh_values)
-            print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
+            mf_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
                         
         elif plot_SLN:
-            ax0.plot(m_pbh_values_evolved, mf_SLN_evolved, color=colors[i], label="${:.0f}$".format(Deltas[i]))
-            ax1.plot(m_pbh_values, 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(mf_SLN_evolved)) / f_max, color=colors[i], label="${:.0f}$".format(Deltas[i]))
+            mf_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
             
-            # Plot fractional difference between evolved mass functions, and a log-normal.       
-            ax3.plot(m_pbh_values_evolved, np.abs(mf_SLN_evolved/LN(m_pbh_values_evolved, mc_LN, sigma=sigmas_LN[i]) - 1), color=colors[i])
-
         elif plot_CC3:
-            ax0.plot(m_pbh_values_evolved, mf_CC3_evolved, color=colors[i], label="${:.0f}$".format(Deltas[i]))  
-            ax1.plot(m_pbh_values, 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(mf_CC3_evolved)) / f_max, color=colors[i], label="${:.0f}$".format(Deltas[i]))
-            
-            # Plot fractional difference between evolved mass functions, and a log-normal.
-            ax3.plot(m_pbh_values_evolved, np.abs(mf_CC3_evolved/LN(m_pbh_values_evolved, mc_LN, sigma=sigmas_LN[i]) - 1), color=colors[i])
-            
-            integral_total = np.trapz(10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(mf_CC3_evolved)) / f_max, m_pbh_values)
-            print("1 / total integral [CC3] = {:.2e}".format(1 / integral_total))
+            mf_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
         
+        mf_evolved_interp = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(mf_evolved))
+
+        ax0.plot(m_pbh_values_evolved, mf_evolved, color=colors[i], label="${:.0f}$".format(Deltas[i]))  
+        ax1.plot(m_pbh_values, 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(mf_CC3_evolved)) / f_max, color=colors[i], label="${:.0f}$".format(Deltas[i]))
+        
+        # Plot fractional difference between evolved mass functions, and a log-normal.
+        ax3.plot(m_pbh_values_evolved, np.abs(mf_evolved/LN(m_pbh_values_evolved, mc_LN, sigma=sigmas_LN[i]) - 1), color=colors[i])
+  
+        print("\nEvolved MFs, Delta = {:.0f}".format(Deltas[i]))
+        integral_total = np.trapz(mf_evolved_interp / f_max, m_pbh_values)
+        print("1 / total integral = {:.2e}".format(1 / integral_total))
+        
+        threshold = 0.005        
+        m_min = findroot(m_min_finder, 1e10, 1e20, args=(mf_evolved_interp, m_pbh_values, integral_total, threshold))
+        m_max = findroot(m_max_finder, 1e10, 1e20, args=(mf_evolved_interp, m_pbh_values, integral_total, threshold))
+
+        print("M_min = {:.2e} g".format(m_min))
+        print("M_max = {:.2e} g".format(m_max))
+        
+        integral_lower = np.trapz(mf_evolved_interp[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
+        integral_upper = np.trapz(mf_evolved_interp[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
+
+        print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min, integral_lower / integral_total))
+        print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_max, integral_upper / integral_total))
+        print("1 / total integral [CC3] = {:.2e}".format(1 / integral_total))
+       
         if plot_KP23:
             ax2.plot(m_pbh_values, f_max / (min(f_max_loaded) * np.power(m_pbh_values / min(m_delta_values_loaded), exponent_PL_upper)) - 1, color=(0.5294, 0.3546, 0.7020))
 
         if m_p == 1e15:
-            ax0.vlines(m_min_values[i], 1e-20, 1e-15, color=colors[i], linestyle="dotted")
-            ax0.vlines(m_max_values[i], 1e-20, 1e-15, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_min_values[i], 1e-12, 5e-9, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_max_values[i], 1e-12, 5e-9, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_min, 1e-20, 1e-15, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_max, 1e-20, 1e-15, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_min, 1e-12, 5e-9, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_max, 1e-12, 5e-9, color=colors[i], linestyle="dotted")
             
         elif m_p == 3e15:
-            ax0.vlines(m_min_values[i], 1e-22, 5e-16, color=colors[i], linestyle="dotted")
-            ax0.vlines(m_max_values[i], 1e-22, 5e-16, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_min_values[i], 1e-13, 2e-10, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_max_values[i], 1e-13, 2e-10, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_min, 1e-22, 5e-16, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_max, 1e-22, 5e-16, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_min, 1e-13, 2e-10, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_max, 1e-13, 2e-10, color=colors[i], linestyle="dotted")
     
         elif m_p == 1e16:
-            ax0.vlines(m_min_values[i], 1e-23, 1e-15, color=colors[i], linestyle="dotted")
-            ax0.vlines(m_max_values[i], 1e-23, 1e-15, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_min_values[i], 1e-14, 2e-11, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_max_values[i], 1e-14, 2e-11, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_min, 1e-23, 1e-15, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_max, 1e-23, 1e-15, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_min, 1e-14, 2e-11, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_max, 1e-14, 2e-11, color=colors[i], linestyle="dotted")
    
         elif m_p == 1e17:
-            ax0.vlines(m_min_values[i], 1e-23, 1e-15, color=colors[i], linestyle="dotted")
-            ax0.vlines(m_max_values[i], 1e-23, 1e-15, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_min_values[i], 5e-17, 1e-13, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_max_values[i], 5e-17, 1e-13, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_min, 1e-23, 1e-15, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_max, 1e-23, 1e-15, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_min, 5e-17, 1e-13, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_max, 5e-17, 1e-13, color=colors[i], linestyle="dotted")
  
         elif m_p == 2e17:
-            ax0.vlines(m_min_values[i], 1e-23, 1e-17, color=colors[i], linestyle="dotted")
-            ax0.vlines(m_max_values[i], 1e-23, 1e-17, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_min_values[i], 5e-18, 2e-14, color=colors[i], linestyle="dotted")
-            ax1.vlines(m_max_values[i], 5e-18, 2e-14, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_min, 1e-23, 1e-17, color=colors[i], linestyle="dotted")
+            ax0.vlines(m_max, 1e-23, 1e-17, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_min, 5e-18, 2e-14, color=colors[i], linestyle="dotted")
+            ax1.vlines(m_max, 5e-18, 2e-14, color=colors[i], linestyle="dotted")
 
         ax3.set_xscale("log")
         ax3.set_yscale("log")
@@ -1327,11 +1367,11 @@ if "__main__" == __name__:
         ax3.set_xlabel("$m~[\mathrm{g}]$")
         
         if m_p < 2e18:
-            ax2.vlines(m_min_values[i], 0., 50, color=colors[i], label="{:.0f}".format(Deltas[i]), linestyle="dotted")
-            ax2.vlines(m_max_values[i], 0., 50, color=colors[i], linestyle="dotted")
-            ax3.vlines(m_min_values[i], 1e-5, 1e5, color=colors[i], label="{:.0f}".format(Deltas[i]), linestyle="dotted")
-            ax3.vlines(m_max_values[i], 1e-5, 1e5, color=colors[i], linestyle="dotted")
-            ax3.set_xlim(5e14, 1.1*max(np.array(m_max_values)[np.array(m_min_values)>0.]))
+            ax2.vlines(m_min, 0., 50, color=colors[i], label="{:.0f}".format(Deltas[i]), linestyle="dotted")
+            ax2.vlines(m_max, 0., 50, color=colors[i], linestyle="dotted")
+            ax3.vlines(m_min, 1e-5, 1e5, color=colors[i], label="{:.0f}".format(Deltas[i]), linestyle="dotted")
+            ax3.vlines(m_max, 1e-5, 1e5, color=colors[i], linestyle="dotted")
+            #ax3.set_xlim(5e14, 1.1*max(np.array(m_max_values)[np.array(m_min_values)>0.]))
 
         if plot_CC3:
             ax3.set_title("Initial CC3, $(\Delta={:.0f}, m_p = {:.1e}".format(Deltas[i], m_p)+"~\mathrm{g})$", fontsize="small")
@@ -1345,15 +1385,16 @@ if "__main__" == __name__:
         ax.set_yscale("log")
         ax.legend(fontsize="small", title="$\Delta$")
         ax.set_xlabel("$m~[\mathrm{g}]$")
+        """
         if m_p < 2e18:
             ax.set_xlim(0.9*min(np.array(m_min_values)[np.array(m_min_values)>0.]), 1.1*max(np.array(m_max_values)[np.array(m_min_values)>0.]))
-        
+        """
         if plot_CC3:
-            ax.set_title("CC3, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+            ax.set_title("Initial CC3, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
         elif plot_SLN:
-            ax.set_title("SLN, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+            ax.set_title("Initial SLN, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
         elif plot_LN:
-            ax.set_title("LN, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
+            ax.set_title("Initial LN, $m_p = {:.1e}".format(m_p)+"~\mathrm{g}$", fontsize="small")
             
     if m_p == 1e15:
         ax0.set_ylim(1e-20, 1e-15)
@@ -1375,7 +1416,6 @@ if "__main__" == __name__:
         ax1.set_ylim(5e-18, 2e-14)
         
     ax2.set_ylim(1e-5, 50)
-    ax2.set_xlim(5e14, 3e17)
         
     ax0.set_ylabel("$\psi_\mathrm{N}~[\mathrm{g}^{-1}]$")
     fig0.tight_layout()
