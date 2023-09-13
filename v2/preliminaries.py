@@ -398,6 +398,7 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
         If True, use data obtained using the same PBH mass range for all Delta (1000 BHs evenly spaced in log space between 1e11-1e21g, if wide=False).
     wide : Boolean, optional
         If True, use the 'wider' PBH mass range for all Delta (1000 BHs evenly spaced in log space between 1e11-1e22g).
+        
     Returns
     -------
     constraints_names : Array-like
@@ -1072,9 +1073,9 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    plot_LN = True
+    plot_LN = False
     plot_SLN = False
-    plot_CC3 = False
+    plot_CC3 = True
     
     plot_KP23 = True
     plot_GC_Isatis = False
@@ -1427,11 +1428,14 @@ if "__main__" == __name__:
     ax2.set_ylim(1e-6, 2)
     fig2.tight_layout()
     fig2.savefig("./Tests/Figures/EMF_constraints_work/fmax_fracdifff_from_m^2_" + file_string + ".png")
-   
+    
     ax3.set_ylim(1e-4, 1e3)
-    ax3.set_ylabel("$|\psi / \psi_\mathrm{LN} - 1|$")
+    ax3.set_ylabel("$|\psi_\mathrm{N}(m, t_0) / \psi_\mathrm{LN} - 1|$")
     fig3.tight_layout()
     fig3.savefig("./Tests/Figures/EMF_constraints_work/psi_fracdifff_from_LN_" + file_string + ".png")
+    
+    ax3.set_xscale("linear")
+    fig3.savefig("./Tests/Figures/EMF_constraints_work/psi_fracdifff_from_LN_" + file_string + "_loglin.png")
     
 
 #%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
@@ -2500,24 +2504,70 @@ if "__main__" == __name__:
 
 #%% Find the integration limits used in the KP '23 extended MF constraints calculations:
 if "__main__" == __name__:
+    
+    from scipy.special import erfinv
         
     n_steps = 1000
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
-    m_delta_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+    m_delta_loaded, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
     m_delta_extrapolated_upper = np.logspace(15, 16, 11)
     m_delta_extrapolated_lower = np.logspace(11, 15, 41)
-    m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values))
-    
+    m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_loaded))
     
     # Find PBH masses at time t
     t = t_0
     m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_total)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_total))+4, n_steps))))
     m_values_input = mass_evolved(m_init_values_input, t)
     
-    print(min(m_values_input))
-    print(min(m_values_input[m_values_input>0]))
-    print(max(m_values_input))
+    print("Integration limits:")
+    print("Lower limit = {:.2e} g".format(min(m_values_input)))
+    print("Lower limit (>0) = {:.2e} g".format(min(m_values_input[m_values_input>0])))
+    print("Upper limit = {:.2e} g".format(max(m_values_input)))
+    
+    # Fractional accuracy to which the result must agree with the calculation with integration limits (0, infty) 
+    threshold = 0.99
+    # Maximum value of the argument allowed by the error function for the true answer to agree to within the threshold of the answer with integration limits (0, infty)
+    max_value = erfinv(threshold)
+    
+    for i in range(len(Deltas)):
+    
+        print("\nConstraints on m_p for simplified problem (Delta={:.1f}):".format(Deltas[i]))
+        print("m_p <= {:.2e}g".format(min(m_values_input[m_values_input>0]) * np.exp(max_value*np.sqrt(2)*sigmas_LN[i]) * np.exp(sigmas_LN[i]**2)))
+        print("m_p >= {:.2e}g".format(max(m_values_input) * np.exp(-max_value*np.sqrt(2)*sigmas_LN[i]) * np.exp(sigmas_LN[i]**2)))
 
+
+#%% Sanity check: calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass     
+if "__main__" == __name__:    
+    m_delta_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
+    m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_loaded))
+    
+    # Simplified estimate
+    f_max_simplified = min(f_max_loaded) * np.power(m_delta_total / min(m_delta_loaded), 2)
+    
+    # Full calculation
+    exponent_PL_upper = 2
+    exponent_PL_lower = 2
+    f_max_extrapolated_upper = min(f_max) * np.power(m_delta_extrapolated_upper / min(m_delta_loaded), exponent_PL_upper)
+    f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+    f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max))
+
+    m_p = 2e17
+    f_PBH_simplified = min(f_max_loaded) * np.power(m_p / min(m_delta_loaded), 2)   # Find value of the simplified constraint
+    #m_p = min(m_delta_loaded)
+    #f_PBH_simplified = min(f_max_loaded)
+    
+    for i in range(len(Deltas)):
+        print("\nDelta={:.1f}:".format(Deltas[i]))
+        params = [sigmas_LN[i]]
+    
+        f_PBH_approx = constraint_Carr([m_p * np.exp(sigmas_LN[i]**2)], m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=LN, params=[sigmas_LN[i]], evolved=True)
+        #f_PBH_approx = constraint_Carr([m_p], m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=CC3, params=[alphas_CC3[i], betas[i]], evolved=True)
+        print("Fractional difference from simplified problem = {:.3e}".format(f_PBH_approx[0] / f_PBH_simplified - 1))
+
+        f_PBH_full = constraint_Carr([m_p * np.exp(sigmas_LN[i]**2)], m_delta=m_delta_total, f_max=f_max_total, psi_initial=LN, params=[sigmas_LN[i]], evolved=False)
+        print("Fractional difference from full problem = {:.3e}".format(f_PBH_full[0] / f_PBH_simplified - 1))
 
 #%% Test the effects on different shapes of the delta-function MF constraints:
 if "__main__" == __name__:
