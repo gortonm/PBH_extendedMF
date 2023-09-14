@@ -1034,22 +1034,26 @@ if "__main__" == __name__:
         
         return beta_prime_values
     
-    m_pbh_values = np.arange(np.log10(m_min), np.log10(m_max), 0.1)
+    m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
     f_max_values = f_PBH_beta(m_pbh_values, beta(beta_prime_lower(m_pbh_values)))
-
-    mc_values = np.logspace(1e15, 1e22, 70)
+    #f_max_values /= 3
+    mc_values = np.logspace(15, 22, 70)
     
     sigma = 2
     
-    fig, ax = plt.subplots(figsize=(5,5))
+    fig, ax = plt.subplots(figsize=(6,5))
     ax1 = ax.secondary_xaxis('top', functions=(Solmass_to_g, g_to_Solmass)) 
 
-    ax.plot(m_pbh_values, f_max_values, color="tab:grey", label="Delta func. [reproduced]", linestyle="dashed")
+    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
+
+    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
     
-    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_LH.csv") 
-    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv") 
-    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded * 1.989e33, color="tab:grey", label="Delta func.")
-    ax.plot(mc_LN_values_loaded, f_PBH_loaded, color="tab:blue", label="LN ($\sigma={:.1f}$) [reproduced]".format(sigma))
+    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    
+    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded, color="tab:grey", label="Delta func.")
+    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
+    ax.plot(mc_values, f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
 
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xlabel("$m_c~[\mathrm{g}]$")
@@ -1060,8 +1064,6 @@ if "__main__" == __name__:
     ax.set_xlim(1e14, 1e20)
     ax.set_ylim(1e-4, 1)
     fig.tight_layout()    
-    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma])
-    ax.plot(mc_values, f_PBH_values, color="tab:blue", label="LN ($\sigma={:.1f}) [reproduced]".format(sigma), linestyle="dashed")
     
 
     
