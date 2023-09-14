@@ -906,3 +906,134 @@ if "__main__" == __name__:
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[Delta_index]))
     
         
+#%% Test: log-normal plots. Aim is to understand why the extended MF constraints shown in Fig. 20 of 2002.12778 differ so much from the delta-function MF constraints, compared to the difference I'm seeing when plotting against the peak mass.
+from preliminaries import constraint_Carr, LN
+
+def g_to_Solmass(m):
+    return 1.989e33 * m
+
+def Solmass_to_g(m):
+    return m / 1.989e33
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+            
+    # Power-law exponent to use between 1e15g and 1e16g.
+    exponent_PL_upper = 2.0
+    # Power-law exponent to use between 1e11g and 1e15g.
+    exponent_PL_lower = 2.0
+    
+    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+        
+    plot_unevolved = False
+    plot_against_mc = False
+    
+    fig, ax = plt.subplots(figsize=(8,6.5))
+       
+    # Delta-function MF constraints
+    m_delta_values_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+        
+    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
+    
+    f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_values_loaded), exponent_PL_upper)
+    f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+
+    m_pbh_values_upper = np.concatenate((m_delta_extrapolated_upper, m_delta_values_loaded))
+    f_max_upper = np.concatenate((f_max_extrapolated_upper, f_max_loaded))
+    
+    f_PBH_delta_evap = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
+    m_delta_evap = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
+    
+    # Calculate extended MF constraint for a log-normal with sigma = 2
+    sigma_Carr21 = 2
+    mc_Carr21 = np.logspace(14, 22, 1000)
+    f_PBH_sigma2_evolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma_Carr21], evolved=True)
+    f_PBH_sigma2_unevolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma_Carr21], evolved=False)
+
+    colors=["tab:blue", "tab:orange", "tab:green", "tab:red"]
+    
+    ax.plot(m_delta_evap, f_PBH_delta_evap, color="tab:gray", label="Delta func.", linewidth=2)
+    ax1 = ax.secondary_xaxis('top', functions=(Solmass_to_g, g_to_Solmass)) 
+        
+    for i, Delta_index in enumerate([6]):
+        
+        data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)    
+        mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+        if plot_against_mc:
+            ax.plot(mc_KP23_LN, f_PBH_KP23_LN, color=colors[i], dashes=[6, 2], label="{:.1f}".format(sigmas_LN[Delta_index]))
+        else:
+            ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_KP23_LN, color=colors[i], dashes=[6, 2], label="{:.1f}".format(sigmas_LN[Delta_index]))
+                        
+        # Plot constraint obtained with unevolved MF
+        if plot_unevolved:
+            # Load constraints calculated for the unevolved MF extrapolated down to 1e11g using a power-law with exponent 2 calculated using GC_constraints_Carr.py (August 2023)
+            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-tests/unevolved/PL_exp_2/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp2.txt".format(Deltas[Delta_index]), delimiter="\t")
+
+            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2)     
+            if plot_against_mc:
+                ax.plot(mc_KP23_LN, f_PBH_KP23_LN, color=colors[i], alpha=0.4)
+            else:
+                ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_KP23_LN, color=colors[i], alpha=0.4)
+                
+    if plot_against_mc:
+        ax.plot(mc_Carr21, f_PBH_sigma2_evolved, color="k", dashes=[6, 2], label="{:.1f}".format(2))
+        ax.plot(mc_Carr21, f_PBH_sigma2_unevolved, color="k", alpha=0.4)
+        ax.set_xlabel("$m_c~[\mathrm{g}]$")
+        ax1.set_xlabel("$m_c~[M_\odot]$")
+    else:
+        ax.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_sigma2_evolved, color="k", dashes=[6, 2], label="{:.1f}".format(2))
+        ax.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_sigma2_unevolved, color="k", alpha=0.4)
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax1.set_xlabel("$m_p~[M_\odot]$")
+       
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.legend(title="$\sigma$", fontsize="x-small")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+        
+    ax.set_xlim(1e16, 1e20)
+    ax.set_ylim(1e-6, 1)
+    
+    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+    ax.xaxis.set_major_locator(x_major)
+    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+    ax.xaxis.set_minor_locator(x_minor)
+    ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+        
+    fig.tight_layout()
+    
+#%% Test: log-normal plots. Aim is to understand why the extended MF constraints shown in Fig. 20 of 2002.12778 differ so much from the delta-function MF constraints compared to the versions Im using.
+    
+    # # Plot the constraints shown in Fig. 20 of 2002.12778
+    # m_min = 1e-25
+    # m_max = 1e-10
+    # epsilon = 0.4
+    # m_star = 5e14
+    # m_pbh_values = np.arange(np.log10(m_min), np.log10(m_max), 0.1) * 1.989e33
+    # f_max_values = 2e-8 * np.power(m_pbh_values/m_star, 3+epsilon)
+    
+    # mc_values = np.logspace(-18, -12, 60)
+    
+    # sigma = 2
+    # f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma])
+    
+    # fig, ax = plt.subplots(figsize=(5,5))
+    # ax.plot(m_pbh_values, f_max_values, color="tab:grey", label="Delta func.", linestyle="dashed")
+    # ax.plot(mc_values, f_PBH_values, color="tab:blue", label="LN ($\sigma={:.1f}) [reproduced]".format(sigma), linestyle="dashed")
+    
+    # m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_LH.csv") 
+    # mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv") 
+    # ax.plot(m_delta_values_loaded, f_max_loaded, color="tab:grey", label="Delta func.")
+    # ax.plot(mc_LN_values_loaded, f_PBH_loaded, color="tab:blue", label="LN ($\sigma={:.1f}) [reproduced]".format(sigma))
+   
+    # ax.set_ylabel("$f_\mathrm{PBH}$")
+    # ax.set_xlabel("$m_c~[M_\odot]$")
+    # ax.legend(title="$\sigma$", fontsize="x-small")
+    # ax.set_xscale("log")
+    # ax.set_yscale("log")
+    # ax.set_xlim(1e-18, 1e-12)
+    # ax.set_ylim(1e-4, 1)
+    
