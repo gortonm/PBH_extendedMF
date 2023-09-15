@@ -906,14 +906,67 @@ if "__main__" == __name__:
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[Delta_index]))
     
         
-#%% Test: log-normal plots. Aim is to understand why the extended MF constraints shown in Fig. 20 of 2002.12778 differ so much from the delta-function MF constraints, compared to the difference I'm seeing when plotting against the peak mass.
+#%% Plot extended MF constraints shown in Fig. 20 of 2002.12778 on the same axes as in that figure.
 from preliminaries import constraint_Carr, LN
 
-def g_to_Solmass(m):
-    return 1.989e33 * m
 
 def Solmass_to_g(m):
+    """Convert a mass m (in solar masses) to grams."""
+    return 1.989e33 * m
+
+
+def g_to_Solmass(m):
+    """Convert a mass m (in grams) to solar masses."""
     return m / 1.989e33
+    
+
+def f_PBH_beta_prime(m_values, beta_prime):
+    """
+    Calcualte f_PBH from the initial PBH fraction beta_prime, using Eq. 57 of 2002.12778.
+
+    Parameters
+    ----------
+    m_values : Array-like
+        PBH masses, in grams.
+    beta_prime : Array-like / float
+        Scaled fraction of the energy density of the Universe in PBHs at their formation time (see Eq. 8 of 2002.12778), at each mass in m_values.
+
+    Returns
+    -------
+    Array-like
+        Value of f_PBH evaluated at each mass in m_values.
+
+    """
+    return 3.81e8 * beta_prime * np.power(m_values / 1.989e33, -1/2)
+ 
+    
+def beta_prime_gamma_rays(m_values, epsilon=0.4):
+    """
+    Calculate values of beta prime allowed from extragalactic gamma-rays, using the simple power-law expressions in 2002.12778.
+
+    Parameters
+    ----------
+    m_values : Array-like
+        PBH masses, in grams.
+    epsilon : Float, optional
+        Parameter describing the power-law dependence of x-ray and gamma-ray spectra on photon energy. The default is 0.4.
+
+    Returns
+    -------
+    Array-like
+        Scaled fraction of the energy density of the Universe in PBHs at their formation time (see Eq. 8 of 2002.12778), at each mass in m_values.
+
+    """
+    beta_prime_values = []
+    
+    for m in m_values:
+        if m < m_star:
+            beta_prime_values.append(5e-28 * np.power(m/m_star, -5/2-2*epsilon))
+        else:
+            beta_prime_values.append(5e-26 * np.power(m/m_star, 7/2+epsilon))
+    
+    return np.array(beta_prime_values)
+
 
 if "__main__" == __name__:
     
@@ -928,11 +981,12 @@ if "__main__" == __name__:
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     
     plot_unevolved = True
-    plot_against_mc = False
+    plot_against_mc = True
     
-    fig, ax = plt.subplots(figsize=(6,5))
+    fig, ax = plt.subplots(figsize=(8,6))
        
-    # Delta-function MF constraints
+    
+    # Delta-function MF constraints from Korwar & Profumo (2023)
     m_delta_values_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
         
     m_delta_extrapolated_upper = np.logspace(15, 16, 11)
@@ -947,63 +1001,96 @@ if "__main__" == __name__:
     f_PBH_delta_evap = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
     m_delta_evap = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
     
+    
     # Calculate extended MF constraint for a log-normal with sigma = 2
     sigma_Carr21 = 2
     mc_Carr21 = np.logspace(14, 22, 1000)
     f_PBH_sigma2_evolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma_Carr21], evolved=True)
     f_PBH_sigma2_unevolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma_Carr21], evolved=False)
 
-    colors=["tab:blue", "tab:orange", "tab:green", "tab:red"]
+    colors=["tab:blue", "tab:orange"]
     
-    ax.plot(m_delta_evap, f_PBH_delta_evap, color="tab:gray", label="Delta func.", linewidth=2)
-    ax1 = ax.secondary_xaxis('top', functions=(Solmass_to_g, g_to_Solmass)) 
+    ax.plot(m_delta_evap, f_PBH_delta_evap, color="tab:gray", label="$\delta$ func.", linewidth=2)
+    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
+    
+    
+    # Calculate extended MF constraints obtained for a log-normal with the delta-function MF constraint from Korwar & Profumo (2023).
+    for i, sigma in enumerate([sigmas_LN[6], sigma_Carr21]):
         
-    for i, Delta_index in enumerate([6]):
+        f_PBH_evolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma], evolved=True)
+        f_PBH_unevolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma], evolved=False)
         
-        data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)    
-        mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
         if plot_against_mc:
-            ax.plot(mc_KP23_LN, f_PBH_KP23_LN, color=colors[i], dashes=[6, 2], label="{:.1f}".format(sigmas_LN[Delta_index]))
+            ax.plot(mc_Carr21, f_PBH_evolved, color=colors[i], dashes=[6, 2], label="{:.1f}".format(sigma))
         else:
-            ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_KP23_LN, color=colors[i], dashes=[6, 2], label="{:.1f}".format(sigmas_LN[Delta_index]))
+            ax.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_evolved, color=colors[i], dashes=[6, 2], label="{:.1f}".format(sigmas_LN[Delta_index]))
                         
         # Plot constraint obtained with unevolved MF
         if plot_unevolved:
-            # Load constraints calculated for the unevolved MF extrapolated down to 1e11g using a power-law with exponent 2 calculated using GC_constraints_Carr.py (August 2023)
-            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-tests/unevolved/PL_exp_2/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp2.txt".format(Deltas[Delta_index]), delimiter="\t")
 
-            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2)     
             if plot_against_mc:
-                ax.plot(mc_KP23_LN, f_PBH_KP23_LN, color=colors[i], alpha=0.4)
+                ax.plot(mc_Carr21, f_PBH_unevolved, color=colors[i], alpha=0.4)
             else:
-                ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_KP23_LN, color=colors[i], alpha=0.4)
+                ax.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_unevolved, color=colors[i], alpha=0.4)
+            
+    # Calculate constraints shown in Fig. 20 of 2002.12778
+    m_min = 1e11
+    m_max = 1e20
+    epsilon = 0.4
+    m_star = 5.1e14
+
+    # Calculate delta-function MF constraints, using Eqs. 32-33 of 2002.12778 for beta_prime, and Eq. 57 to convert to f_PBH
+    m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
+    f_max_values = f_PBH_beta_prime(m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
                 
+    f_PBH_values = constraint_Carr(mc_Carr21, m_pbh_values, f_max_values, LN, params=[sigma_Carr21], evolved=False)
+    
+    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    
     if plot_against_mc:
         ax.plot(mc_Carr21, f_PBH_sigma2_evolved, color="tab:orange", dashes=[6, 2], label="{:.1f}".format(2))
         if plot_unevolved:
             ax.plot(mc_Carr21, f_PBH_sigma2_unevolved, color="tab:orange", alpha=0.4)
         ax.set_xlabel("$m_c = m_p\exp(\sigma^2)~[\mathrm{g}]$")
         ax1.set_xlabel("$m_c~[M_\odot]$")
+        
+        ax2 = ax.twinx()        
+        ax2.plot(Solmass_to_g(m_delta_values_loaded), f_max_loaded, color="k", label="$\delta$ func.")
+        ax2.plot(m_pbh_values, f_max_values, color="k", label="$\delta$ func. [repr.]", linestyle="dotted")
+        ax2.plot(Solmass_to_g(mc_LN_values_loaded), f_PBH_loaded, color="lime", label="LN")
+        ax2.plot(mc_Carr21, f_PBH_values, color="tab:green", label="CLN [repr.]")
+        ax2.legend(title="Carr+ '21", fontsize="x-small")
+        
     else:
         ax.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_sigma2_evolved, color="tab:orange", dashes=[6, 2], label="{:.1f}".format(2))
         if plot_unevolved:
             ax.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_sigma2_unevolved, color="tab:orange", alpha=0.4)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
         ax1.set_xlabel("$m_p~[M_\odot]$")
-       
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.legend(title="$\sigma$", fontsize="x-small")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
         
-    ax.set_xlim(1e16, 1e20)
-    ax.set_ylim(1e-6, 1)
+        ax2 = ax.twinx()        
+        ax2.plot(Solmass_to_g(m_delta_values_loaded) / np.exp(sigma_Carr21**2), f_max_loaded, color="k", label="$\delta$ func.")
+        ax2.plot(m_pbh_values, f_max_values, color="k", label="$\delta$ func. [repr.]", linestyle="dotted")
+        ax2.plot(Solmass_to_g(mc_LN_values_loaded) / np.exp(sigma_Carr21**2), f_PBH_loaded, color="lime", label="LN")
+        ax2.plot(mc_Carr21, f_PBH_values, color="tab:green", label="CLN [repr.]")
+        ax2.legend(title="Carr+ '21", fontsize="x-small")
+            
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.legend(title="$\sigma$ (KP' 23)", fontsize="x-small")
     
-    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
-    ax.xaxis.set_major_locator(x_major)
-    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
-    ax.xaxis.set_minor_locator(x_minor)
-    ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+    for a in [ax, ax2]:
+        a.set_xscale("log")
+        a.set_yscale("log")
+            
+        a.set_xlim(1e16, 1e20)
+        a.set_ylim(1e-6, 1)
+        
+        x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+        a.xaxis.set_major_locator(x_major)
+        x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+        a.xaxis.set_minor_locator(x_minor)
+        a.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
         
     fig.tight_layout()
     
@@ -1013,45 +1100,26 @@ if "__main__" == __name__:
     m_min = 1e11
     m_max = 1e20
     epsilon = 0.4
-    m_star = 5e14
-    
-    def f_PBH_beta(m_values, beta):
-        # masses m_values must be in grams
-        return 1.7e8 * beta * np.power(m_values / 1.989e33, -1/2)
-    
-    def beta(beta_prime, gamma=0.2):
-        return beta_prime / np.sqrt(gamma) 
- 
-    def beta_prime_lower(m_values, epsilon=0.4):
-        
-        beta_prime_values = []
-        
-        for m in m_values:
-            if m < m_star:
-                beta_prime_values.append(5e-28 * np.power(m/m_star, -5/2-2*epsilon))
-            else:
-                beta_prime_values.append(5e-26 * np.power(m/m_star, 7/2+epsilon))
-        
-        return beta_prime_values
+    m_star = 5.1e14
     
     m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
-    f_max_values = f_PBH_beta(m_pbh_values, beta(beta_prime_lower(m_pbh_values)))
-    #f_max_values /= 3
+    f_max_values = f_PBH_beta_prime(m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
+    #f_max_values /= 2
     mc_values = np.logspace(15, 22, 70)
     
     sigma = 2
     
-    fig, ax = plt.subplots(figsize=(6,5))
+    fig, ax = plt.subplots(figsize=(8,7))
     ax1 = ax.secondary_xaxis('top', functions=(Solmass_to_g, g_to_Solmass)) 
 
     f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
 
-    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
     
     m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
     mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
     
     ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded, color="tab:grey", label="Delta func.")
+    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
     ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
     ax.plot(mc_values, f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
 
@@ -1061,7 +1129,7 @@ if "__main__" == __name__:
     ax.legend(title="$\sigma$", fontsize="x-small")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_xlim(1e14, 1e20)
+    ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
     ax.set_ylim(1e-4, 1)
     fig.tight_layout()    
     
