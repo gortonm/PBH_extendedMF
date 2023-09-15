@@ -987,26 +987,25 @@ if "__main__" == __name__:
        
     
     # Delta-function MF constraints from Korwar & Profumo (2023)
-    m_delta_values_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+    m_delta_KP23_loaded, f_max_KP23_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
         
     m_delta_extrapolated_upper = np.logspace(15, 16, 11)
     m_delta_extrapolated_lower = np.logspace(11, 15, 41)
     
-    f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_values_loaded), exponent_PL_upper)
+    f_max_extrapolated_upper = min(f_max_KP23_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_KP23_loaded), exponent_PL_upper)
     f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
 
-    m_pbh_values_upper = np.concatenate((m_delta_extrapolated_upper, m_delta_values_loaded))
-    f_max_upper = np.concatenate((f_max_extrapolated_upper, f_max_loaded))
+    m_delta_Carr21_upper = np.concatenate((m_delta_extrapolated_upper, m_delta_KP23_loaded))
+    f_max_upper = np.concatenate((f_max_extrapolated_upper, f_max_KP23_loaded))
     
-    f_PBH_delta_evap = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
-    m_delta_evap = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
+    f_max_KP23 = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_KP23_loaded))
+    m_delta_KP23 = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_KP23_loaded))
     
     
-    # Calculate extended MF constraint for a log-normal with sigma = 2
+    # Width of log-normal MF used in Carr et al. (2021)
     sigma_Carr21 = 2
+    # Range of characteristic masses for obtaining constraints.
     mc_Carr21 = np.logspace(14, 22, 1000)
-    f_PBH_sigma2_evolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma_Carr21], evolved=True)
-    f_PBH_sigma2_unevolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma_Carr21], evolved=False)
 
     colors=["tab:blue", "tab:orange"]
     
@@ -1040,40 +1039,34 @@ if "__main__" == __name__:
     m_star = 5.1e14
 
     # Calculate delta-function MF constraints, using Eqs. 32-33 of 2002.12778 for beta_prime, and Eq. 57 to convert to f_PBH
-    m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
-    f_max_values = f_PBH_beta_prime(m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
+    m_delta_Carr21 = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
+    f_max_Carr21 = f_PBH_beta_prime(m_delta_Carr21, beta_prime_gamma_rays(m_delta_Carr21))
                 
-    f_PBH_values = constraint_Carr(mc_Carr21, m_pbh_values, f_max_values, LN, params=[sigma_Carr21], evolved=False)
+    f_PBH_Carr21 = constraint_Carr(mc_Carr21, m_delta_Carr21, f_max_Carr21, LN, params=[sigma_Carr21], evolved=False)
     
-    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
-    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    m_delta_Carr21_loaded, f_max_Carr21_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_Carr21_LN_loaded, fPBH_Carr21_LN_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
     
     if plot_against_mc:
-        ax.plot(mc_Carr21, f_PBH_sigma2_evolved, color="tab:orange", dashes=[6, 2], label="{:.1f}".format(2))
-        if plot_unevolved:
-            ax.plot(mc_Carr21, f_PBH_sigma2_unevolved, color="tab:orange", alpha=0.4)
         ax.set_xlabel("$m_c = m_p\exp(\sigma^2)~[\mathrm{g}]$")
         ax1.set_xlabel("$m_c~[M_\odot]$")
         
         ax2 = ax.twinx()        
-        ax2.plot(Solmass_to_g(m_delta_values_loaded), f_max_loaded, color="k", label="$\delta$ func.")
-        ax2.plot(m_pbh_values, f_max_values, color="k", label="$\delta$ func. [repr.]", linestyle="dotted")
-        ax2.plot(Solmass_to_g(mc_LN_values_loaded), f_PBH_loaded, color="lime", label="LN")
-        ax2.plot(mc_Carr21, f_PBH_values, color="tab:green", label="CLN [repr.]")
+        ax2.plot(Solmass_to_g(m_delta_Carr21_loaded), f_max_Carr21_loaded, color="k", label="$\delta$ func.")
+        ax2.plot(m_delta_Carr21, f_max_Carr21, color="k", label="$\delta$ func. [repr.]", linestyle="dotted")
+        ax2.plot(Solmass_to_g(mc_Carr21_LN_loaded), fPBH_Carr21_LN_loaded, color="lime", label="LN")
+        ax2.plot(mc_Carr21, f_PBH_Carr21, color="tab:green", label="LN [repr.]")
         ax2.legend(title="Carr+ '21", fontsize="x-small")
         
     else:
-        ax.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_sigma2_evolved, color="tab:orange", dashes=[6, 2], label="{:.1f}".format(2))
-        if plot_unevolved:
-            ax.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_sigma2_unevolved, color="tab:orange", alpha=0.4)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
         ax1.set_xlabel("$m_p~[M_\odot]$")
         
         ax2 = ax.twinx()        
-        ax2.plot(Solmass_to_g(m_delta_values_loaded) / np.exp(sigma_Carr21**2), f_max_loaded, color="k", label="$\delta$ func.")
-        ax2.plot(m_pbh_values, f_max_values, color="k", label="$\delta$ func. [repr.]", linestyle="dotted")
-        ax2.plot(Solmass_to_g(mc_LN_values_loaded) / np.exp(sigma_Carr21**2), f_PBH_loaded, color="lime", label="LN")
-        ax2.plot(mc_Carr21, f_PBH_values, color="tab:green", label="CLN [repr.]")
+        ax2.plot(Solmass_to_g(m_delta_Carr21_loaded), f_max_Carr21_loaded, color="k", label="$\delta$ func.")
+        ax2.plot(m_delta_Carr21, f_max_Carr21, color="k", label="$\delta$ func. [repr.]", linestyle="dotted")
+        ax2.plot(Solmass_to_g(mc_Carr21_LN_loaded) / np.exp(sigma_Carr21**2), fPBH_Carr21_LN_loaded, color="lime", label="LN")
+        ax2.plot(mc_Carr21, f_PBH_Carr21, color="tab:green", label="LN [repr.]")
         ax2.legend(title="Carr+ '21", fontsize="x-small")
             
     ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -1094,6 +1087,47 @@ if "__main__" == __name__:
         
     fig.tight_layout()
     
+    #%%
+    # Plot psi_N, f_max and the integrand in the same figure window (sigma=2 case)
+    m_c = 2e18
+    
+    fig1, axes = plt.subplots(3, 1, figsize=(5, 14))
+    ax1 = axes[0]
+    ax2 = axes[1]
+    ax3 = axes[2]
+    
+    ax1.plot(m_delta_evap, LN(m_delta_evap, m_c=m_c, sigma=sigma_Carr21))
+    ax1.set_ylabel("$\psi_\mathrm{N}~[\mathrm{g}^{-1}]$")
+
+    ax2.plot(m_delta_KP23, 1/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
+    ax2.plot(m_delta_Carr21, 1/f_max_Carr21, color="k", label="Carr+ '21")
+    ax2.legend(fontsize="x-small")
+    ax2.set_ylabel("$1 / f_\mathrm{max}$")
+    
+    ax3.plot(m_delta_KP23, LN(m_delta_KP23, m_c=m_c, sigma=sigma_Carr21)/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
+    ax3.plot(m_delta_Carr21, LN(m_delta_Carr21, m_c=m_c, sigma=sigma_Carr21)/f_max_Carr21, color="k", label="Carr+ '21")
+    ax3.legend(fontsize="x-small")
+    ax3.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
+
+    for ax in [ax1, ax2, ax3]:
+        ax.set_xlabel("$m~[\mathrm{g}]$")
+        ax.set_xlim(1e11, 1e17)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+     
+    # Plot the integrand on a linear scale
+    fig2, ax4 = plt.subplots(figsize=(6,5))
+    ax4.plot(m_delta_KP23, LN(m_delta_KP23, m_c=m_c, sigma=sigma_Carr21)/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
+    ax4.plot(m_delta_Carr21, LN(m_delta_Carr21, m_c=m_c, sigma=sigma_Carr21)/f_max_Carr21, color="k", label="Carr+ '21")
+    ax4.legend(fontsize="x-small")
+    ax4.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
+    ax4.set_xlim(0, 1e15)
+    
+    for fig in [fig1, fig2]:
+        fig.suptitle("$m_c = {:.1e}".format(m_c) + "~\mathrm{g}$", fontsize="small")
+        fig.tight_layout()
+
+        
 #%% Test: log-normal plots. Aim is to understand why the extended MF constraints shown in Fig. 20 of 2002.12778 differ so much from the delta-function MF constraints compared to the versions Im using.
     
     # Plot the constraints shown in Fig. 20 of 2002.12778
