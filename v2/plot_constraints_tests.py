@@ -1338,3 +1338,156 @@ if "__main__" == __name__:
             fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
 
+#%% Compare how stringent the (approximate) extragalactic gamma ray constraints from Carr et al. (2021) are compared to the constraints from Korwar & Profumo (2023).
+
+from preliminaries import constraint_Carr, LN, SLN, CC3
+
+t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
+
+def Solmass_to_g(m):
+    """Convert a mass m (in solar masses) to grams."""
+    return 1.989e33 * m
+
+
+def g_to_Solmass(m):
+    """Convert a mass m (in grams) to solar masses."""
+    return m / 1.989e33
+    
+
+def f_PBH_beta_prime(m_values, beta_prime):
+    """
+    Calcualte f_PBH from the initial PBH fraction beta_prime, using Eq. 57 of 2002.12778.
+
+    Parameters
+    ----------
+    m_values : Array-like
+        PBH masses, in grams.
+    beta_prime : Array-like / float
+        Scaled fraction of the energy density of the Universe in PBHs at their formation time (see Eq. 8 of 2002.12778), at each mass in m_values.
+
+    Returns
+    -------
+    Array-like
+        Value of f_PBH evaluated at each mass in m_values.
+
+    """
+    return 3.81e8 * beta_prime * np.power(m_values / 1.989e33, -1/2)
+ 
+    
+def beta_prime_gamma_rays(m_values, epsilon=0.4):
+    """
+    Calculate values of beta prime allowed from extragalactic gamma-rays, using the simple power-law expressions in 2002.12778.
+
+    Parameters
+    ----------
+    m_values : Array-like
+        PBH masses, in grams.
+    epsilon : Float, optional
+        Parameter describing the power-law dependence of x-ray and gamma-ray spectra on photon energy. The default is 0.4.
+
+    Returns
+    -------
+    Array-like
+        Scaled fraction of the energy density of the Universe in PBHs at their formation time (see Eq. 8 of 2002.12778), at each mass in m_values.
+
+    """
+    beta_prime_values = []
+    
+    for m in m_values:
+        if m < m_star:
+            beta_prime_values.append(5e-28 * np.power(m/m_star, -5/2-2*epsilon))
+        else:
+            beta_prime_values.append(5e-26 * np.power(m/m_star, 7/2+epsilon))
+    
+    return np.array(beta_prime_values)
+
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)       
+    
+    m_min = 3e13    # Minimum mass corresponds to the smallest value that is shown in Fig. 7 of 2002.12778.
+    m_max = 1e20
+    epsilon = 0.4
+    m_star = 5.1e14
+    
+    evolved = False
+    t = t_0
+    
+    # Range of characteristic masses for obtaining constraints.
+    mc_Carr21 = np.logspace(14, 22, 1000)
+
+    colors=["r", "b", "g"]
+      
+    # Calculate delta-function MF constraints, using Eqs. 32-33 of 2002.12778 for beta_prime, and Eq. 57 to convert to f_PBH
+    m_delta_Carr21 = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
+    f_max_Carr21 = f_PBH_beta_prime(m_delta_Carr21, beta_prime_gamma_rays(m_delta_Carr21))
+    
+    # Calculate extended MF constraints obtained for a log-normal with the delta-function MF constraint from Korwar & Profumo (2023).
+    for j in range(len(Deltas)):
+        
+        fig, ax = plt.subplots(figsize=(6, 6))
+        
+        params_LN = [sigmas_LN[j]]
+        params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+        params_CC3 = [alphas_CC3[j], betas[j]]
+        
+        f_pbh_LN = constraint_Carr(mc_Carr21, m_delta_Carr21, f_max_Carr21, LN, params_LN, evolved, t)
+        f_pbh_SLN = constraint_Carr(mc_Carr21, m_delta_Carr21, f_max_Carr21, SLN, params_SLN, evolved, t)
+        f_pbh_CC3 = constraint_Carr(mc_Carr21, m_delta_Carr21, f_max_Carr21, CC3, params_CC3, evolved, t)
+        
+        # Peak mass for log-normal MF
+        mp_LN = mc_Carr21 * np.exp(-sigmas_LN[j]**2)
+        # Estimate peak mass of skew-lognormal MF
+        mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_Carr21]
+
+        ax.plot(mp_LN, f_pbh_LN, color=colors[0], dashes=[6, 2], label="LN")        
+        ax.plot(mp_SLN, f_pbh_SLN, color=colors[1], linestyle=(0, (5, 7)), label="SLN")            
+        ax.plot(mc_Carr21, f_pbh_CC3, color=colors[2], linestyle="dashed", label="CC3")            
+        ax.set_label("CC3")
+        
+        
+        # Plot extended MF constraints from Korwar & Profumo (2023)
+        # Path to extended MF constraints
+        exponent_PL_lower = 2
+        data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+                
+        data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+        data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+        data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+        
+        mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+        mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+        mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+ 
+        # Peak mass for log-normal MF
+        mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
+        # Estimate peak mass of skew-lognormal MF
+        mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+ 
+        ax.plot(mp_LN, f_PBH_KP23_LN, color=colors[0], dashes=[6, 2], alpha=0.5)
+        ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[1], linestyle=(0, (5, 7)), alpha=0.5)
+        ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[2], linestyle="dashed", alpha=0.5)
+        
+
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.legend(fontsize="x-small")
+    
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+            
+        ax.set_xlim(1e16, 5e18)
+        ax.set_ylim(1e-6, 1)
+        
+        ax.set_title("C+ '21 and KP '23 constraints, $\Delta={:.1f}$".format(Deltas[j]))
+        
+        x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+        ax.xaxis.set_major_locator(x_major)
+        x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+        ax.xaxis.set_minor_locator(x_minor)
+        ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+        
+        fig.tight_layout()
+    
