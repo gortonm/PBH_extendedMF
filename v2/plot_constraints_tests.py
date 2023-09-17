@@ -697,9 +697,9 @@ if "__main__" == __name__:
     else:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
-    LN = True
-    SLN = False
-    CC3 = False
+    plot_LN = False
+    plot_SLN = True
+    plot_CC3 = False
         
     for j in range(len(Deltas)):
         
@@ -721,11 +721,11 @@ if "__main__" == __name__:
         mp_LN_unevolved = mc_values_old * np.exp(-sigmas_LN[j]**2)
         
         for i in range(len(constraints_names)):
-            if LN:
+            if plot_LN:
                 ax.plot(mp_LN_unevolved, f_PBH_LN_unevolved[i], label=constraints_names[i], color=colors_evap[i])
-            elif SLN:
+            elif plot_SLN:
                 ax.plot(mp_SLN_unevolved, f_PBH_SLN_unevolved[i], label=constraints_names[i], color=colors_evap[i])
-            elif CC3:
+            elif plot_CC3:
                 ax.plot(mc_values_old, f_PBH_CC3_unevolved[i], label=constraints_names[i], color=colors_evap[i])
                 
             # Load and plot results for the unevolved mass functions
@@ -740,11 +740,11 @@ if "__main__" == __name__:
             mp_SLN_unevolved_approx = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_unevolved_approx]
             mp_LN_unevolved_approx = mc_LN_unevolved_approx * np.exp(-sigmas_LN[j]**2)
             
-            if LN:
+            if plot_LN:
                 ax.plot(mp_LN_unevolved_approx, f_PBH_LN_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")
-            elif SLN:
+            elif plot_SLN:
                 ax.plot(mp_SLN_unevolved_approx, f_PBH_SLN_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")
-            elif CC3:
+            elif plot_CC3:
                 ax.plot(mp_CC3_unevolved_approx, f_PBH_CC3_unevolved_approx, color=colors_evap[i], linestyle="None", marker="x")                
 
             # Load and plot results for the 'evolved' mass functions evaluated at the initial time t_init = 0
@@ -759,13 +759,13 @@ if "__main__" == __name__:
             mp_SLN_t_init_approx = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_t_init_approx]
             mp_LN_t_init_approx = mc_LN_t_init_approx * np.exp(-sigmas_LN[j]**2)
             
-            if LN:
+            if plot_LN:
                 ax.plot(mp_LN_t_init_approx, f_PBH_LN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")    
                 ax1.plot(mp_LN_unevolved, np.interp(mp_LN_unevolved, mp_LN_unevolved_approx, f_PBH_SLN_unevolved_approx) / f_PBH_LN_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
-            elif SLN:
+            elif plot_SLN:
                 ax.plot(mp_SLN_t_init_approx, f_PBH_SLN_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")   
                 ax1.plot(mp_SLN_unevolved, np.interp(mp_SLN_unevolved, mp_SLN_unevolved_approx, f_PBH_SLN_unevolved_approx) / f_PBH_SLN_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
-            elif CC3:
+            elif plot_CC3:
                 ax.plot(mp_CC3_t_init_approx, f_PBH_CC3_t_init_approx, color=colors_evap[i], linestyle="None", marker="+")
                 ax1.plot(mc_values_old, np.interp(mc_values_old, mp_CC3_unevolved_approx, f_PBH_CC3_unevolved_approx) / f_PBH_CC3_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
                 
