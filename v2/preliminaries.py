@@ -1637,8 +1637,8 @@ if "__main__" == __name__:
  
 if "__main__" == __name__:
     
-    plot_KP23 = True
-    plot_GC_Isatis = False
+    plot_KP23 = False
+    plot_GC_Isatis = True
     plot_BC19 = False
     Delta = 0
     
@@ -1679,19 +1679,21 @@ if "__main__" == __name__:
         f_max_upper = f_max
         
     elif plot_GC_Isatis:
-        
+        # Select which instrument places the tightest constraint (depends on Delta and the peak mass)
+        # 0 for COMPTEL, 1 for EGRET, 2 for Fermi-LAT, 3 for INTEGRAL
+        # Note: the defaults here apply to the evolved MF constraints and a peak mass m_p = 1e16g, and do not depend on the fitting function at m_p = 1e16g 
         if Delta == 0:
-            j = 3
+            j = 0
         elif Delta == 2:
             j = 1
         elif Delta == 5:
             j = 1
+            # note: j=2 for the unevolved MF constraints at m_p = 1e16g
         
         # Galactic Centre photon constraints from Isatis
         m_delta_values_loaded = np.logspace(11, 21, 1000)
         constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
-        f_max_loaded = f_max_Isatis[j]   # 0 for COMPTEL, 1 for EGRET, 2 for Fermi-LAT, 3 for INTEGRAL
-        f_max_loaded_FermiLAT = f_max_Isatis[2]                              
+        f_max_loaded = f_max_Isatis[j]   
         
         m_delta_extrapolated = np.logspace(11, 13, 21)
         
@@ -1700,8 +1702,6 @@ if "__main__" == __name__:
         
         # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
         f_max_allpositive = []
-        f_max_allpositive_FermiLAT = []
-
 
         for f_max_value in f_max_Isatis[j]:
             if f_max_value == -1:
@@ -1709,22 +1709,11 @@ if "__main__" == __name__:
             else:
                 f_max_allpositive.append(f_max_value)
                 
-        for f_max_value in f_max_loaded_FermiLAT:
-            if f_max_value == -1:
-                f_max_allpositive_FermiLAT.append(1e100)
-            else:
-                f_max_allpositive_FermiLAT.append(f_max_value)
-        
         # Extrapolate f_max at masses below 1e13g using a power-law
         f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
         f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
         f_max = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
         
-        # Extrapolate f_max at masses below 1e13g using a power-law
-        f_max_FermiLAT_loaded_truncated = np.array(f_max_allpositive_FermiLAT)[m_delta_values_loaded > 1e13]
-        f_max_FermiLAT_extrapolated = f_max_FermiLAT_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
-        f_max_FermiLAT = np.concatenate((f_max_FermiLAT_extrapolated, f_max_FermiLAT_loaded_truncated))
-
         m_pbh_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
 
     elif plot_BC19:
@@ -1747,12 +1736,9 @@ if "__main__" == __name__:
                 m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
             else:
                 m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
-
-
-    fig, ax = plt.subplots(figsize=(6, 6))
     
     # Peak mass, in grams
-    m_p = 3e15
+    m_p = 1e16
     
     # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
     if Delta == 0:
@@ -1970,9 +1956,9 @@ if "__main__" == __name__:
     # Minimum and maximum masses for which the evolved CC3 MF for Delta = 2 is larger than the evolved Delta = 5 MF, for a peak mass M_p = 1e16g
     #m_min_CC3 = 1.13e15
     
-    m_min = 6.35e14
+    #m_min = 6.35e14
     m_max = 1e25
-    #m_min = 1.13e15   # Initial PBH mass that has lost more than 10% of its mass over its lifetime
+    m_min = 1.13e15   # Initial PBH mass that has lost more than 10% of its mass over its lifetime
     #m_max = 7.33e16
     #m_min = 5e14
     #m_max = 2e22
@@ -2004,7 +1990,7 @@ if "__main__" == __name__:
     print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
     
     # For initial MFs, restrict the mass range to that loaded from the data itself
-    """
+    
     if plot_KP23:
         f_max = np.array(f_max_upper)
         m_pbh_values = np.array(m_pbh_values_upper)
@@ -2040,7 +2026,7 @@ if "__main__" == __name__:
     print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
-    """
+    
 
     #%% Find mass range that contributes > 10% of the total integral
      
