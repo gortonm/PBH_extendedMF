@@ -1637,7 +1637,7 @@ if "__main__" == __name__:
  
 def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower):
     """
-    
+    Load delta-function MF constraint on f_PBH from Galactic Centre photons.
 
     Parameters
     ----------
@@ -1686,7 +1686,7 @@ if "__main__" == __name__:
     plot_BC19 = False
     plot_Subaru = False
     plot_Sugiyama19 = False
-    Delta = 2
+    Delta = 0
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -1742,6 +1742,7 @@ if "__main__" == __name__:
             j = 1
         
         constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
+        colours_GC_fit = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
         
         f_max, m_pbh_values = extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower)
         # For the unevolved MF constraints, j=2 when m_p = 1e16g
@@ -1925,7 +1926,10 @@ if "__main__" == __name__:
 
     elif plot_GC_Isatis:
                
-        axes[1].plot(m_pbh_values, 1 / f_max, color="g")
+        axes[1].plot(m_pbh_values, 1 / f_max, color=colours_GC_fit[j])
+        if Delta == 5:
+            axes[1].plot(m_pbh_values, 1 / f_max_FermiLAT, color="tab:red", linestyle="dotted", alpha=0.5)
+
         axes[2].set_ylim(1e-13, 1e-11)
         exponent_fit = 2.8
         fmax_fit = f_max[90] * np.power(m_pbh_values/m_pbh_values[90], 2.8)
@@ -1938,7 +1942,7 @@ if "__main__" == __name__:
             axes[2].set_ylim(1e-14, 2e-12)        
             
         elif Delta == 5:
-            axes[2].set_ylim(1e-14, 5e-11)        
+            axes[2].set_ylim(1e-14, 1e-8)        
         
     else:
         if with_bkg:
@@ -1973,6 +1977,17 @@ if "__main__" == __name__:
     axes[2].plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
     axes[2].plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
     axes[2].plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
+    
+    if plot_GC_Isatis and Delta == 5:
+        axes[2].plot(m_pbh_values_FermiLAT, mf_SLN_unevolved / f_max_FermiLAT, color="b", linestyle="dotted")
+        axes[2].plot(m_pbh_values_FermiLAT, mf_CC3_unevolved / f_max_FermiLAT, color="g", linestyle="dotted")
+        axes[2].plot(m_pbh_values_FermiLAT, mf_LN_unevolved / f_max_FermiLAT, color="r", linestyle="dotted")
+
+    else:
+        axes[2].plot(m_pbh_values, mf_SLN_unevolved / f_max, color="b", linestyle="dotted")
+        axes[2].plot(m_pbh_values, mf_CC3_unevolved / f_max, color="g", linestyle="dotted")
+        axes[2].plot(m_pbh_values, mf_LN_unevolved / f_max, color="r", linestyle="dotted")
+    
     axes[2].set_ylabel("$\psi_\mathrm{N} / f_\mathrm{max}~[\mathrm{g}^{-1}]$")
     axes[2].set_xlabel("$m~[\mathrm{g}]$")
     
@@ -2026,6 +2041,7 @@ if "__main__" == __name__:
     #m_max = 2e22
     m_min_CC3 = m_min
     m_max_CC3 = m_max
+
         
     integral_lower = np.trapz(mf_CC3_evolved[m_pbh_values<m_min_CC3] / f_max[m_pbh_values<m_min_CC3], m_pbh_values[m_pbh_values<m_min_CC3])
     integral_upper = np.trapz(mf_CC3_evolved[m_pbh_values<m_max_CC3] / f_max[m_pbh_values<m_max_CC3], m_pbh_values[m_pbh_values<m_max_CC3])
@@ -2056,7 +2072,11 @@ if "__main__" == __name__:
     if plot_KP23:
         f_max = np.array(f_max_upper)
         m_pbh_values = np.array(m_pbh_values_upper)
-            
+    
+    if plot_GC_Isatis and Delta == 5:
+        f_max = f_max_FermiLAT
+        m_pbh_values = m_pbh_values_FermiLAT
+    
     m_pbh_values_lower = m_pbh_values[m_pbh_values<m_min]
     m_pbh_values_upper = m_pbh_values[m_pbh_values<m_max]
     integral_lower = np.trapz(CC3(m_pbh_values_lower, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max[m_pbh_values<m_min_CC3], m_pbh_values_lower)
