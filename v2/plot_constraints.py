@@ -40,11 +40,13 @@ plt.style.use('tableau-colorblind10')
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = False
+    plot_GC_Isatis = True
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = not plot_GC_Isatis
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
     include_extrapolated = True
+    # If True, plot unevolved MF constraint
+    plot_unevolved = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'r', 'b', 'g', 'k']
@@ -78,28 +80,38 @@ if "__main__" == __name__:
         mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         
         if plot_GC_Isatis:
-            
-            
-            # Plot constraints obtained with unevolved MF
-            mc_values_GC = np.logspace(14, 19, 100)
-            # Load constraints from Galactic Centre photons.
-            fname_base_CC3 = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
-            
-            constraints_names_GC, f_PBHs_GC_SLN = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
-            constraints_names_GC, f_PBHs_GC_CC3 = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
-            
-            f_PBH_GC_SLN = envelope(f_PBHs_GC_SLN)
-            f_PBH_GC_CC3 = envelope(f_PBHs_GC_CC3)
-                        
-            # Estimate peak mass of skew-lognormal MF
-            mp_SLN_GC = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
-            
-            ax0.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], alpha=0.4)
-            ax0.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], alpha=0.4)
-            ax1.plot(mp_SLN_GC, f_PBH_GC_SLN, color=colors[2], alpha=0.4)
-            ax1.plot(mc_values_GC, f_PBH_GC_CC3, color=colors[3], alpha=0.4)
-            
+
+            # If required, plot unevolved MF constraints.
+            if plot_unevolved:            
+                constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+                f_PBH_instrument_LN = []
+                f_PBH_instrument_SLN = []
+                f_PBH_instrument_CC3 = []
+    
+                for k in range(len(constraints_names_short)):
+    
+                    # Plot constraints obtained with unevolved MF
+                    # Load and plot results for the unevolved mass functions
+                    data_filename_LN_unevolved_approx = "./Data-tests/unevolved" + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[i])
+                    data_filename_SLN_unevolved_approx = "./Data-tests/unevolved" + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[i])
+                    data_filename_CC3_unevolved_approx = "./Data-tests/unevolved" + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[i])
+        
+                    mc_LN_unevolved_approx, f_PBH_LN_unevolved_approx = np.genfromtxt(data_filename_LN_unevolved_approx, delimiter="\t")
+                    mc_SLN_unevolved_approx, f_PBH_SLN_unevolved_approx = np.genfromtxt(data_filename_SLN_unevolved_approx, delimiter="\t")
+                    mp_CC3_unevolved_approx, f_PBH_CC3_unevolved_approx = np.genfromtxt(data_filename_CC3_unevolved_approx, delimiter="\t")
+                                    
+                    # Compile constraints from all instruments
+                    f_PBH_instrument_LN.append(f_PBH_LN_unevolved_approx)
+                    f_PBH_instrument_SLN.append(f_PBH_SLN_unevolved_approx)
+                    f_PBH_instrument_CC3.append(f_PBH_CC3_unevolved_approx)
+                    
+                mp_SLN_unevolved_approx = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_unevolved_approx]
+                mp_LN_unevolved_approx = mc_LN_unevolved_approx * np.exp(-sigmas_LN[i]**2)
+                
+                for ax in [ax0, ax1]:
+                    ax.plot(mp_LN_unevolved_approx, envelope(f_PBH_instrument_LN), color=colors[1], alpha=0.4)
+                    ax.plot(mp_SLN_unevolved_approx, envelope(f_PBH_instrument_SLN), color=colors[2], alpha=0.4)
+                    ax.plot(mp_CC3_unevolved_approx, envelope(f_PBH_instrument_CC3), color=colors[3], alpha=0.4)
             
             plt.suptitle("Existing constraints (showing Galactic Centre photon constraints (Isatis)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
             
@@ -211,9 +223,7 @@ if "__main__" == __name__:
             mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
             mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
-            
-            # print(f_PBH_KP23_SLN[20:30])
-            
+                        
             # Estimate peak mass of skew-lognormal MF
             mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
             mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
@@ -234,22 +244,22 @@ if "__main__" == __name__:
                 ax.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
                 ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2])
 
-            # Plot constraint obtained with unevolved MF
+            # If required, plot constraints obtained with unevolved MF
+            if plot_unevolved:
+                mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data-old/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
+                mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data-old/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
+                mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-old/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
+               
+                # Estimate peak mass of skew-lognormal MF
+                mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+                mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
             
-            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data-old/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
-            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data-old/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
-            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-old/LN_2302.04408_Carr_Delta={:.1f}_extrapolated.txt".format(Deltas[i]), delimiter="\t")
-           
-            # Estimate peak mass of skew-lognormal MF
-            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
-            mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
-        
-            ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.4)
-            ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.4)
-            ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.4)
-            ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.4)
-            ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
-            ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
+                ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.4)
+                ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.4)
+                ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.4)
+                ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.4)
+                ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
+                ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
             
 
         # Set axis limits
@@ -706,7 +716,7 @@ if "__main__" == __name__:
 
 
     
-#%% Plot the most stringent GC photon constraint
+#%% Plot the most stringent GC photon constraint (calculated using the method from 1705.05567 with the delta-function MF constraint from Isatis).
 
 if "__main__" == __name__:
     
@@ -715,6 +725,9 @@ if "__main__" == __name__:
     
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    
+    # if True, use the constraints obtained for evolved MFs. Otherwise, use constraints obtained using the unevolved MFs.
+    evolved = False
     
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
@@ -737,18 +750,25 @@ if "__main__" == __name__:
         
         exponent_PL_lower = 2
         constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-        data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
-        
+        if evolved:
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+        else:
+            data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
         f_PBH_instrument_LN = []
         f_PBH_instrument_SLN = []
         f_PBH_instrument_CC3 = []
 
         for k in range(len(constraints_names_short)):
             # Load constraints for an evolved extended mass function obtained from each instrument
-            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
-            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
-            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
-                
+            if evolved:
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[i])
+            else:
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[i])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[i])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[i])
+
             mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
             mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
@@ -785,7 +805,7 @@ if "__main__" == __name__:
     plot_SLN = False
     plot_CC3 = True
     
-    exponent_PL_lower = 2
+    exponent_PL_lower = 3
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     
     # For Boudaud & Cirelli (2019) constraints
@@ -855,7 +875,7 @@ if "__main__" == __name__:
         mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
         mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
             
-    
+        """
         # Load constraints from Galactic Centre photons.
         f_PBH_instrument_LN = []
         f_PBH_instrument_SLN = []
@@ -879,7 +899,7 @@ if "__main__" == __name__:
         f_PBH_GC_LN = envelope(f_PBH_instrument_LN)
         f_PBH_GC_SLN = envelope(f_PBH_instrument_SLN)
         f_PBH_GC_CC3 = envelope(f_PBH_instrument_CC3)
-        
+        """
         if plot_LN:
             ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_KP23_LN, color="k", label="KP '23")
             #ax.plot(mc_values_evap * np.exp(-sigmas_LN[Delta_index]**2), f_PBH_GC_LN, color="tab:grey", label="GC photons")
@@ -888,7 +908,7 @@ if "__main__" == __name__:
             # Estimate peak mass of skew-lognormal MF
             mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
             ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="k", label="KP '23")
-            mp_GC_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_values_evap]
+            #mp_GC_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_values_evap]
             #ax.plot(mp_GC_SLN, f_PBH_GC_SLN, color="tab:grey", label="GC photons")
         
         elif plot_CC3:
@@ -981,9 +1001,9 @@ if "__main__" == __name__:
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     
     plot_unevolved = True
-    plot_against_mc = True
+    plot_against_mc = False
     
-    fig, ax = plt.subplots(figsize=(8,6))
+    fig, ax = plt.subplots(figsize=(7,6))
        
     
     # Delta-function MF constraints from Korwar & Profumo (2023)
@@ -1009,20 +1029,20 @@ if "__main__" == __name__:
 
     colors=["tab:blue", "tab:orange"]
     
-    ax.plot(m_delta_evap, f_PBH_delta_evap, color="tab:gray", label="$\delta$ func.", linewidth=2)
+    ax.plot(m_delta_KP23, f_max_KP23, color="tab:gray", label="$\delta$ func.", linewidth=2)
     ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
     
     
     # Calculate extended MF constraints obtained for a log-normal with the delta-function MF constraint from Korwar & Profumo (2023).
-    for i, sigma in enumerate([sigmas_LN[6], sigma_Carr21]):
+    for i, sigma in enumerate([sigma_Carr21]):
         
-        f_PBH_evolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma], evolved=True)
-        f_PBH_unevolved = constraint_Carr(mc_Carr21, m_delta_evap, f_PBH_delta_evap, LN, [sigma], evolved=False)
+        f_PBH_evolved = constraint_Carr(mc_Carr21, m_delta_KP23, f_max_KP23, LN, [sigma], evolved=True)
+        f_PBH_unevolved = constraint_Carr(mc_Carr21, m_delta_KP23, f_max_KP23, LN, [sigma], evolved=False)
         
         if plot_against_mc:
-            ax.plot(mc_Carr21, f_PBH_evolved, color=colors[i], dashes=[6, 2], label="{:.1f}".format(sigma))
+            ax.plot(mc_Carr21, f_PBH_evolved, color=colors[i], dashes=[6, 2], label="LN ($\sigma={:.2f})$".format(sigma))
         else:
-            ax.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_evolved, color=colors[i], dashes=[6, 2], label="{:.1f}".format(sigmas_LN[Delta_index]))
+            ax.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_evolved, color=colors[i], dashes=[6, 2], label="LN ($\sigma={:.2f})$".format(sigma))
                         
         # Plot constraint obtained with unevolved MF
         if plot_unevolved:
@@ -1049,34 +1069,38 @@ if "__main__" == __name__:
     
     if plot_against_mc:
         ax.set_xlabel("$m_c = m_p\exp(\sigma^2)~[\mathrm{g}]$")
-        ax1.set_xlabel("$m_c~[M_\odot]$")
+        #ax1.set_xlabel("$m_c~[M_\odot]$")
         
         ax2 = ax.twinx()        
-        ax2.plot(Solmass_to_g(m_delta_Carr21_loaded), f_max_Carr21_loaded, color="k", label="$\delta$ func.")
-        ax2.plot(m_delta_Carr21, f_max_Carr21, color="k", label="$\delta$ func. [repr.]", linestyle="dotted")
-        ax2.plot(Solmass_to_g(mc_Carr21_LN_loaded), fPBH_Carr21_LN_loaded, color="lime", label="LN")
-        ax2.plot(mc_Carr21, f_PBH_Carr21, color="tab:green", label="LN [repr.]")
-        ax2.legend(title="Carr+ '21", fontsize="x-small")
+        #ax2.plot(Solmass_to_g(m_delta_Carr21_loaded), f_max_Carr21_loaded, color="k", label="$\delta$ func.")
+        ax2.plot(m_delta_Carr21, f_max_Carr21, color="k", label="$\delta$ func.", linestyle="dotted")
+        #ax2.plot(Solmass_to_g(mc_Carr21_LN_loaded), fPBH_Carr21_LN_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma_Carr21))
+        ax2.plot(mc_Carr21, f_PBH_Carr21, color="tab:green", label="LN ($\sigma={:.2f}$)".format(sigma_Carr21))
+        ax2.legend(title="Carr+ '21", fontsize="x-small", loc=(0.55, 0.02))
         
     else:
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
-        ax1.set_xlabel("$m_p~[M_\odot]$")
+        #ax1.set_xlabel("$m_p~[M_\odot]$")
         
         ax2 = ax.twinx()        
-        ax2.plot(Solmass_to_g(m_delta_Carr21_loaded), f_max_Carr21_loaded, color="k", label="$\delta$ func.")
-        ax2.plot(m_delta_Carr21, f_max_Carr21, color="k", label="$\delta$ func. [repr.]", linestyle="dotted")
-        ax2.plot(Solmass_to_g(mc_Carr21_LN_loaded) / np.exp(sigma_Carr21**2), fPBH_Carr21_LN_loaded, color="lime", label="LN")
-        ax2.plot(mc_Carr21, f_PBH_Carr21, color="tab:green", label="LN [repr.]")
-        ax2.legend(title="Carr+ '21", fontsize="x-small")
+        #ax2.plot(Solmass_to_g(m_delta_Carr21_loaded), f_max_Carr21_loaded, color="k", label="$\delta$ func.")
+        ax2.plot(m_delta_Carr21, f_max_Carr21, color="k", label="$\delta$ func.", linestyle="dotted")
+        #ax2.plot(Solmass_to_g(mc_Carr21_LN_loaded) / np.exp(sigma_Carr21**2), fPBH_Carr21_LN_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma_Carr21))
+        ax2.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_Carr21, color="tab:green", label="LN ($\sigma={:.2f}$)".format(sigma_Carr21))
+        ax2.legend(title="Carr+ '21", fontsize="x-small", loc=(0.55, 0.02))
             
     ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.legend(title="$\sigma$ (KP' 23)", fontsize="x-small")
+    
+    ax.legend(title="KP' 23", fontsize="x-small", loc=(0.55, 0.35))
     
     for a in [ax, ax2]:
         a.set_xscale("log")
         a.set_yscale("log")
-            
-        a.set_xlim(1e16, 1e20)
+        
+        if plot_against_mc:
+            a.set_xlim(1e16, 1e20)
+        else:
+            a.set_xlim(1e16, 3e18)
         a.set_ylim(1e-6, 1)
         
         x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
@@ -1084,47 +1108,108 @@ if "__main__" == __name__:
         x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
         a.xaxis.set_minor_locator(x_minor)
         a.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-        
+    
+    #ax1.set_axis_off()
+    ax2.set_axis_off()
     fig.tight_layout()
     
     #%%
-    # Plot psi_N, f_max and the integrand in the same figure window (sigma=2 case)
-    m_c = 2e18
+    # Plot psi_N, f_max and the integrand in the same figure window
+    for sigma_Carr21 in [sigmas_LN[5], 2]:
+        m_p = 1e17
+        m_c = m_p * np.exp(sigma_Carr21**2) 
+        
+        fig1, axes = plt.subplots(3, 1, figsize=(5, 14))
+        ax1 = axes[0]
+        ax2 = axes[1]
+        ax3 = axes[2]
+        
+        ax1.plot(m_delta_KP23, LN(m_delta_KP23, m_c=m_c, sigma=sigma_Carr21) / max(LN(m_delta_KP23, m_c=m_c, sigma=sigma_Carr21)))
+        ax1.set_ylabel("$\psi / \psi_\mathrm{max}$")
+        ax1.set_ylim(1e-5, 2)
+    
+        ax2.plot(m_delta_KP23, 1/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
+        ax2.plot(m_delta_Carr21, 1/f_max_Carr21, color="k", label="Carr+ '21")
+        ax2.legend(fontsize="x-small")
+        ax2.set_ylabel("$1 / f_\mathrm{max}$")
+        ax2.set_ylim(1e-2, 1e10)
+       
+        ax3.plot(m_delta_KP23, LN(m_delta_KP23, m_c=m_c, sigma=sigma_Carr21)/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
+        ax3.plot(m_delta_Carr21, LN(m_delta_Carr21, m_c=m_c, sigma=sigma_Carr21)/f_max_Carr21, color="k", label="Carr+ '21")
+        ax3.legend(fontsize="x-small")
+        ax3.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
+        ax3.set_ylim(1e-20, 1e-8)
+    
+        for ax in [ax1, ax2, ax3]:
+            ax.set_xlabel("$m~[\mathrm{g}]$")
+            ax.set_xlim(1e14, 1e17)
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+         
+        # Plot the integrand on a linear scale
+        fig2, ax4 = plt.subplots(figsize=(6,5))
+        ax4.plot(m_delta_KP23, LN(m_delta_KP23, m_c=m_c, sigma=sigma_Carr21)/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
+        ax4.plot(m_delta_Carr21, LN(m_delta_Carr21, m_c=m_c, sigma=sigma_Carr21)/f_max_Carr21, color="k", label="Carr+ '21")
+        ax4.legend(fontsize="x-small")
+        ax4.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
+        ax4.set_xlabel("$m~[\mathrm{g}]$")
+        ax4.set_xlim(0, 1e15)
+        
+        for fig in [fig1, fig2]:
+            fig.suptitle("$m_p = {:.1e}".format(m_p) + "~\mathrm{g}$" + ", $\sigma={:.2f}$".format(sigma_Carr21), fontsize="small")
+            fig.tight_layout()
+        
+#%%
+    # Plot psi_N, f_max and the integrand in the same figure window (sigma=2 case), using constraints from Auffinger (2022) [2201.01265] Fig. 3 RH panel
+    m_delta_A22, f_max_A22 = load_data("./2201.01265/2201.01265_Fig3_EGXB.csv")   
+
+    sigma_A22 = 2
+    m_p = 1e16
+    m_c = m_p * np.exp(sigma_A22**2) 
     
     fig1, axes = plt.subplots(3, 1, figsize=(5, 14))
     ax1 = axes[0]
     ax2 = axes[1]
     ax3 = axes[2]
     
-    ax1.plot(m_delta_evap, LN(m_delta_evap, m_c=m_c, sigma=sigma_Carr21))
+    from preliminaries import psi_evolved, mass_evolved
+    t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
+    m_pbh_values_formation = np.concatenate((np.logspace(np.log10(m_star) - 3, np.log10(m_star)), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_KP23))+4, 1000)))
+    m_pbh_values_evolved = mass_evolved(m_pbh_values_formation, t_0)
+    psi_initial = LN(m_pbh_values_formation, m_c, sigma_A22)
+    psi_evolved = psi_evolved(psi_initial, m_pbh_values_evolved, m_pbh_values_formation)
+    psi_evolved_interp_A22 = 10**np.interp(np.log10(m_delta_A22), np.log10(m_pbh_values_evolved), np.log10(psi_evolved))
+    psi_evolved_interp_KP23 = 10**np.interp(np.log10(m_delta_KP23), np.log10(m_pbh_values_evolved), np.log10(psi_evolved))
+   
+    ax1.plot(m_delta_KP23, psi_evolved_interp_KP23)
     ax1.set_ylabel("$\psi_\mathrm{N}~[\mathrm{g}^{-1}]$")
 
     ax2.plot(m_delta_KP23, 1/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
-    ax2.plot(m_delta_Carr21, 1/f_max_Carr21, color="k", label="Carr+ '21")
+    ax2.plot(m_delta_A22, 1/f_max_A22, color="k", label="Auffinger '22")
     ax2.legend(fontsize="x-small")
     ax2.set_ylabel("$1 / f_\mathrm{max}$")
     
-    ax3.plot(m_delta_KP23, LN(m_delta_KP23, m_c=m_c, sigma=sigma_Carr21)/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
-    ax3.plot(m_delta_Carr21, LN(m_delta_Carr21, m_c=m_c, sigma=sigma_Carr21)/f_max_Carr21, color="k", label="Carr+ '21")
+    ax3.plot(m_delta_KP23, psi_evolved_interp_KP23/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
+    ax3.plot(m_delta_A22, psi_evolved_interp_A22/f_max_A22, color="k", label="Auffinger '22")
     ax3.legend(fontsize="x-small")
     ax3.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
 
     for ax in [ax1, ax2, ax3]:
         ax.set_xlabel("$m~[\mathrm{g}]$")
-        ax.set_xlim(1e11, 1e17)
+        ax.set_xlim(1e14, 1e17)
         ax.set_xscale("log")
         ax.set_yscale("log")
      
     # Plot the integrand on a linear scale
     fig2, ax4 = plt.subplots(figsize=(6,5))
-    ax4.plot(m_delta_KP23, LN(m_delta_KP23, m_c=m_c, sigma=sigma_Carr21)/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
-    ax4.plot(m_delta_Carr21, LN(m_delta_Carr21, m_c=m_c, sigma=sigma_Carr21)/f_max_Carr21, color="k", label="Carr+ '21")
+    ax4.plot(m_delta_KP23, psi_evolved_interp_KP23/f_max_KP23, color=(0.5294, 0.3546, 0.7020), label="KP '23")
+    ax4.plot(m_delta_A22, psi_evolved_interp_A22/f_max_A22, color="k", label="Auffinger '22")
     ax4.legend(fontsize="x-small")
     ax4.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
-    ax4.set_xlim(0, 1e15)
+    ax4.set_xlim(0, 5e16)
     
     for fig in [fig1, fig2]:
-        fig.suptitle("$m_c = {:.1e}".format(m_c) + "~\mathrm{g}$", fontsize="small")
+        fig.suptitle("$m_p = {:.1e}".format(m_p) + "~\mathrm{g}$", fontsize="small")
         fig.tight_layout()
 
         
@@ -1144,11 +1229,10 @@ if "__main__" == __name__:
     sigma = 2
     
     fig, ax = plt.subplots(figsize=(8,7))
-    ax1 = ax.secondary_xaxis('top', functions=(Solmass_to_g, g_to_Solmass)) 
+    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
 
     f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
 
-    
     m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
     mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
     
@@ -1167,5 +1251,28 @@ if "__main__" == __name__:
     ax.set_ylim(1e-4, 1)
     fig.tight_layout()    
     
+    
+    fig, ax = plt.subplots(figsize=(8,7))
+    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
+
+    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
+
+    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    
+    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded, color="tab:grey", label="Delta func.")
+    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
+    ax.plot(mc_LN_values_loaded * 1.989e33 * np.exp(-sigma**2), f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
+    ax.plot(mc_values  * np.exp(-sigma**2), f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
+
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xlabel("$m_p~[\mathrm{g}]$")
+    ax1.set_xlabel("$m_p~[M_\odot]$")
+    ax.legend(title="$\sigma$", fontsize="x-small")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
+    ax.set_ylim(1e-4, 1)
+    fig.tight_layout()    
 
     
