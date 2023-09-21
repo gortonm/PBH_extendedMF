@@ -1681,12 +1681,12 @@ def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower):
 
 if "__main__" == __name__:
     
-    plot_KP23 = False
-    plot_GC_Isatis = True
+    plot_KP23 = True
+    plot_GC_Isatis = False
     plot_BC19 = False
     plot_Subaru = False
     plot_Sugiyama19 = False
-    Delta = 0
+    Delta = 2
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -1724,8 +1724,8 @@ if "__main__" == __name__:
         m_pbh_values = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
         
         #Uncomment to check how the evolved MF integrand would appear if there is no cutoff below 1e15g.
-        #m_pbh_values_upper = m_pbh_values
-        #f_max_upper = f_max
+        m_pbh_values_upper = m_pbh_values
+        f_max_upper = f_max
         
         
     elif plot_GC_Isatis:
@@ -1803,10 +1803,18 @@ if "__main__" == __name__:
     mf_SLN_evolved = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)))
     mf_CC3_evolved = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)))
 
-    mf_LN_unevolved = LN(m_pbh_values_FermiLAT, mc_LN, sigma=sigmas_LN[i])
-    mf_SLN_unevolved = SLN(m_pbh_values_FermiLAT, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-    mf_CC3_unevolved = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
-    
+    # Unevolved MF, evaluated at the masses the delta-function MF constraint is evaluated at
+    if plot_GC_Isatis and Delta == 5:
+        mf_LN_unevolved = LN(m_pbh_values_FermiLAT, mc_LN, sigma=sigmas_LN[i])
+        mf_SLN_unevolved = SLN(m_pbh_values_FermiLAT, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+        mf_CC3_unevolved = CC3(m_pbh_values_FermiLAT, m_p, alpha=alphas_CC3[i], beta=betas[i])
+
+    else:
+        mf_LN_unevolved = LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i])
+        mf_SLN_unevolved = SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
+        mf_CC3_unevolved = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
+
+
     fig, ax = plt.subplots(figsize=(6, 6))
 
     ymin, ymax = 1e-26, 2.5e-23
@@ -1822,21 +1830,16 @@ if "__main__" == __name__:
         ax.plot(m_pbh_values_upper, CC3(m_pbh_values_upper, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max_upper, color="g", linestyle="dotted")
         ax.plot(m_pbh_values_upper, LN(m_pbh_values_upper, mc_LN, sigma=sigmas_LN[i]) / f_max_upper, color="r", linestyle="dotted")
 
-    elif plot_GC_Isatis:
-        if Delta < 5:
-            ax.plot(m_pbh_values, mf_SLN_unevolved / f_max, color="b", linestyle="dotted")
-            ax.plot(m_pbh_values, mf_CC3_unevolved / f_max, color="g", linestyle="dotted")
-            ax.plot(m_pbh_values, mf_LN_unevolved / f_max, color="r", linestyle="dotted")
-        else:
-            ax.plot(m_pbh_values_FermiLAT, mf_SLN_unevolved / f_max_FermiLAT, color="b", linestyle="dotted")
-            ax.plot(m_pbh_values_FermiLAT, mf_CC3_unevolved / f_max_FermiLAT, color="g", linestyle="dotted")
-            ax.plot(m_pbh_values_FermiLAT, mf_LN_unevolved / f_max_FermiLAT, color="r", linestyle="dotted")
-           
-    elif plot_BC19:
+    if plot_GC_Isatis and Delta == 5:
+        ax.plot(m_pbh_values_FermiLAT, mf_SLN_unevolved / f_max_FermiLAT, color="b", linestyle="dotted")
+        ax.plot(m_pbh_values_FermiLAT, mf_CC3_unevolved / f_max_FermiLAT, color="g", linestyle="dotted")
+        ax.plot(m_pbh_values_FermiLAT, mf_LN_unevolved / f_max_FermiLAT, color="r", linestyle="dotted")
+
+    else:
         ax.plot(m_pbh_values, mf_SLN_unevolved / f_max, color="b", linestyle="dotted")
         ax.plot(m_pbh_values, mf_CC3_unevolved / f_max, color="g", linestyle="dotted")
         ax.plot(m_pbh_values, mf_LN_unevolved / f_max, color="r", linestyle="dotted")
-
+           
     ax.grid()
     ax.legend(fontsize="small")
     ax.set_xlabel("$m~[\mathrm{g}]$")
@@ -2041,7 +2044,6 @@ if "__main__" == __name__:
     #m_max = 2e22
     m_min_CC3 = m_min
     m_max_CC3 = m_max
-
         
     integral_lower = np.trapz(mf_CC3_evolved[m_pbh_values<m_min_CC3] / f_max[m_pbh_values<m_min_CC3], m_pbh_values[m_pbh_values<m_min_CC3])
     integral_upper = np.trapz(mf_CC3_evolved[m_pbh_values<m_max_CC3] / f_max[m_pbh_values<m_max_CC3], m_pbh_values[m_pbh_values<m_max_CC3])
