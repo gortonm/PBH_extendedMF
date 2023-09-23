@@ -132,13 +132,13 @@ if "__main__" == __name__:
 #%%
 
 
-def power_law_mf(m, m_min, m_max, gamma):
+def power_law_mf(m_pbh_values, m_min, m_max, gamma):
     """
     Power-law mass function.
 
     Parameters
     ----------
-    m : Array-like
+    m_pbh_values : Array-like
         PBH mass.
     m_min : Float
         Minimum mass for which the power-law mass function is defined.
@@ -153,11 +153,44 @@ def power_law_mf(m, m_min, m_max, gamma):
         Value of the power-law mass function.
 
     """
-    return np.power(m, gamma-1) * gamma / (np.power(m_max, gamma) - np.power(m_min, gamma))
+    mf_values = []
+    
+    for m in m_pbh_values:
+        if m < m_min or m > m_max:
+            mf_values.append(0)
+        else:
+            mf_values.append(np.power(m, gamma-1) * gamma / (np.power(m_max, gamma) - np.power(m_min, gamma)))
+    
+    return np.array(mf_values)
 
 
 def fPBH_power_law_analytic(m_min, m_max, gamma, n, k):
+    """
+    Analytic result for f_PBH for a power-law mass function with exponent
+    gamma, defined between masses m_min and m_max, for a delta-function MF
+    constraint f_max = k * m^n (m = PBH mass).
+
+    Parameters
+    ----------
+    m_min : Float
+        Minimum PBH mass at which the power-law MF is defined.
+    m_max : Float
+        Maximum PBH mass at which the power-law MF is defined.
+    gamma : Float
+        Exponent of the power-law MF.
+    n : Float
+        Exponent (in the mass) of the delta-function MF constraint.
+    k : Float
+        Normalisation for the delta-function MF constraint.
+
+    Returns
+    -------
+    Float
+        Extended MF constraint for a power-law PBH MF where the delta-function MF constraint is a power law in the PBH mass.
+
+    """
     return k * ((gamma - n) / gamma) * (np.power(m_max, gamma) - np.power(m_min, gamma)) / (np.power(m_max, gamma-n) - np.power(m_min, gamma-n))
+
 
 if "__main__" == __name__:
 
@@ -171,7 +204,6 @@ if "__main__" == __name__:
     f_max = (1 / max(m_pbh_values**PL_exp)) * m_pbh_values**PL_exp
     
     params_PL = [m_max, gamma]
-    f_PBH_values_PL_trapz = [1 / np.trapz(power_law_mf(m_pbh_values, m_min, m_max, gamma) / f_max, m_pbh_values) for m_min in m_min_values]
     f_PBH_values_PL = constraint_Carr(m_min_values, m_pbh_values, f_max, power_law_mf, params_PL, evolved=False)
     
     f_PBH_values_PL_analytic = fPBH_power_law_analytic(m_min_values, m_max, gamma, PL_exp, (1 / max(m_pbh_values**PL_exp)))
@@ -181,7 +213,6 @@ if "__main__" == __name__:
     ax.plot(m_pbh_values, f_max, color="tab:grey", label="Delta function", linewidth=2)
 
     ax.plot(m_min_values, f_PBH_values_PL, color="tab:blue", linestyle="dashed", label="PL")
-    ax.plot(m_min_values, f_PBH_values_PL_trapz, color="tab:red", linestyle="dotted", label="PL [np.trapz]")
     ax.plot(m_min_values, f_PBH_values_PL_analytic, color="k", linestyle="dotted", label="PL [analytic]")
 
     ax.set_xscale("log")
