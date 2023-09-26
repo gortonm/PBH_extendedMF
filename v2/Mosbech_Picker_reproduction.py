@@ -40,6 +40,7 @@ filepath = './Extracted_files/'
 m_Pl = 2.176e-5    # Planck mass, in grams
 t_Pl = 5.391e-44    # Planck time, in seconds
 t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
+m_star = 7.473420349255e+14    # Formation mass of a PBH with a lifetimt equal to the age of the Universe, in grams.
 
 #%%
 m_pbh_values_formation_BlackHawk = np.logspace(np.log10(4e14), 16, 50)   # Range of formation masses for which the lifetime is calculated using BlackHawk (primary particle energy range from 1e-6 to 1e5 GeV)
@@ -408,7 +409,8 @@ if "__main__" == __name__:
     m_pbh_values_formation = np.logspace(11, 17, 500)
     # Initial PBH mass values includes values close to the initial mass of a PBH with lifetime equal to the age of the Universe,
     # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
-    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 17, 500)))
+    #m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 17, 500)))
+    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 17, 500)))
     m_pbh_values_evolved = m_pbh_evolved_MP22(m_pbh_values_formation_to_evolve, t_0)
     m_c = 1e15
     
@@ -1486,14 +1488,17 @@ if "__main__" == __name__:
         ax1 = axes_plotting1[i]
         ax1.fill_between(mc_values_unevolved, abs(np.array(constraint_lower_unevolved) / np.array(constraint_lower_unevolved_LN_psi) - 1), abs(np.array(constraint_upper_unevolved)/np.array(constraint_upper_unevolved_LN_psi) -1), color="tab:blue")
         ax1.set_xlabel("$M_c~[\mathrm{g}]$")
-        ax1.set_ylabel("$|f_\mathrm{PBH}(\phi~\mathrm{LN}) / f_\mathrm{PBH}(\psi~\mathrm{LN})| - 1$")
+        ax1.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
         ax1.set_xscale("log")
         ax1.set_yscale("log")
         ax1.set_ylim(fracdiff_ylims[i])
         ax1.set_xlim(1e14, 1e17)
         ax1.set_title("$\sigma={:.1f}$".format(sigma))
-       
+        
         if i == 0:
             ax.legend()
+            
     fig.tight_layout()
+    
+    fig1.suptitle("Fractional difference (LN in $\phi$ / LN in $\psi$ - 1)")
     fig1.tight_layout()
