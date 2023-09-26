@@ -611,7 +611,7 @@ if "__main__" == __name__:
     # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
     include_extrapolated = True
     # Boolean determines whether to use evolved mass function.
-    evolved = True
+    evolved = False
     # Boolean determines whether to evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:

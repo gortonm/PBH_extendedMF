@@ -236,8 +236,8 @@ elif KP23:
 
 #%%
 
-for i in range(0, 3):
-    
+for i in range(0, 2):
+        
     rho_odot_values = np.array([rho_odot_mean[i], rho_odot_mean[i]+rho_odot_plus[i], rho_odot_mean[i]-rho_odot_minus[i]]) * GeV_to_g
     r200_values = np.array([r200_mean[i], r200_mean[i]+r200_plus[i], r200_mean[i]-r200_minus[i]]) * 1000 * pc_to_cm
     rs_values = np.array([rs_mean[i], rs_mean[i]+rs_plus[i], rs_mean[i]-rs_minus[i]]) * 1000 * pc_to_cm
@@ -259,8 +259,8 @@ for i in range(0, 3):
                     params_rho = [slope]
                     
                     if i == 0 or i == 1:
-                        print(J_D(-l_max, l_max, -b_max, b_max, rho_gNFW, params_rho))
-                        
+                        j_factor = (J_D(-l_max, l_max, -b_max, b_max, rho_gNFW, params_rho))
+                                                
                     elif i == 2:
                         print(J_D(-l_max, l_max, -b_max, b_max, rho_Einasto, params_rho))
 

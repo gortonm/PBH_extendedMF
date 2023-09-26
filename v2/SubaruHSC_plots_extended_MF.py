@@ -202,7 +202,7 @@ if "__main__" == __name__:
     
 
 #%% Calculate constraints for extended MFs from 2009.03204.
-mc_subaru = 10**np.linspace(17, 29, 1000)
+mc_subaru = 10**np.linspace(17, 30, 1000)
 
 # Constraints for monochromatic MF.
 m_subaru_delta, f_max_subaru_delta = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")

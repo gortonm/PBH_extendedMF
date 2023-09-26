@@ -306,7 +306,7 @@ if "__main__" == __name__:
 
         constraint_upper_evolved.append(min(f_PBH_energy_bin_upper))
 
-        
+
 #%% Plot constraints for extended MF (reproducing Fig. 4 of Mosbech & Picker (2022)), using direct calculation of psi
 # Use the middle values of the fluxes, so no range in outputs from including an error bar.
 
