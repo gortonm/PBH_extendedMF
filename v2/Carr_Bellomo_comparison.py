@@ -162,7 +162,7 @@ if "__main__" == __name__:
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     mc_values = np.logspace(14, 20, 120)
     
-    all_fmax = True
+    all_fmax = False
     evolved = True
     
     if evolved:
@@ -304,7 +304,7 @@ if "__main__" == __name__:
     #m_delta_extrapolated = np.logspace(11, 13, 41)
    
     evolved = True
-    all_fmax = True
+    all_fmax = False
     
     if evolved:
         title_init = "Power law extrapolation \n Evolved"
@@ -407,4 +407,119 @@ if "__main__" == __name__:
         ax.set_ylim(1e-10, 1)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")                
         
+    fig.tight_layout()
+
+
+#%% Constraints from Korwar & Profumo (2023).
+# Obtained using the method from Bellomo et al. (2018) [1709.07467].
+# Extrapolate using a power-law in g(M) to M < 1e15g
+
+use_LN = False
+use_SLN = False
+use_CC3 = True
+
+def integral_over_g(m_delta_input, m_c, params, t=t_0):
+    # Find PBH masses at time t
+    m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_input)), np.log10(m_star), 1000), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_input))+4, 1000))))
+    m_values_input = mass_evolved(m_init_values_input, t)
+    
+    if use_LN:
+        psi_initial_values = LN(m_init_values_input, m_c, *params)
+        
+    elif use_CC3:
+        psi_initial_values = CC3(m_init_values_input, m_c, *params)
+        
+    # Calculate evolved MF
+    psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_values_input, m_init_values_input)
+    
+    # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
+    m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
+    psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
+    psi_evolved_interp = 10**np.interp(np.log10(m_delta_input), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
+    
+    integrand = psi_evolved_interp / f_max_input
+    return np.trapz(np.nan_to_num(integrand), m_delta_input)
+    
+
+def m_eq_func(m, f_max_input, m_delta_input, m_c, params):
+    return np.interp(m, m_delta_input, 1/f_max_input) - integral
+
+    
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    i = 0
+    
+    if use_LN:
+        params = [sigmas_LN[i]]
+        mc_values = np.logspace(16, 18, 10) * np.exp(sigmas_LN[i]**2)  # convert range of peak masses to values in terms of the characteristic mass of a log-normal, m_c
+        
+    elif use_CC3:
+        params = [alphas_CC3[i], betas[i]]
+        mc_values = np.logspace(16, 18, 10)
+    
+    # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
+    m_delta_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+    
+    # Power-law exponent to use between 1e15g and 1e16g.
+    exponent_PL_upper = 2.0
+    # Power-law exponent to use between 1e11g and 1e15g.
+    exponent_PL_lower = 2.0
+    
+    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
+    
+    f_max_extrapolated_upper = min(f_max) * np.power(m_delta_extrapolated_upper / min(m_delta_values), exponent_PL_upper)
+    f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+
+    f_max_input = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max))
+    m_delta_input = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values))
+       
+    title_init = "Power law extrapolation \n Evolved"    
+    
+    # Calculate results using method from Bellomo et al. (2018)
+    f_PBH_Bellomo = []
+    m_eq_values = []
+            
+    for m_c in mc_values:
+        integral = integral_over_g(m_delta_input, m_c, params)
+        m_eq_estimate = findroot(m_eq_func, min(m_delta_input), max(m_delta_input), args=(f_max_input, m_delta_input, m_c, params))
+        m_eq_values.append(m_eq_estimate)
+        f_PBH_Bellomo.append(np.interp(m_eq_estimate, m_delta_input, f_max_input))
+ 
+    fig, ax = plt.subplots(figsize=(6, 6))
+        
+    # Calculate results using method from Bellomo et al. (2018)
+    
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    
+    if use_LN:
+        ax.plot(mc_values*np.exp(-sigmas_LN[i]**2), f_PBH_Bellomo, color="tab:blue", linestyle="None", marker="x", label="Bellomo et al. (2018) method")
+        
+        # Load and plot constraints calculated in GC_photon_constraints.py
+        data_filename_LN = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower)
+        mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+        ax.plot(mc_LN_evolved*np.exp(-sigmas_LN[i]**2), f_PBH_LN_evolved, color=(0.5294, 0.3546, 0.7020), label="Carr et al. (2017) method \n From GC_constraints_Carr.py")
+        ax.set_title(title_init + " LN ($\Delta={:.1f}$)".format(Deltas[i]), fontsize="small")
+        ax.set_xlabel("$m_c~[\mathrm{g}]$")                
+       
+    
+    elif use_CC3:
+        ax.plot(mc_values, f_PBH_Bellomo, color="tab:blue", linestyle="None", marker="x", label="Bellomo et al. (2018) method")
+
+        # Load and plot constraints calculated in GC_photon_constraints.py
+        data_filename_CC3 = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower)
+        mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+        ax.plot(mp_CC3_evolved, f_PBH_CC3_evolved, color=(0.5294, 0.3546, 0.7020), label="Carr et al. (2017) method \n From GC_constraints_Carr.py")
+        ax.set_title(title_init + " CC3 ($\Delta={:.1f}$)".format(Deltas[i]), fontsize="small")
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")                
+    
+    print("M_eq = {:.3e} g".format(m_eq_values[0]))
+        
+    ax.legend(fontsize="small")
+    ax.set_xlim(1e16, 1e18)
+    ax.set_ylim(1e-5, 1)
     fig.tight_layout()
