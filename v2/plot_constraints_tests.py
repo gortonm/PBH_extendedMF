@@ -1596,34 +1596,30 @@ if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(7,7))
 
     # Load data used in Carr et al. (2021) [2002.12778]
-    E_lower, flux_mid = load_data("2002.12778/2002.12778_Fig6_COMPTEL_lower_E.csv")
-    E_upper, flux_mid = load_data("2002.12778/2002.12778_Fig6_COMPTEL_upper_E.csv")
-    E_mid, flux_lower = load_data("2002.12778/2002.12778_Fig6_COMPTEL_lower_flux.csv")
-    E_mid, flux_upper = load_data("2002.12778/2002.12778_Fig6_COMPTEL_upper_flux.csv")
+    E_lower, flux_mid = load_data("Weidenspointner+2000/Weidenspointner+2000_Fig1_lower_E.csv")
+    E_upper, flux_mid = load_data("Weidenspointner+2000/Weidenspointner+2000_Fig1_upper_E.csv")
+    E_mid, flux_lower = load_data("Weidenspointner+2000/Weidenspointner+2000_Fig1_lower_flux.csv")
+    E_mid, flux_upper = load_data("Weidenspointner+2000/Weidenspointner+2000_Fig1_upper_flux.csv")
     
     # Calculate error bars, and convert energy units to GeV
-    error_flux_upper = (flux_upper - flux_mid)
-    error_flux_lower = (flux_mid - flux_lower) 
+    error_flux_upper = (flux_upper - flux_mid) / 1e3
+    error_flux_lower = (flux_mid - flux_lower) / 1e3
     error_E_upper = (E_upper - E_mid) / 1e3
     error_E_lower = (E_mid - E_lower) / 1e3
     E_mid /= 1e3
+    flux_mid /= 1e3
       
     # Load data used in Auffinger (2022), from Ackermann et al. (2015) [1502.06116]
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
     append = "COMPTEL_1502.06116"
     energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
 
-    flux_scaled = flux[:-1] * np.diff(energies)
-    flux_minus_scaled = flux_minus[:-1] * np.diff(energies)
-    flux_plus_scaled = flux_plus[:-1] * np.diff(energies)
-
     ax.errorbar(E_mid, flux_mid, yerr=([error_flux_upper, error_flux_lower]), xerr=([error_E_lower, error_E_upper]), label="Carr et al. (2021)", linestyle="None")
-    ax.errorbar(E_mid[:-1], flux_scaled, yerr=([flux_minus_scaled, flux_plus_scaled]), xerr=([energies_minus[:-1], energies_plus[:-1]]), label="Auffinger (2022)", linestyle="None")
+    ax.errorbar(energies, flux*energies**2, yerr=([flux_minus, flux_plus]*energies**2), xerr=([energies_minus, energies_plus]), label="Auffinger (2022)", linestyle="None")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("$E$ [GeV]")
-    #ax.set_ylabel('${\\rm d}\Phi/{\\rm d}E\,\, ({\\rm GeV}^{-1} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
-    ax.set_ylabel('$I\,\, (cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
+    ax.set_ylabel('$E^2 {\\rm d}\Phi/{\\rm d}E\,\, ({\\rm GeV} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-2} \cdot {\\rm sr}^{-1})$')
     ax.legend(fontsize="small")
     fig.tight_layout()
     
