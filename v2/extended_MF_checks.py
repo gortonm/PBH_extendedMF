@@ -40,9 +40,9 @@ def constraint_Carr(mc_values, m_mono, f_max, mf, params):
     Parameters
     ----------
     mc_values : Array-like
-        Characteristic PBH masses (m_c for a (skew-)lognormal, m_p for CC3)..
+        Characteristic PBH masses (m_c for a (skew-)lognormal, m_p for CC3).
     m_mono : Array-like
-        Masses at which constraints for a monochromatic PBH mass function are evaluated..
+        Masses at which constraints for a monochromatic PBH mass function are evaluated.
     f_max : Array-like
         Constraints obtained for a monochromatic mass function..
     mf : Function
@@ -315,8 +315,7 @@ if "__main__" == __name__:
         energies_string = "E{:.0f}".format(np.log10(E_number))
 
     # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
-        betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     mc_values = np.logspace(14, 19, 100)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
@@ -326,13 +325,11 @@ if "__main__" == __name__:
     for j in range(len(sigmas_LN[:-1])):
 
         # Filename of constraints obtained using Isatis.
-        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(
-            Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         #fname_base = "LN_D={:.1f}_test_range"
 
         # Constraints calculated using Isatis, using a PBH mass range logarithmically spaced between 1e11 and 1e21 grams.
-        constraints_names, f_PBH_Isatis = load_results_Isatis(
-            mf_string="LN_D={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)
+        constraints_names, f_PBH_Isatis = load_results_Isatis(mf_string="LN_D={:.1f}".format(Deltas[j]), modified=True, test_mass_range=True)
 
         # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
         # Using the envelope of constraints for each instrument for the monochromatic MF constraint.
@@ -346,10 +343,8 @@ if "__main__" == __name__:
                 mc_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
 
             # Calculate constraint using method from 1705.05567, and plot.
-            f_PBH_Carr = constraint_Carr(
-                mc_values, m_mono_values, f_max[i], LN, params_LN)
-            ax.plot(mc_values, f_PBH_Carr, marker="x",
-                    linestyle="None", color=colors_evap[i])
+            f_PBH_Carr = constraint_Carr(mc_values, m_mono_values, f_max[i], LN, params_LN)
+            ax.plot(mc_values, f_PBH_Carr, marker="x",linestyle="None", color=colors_evap[i])
 
         ax.set_xlim(1e14, 1e18)
         ax.set_ylim(10**(-10), 1)
@@ -393,8 +388,7 @@ if "__main__" == __name__:
     for j in range(len(sigmas_LN[:-1])):
 
         # Filename of constraints obtained using Isatis.
-        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(
-            Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+        fname_base = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
 
         if j == 5:
             
@@ -407,15 +401,13 @@ if "__main__" == __name__:
 
             # Load monochromatic MF constraints calculated using Isatis, to use the method from 1705.05567.
             # Using each energy bin per instrument individually for the monochromatic MF constraint, then obtaining the tightest constraint from each instrument using envelope().
-            constraints_names, f_max = load_results_Isatis(
-                mf_string="GC_mono_wide", modified=True)
+            constraints_names, f_max = load_results_Isatis(mf_string="GC_mono_wide", modified=True)
             params_LN = [sigmas_LN[j]]
 
             fig, ax = plt.subplots(figsize=(8, 8))
 
             for i in range(len(constraints_names)):
-                ax.plot(
-                    mc_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
+                ax.plot(mc_values, f_PBH_Isatis[i], label=constraints_names[i], color=colors_evap[i])
 
                 # Calculate constraint using method from 1705.05567.
 
