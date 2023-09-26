@@ -1681,12 +1681,12 @@ def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower):
 
 if "__main__" == __name__:
     
-    plot_KP23 = True
-    plot_GC_Isatis = False
+    plot_KP23 = False
+    plot_GC_Isatis = True
     plot_BC19 = False
     plot_Subaru = False
     plot_Sugiyama19 = False
-    Delta = 2
+    Delta = 5
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -1739,7 +1739,7 @@ if "__main__" == __name__:
         elif Delta == 2:
             j = 1
         elif Delta == 5:
-            j = 1
+            j = 2
         
         constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
         colours_GC_fit = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
