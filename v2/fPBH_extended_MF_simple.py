@@ -70,13 +70,13 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     # Peak PBH masses
-    mp_values = np.logspace(14, 17, 30)
+    mp_values = np.logspace(15, 17, 30)
     
     # Characteristic masses for the SLN MF
-    mc_SLN = np.logspace(14, 19, 50)
+    mc_SLN = np.logspace(15, 19, 50)
 
     # Functional form of f_max
-    PL_exp = 2
+    PL_exp = 4
     m_pbh_values = np.logspace(11, 20, 1000)
     f_max = (1 / max(mp_values**PL_exp)) * m_pbh_values**PL_exp
         
@@ -128,7 +128,31 @@ if "__main__" == __name__:
         fig1.suptitle("$\Delta={:.1f}$".format(Deltas[i]) + ", $f_\mathrm{max}(m) " + "\propto m^{:.0f}$".format(PL_exp))
         fig1.tight_layout()
 
+#%%
+from scipy.special import gamma
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    for i in range(len(Deltas)):
         
+        fig, ax = plt.subplots(figsize=(6,6))
+        alpha = alphas_CC3[i]
+        beta = betas[i]
+        
+        root_values = []
+        PL_exp_values = np.linspace(-5, 5, 50)
+        
+        for PL_exp in PL_exp_values:
+            root_values.append(np.power(gamma(beta/alpha), PL_exp/beta) * gamma((alpha+1)/beta) - gamma((alpha+1-PL_exp) / beta))
+            
+        ax.plot(PL_exp_values, root_values)
+        ax.set_xlabel("$n$")
+        fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
+        fig.tight_layout()
+     
 #%%
 
 
