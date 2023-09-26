@@ -538,7 +538,7 @@ if "__main__" == __name__:
                 
         for k, exponent_PL_lower in enumerate(exponents_PL_lower):
             
-            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+            data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower) 
             data_filename_LN = data_folder + "/LN_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             data_filename_SLN = data_folder + "/SLN_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             data_filename_CC3 = data_folder + "/CC3_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
@@ -561,13 +561,40 @@ if "__main__" == __name__:
             f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
             
+            
+            
+            # Plot extended MF constraints from Korwar & Profumo (2023)
+            # Path to extended MF constraints
+            exponent_PL_lower = 2
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+                    
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            
+            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+     
+            # Peak mass for log-normal MF
+            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
+            # Estimate peak mass of skew-lognormal MF
+            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+     
+            ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
+            ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)), label="KP '23")
+            ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
+            
+            
+            
+            
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
         ax0.set_xscale("log")
         ax0.set_yscale("log")
-        ax0.set_xlim(min(m_delta_extrapolated_lower), 1e18)
-        ax0.set_ylim(min(f_max_extrapolated_lower), 1)
+        ax0.set_xlim(min(m_delta_extrapolated), 1e18)
+        ax0.set_ylim(0.1*min(f_max), 1)
         
         for ax in [ax1, ax2, ax3]:
             if Deltas[j] < 5:
@@ -583,6 +610,8 @@ if "__main__" == __name__:
 
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
+        ax2.legend(fontsize="small")
+
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
@@ -648,6 +677,32 @@ if "__main__" == __name__:
             ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
             f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
+            
+            
+            
+            # Plot extended MF constraints from Korwar & Profumo (2023)
+            # Path to extended MF constraints
+            exponent_PL_lower = 2
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+                    
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            
+            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+     
+            # Peak mass for log-normal MF
+            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
+            # Estimate peak mass of skew-lognormal MF
+            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+     
+            ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
+            ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)))
+            ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
+
+            
             
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
@@ -1024,6 +1079,30 @@ if "__main__" == __name__:
             ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
             f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
+            
+            
+            # Plot extended MF constraints from Korwar & Profumo (2023)
+            # Path to extended MF constraints
+            exponent_PL_lower = 2
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+                    
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            
+            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+     
+            # Peak mass for log-normal MF
+            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
+            # Estimate peak mass of skew-lognormal MF
+            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+     
+            ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
+            ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)))
+            ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
+
             
         ax0.plot(np.concatenate((m_delta_extrapolated, m_delta_values)), np.concatenate((f_max_extrapolated, f_max)), color=(0.5294, 0.3546, 0.7020))
         ax0.set_xlabel("$m$ [g]")
@@ -1412,7 +1491,7 @@ if "__main__" == __name__:
     epsilon = 0.4
     m_star = 5.1e14
     
-    evolved = False
+    evolved = True
     t = t_0
     
     # Range of characteristic masses for obtaining constraints.
@@ -1490,4 +1569,86 @@ if "__main__" == __name__:
         ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
         
         fig.tight_layout()
+
+#%% Check how closely the constraints on beta prime (with the fitting functions) match Fig. 7 of Carr et al. (2021)
+if "__main__" == __name__:
     
+    m_min = 3e13    # Minimum mass corresponds to the smallest value that is shown in Fig. 7 of 2002.12778.
+    m_max = 1e20
+    
+    m_delta_Carr21_Fig7, beta_prime_Carr21_Fig7 = load_data("/2002.12778/Carr+21_Fig7.csv")
+    
+    beta_prime_Carr21 = beta_prime_gamma_rays(m_delta_Carr21_Fig7, epsilon=0.4)
+    
+    fig, ax = plt.subplots(figsize=(6,6))
+    ax.plot(m_delta_Carr21_Fig7, beta_prime_Carr21_Fig7, label="From Fig. 7 of Carr et al. (2021)")
+    ax.plot(m_delta_Carr21_Fig7, beta_prime_Carr21, linestyle="dotted", label="Fitting functions")
+    ax.legend(fontsize="x-small")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("$m_i~[\mathrm{g}]$")
+    ax.set_ylabel(r"$\beta '$")
+    fig.tight_layout()
+    
+#%% Compare data used for COMPTEL in Carr et al. (2021) and Auffinger (2022)
+if "__main__" == __name__:
+    
+    fig, ax = plt.subplots(figsize=(7,7))
+
+    # Load data used in Carr et al. (2021) [2002.12778]
+    E_lower, flux_mid = load_data("2002.12778/2002.12778_Fig6_COMPTEL_lower_E.csv")
+    E_upper, flux_mid = load_data("2002.12778/2002.12778_Fig6_COMPTEL_upper_E.csv")
+    E_mid, flux_lower = load_data("2002.12778/2002.12778_Fig6_COMPTEL_lower_flux.csv")
+    E_mid, flux_upper = load_data("2002.12778/2002.12778_Fig6_COMPTEL_upper_flux.csv")
+    
+    # Calculate error bars, and convert energy units to GeV
+    error_flux_upper = (flux_upper - flux_mid)
+    error_flux_lower = (flux_mid - flux_lower) 
+    error_E_upper = (E_upper - E_mid) / 1e3
+    error_E_lower = (E_mid - E_lower) / 1e3
+    E_mid /= 1e3
+      
+    # Load data used in Auffinger (2022), from Ackermann et al. (2015) [1502.06116]
+    file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
+    append = "COMPTEL_1502.06116"
+    energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
+
+    flux_scaled = flux[:-1] * np.diff(energies)
+    flux_minus_scaled = flux_minus[:-1] * np.diff(energies)
+    flux_plus_scaled = flux_plus[:-1] * np.diff(energies)
+
+    ax.errorbar(E_mid, flux_mid, yerr=([error_flux_upper, error_flux_lower]), xerr=([error_E_lower, error_E_upper]), label="Carr et al. (2021)", linestyle="None")
+    ax.errorbar(E_mid[:-1], flux_scaled, yerr=([flux_minus_scaled, flux_plus_scaled]), xerr=([energies_minus[:-1], energies_plus[:-1]]), label="Auffinger (2022)", linestyle="None")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel("$E$ [GeV]")
+    #ax.set_ylabel('${\\rm d}\Phi/{\\rm d}E\,\, ({\\rm GeV}^{-1} \cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
+    ax.set_ylabel('$I\,\, (cdot {\\rm s}^{-1}\cdot{\\rm cm}^{-3} \cdot {\\rm sr}^{-1})$')
+    ax.legend(fontsize="small")
+    fig.tight_layout()
+    
+    
+#%% Compare extragalactic gamma-ray background constraints calculated with PYTHIA and Hazma hadronisation tables.
+from preliminaries import load_results_Isatis
+
+if "__main__" == __name__:
+    
+    m_pbh_values = np.logspace(14, 17, 50)
+    
+    constraints_names, constraints_Hazma = load_results_Isatis(mf_string="EXGB_Hazma")   
+    constraints_names, constraints_PYTHIA = load_results_Isatis(mf_string="EXGB_PYTHIA")
+    
+    fig, ax = plt.subplots(figsize=(7,7))
+    
+    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red", "tab:grey", "k"]
+    
+    for i in range(len(constraints_names)):
+        ax.plot(m_pbh_values, constraints_Hazma[i], color=colors[i], label=constraints_names[i])
+        ax.plot(m_pbh_values, constraints_PYTHIA[i], color=colors[i], marker="x")
+        
+    ax.legend(fontsize="small")
+    ax.set_xlabel("$m_i~[\mathrm{g}]$")
+    ax.set_ylabel("$f_[\mathrm{PBH}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    fig.tight_layout()
