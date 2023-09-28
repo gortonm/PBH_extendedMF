@@ -2619,18 +2619,55 @@ if "__main__" == __name__:
     f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
     f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max))
 
-    m_p = 2e17
+    m_p = 1e16
     f_PBH_simplified = min(f_max_loaded) * np.power(m_p / min(m_delta_loaded), 2)   # Find value of the simplified constraint
     #m_p = min(m_delta_loaded)
     #f_PBH_simplified = min(f_max_loaded)
+        
+    # If True, use LN MF
+    use_LN = True
+    use_CC3 = not use_LN
+    
+    # If True, use evolved MF
+    evolved = False
+    
+    # If True, use the approximate form of f_max (a delta-function MF constraint in the mass)
+    use_approx_fmax = True
+    
+    if use_CC3:
+        print("CC3 MF")
+        evolved = True
+        psi_initial = CC3
+        params = [alphas_CC3[i], betas[i]]
+        mc_values = [m_p]
+       
+    elif use_LN:
+        print("LN MF")
+        psi_initial = LN
+        params=[sigmas_LN[i]]
+        mc_values = [m_p * np.exp(sigmas_LN[i]**2)]
+        
+    if evolved:
+        print("Evolved MF")
+    else:
+        print("Unevolved MF")
+        
+    if use_approx_fmax:
+        print("Approximate f_max (f_max \propto m^2)")
+    else:
+        print("Full f_max")
     
     for i in range(len(Deltas)):
         print("\nDelta={:.1f}:".format(Deltas[i]))
         params = [sigmas_LN[i]]
     
-        f_PBH_approx = constraint_Carr([m_p * np.exp(sigmas_LN[i]**2)], m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=LN, params=[sigmas_LN[i]], evolved=True)
-        #f_PBH_approx = constraint_Carr([m_p], m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=CC3, params=[alphas_CC3[i], betas[i]], evolved=True)
-        print("Fractional difference from simplified problem = {:.3e}".format(f_PBH_approx[0] / f_PBH_simplified - 1))
-
-        f_PBH_full = constraint_Carr([m_p * np.exp(sigmas_LN[i]**2)], m_delta=m_delta_total, f_max=f_max_total, psi_initial=LN, params=[sigmas_LN[i]], evolved=False)
+        f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
+        print("f_PBH (full value) = {:.3e}".format(f_PBH_full))
         print("Fractional difference from full problem = {:.3e}".format(f_PBH_full[0] / f_PBH_simplified - 1))
+        
+        if use_approx_fmax:
+            f_max = f_max_simplified
+        else:
+            f_max = f_max_total
+        f_PBH_approx = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=evolved)
+        print("Fractional difference from simplified problem = {:.3e}".format(f_PBH_approx[0] / f_PBH_simplified - 1))
