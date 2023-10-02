@@ -167,26 +167,10 @@ if "__main__" == __name__:
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
-                
-                # set x-axis and y-axis ticks
-                # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
-                
-                x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
-                ax.xaxis.set_major_locator(x_major)
-                x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
-                ax.xaxis.set_minor_locator(x_minor)
-                ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-                y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
-                ax.yaxis.set_major_locator(y_major)
-                y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
-                ax.yaxis.set_minor_locator(y_minor)
-                ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-                
+                                
                 ax.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
                 ax.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
                 ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2])
-
         
         elif plot_KP23:
             
@@ -261,6 +245,23 @@ if "__main__" == __name__:
                 ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
                 ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
             
+        for ax in [ax0, ax1, ax2]:
+            # set x-axis and y-axis ticks
+            # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
+            
+            x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+            ax.xaxis.set_major_locator(x_major)
+            x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+            ax.xaxis.set_minor_locator(x_minor)
+            ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+
+            y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+            ax.yaxis.set_major_locator(y_major)
+            y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+            ax.yaxis.set_minor_locator(y_minor)
+            ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+            
+            ax.grid()
 
         # Set axis limits
         if Deltas[i] < 5:
@@ -433,10 +434,10 @@ if "__main__" == __name__:
 if "__main__" == __name__:
         
     # Choose colors to match those from Fig. 5 of 2009.03204
-    colors = ['tab:gray', 'r', 'b', 'g', 'k']
+    colors = ['tab:gray', 'crimson', 'tab:blue', 'lime', 'k']
     
     # Linestyles for different constraints
-    linestyles = ["solid", "dashed", "dotted"]
+    linestyles = ["dashdot", "dashed", "dotted"]
     
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
@@ -757,7 +758,8 @@ if "__main__" == __name__:
     f_PBH_delta_KP23 = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
     m_delta_KP23 = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
 
-    ax.plot(m_delta_Subaru, f_PBH_delta_Subaru, color="tab:gray", linewidth=2, linestyle=linestyles[0], label="Delta function")
+    ax.plot(0, 0, color="tab:gray", linewidth=2, label="Delta function")
+    ax.plot(m_delta_Subaru, f_PBH_delta_Subaru, color="tab:gray", linewidth=2, linestyle=linestyles[0])
     ax.plot(m_delta_GC, f_PBH_delta_GC, color="tab:gray", linewidth=2, linestyle=linestyles[1])
     ax.plot(m_delta_KP23, f_PBH_delta_KP23, color="tab:gray", linewidth=2, linestyle=linestyles[2])
 
@@ -823,25 +825,32 @@ if "__main__" == __name__:
             mp_GC_LN = mc_values_GC * np.exp(-sigmas_LN[Delta_index]**2)
             mp_Subaru_LN = mc_Subaru_SLN * np.exp(-sigmas_LN[Delta_index]**2) 
             
-            ax.plot(mp_Subaru_LN, f_PBH_Subaru_LN, color=colors[i], linestyle=linestyles[0], label="$\Delta={:.0f}$".format(Deltas[Delta_index]), linewidth=linewidth_values[i])
+            ax.plot(mp_Subaru_LN, f_PBH_Subaru_LN, color=colors[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
             ax.plot(mp_GC_LN, f_PBH_GC_LN, color=colors[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
             ax.plot(mp_KP23_LN, f_PBH_KP23_LN, color=colors[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+            
+            legend_title = "LN"
                           
         elif plot_SLN:            
             mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
             mp_GC_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
             mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Subaru_SLN]
 
-            ax.plot(mp_Subaru_SLN, f_PBH_Subaru_SLN, color=colors[i], linestyle=linestyles[0], label="$\Delta={:.0f}$".format(Deltas[Delta_index]), linewidth=linewidth_values[i])
+            ax.plot(mp_Subaru_SLN, f_PBH_Subaru_SLN, color=colors[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
             ax.plot(mp_GC_SLN, f_PBH_GC_SLN, color=colors[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
             ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+            
+            legend_title = "SLN"
                 
         elif plot_CC3:
             mp_GC_CC3 = mc_values_GC
             
-            ax.plot(mp_Subaru_CC3, f_PBH_Subaru_CC3, color=colors[i], linestyle=linestyles[0], label="$\Delta={:.0f}$".format(Deltas[Delta_index]), linewidth=linewidth_values[i])
+            ax.plot(mp_Subaru_CC3, f_PBH_Subaru_CC3, color=colors[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
             ax.plot(mp_GC_CC3, f_PBH_GC_CC3, color=colors[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
             ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+            ax.plot(0,0, color=colors[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
+            
+            legend_title = "GCC"
         
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -850,6 +859,10 @@ if "__main__" == __name__:
     ax.set_xlim(1e16, 1e24)
     ax.set_ylim(1e-3, 1)
     ax.legend(fontsize="x-small")
+    
+    ax1 = ax.twinx()
+    ax1.legend(title=legend_title, loc="upper right", fontsize="x-small")
+    ax1.axis("off")
     
     x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
     ax.xaxis.set_major_locator(x_major)
