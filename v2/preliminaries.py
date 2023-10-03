@@ -1082,7 +1082,7 @@ if "__main__" == __name__:
     plot_BC19 = False
     
     # Peak mass (in grams)
-    m_p = 2e16
+    m_p = 1e16
     
     file_string = ""
     
@@ -1681,12 +1681,12 @@ def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower):
 
 if "__main__" == __name__:
     
-    plot_KP23 = False
-    plot_GC_Isatis = True
+    plot_KP23 = True
+    plot_GC_Isatis = False
     plot_BC19 = False
     plot_Subaru = False
     plot_Sugiyama19 = False
-    Delta = 5
+    Delta = 0
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -2602,7 +2602,7 @@ if "__main__" == __name__:
         print("m_p >= {:.2e}g".format(max(m_values_input) * np.exp(-max_value*np.sqrt(2)*sigmas_LN[i]) * np.exp(sigmas_LN[i]**2)))
 
 
-#%% Sanity check: calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass     
+#%% Calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass     
 if "__main__" == __name__:    
     m_delta_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
     m_delta_extrapolated_upper = np.logspace(15, 16, 11)
@@ -2619,8 +2619,8 @@ if "__main__" == __name__:
     f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
     f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
 
-    m_p = 1e17
-    f_PBH_simplified = min(f_max_loaded) * np.power(m_p / min(m_delta_loaded), 2)   # Find value of the simplified constraint
+    m_p = 1e15
+    f_PBH_simplified = f_max_loaded[0] * np.power(m_p / m_delta_loaded[0], 2)   # Find value of the simplified constraint
     #m_p = min(m_delta_loaded)
     #f_PBH_simplified = min(f_max_loaded)
         
@@ -2629,10 +2629,10 @@ if "__main__" == __name__:
     use_CC3 = not use_LN
     
     # If True, use evolved MF
-    evolved = True
+    evolved = False
     
     # If True, use the approximate form of f_max (a delta-function MF constraint in the mass)
-    use_approx_fmax = True
+    use_approx_fmax = False
     
     print("Peak mass m_p = {:.1e} g".format(m_p))
     
@@ -2673,7 +2673,8 @@ if "__main__" == __name__:
             f_max = f_max_simplified
         else:
             f_max = f_max_total
-        f_PBH_approx = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=evolved)
+            
+        f_PBH_approx = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max, psi_initial=psi_initial, params=params, evolved=evolved)
         f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
         
         fPBH_full_values.append(f_PBH_full)
@@ -2696,4 +2697,101 @@ if "__main__" == __name__:
         print("f_PBH (full value) = {:.3e}".format(f_PBH_full[0]))
         print("Fractional difference from simplified problem = {:.3e}".format(f_PBH_approx[0] / f_PBH_simplified - 1))
         print("Fractional difference from full problem = {:.3e}".format(f_PBH_full[0] / f_PBH_simplified - 1))
-   """     
+   """
+   
+#%% Calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass. Plot results.  
+if "__main__" == __name__:    
+    m_delta_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
+    m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_loaded))
+    
+    # Simplified estimate
+    f_max_simplified = min(f_max_loaded) * np.power(m_delta_total / min(m_delta_loaded), 2)
+    
+    # Full calculation
+    exponent_PL_upper = 2
+    exponent_PL_lower = 2
+    f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_loaded), exponent_PL_upper)
+    f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+    f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
+    
+    fig, ax = plt.subplots(figsize=(9,6))
+        
+    # If True, use LN MF
+    use_LN = True
+    use_CC3 = not use_LN
+                    
+    frac_diff_approx_both = []
+    frac_diff_approx_fmax = []
+    frac_diff_approx_LN = []
+    frac_diff_full = []
+            
+    if use_LN:
+        m_p = 1e15
+        f_PBH_simplified = f_max_loaded[0] * np.power(m_p / m_delta_loaded[0], 2)   # Find value of the simplified constraint
+    
+        for i in range(len(Deltas)):
+                           
+            psi_initial = LN
+            params=[sigmas_LN[i]]
+            mc_values = [m_p * np.exp(sigmas_LN[i]**2)]
+            
+            f_PBH_approx_both = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=False)
+            f_PBH_approx_fmax = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=True)
+            f_PBH_approx_LN = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=False)
+            f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
+            
+            frac_diff_approx_both.append(f_PBH_approx_both[0] / f_PBH_simplified - 1)
+            frac_diff_approx_fmax.append(f_PBH_approx_fmax[0] / f_PBH_simplified - 1)
+            frac_diff_approx_LN.append(f_PBH_approx_LN[0] / f_PBH_simplified - 1)
+            frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
+    
+        ax.plot(Deltas, frac_diff_full, marker="x", markersize=10, linestyle="None", label="Full calculation", color="k")
+        ax.plot(Deltas, frac_diff_approx_fmax, marker="+", markersize=10, linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
+        ax.plot(Deltas, frac_diff_approx_LN, marker="x", linestyle="None", label="Full $f_\mathrm{max}$, LN $\psi_\mathrm{N}$", color="tab:red")
+        ax.plot(Deltas, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, LN $\psi_\mathrm{N}$", color="tab:red")
+        ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
+        ax.set_xlabel("$\Delta$")
+        ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
+        ax.set_ylim(-0.2, 1)
+        ax.grid()
+        ax.set_title("$m_p$ = {:.1e} g".format(m_p))
+        fig.tight_layout()
+        
+    elif use_CC3:
+        i = 5
+        mp_values = np.logspace(15, 17, 10)
+        
+        for m_p in mp_values:
+            f_PBH_simplified = f_max_loaded[0] * np.power(m_p / m_delta_loaded[0], 2)   # Find value of the simplified constraint
+
+            psi_initial = CC3
+            params = [alphas_CC3[i], betas[i]]
+            mc_values = [m_p]
+            
+            f_PBH_approx_both = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=False)
+            f_PBH_approx_fmax = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=True)
+            f_PBH_approx_LN = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=False)
+            f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
+            
+            frac_diff_approx_both.append(f_PBH_approx_both[0] / f_PBH_simplified - 1)
+            frac_diff_approx_fmax.append(f_PBH_approx_fmax[0] / f_PBH_simplified - 1)
+            frac_diff_approx_LN.append(f_PBH_approx_LN[0] / f_PBH_simplified - 1)
+            frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
+        
+        ax.plot(mp_values, frac_diff_full, marker="x", linestyle="None", label="Full calculation", color="k")
+        ax.plot(mp_values, frac_diff_approx_fmax, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
+        ax.plot(mp_values, frac_diff_approx_LN, marker="x", linestyle="None", label="Full $f_\mathrm{max}$, CC3 $\psi_\mathrm{N}$", color="tab:green")
+        ax.plot(mp_values, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, CC3 $\psi_\mathrm{N}$", color="tab:green")
+        ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
+        ax.set_ylim(-0.1, 0.2)
+        ax.set_xlim(min(mp_values), max(mp_values))
+        ax.grid()
+        ax.set_xscale("log")
+        ax.set_title("CC3 MF, $\Delta=2$")
+        fig.tight_layout()
+       
+        
