@@ -1686,7 +1686,7 @@ if "__main__" == __name__:
     plot_BC19 = False
     plot_Subaru = False
     plot_Sugiyama19 = False
-    Delta = 0
+    Delta = 5
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -1792,8 +1792,10 @@ if "__main__" == __name__:
     print("m_p (CC3) = {:.2e}".format(m_p))
     print("m_p (SLN) = {:.2e}".format(mp_SLN))
      
-    m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(np.log10(m_p)-3, np.log10(m_p)+3, 100))))
-
+    #m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(np.log10(m_p)-3, np.log10(m_p)+3, 100))))
+    n_steps = 1000
+    m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_pbh_values)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_pbh_values))+4, n_steps))))
+    
     mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
     mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
     mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
@@ -2052,6 +2054,7 @@ if "__main__" == __name__:
     print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, m_max_CC3, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [CC3] = {:.2e}".format(1 / integral_total))
+    print("constraint_Carr result [CC3] = {:.2e}".format(constraint_Carr([m_p], m_pbh_values, f_max, CC3, [alphas_CC3[i], betas[i]], evolved=True)[0]))
 
     integral_lower = np.trapz(mf_SLN_evolved[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
     integral_upper = np.trapz(mf_SLN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
@@ -2059,7 +2062,6 @@ if "__main__" == __name__:
     print("\n Evolved MFs")
     print("Integral (M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
-    print("1 / total integral [SLN] = {:.2e}".format(1 / integral_total))
 
     integral_lower = np.trapz(mf_LN_evolved[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
     integral_upper = np.trapz(mf_LN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
@@ -2068,6 +2070,7 @@ if "__main__" == __name__:
     print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
+    print("constraint_Carr result [LN] = {:.2e}".format(constraint_Carr([m_p*np.exp(sigmas_LN[i]**2)], m_pbh_values, f_max, LN, [sigmas_LN[i]], evolved=True)[0]))
     
     # For initial MFs, restrict the mass range to that loaded from the data itself
     
@@ -2088,6 +2091,7 @@ if "__main__" == __name__:
     print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, m_max_CC3, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [CC3] = {:.2e}".format(1 / integral_total))
+    print("constraint_Carr result [CC3] = {:.2e}".format(constraint_Carr([m_p], m_pbh_values, f_max, CC3, [alphas_CC3[i], betas[i]], evolved=False)[0]))
     
     m_pbh_values_lower = m_pbh_values[m_pbh_values<m_min]
     m_pbh_values_upper = m_pbh_values[m_pbh_values<m_max]
@@ -2098,7 +2102,7 @@ if "__main__" == __name__:
     print("Integral (M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [SLN] = {:.2e}".format(1 / integral_total))
-   
+  
     integral_lower = np.trapz(LN(m_pbh_values_lower, mc_LN, sigma=sigmas_LN[i]) / f_max[m_pbh_values<m_min], m_pbh_values_lower)
     integral_upper = np.trapz(LN(m_pbh_values_upper, mc_LN, sigma=sigmas_LN[i]) / f_max[m_pbh_values<m_max], m_pbh_values_upper)
     integral_total = np.trapz(LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i]) / f_max, m_pbh_values)
@@ -2106,6 +2110,7 @@ if "__main__" == __name__:
     print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
+    print("constraint_Carr result [LN] = {:.2e}".format(constraint_Carr([m_p*np.exp(sigmas_LN[i]**2)], m_pbh_values, f_max, LN, [sigmas_LN[i]], evolved=False)[0]))
     
 
     #%% Find mass range that contributes > 10% of the total integral
