@@ -1040,9 +1040,9 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    plot_LN = True
+    plot_LN = False
     plot_SLN = False
-    plot_CC3 = False
+    plot_CC3 = True
     
     
     if plot_LN:
@@ -1229,7 +1229,7 @@ if "__main__" == __name__:
 
 #%% Plot the integrand appearing in Eq. 12 of 1705.05567, for different delta-function MF constraints
  
-def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower):
+def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower=2):
     """
     Load delta-function MF constraint on f_PBH from Galactic Centre photons.
 
@@ -1275,12 +1275,12 @@ def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower):
 
 if "__main__" == __name__:
     
-    plot_KP23 = True
-    plot_GC_Isatis = False
+    plot_KP23 = False
+    plot_GC_Isatis = True
     plot_BC19 = False
     plot_Subaru = False
     plot_Sugiyama19 = False
-    Delta = 0
+    Delta = 5
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -1323,6 +1323,9 @@ if "__main__" == __name__:
         
         
     elif plot_GC_Isatis:
+        # Power-law exponent to use between 1e11g and 1e13g.
+        exponent_PL_lower = 2
+        
         # Constraints from Galactic Centre photons from Isatis (see Auffinger (2022) [2201.01265])
         
         # Select which instrument places the tightest constraint, for the evolved MF constraints (depends on Delta and the peak mass). Values are for a peak mass m_p = 1e16g
@@ -1494,7 +1497,7 @@ if "__main__" == __name__:
     axes[0].plot(m_pbh_values, mf_LN_unevolved, color="r", linestyle="dotted", alpha=0.5)
     axes[0].plot(m_pbh_values, psinorm_fit, linestyle="dotted", color="k", label="$m^3$ fit")
         
-    if Delta >= 2:
+    if Delta >= 2 and plot_BC19:
         axes[0].plot(m_pbh_values, psinorm_fit_2, linestyle="dotted", color="magenta", label="$m^2$ fit")
     
     if m_p > 1e17:
