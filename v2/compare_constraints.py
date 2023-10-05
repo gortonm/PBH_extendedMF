@@ -185,9 +185,13 @@ m_max = 1e20
 epsilon = 0.4
 m_star = 5.1e14
           
-# Calculate delta-function MF constraints, using Eqs. 32-33 of 2002.12778 for beta_prime, and Eq. 57 to convert to f_PBH
+# EXGB constraints using beta prime from Eqs. 32-33 of 2002.12778, converted to f_PBH using Eq. 57 of 2002.12778
 m_delta_Carr21 = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
 f_max_Carr21 = f_PBH_beta_prime(m_delta_Carr21, beta_prime_gamma_rays(m_delta_Carr21))
+
+# EXGB constraints from Fig. 5 of 0912.5297, converted to f_PBH using Eq. 57 of 2002.12778
+m_delta_Carr10, beta_prime_Carr10 = load_data("0912.5297/0912.5297_Fig5_total.csv")
+f_max_Carr10 = f_PBH_beta_prime(m_delta_Carr10, beta_prime_Carr10)
 
 
 m_GC_v2 = np.logspace(11, 21, 1000)
@@ -207,6 +211,7 @@ fPBH_A22_EXGB_weakest = fPBH_A22_EXGB * np.power(10, 1.)
 #m_BC19_v2_strongest, fPBH_BC19_strongest = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
 #fPBH_BC19_strongest_interp = np.interp(m_BC19_v2_weakest, m_BC19_v2_strongest, fPBH_BC19_strongest)
 #fPBH_BC19_mean = 10 ** (0.5*(np.log10(fPBH_BC19_weakest) + np.log10(fPBH_BC19_strongest_interp)))
+
 m_BC19_propA_nobkg, fPBH_BC19_propA_nobkg = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
 m_BC19_propB_nobkg, fPBH_BC19_propB_nobkg = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
 m_BC19_propA_bkg, fPBH_BC19_propA_bkg = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
@@ -226,15 +231,16 @@ fPBH_D20_mean = 10 ** (0.5*(np.log10(fPBH_D20_weakest) + np.log10(fPBH_D20_stron
 
 plt.figure(figsize=(7,7))
 ax = plt.gca()
-ax2 = ax.twinx()
+#ax2 = ax.twinx()
 ax3 = ax.twinx()
-ax.plot(m_GC_v2, fPBH_GC, color="tab:blue", label = "Isatis")
+#ax.plot(m_GC_v2, fPBH_GC, color="tab:blue", label = "Isatis")
 #ax.fill_between(m_GC_v2, fPBH_GC_weakest, fPBH_GC_strongest, color="tab:blue", alpha=0.25)
 
 #ax2.fill_between(m_D20_v2, fPBH_D20_strongest, fPBH_D20_weakest, color="tab:orange", alpha=0.25)
 #ax2.plot(m_D20_v2, fPBH_D20_mean, color="tab:orange", label = "DLR '20")
 #ax2.fill_between(m_KP23, fPBH_KP23_weakest, fPBH_KP23_strongest, color="purple", alpha=0.25)
 m_pbh_extrapolated = np.logspace(11, np.log10(min(m_KP23)), 100)
+"""
 ax2.plot(m_KP23, fPBH_KP23, color="purple", label="KP '23 MW diffuse (SPI)")
 ax2.plot(m_pbh_extrapolated, min(fPBH_KP23) * np.power(m_pbh_extrapolated/min(m_KP23), 2), color="purple", linestyle="dotted")
 
@@ -242,32 +248,37 @@ ax2.plot(m_BC19_propA_nobkg, fPBH_BC19_propA_nobkg, color="tab:grey", label="Voy
 ax2.plot(m_BC19_propB_nobkg, fPBH_BC19_propB_nobkg, color="k", label="Voyager-1 (BC '19) [prop B]")
 ax2.plot(m_BC19_propA_bkg, fPBH_BC19_propA_bkg, linestyle="dashed", color="tab:grey")
 ax2.plot(m_BC19_propB_bkg, fPBH_BC19_propB_bkg, linestyle="dashed", color="k")
-
+"""
 #ax2.fill_between(m_BC19_v2_weakest, fPBH_BC19_strongest_interp, m_BC19_v2_weakest, color="tab:grey", alpha=0.25)
 
 ax3.plot(m_A22_EXGB, fPBH_A22_EXGB, color="r", label="Auffinger (2022)")
 #ax3.fill_between(m_A22_EXGB, fPBH_A22_EXGB_weakest, fPBH_A22_EXGB_strongest, color="r", alpha=0.25)
 
-ax3.plot(m_delta_Carr21, f_max_Carr21, color="g", label="Carr+ (2021)")
+ax3.plot(m_delta_Carr21, f_max_Carr21, color="g", label="Carr+ (2021) [fitting function]")
+ax3.plot(m_delta_Carr10, f_max_Carr10, color="g", linestyle="None", marker="x", label="CKSY (2010)")
 
 ax.set_xlabel(r"$M_\mathrm{PBH}$ [g]")
 ax.set_ylabel(r"$f_\mathrm{PBH}$")
 ax.set_xscale('log')
 ax.set_yscale('log')
+"""
 ax2.set_xscale("log")
 ax2.set_yscale("log")
+"""
 ax3.set_xscale("log")
 ax3.set_yscale("log")
 ax.set_ylim(1e-10, 1)
+"""
 ax2.set_ylim(1e-10, 1)
+"""
 ax3.set_ylim(1e-10, 1)
-ax2.get_yaxis().set_visible(False)
+#ax2.get_yaxis().set_visible(False)
 ax3.get_yaxis().set_visible(False)
 
 #ax.set_xlim(1e16, 1e18)
 ax.set_xlim(1e14, 3e17)
-ax.legend(fontsize='x-small', title=r"Galactic centre photons", loc=[0.55, 0.35])
-ax2.legend(fontsize='x-small', title=r"Electrons/positrons", loc=[0.5, 0.16])
+#ax.legend(fontsize='x-small', title=r"Galactic centre photons", loc=[0.55, 0.35])
+#ax2.legend(fontsize='x-small', title=r"Electrons/positrons", loc=[0.5, 0.16])
 ax3.legend(fontsize='x-small', title=r"Extragalactic photon background", loc=[0.4, 0.025])
 
 plt.tight_layout()
