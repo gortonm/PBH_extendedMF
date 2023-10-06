@@ -508,115 +508,6 @@ if "__main__" == __name__:
 
 
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses 
-# Constraints from 2201.01265 (extragalactic gamma-ray background).
-
-if "__main__" == __name__:
-    
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
-    mc_values = np.logspace(14, 20, 120)
-
-    # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
-    exponents_PL_lower = [0, -2, -4]
-    
-    linestyles = ["solid", "dashed", "dashdot", "dotted"]
-    
-    # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
-    m_delta_values, f_max = load_data("2201.01265/2201.01265_Fig3_EGXB.csv")
-    
-    for j in range(len(Deltas)):
-        
-        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
-        
-        ax0 = axes[0][0]
-        ax1 = axes[0][1]
-        ax2 = axes[1][0]
-        ax3 = axes[1][1]
-                
-        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_values))+0.01, 0.1)
-                
-        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
-            
-            data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower) 
-            data_filename_LN = data_folder + "/LN_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            
-            mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
-            mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
-            mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
-            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
-            mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
-                        
-            ax1.plot(mp_LN, f_PBH_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
-            ax2.plot(mp_SLN, f_PBH_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
-            ax3.plot(mp_CC3_evolved, f_PBH_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
-                        
-            ax1.set_title("LN")
-            ax2.set_title("SLN")
-            ax3.set_title("CC3")
-            
-            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
-            f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
-            ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
-            
-            
-            
-            # Plot extended MF constraints from Korwar & Profumo (2023)
-            # Path to extended MF constraints
-            exponent_PL_lower = 2
-            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
-                    
-            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            
-            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
-            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
-            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
-     
-            # Peak mass for log-normal MF
-            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
-            # Estimate peak mass of skew-lognormal MF
-            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
-     
-            ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
-            ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)), label="KP '23")
-            ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
-            
-            
-            
-            
-        ax0.plot(m_delta_values, f_max, color="tab:grey")
-        ax0.set_xlabel("$m$ [g]")
-        ax0.set_ylabel("$f_\mathrm{max}$")
-        ax0.set_xscale("log")
-        ax0.set_yscale("log")
-        ax0.set_xlim(min(m_delta_extrapolated), 1e18)
-        ax0.set_ylim(0.1*min(f_max), 1)
-        
-        for ax in [ax1, ax2, ax3]:
-            if Deltas[j] < 5:
-                ax.set_xlim(1e16, 1e18)
-            else:
-                ax.set_xlim(1e16, 7e18)
-               
-            ax.set_ylim(1e-6, 1)
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-
-        ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
-        ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
-        ax2.legend(fontsize="small")
-
-        fig.tight_layout()
-        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
-
-
-#%% Tests of the results obtained using different power-law exponents in f_max at low masses 
 # Constraints from 2108.13256 (CMB anisotropies).
 
 if "__main__" == __name__:
@@ -938,6 +829,145 @@ if "__main__" == __name__:
 
             ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))            
             ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))
+                
+            ax0.set_xlim(1e11, 3e17)
+            ax0.set_ylim(10**(-15), 1)
+            ax0.set_xlabel("m$~[\mathrm{g}]$")
+            ax0.set_ylabel("$f_\mathrm{max}$")
+            ax0.set_xscale("log")
+            ax0.set_yscale("log")
+            
+            for ax in [ax1, ax2, ax3]:
+                
+                if Deltas[j] < 5:
+                    ax.set_xlim(1e16, 3e17)
+                else:
+                    ax.set_xlim(1e16, 1e18)
+                   
+                ax.set_ylim(1e-4, 1)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+    
+            ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")        
+            ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")
+            fig.tight_layout()
+            fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
+
+
+
+
+#%% Tests of the results obtained using different power-law exponents in f_max at low masses (Extragalactic gamma ray photon constraints)
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    mc_values = np.logspace(14, 20, 120)
+
+    # Array of power law exponents to use at masses below 1e15g
+    exponents_PL_lower = [0, -2, -4]
+    
+    style_markers = ["--", "+", "x"]
+    
+    for j in range(len(Deltas)):
+        
+        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
+        
+        ax0 = axes[0][0]
+        ax1 = axes[0][1]
+        ax2 = axes[1][0]
+        ax3 = axes[1][1]
+        
+        m_delta_values_loaded = np.logspace(14, 17, 32)
+        constraints_names, f_max_Isatis = load_results_Isatis(mf_string="EXGB_Hazma")
+        colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue", "k"]
+        constraints_names_short = ["COMPTEL_1502.06116", "COMPTEL_1107.0200", "EGRET_0405441", "EGRET_9811211", "Fermi-LAT_1410.3696", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200", "HEAO+balloon_9903492"]                                   
+        m_delta_extrapolated = np.logspace(11, 14, 31)        
+        
+        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
+            data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+            
+            f_PBH_instrument_LN = []
+            f_PBH_instrument_SLN = []
+            f_PBH_instrument_CC3 = []
+            
+            for i in range(len(constraints_names)):
+                
+                if i in (0, 2, 4, 7):
+                    # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
+                    f_max_allpositive = []
+            
+                    for f_max in f_max_Isatis[i]:
+                        if f_max == -1:
+                            f_max_allpositive.append(1e100)
+                        else:
+                            f_max_allpositive.append(f_max)
+                    
+                    # Extrapolate f_max at masses below 1e13g using a power-law
+                    f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e14]
+                    f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e14, exponent_PL_lower)
+                    f_max_i = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+                    m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e14]))
+    
+                    ax0.plot(m_delta_extrapolated, f_max_extrapolated, style_markers[k], color=colors_evap[int(i/2)])
+                    ax0.plot(m_delta_values_loaded[m_delta_values_loaded > 1e14], f_max_loaded_truncated, color=colors_evap[int(i/2)])
+    
+                    # Load constraints for an evolved extended mass function obtained from each instrument
+                    data_filename_LN = data_folder + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                    data_filename_SLN = data_folder + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                    data_filename_CC3 = data_folder + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                        
+                    mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+                    mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                    mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                    
+                    # Compile constraints from all instruments
+                    f_PBH_instrument_LN.append(f_PBH_LN_evolved)
+                    f_PBH_instrument_SLN.append(f_PBH_SLN_evolved)
+                    f_PBH_instrument_CC3.append(f_PBH_CC3_evolved)
+                                        
+            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_values]
+            mp_LN = mc_values * np.exp(-sigmas_LN[j]**2)
+            mp_CC3 = mc_values
+            
+            # Plot the tightest constraint (of the different instruments) for each peak mass
+            ax1.plot(mp_LN, envelope(f_PBH_instrument_LN), style_markers[k], color="r")
+            ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN), style_markers[k], color="b")
+            ax3.plot(mp_CC3, envelope(f_PBH_instrument_CC3), style_markers[k], color="g")
+                        
+            ax1.set_title("LN")
+            ax2.set_title("SLN")
+            ax3.set_title("CC3")
+
+            ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))            
+            ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))
+            
+            
+            # Plot extended MF constraints from Korwar & Profumo (2023)
+            # Path to extended MF constraints
+            exponent_PL_lower = 2
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+                    
+            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            
+            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+     
+            # Peak mass for log-normal MF
+            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
+            # Estimate peak mass of skew-lognormal MF
+            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+     
+            ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
+            ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)))
+            ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
+
                 
             ax0.set_xlim(1e11, 3e17)
             ax0.set_ylim(10**(-15), 1)
@@ -1629,22 +1659,31 @@ from preliminaries import load_results_Isatis
 
 if "__main__" == __name__:
     
-    m_pbh_values = np.logspace(14, 17, 50)
+    #m_pbh_values = np.logspace(14, 17, 32)
+    m_pbh_values = 10**np.arange(14, 17.04, 0.05)
     
     constraints_names, constraints_Hazma = load_results_Isatis(mf_string="EXGB_Hazma")   
     constraints_names, constraints_PYTHIA = load_results_Isatis(mf_string="EXGB_PYTHIA")
     
     fig, ax = plt.subplots(figsize=(7,7))
     
-    colors = ["tab:blue", "tab:orange", "tab:green", "tab:red", "tab:grey", "k"]
+    colors = ["tab:orange", "tab:green", "tab:red", "tab:blue", "k"]
     
-    for i in range(len(constraints_names)):
-        ax.plot(m_pbh_values, constraints_Hazma[i], color=colors[i], label=constraints_names[i])
-        ax.plot(m_pbh_values, constraints_PYTHIA[i], color=colors[i], marker="x")
+    for i in range(len(constraints_Hazma[0:8])):
+        # Select constraints calculated from existing measurements of the extragalactic photon background.
+        if i in (0, 2, 4, 7):
+            print(constraints_names[i])
+            ax.plot(m_pbh_values, constraints_Hazma[i], color=colors[int(i/2)], label=constraints_names[i])
+            ax.plot(m_pbh_values, constraints_PYTHIA[i], color=colors[int(i/2)], linestyle="None", marker="x")
         
-    ax.legend(fontsize="small")
-    ax.set_xlabel("$m_i~[\mathrm{g}]$")
-    ax.set_ylabel("$f_[\mathrm{PBH}]$")
+    ax.legend()
+    #ax.set_xlabel("$m_i~[\mathrm{g}]$")
+    #ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
+    ax.set_xlim(1e14, 1e18)
+    ax.set_ylim(1e-10, 1)
+    ax.grid()
     fig.tight_layout()
+    fig.savefig("EXGB_Hazma_PYTHIA.pdf")
+    fig.savefig("EXGB_Hazma_PYTHIA.png")

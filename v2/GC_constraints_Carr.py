@@ -34,7 +34,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 
-#%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Calculated using f_max as the minimum constraint over each energy bin.
+#%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Calculated using f_max as the minimum constraint over each energy bin.
 
 if "__main__" == __name__:
 
@@ -169,7 +169,7 @@ if "__main__" == __name__:
         np.savetxt(data_filename_CC3, [mc_values, f_PBH_Carr_CC3], delimiter="\t")
 
 
-#%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
+#%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
 
 if "__main__" == __name__:
     
@@ -605,76 +605,116 @@ if "__main__" == __name__:
             np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
 
 
-#%% Constraints from 2201.01265 (extragalactic gamma-ray background).
+#%% Extragalactic gamma-ray background from Isatis.
 
 if "__main__" == __name__:
-    # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
-    include_extrapolated = True
-    # Boolean determines whether to use evolved mass function.
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Boolean determines whether to useFalse evolved mass function.
     evolved = False
     # Boolean determines whether to evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
     
-    t = t_0
+    # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
+    include_extrapolated = True
+    # If True, plot extrapolated delta-function MF constraints down to 1e11g.
+    plot_extrapolated = True
     
+    m_delta_values_loaded = np.logspace(14, 17, 32)
+    constraints_names, f_max_Isatis = load_results_Isatis(mf_string="EXGB_Hazma")
+    colors = ["tab:orange", "tab:green", "tab:red", "tab:blue", "k"]
+    constraints_names_short = ["COMPTEL_1502.06116", "COMPTEL_1107.0200", "EGRET_0405441", "EGRET_9811211", "Fermi-LAT_1410.3696", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200", "HEAO+balloon_9903492"]
+    
+    mc_values = np.logspace(14, 20, 120)
+    
+    t = t_0
+        
+    if not evolved:
+        data_folder_base = "./Data-tests/unevolved"
+    elif t_initial:
+        data_folder_base = "./Data-tests/t_initial"
+        t = 0
+    else:
+        data_folder_base = "./Data-tests/"
+        
     # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.            
     for exponent_PL_lower in [0, -2, -4]:
-
-        if not evolved:
-            data_folder = "./Data-tests/unevolved"
-        elif t_initial:
-            data_folder = "./Data-tests/t_initial"
-            t = 0
-        else:
-            data_folder = "./Data-tests"
-    
-        # Load mass function parameters.
-        [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-        
-        mc_values = np.logspace(14, 20, 120)
-        
-        # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
-        m_delta_values, f_max = load_data("2201.01265/2201.01265_Fig3_EGXB.csv")
         
         if include_extrapolated:
-                
-            m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_values))+0.01, 0.1)
-            f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
+            # Power-law exponent to use
+            m_delta_extrapolated = np.logspace(11, 14, 31)
+            data_folder = data_folder_base + "/PL_exp_{:.0f}/".format(exponent_PL_lower)
         
-            f_max_total = np.concatenate((f_max_extrapolated, f_max))
-            m_delta_total = np.concatenate((m_delta_extrapolated, m_delta_values))
-        
-            data_folder += "/PL_exp_{:.0f}".format(exponent_PL_lower)
-    
         else:
-            f_max_total = f_max
-            m_delta_total = m_delta_values
-        
-        for j in range(len(Deltas)):                
-            if include_extrapolated:                     
-                data_filename_LN = data_folder + "/LN_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                data_filename_SLN = data_folder + "/SLN_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                data_filename_CC3 = data_folder + "/CC3_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-    
-            else:          
-                data_filename_LN = data_folder + "/LN_2201.01265_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                data_filename_SLN = data_folder + "/SLN_2201.01265_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                data_filename_CC3 = data_folder + "/CC3_2201.01265_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                
+            data_folder = data_folder_base
+
+        if plot_extrapolated:
+            fig, ax = plt.subplots(figsize=(8, 8))
+                    
+        for j in range(len(Deltas)):
             params_LN = [sigmas_LN[j]]
             params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
             params_CC3 = [alphas_CC3[j], betas[j]]
             
-            f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
-            f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
-            f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
+            for i in range(len(constraints_names)):
+                
+                if i in (0, 2, 4, 7):
+                    print(constraints_names[i])
+                
+                    # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
+                    f_max_allpositive = []
             
-            np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
-            np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
-            np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-
+                    for f_max in f_max_Isatis[i]:
+                        if f_max == -1:
+                            f_max_allpositive.append(1e100)
+                        else:
+                            f_max_allpositive.append(f_max)
+                    
+                    # Extrapolate f_max at masses below 1e13g using a power-law
+                    if include_extrapolated:
+                        f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e14]
+                        f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e14, exponent_PL_lower)
+                        f_max_i = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+                        m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e14]))
+                    else:
+                        f_max_i = f_max_allpositive
+                        m_delta_values = m_delta_values_loaded
+                    
+                    # Plot the extrapolated power-law fit to f_max
+                    if plot_extrapolated:
+                        ax.plot(m_delta_extrapolated, f_max_extrapolated, linestyle="dashed", color=colors[int(i/2)])
+                        ax.plot(m_delta_values_loaded[m_delta_values_loaded > 1e14], f_max_loaded_truncated, color=colors[int(i/2)])
+                    
+                    f_PBH_i_LN = constraint_Carr(mc_values, m_delta_values, f_max_i, LN, params_LN, evolved, t)
+                    f_PBH_i_SLN = constraint_Carr(mc_values, m_delta_values, f_max_i, SLN, params_SLN, evolved, t)
+                    f_PBH_i_CC3 = constraint_Carr(mc_values, m_delta_values, f_max_i, CC3, params_CC3, evolved, t)
+              
+                    if evolved == False:
+                        data_filename_LN = data_folder + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                        data_filename_SLN = data_folder + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                        data_filename_CC3 = data_folder + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                    else:
+                        data_filename_LN = data_folder + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                        data_filename_SLN = data_folder + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                        data_filename_CC3 = data_folder + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+            
+                    np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
+                    np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
+                    np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
+        
+        if plot_extrapolated: 
+            ax.set_xlim(1e11, 1e18)
+            ax.set_ylim(10**(-10), 1)
+            ax.set_xlabel("$m_i~[\mathrm{g}]$")
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.legend(fontsize="small")
+            fig.tight_layout()
 
 #%% Constraints from 2108.13256 (CMB anisotropies).
 
