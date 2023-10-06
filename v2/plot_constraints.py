@@ -35,6 +35,40 @@ mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 plt.style.use('tableau-colorblind10')
 
+
+def frac_diff(y1, y2, x1, x2, interp_log = True):
+    """
+    Find the fractional difference between two arrays (y1, y2), evaluated
+    at (x1, x2), of the form (y1/y2 - 1).
+    
+    In the calculation, interpolation (logarithmic or linear) is used to 
+    evaluate the array y2 at x-axis values x1.
+
+    Parameters
+    ----------
+    y1 : Array-like
+        Array to find fractional difference of, evaluated at x1.
+    y2 : Array-like
+        Array to find fractional difference of, evaluated at x2.
+    x1 : Array-like
+        x-axis values that y1 is evaluated at.
+    x2 : Array-like
+        x-axis values that y2 is evaluated at.
+    interp_log : Boolean, optional
+        If True, use logarithmic interpolation to evaluate y1 at x2. The default is True.
+
+    Returns
+    -------
+    Array-like
+        Fractional difference between y1 and y2.
+
+    """
+    if interp_log:
+        return y1 / 10**np.interp(np.log10(x1), np.log10(x2), np.log10(y2)) - 1
+    else:
+        return np.interp(x1, x2, y2) / y1 - 1
+
+
 #%% Existing constraints
 
 if "__main__" == __name__:
@@ -42,11 +76,15 @@ if "__main__" == __name__:
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
     plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = not plot_GC_Isatis
+    plot_KP23 = False
+    # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
+    plot_BC19 = True
     # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
     include_extrapolated = True
     # If True, plot unevolved MF constraint
     plot_unevolved = True
+    # If True, plot the fractional difference between evolved and unevolved MF results
+    plot_fracdiff = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'r', 'b', 'g', 'k']
@@ -172,6 +210,22 @@ if "__main__" == __name__:
                 ax.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
                 ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2])
         
+            if plot_unevolved and plot_fracdiff:
+                fig1, ax1a = plt.subplots(figsize=(6,6))
+                ax1a.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), np.abs(frac_diff(f_PBH_LN_unevolved_approx, f_PBH_GC_LN, mp_LN_unevolved_approx, mc_values_evap * np.exp(-sigmas_LN[i]**2))), label="LN", color="r")
+                ax1a.plot(mp_SLN_evap, np.abs(frac_diff(f_PBH_SLN_unevolved_approx, f_PBH_GC_SLN, mp_SLN_unevolved_approx, mp_SLN_evap)), label="SLN", color="b")
+                ax1a.plot(mc_values_evap, np.abs(frac_diff(f_PBH_CC3_unevolved_approx, f_PBH_GC_CC3, mp_CC3_unevolved_approx, mc_values_evap)), label="CC3", color="g")
+                ax1a.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax1a.set_xscale("log")
+                ax1a.set_yscale("log")
+                ax1a.set_title("$\Delta={:.1f}$".format(Deltas[i]))
+                ax1a.legend(title="Unevolved/evolved - 1", fontsize="x-small")
+                ax1a.set_xlim(xmin=1e16)
+                ax1a.set_ylim(ymax=1e2)
+                ax1a.grid()
+                fig1.tight_layout()
+
         elif plot_KP23:
             
             # Delta-function MF constraints
@@ -224,10 +278,6 @@ if "__main__" == __name__:
                 ax.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], linestyle="dashed")
                 ax.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], dashes=[6, 2])
                 
-                ax.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
-                ax.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
-                ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2])
-
             # If required, plot constraints obtained with unevolved MF
             if plot_unevolved:
                 """
@@ -239,12 +289,10 @@ if "__main__" == __name__:
                 # Load constraints calculated for the unevolved MF extrapolated down to 1e11g using a power-law with exponent 2 calculated using GC_constraints_Carr.py (August 2023)
                 mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt("./Data-tests/unevolved/PL_exp_2/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp2.txt".format(Deltas[i]), delimiter="\t")
                 mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt("./Data-tests/unevolved/PL_exp_2/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp2.txt".format(Deltas[i]), delimiter="\t")
-                mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-tests/unevolved/PL_exp_2/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp2.txt".format(Deltas[i]), delimiter="\t")
+                mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt("./Data-tests/unevolved/PL_exp_2/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp2.txt".format(Deltas[i]), delimiter="\t")                
 
-                
                 # Estimate peak mass of skew-lognormal MF
                 mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
-                mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Carr_SLN]
             
                 ax0.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors[2], alpha=0.4)
                 ax0.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.4)
@@ -252,8 +300,68 @@ if "__main__" == __name__:
                 ax1.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors[3], alpha=0.4)
                 ax0.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
                 ax1.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), f_PBH_KP23_LN, color=colors[1], alpha=0.4)
+        
+        elif plot_BC19:
             
+            exponent_PL_lower = 2
+            # Boolean determines which propagation model to load data from
+            for prop_A in [True, False]:
+                prop_B = not prop_A
+            
+                # Boolean determines whether to load constraint obtained with a background or without a background
+                for with_bkg in [True, False]:
+                            
+                    if prop_A:
+                        prop_string = "prop_A"
+                        if with_bkg:
+                            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+                        else:
+                            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
+                
+                    elif prop_B:
+                        prop_string = "prop_B"
+                        if with_bkg:
+                            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
+                        else:
+                            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
+                                
+                    if not with_bkg:
+                        prop_string += "_nobkg"
+                        linestyle = "dashed"
+
+                    else:
+                        linestyle = "dotted"                                                    
+                
+                    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+                    data_filename_LN = data_folder + "/LN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower)
+                    data_filename_SLN = data_folder + "/SLN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower)
+                    data_filename_CC3 = data_folder + "/CC3_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower)
+                        
+                    mc_BC19_LN, f_PBH_BC19_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+                    mc_BC19_SLN, f_PBH_BC19_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                    mp_BC19_CC3, f_PBH_BC19_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                    
+                    # Estimate peak mass of skew-lognormal MF
+                    mp_BC19_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_BC19_SLN]
+                    
+                    for ax in [ax0, ax1, ax2]:
+                        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                        ax.plot(m_delta_values, f_max, color=colors[0], label="Delta function", linewidth=2)
+                        ax.set_ylabel("$f_\mathrm{PBH}$")
+                        ax.set_xscale("log")
+                        ax.set_yscale("log")
+                        
+                        ax.plot(mp_BC19_SLN, f_PBH_BC19_SLN, color=colors[2], linestyle=linestyle)
+                        ax.plot(mp_BC19_CC3, f_PBH_BC19_CC3, color=colors[3], linestyle=linestyle)
+                        ax.plot(mc_BC19_LN * np.exp(-sigmas_LN[i]**2), f_PBH_BC19_LN, color=colors[1], linestyle=linestyle)
+                        
         for ax in [ax0, ax1, ax2]:
+            # Plot delta-function and extended MF constraints from Subaru-HSC observations
+            ax.plot(m_delta_Subaru, f_PBH_delta_Subaru, color=colors[0], linewidth=2)
+            ax.plot(mp_Subaru_SLN, f_PBH_Carr_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
+            ax.plot(mp_Subaru_CC3, f_PBH_Carr_CC3, color=colors[3], label="CC3", linestyle="dashed")
+            ax.plot(mc_Carr_LN * np.exp(-sigmas_LN[i]**2), f_PBH_Carr_LN, color=colors[1], label="LN", dashes=[6, 2])
+
             # set x-axis and y-axis ticks
             # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
             
@@ -272,29 +380,28 @@ if "__main__" == __name__:
             ax.grid()
 
         # Set axis limits
+        
+        ymin, ymax = 3e-5, 1
+
         if Deltas[i] < 5:
             xmin_evap, xmax_evap = 1e16, 2.5e17
             xmin_HSC, xmax_HSC = 1e21, 1e29
-            ymin, ymax = 3e-5, 1
             
             if plot_KP23:
                 xmin_evap, xmax_evap = 1e16, 7e17
-                ymin, ymax = 3e-5, 1
-        
+                
+            elif plot_BC19:
+                xmin_evap, xmax_evap = 1e16, 3e17
+       
         else:
             xmin_evap, xmax_evap = 1e16, 7e17
             xmin_HSC, xmax_HSC = 9e18, 1e29
-            ymin, ymax = 3e-5, 1
-            """
-            
-            xmin_GC, xmax_GC = 1e16, 7e17
-            xmin_HSC, xmax_HSC = 9e18, 1e29
-            ymin, ymax = 3e-6, 1
-            
-            """
+
             if plot_KP23:
                 xmin_evap, xmax_evap = 1e16, 2e18
-                ymin, ymax = 3e-5, 1
+                
+            elif plot_BC19:
+                xmin_evap, xmax_evap = 1e16, 1e19
 
         ax0.set_xlim(xmin_evap, 1e24)
         ax0.set_ylim(ymin, ymax)
@@ -313,6 +420,11 @@ if "__main__" == __name__:
         elif plot_KP23:
             fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_KP23.pdf".format(Deltas[i]))
             fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_KP23.png".format(Deltas[i]))
+
+        elif plot_BC19:
+            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_BC19.pdf".format(Deltas[i]))
+            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_BC19.png".format(Deltas[i]))
+
                 
 #%% Prospective constraints
 
