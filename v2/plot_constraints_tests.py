@@ -8,6 +8,8 @@ Created on Wed Mar 29 16:39:43 2023
 
 # Script plots results obtained for the extended PBH mass functions given by
 # the fitting functions in 2009.03204.
+# Compares a number of different constraints obtained using the extended
+# PBH mass function.
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -33,6 +35,50 @@ mpl.rcParams['font.family'] = 'serif'
 mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 plt.style.use('tableau-colorblind10')
+
+
+def plot_KP23(j, ax1, ax2, ax3, exponent_PL_lower=2):
+    """
+    Plot the evolved MF constraints from Korwar & Profumo (2023)
+
+    Parameters
+    ----------
+    j : Integer
+        Index indicating which value of Delta to plot constraints for.
+    ax1 : Matplotlib Axes object
+        Axis on which to plot the LN MF constraint.
+    ax2 : Matplotlib Axes object
+        Axis on which to plot the SLN MF constraint.
+    ax3 : Matplotlib Axes object
+        Axis on which to plot the CC3 MF constraint.
+    exponent_PL_lower : Integer, optional
+        Power-law exponent to extrapolate the delta-function constraint below 1e15g. The default is 2.
+
+    Returns
+    -------
+    None.
+
+    """
+    # Path to extended MF constraints
+    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+            
+    data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+    data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+    data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+    
+    mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+    mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+    mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+ 
+    # Peak mass for log-normal MF
+    mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
+    # Estimate peak mass of skew-lognormal MF
+    mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
+ 
+    ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
+    ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)))
+    ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
+
 
 #%% Tests evaluating the mass functions at the initial time (or unevolved mass functions), and comparing to results obtained before June 2023.
 
@@ -147,7 +193,7 @@ if "__main__" == __name__:
         fig.tight_layout()
                         
 
-#%% Tests of the results obtained using different power-law exponents in f_max at low masses (Korwar & Profumo (2023))
+#%% Tests of the results obtained using different power-law exponents in f_max at low masses (Korwar & Profumo (2023) [2302.04408])
 
 if "__main__" == __name__:
     
@@ -233,7 +279,7 @@ if "__main__" == __name__:
         ax0.set_yscale("log")
         ax0.set_xlim(min(m_delta_extrapolated_lower), 1e18)
         ax0.set_ylim(min(f_max_extrapolated_lower), 1)
-        
+                
         for ax in [ax1, ax2, ax3]:
             if Deltas[j] < 5:
                 ax.set_xlim(1e16, 1e18)
@@ -248,10 +294,10 @@ if "__main__" == __name__:
 
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
+        fig.suptitle("[2302.04408], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
-        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
-#%% Tests of the results obtained using different power-law exponents in f_max at low masses (Berteaud et al. (2022))
+#%% Tests of the results obtained using different power-law exponents in f_max at low masses (Berteaud et al. (2022) [2202.07483])
 
 if "__main__" == __name__:
     
@@ -302,6 +348,9 @@ if "__main__" == __name__:
             f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
             
+        # Plot extended MF constraints from Korwar & Profumo (2023)
+        plot_KP23(j, ax1, ax2, ax3)
+
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
@@ -324,9 +373,9 @@ if "__main__" == __name__:
 
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 3e16~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 3e16~\mathrm{g}$)")
+        fig.suptitle("Gamma rays [2202.07483], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
-        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
-        
+     
         
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses 
 # Constraints from 1807.03075 (Voyager-1 electron / positron detections).
@@ -402,6 +451,9 @@ if "__main__" == __name__:
             f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
             
+        # Plot extended MF constraints from Korwar & Profumo (2023)
+        plot_KP23(j, ax1, ax2, ax3)
+
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
@@ -424,9 +476,8 @@ if "__main__" == __name__:
 
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
+        fig.suptitle("Voyager 1 [1807.03075], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
-        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
-
 
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses 
 # Constraints from 1912.01014 (511 keV line).
@@ -458,7 +509,8 @@ if "__main__" == __name__:
         m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_values))+0.01, 0.1)
                 
         for k, exponent_PL_lower in enumerate(exponents_PL_lower):
-                            
+            
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
             data_filename_LN = data_folder + "/LN_1912.01014_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             data_filename_SLN = data_folder + "/SLN_1912.01014_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             data_filename_CC3 = data_folder + "/CC3_1912.01014_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
@@ -480,14 +532,17 @@ if "__main__" == __name__:
             ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
             f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
-            
+        
+        # Plot extended MF constraints from Korwar & Profumo (2023)
+        plot_KP23(j, ax1, ax2, ax3)
+        
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
         ax0.set_xscale("log")
         ax0.set_yscale("log")
         ax0.set_xlim(min(m_delta_extrapolated), 1e18)
-        ax0.set_ylim(min(f_max_extrapolated), 1)
+        ax0.set_ylim(min(f_max), 1)
         
         for ax in [ax1, ax2, ax3]:
             if Deltas[j] < 5:
@@ -503,9 +558,8 @@ if "__main__" == __name__:
 
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
+        fig.suptitle("511 keV line [1912.01014], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
-        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
-
 
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses 
 # Constraints from 2108.13256 (CMB anisotropies).
@@ -568,32 +622,9 @@ if "__main__" == __name__:
             ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
             f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
-            
-            
-            
-            # Plot extended MF constraints from Korwar & Profumo (2023)
-            # Path to extended MF constraints
-            exponent_PL_lower = 2
-            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
-                    
-            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            
-            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
-            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
-            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
-     
-            # Peak mass for log-normal MF
-            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
-            # Estimate peak mass of skew-lognormal MF
-            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
-     
-            ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
-            ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)))
-            ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
-
-            
+        
+        # Plot extended MF constraints from Korwar & Profumo (2023)
+        plot_KP23(j, ax1, ax2, ax3)
             
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
@@ -617,10 +648,8 @@ if "__main__" == __name__:
 
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
+        fig.suptitle("CMB anisotropies [2108.13256], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
-        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
-
-
 
 #%% Plot the Galactic Centre photon constraints for an extended mass function, with the delta-function MF constraints obtained using Isatis.
 # Compare to the approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin, for the unevolved mass function and the 'evolved' mass function evaluated at the initial time t=0.
@@ -810,22 +839,23 @@ if "__main__" == __name__:
                 f_PBH_instrument_LN.append(f_PBH_LN_evolved)
                 f_PBH_instrument_SLN.append(f_PBH_SLN_evolved)
                 f_PBH_instrument_CC3.append(f_PBH_CC3_evolved)
-                
-                print("f_PBH_LN_evolved[0] =", f_PBH_LN_evolved[0])
-                
+                                
             mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_values]
             mp_LN = mc_values * np.exp(-sigmas_LN[j]**2)
             mp_CC3 = mc_values
+            
             
             # Plot the tightest constraint (of the different instruments) for each peak mass
             ax1.plot(mp_LN, envelope(f_PBH_instrument_LN), style_markers[k], color="r")
             ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN), style_markers[k], color="b")
             ax3.plot(mp_CC3, envelope(f_PBH_instrument_CC3), style_markers[k], color="g")
-            print("envelope(f_PBH_instrument_LN)[0] =", envelope(f_PBH_instrument_LN)[0])
                         
             ax1.set_title("LN")
             ax2.set_title("SLN")
             ax3.set_title("CC3")
+            
+            # Plot extended MF constraints from Korwar & Profumo (2023)
+            plot_KP23(j, ax1, ax2, ax3)
 
             ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))            
             ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))
@@ -852,11 +882,8 @@ if "__main__" == __name__:
     
             ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")        
             ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")
+            fig.suptitle("GC photons [Isatis], $\Delta={:.1f}$".format(Deltas[j]))
             fig.tight_layout()
-            fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
-
-
-
 
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses (Extragalactic gamma ray photon constraints)
 
@@ -945,30 +972,9 @@ if "__main__" == __name__:
             ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))            
             ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))
             
-            
             # Plot extended MF constraints from Korwar & Profumo (2023)
-            # Path to extended MF constraints
-            exponent_PL_lower = 2
-            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
-                    
-            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            plot_KP23(j, ax1, ax2, ax3)
             
-            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
-            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
-            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
-     
-            # Peak mass for log-normal MF
-            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
-            # Estimate peak mass of skew-lognormal MF
-            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
-     
-            ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
-            ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)))
-            ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
-
-                
             ax0.set_xlim(1e11, 3e17)
             ax0.set_ylim(10**(-15), 1)
             ax0.set_xlabel("m$~[\mathrm{g}]$")
@@ -991,8 +997,8 @@ if "__main__" == __name__:
     
             ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")        
             ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{13}~\mathrm{g}$)")
+            fig.suptitle("EXGB photons [Isatis], $\Delta={:.1f}$".format(Deltas[j]))
             fig.tight_layout()
-            fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
 
 #%% Compare results obtained at t=0 and the unevolved MF (prospective evaporation constraints from GECCO [2101.01370]).
@@ -1057,8 +1063,8 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.legend(fontsize="x-small")
-        fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
+        fig.tight_layout()
 
 
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses (prospective evaporation constraints from GECCO [2101.01370])
@@ -1110,29 +1116,8 @@ if "__main__" == __name__:
             f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
             
-            
             # Plot extended MF constraints from Korwar & Profumo (2023)
-            # Path to extended MF constraints
-            exponent_PL_lower = 2
-            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
-                    
-            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            
-            mc_KP23_LN, f_PBH_KP23_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
-            mc_KP23_SLN, f_PBH_KP23_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
-            mp_KP23_CC3, f_PBH_KP23_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
-     
-            # Peak mass for log-normal MF
-            mp_LN = mc_KP23_LN * np.exp(-sigmas_LN[j]**2)               
-            # Estimate peak mass of skew-lognormal MF
-            mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
-     
-            ax1.plot(mp_LN, f_PBH_KP23_LN, dashes=[6, 2], color="tab:grey")
-            ax2.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="tab:grey", linestyle=(0, (5, 7)))
-            ax3.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color="tab:grey", linestyle="dashed")
-
+            plot_KP23(j, ax1, ax2, ax3)
             
         ax0.plot(np.concatenate((m_delta_extrapolated, m_delta_values)), np.concatenate((f_max_extrapolated, f_max)), color=(0.5294, 0.3546, 0.7020))
         ax0.set_xlabel("$m$ [g]")
@@ -1156,8 +1141,8 @@ if "__main__" == __name__:
 
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
+        fig.suptitle("Prpspective (GECCO) [2101.01370], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
-        fig.suptitle("$\Delta={:.1f}$".format(Deltas[j]))
 
 
 #%% Check how the Subaru-HSC microlensing constraints for extended MFs change when using different power law extrapolations below ~1e22g in the delta-function MF constraint
@@ -1243,8 +1228,8 @@ if "__main__" == __name__:
 
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{22}~\mathrm{g}$)")
+        fig.suptitle("Subaru-HSC, $\Delta={:.1f}$".format(Deltas[i]))
         fig.tight_layout()
-        fig.suptitle("$\Delta={:.1f}$".format(Deltas[i]))
 
 
 #%% Plot constraints from 2302.04408 (MW diffuse SPI with NFW template).
@@ -1325,9 +1310,8 @@ if "__main__" == __name__:
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
         ax.set_xscale("log")
         ax.set_yscale("log")
+        fig.suptitle("KP '23 convergence test ($\Delta={:.1f}$)".format(Deltas[j]))
         fig.tight_layout()
-        fig.suptitle("Convergence test ($\Delta={:.1f}$)".format(Deltas[j]))
-
 
 #%% Tests of the results obtained using different power-law exponents in f_max at masses M < 1e15g (Galactic Centre photon constraints)
 
@@ -1655,6 +1639,7 @@ if "__main__" == __name__:
     
     
 #%% Compare extragalactic gamma-ray background constraints calculated with PYTHIA and Hazma hadronisation tables.
+
 from preliminaries import load_results_Isatis
 
 if "__main__" == __name__:
