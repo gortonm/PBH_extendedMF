@@ -385,7 +385,7 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = np.logspace(14, 20, 120)
+    mc_values = 10**np.arange(14, 20.5, 0.1)
 
     # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
     exponents_PL_lower = [0, 2, 3, 4]
@@ -393,10 +393,10 @@ if "__main__" == __name__:
     linestyles = ["solid", "dashed", "dashdot", "dotted"]
     
     # Boolean determines which propagation model to load data from
-    prop_A = False
+    prop_A = True
     prop_B = not prop_A
     
-    with_bkg = True
+    with_bkg = False
     
     if prop_A:
         prop_string = "prop_A"
