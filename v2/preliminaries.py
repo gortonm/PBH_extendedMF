@@ -1031,7 +1031,8 @@ if "__main__" == __name__:
     
     fig0.tight_layout()
     fig1.tight_layout()
-
+    
+    
 #%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant
 # for the Galactic Centre photon constraints from Isatis (1e16g) - ratio plots.
  
@@ -1352,7 +1353,8 @@ if "__main__" == __name__:
         # Boolean determines which propagation model to load data from
         prop_A = True
         prop_B = not prop_A
-        
+ 
+        # If True, use constraints obtained with background subtraction
         with_bkg = True
         
         if prop_A:
@@ -2001,105 +2003,9 @@ if "__main__" == __name__:
         print("m_p <= {:.2e}g".format(min(m_values_input[m_values_input>0]) * np.exp(max_value*np.sqrt(2)*sigmas_LN[i]) * np.exp(sigmas_LN[i]**2)))
         print("m_p >= {:.2e}g".format(max(m_values_input) * np.exp(-max_value*np.sqrt(2)*sigmas_LN[i]) * np.exp(sigmas_LN[i]**2)))
 
-
-#%% Calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass     
-if "__main__" == __name__:    
-    m_delta_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
-    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
-    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
-    m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_loaded))
-    
-    # Simplified estimate
-    f_max_simplified = min(f_max_loaded) * np.power(m_delta_total / min(m_delta_loaded), 2)
-    
-    # Full calculation
-    exponent_PL_upper = 2
-    exponent_PL_lower = 2
-    f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_loaded), exponent_PL_upper)
-    f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
-    f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
-
-    m_p = 1e15
-    f_PBH_simplified = f_max_loaded[0] * np.power(m_p / m_delta_loaded[0], 2)   # Find value of the simplified constraint
-    #m_p = min(m_delta_loaded)
-    #f_PBH_simplified = min(f_max_loaded)
-        
-    # If True, use LN MF
-    use_LN = False
-    use_CC3 = not use_LN
-    
-    # If True, use evolved MF
-    evolved = False
-    
-    # If True, use the approximate form of f_max (a delta-function MF constraint in the mass)
-    use_approx_fmax = False
-    
-    print("Peak mass m_p = {:.1e} g".format(m_p))
-    
-    if evolved:
-        print("Evolved MF")
-    else:
-        print("Unevolved MF")
-        
-    if use_approx_fmax:
-        print("Approximate f_max (f_max \propto m^2)")
-    else:
-        print("Full f_max")
-        
-    fPBH_full_values = []
-    frac_diff_simplified = []
-    frac_diff_full = []
-    
-    if use_CC3:
-        print("CC3 MF")
-       
-    elif use_LN:
-        print("LN MF")
-    
-    for i in range(len(Deltas)):
-        
-        if use_CC3:
-            evolved = True
-            psi_initial = CC3
-            params = [alphas_CC3[i], betas[i]]
-            mc_values = [m_p]
-           
-        elif use_LN:
-            psi_initial = LN
-            params=[sigmas_LN[i]]
-            mc_values = [m_p * np.exp(sigmas_LN[i]**2)]
-
-        if use_approx_fmax:
-            f_max = f_max_simplified
-        else:
-            f_max = f_max_total
-            
-        f_PBH_approx = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max, psi_initial=psi_initial, params=params, evolved=evolved)
-        f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
-        
-        fPBH_full_values.append(f_PBH_full)
-        frac_diff_simplified.append(f_PBH_approx[0] / f_PBH_simplified - 1)
-        frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
-       
-    print("f_PBH (full value)")
-    for i in range(len(fPBH_full_values)):
-        print("{:.3e}".format(fPBH_full_values[i][0]))
-    
-    print("\nFractional difference from simplified problem")
-    for i in range(len(frac_diff_simplified)):
-        print("{:.3e}".format(frac_diff_simplified[i]))
-    
-    print("\nFractional difference from full problem")
-    for i in range(len(frac_diff_full)):
-        print("{:.3e}".format(frac_diff_full[i]))
-    
-    """
-        print("f_PBH (full value) = {:.3e}".format(f_PBH_full[0]))
-        print("Fractional difference from simplified problem = {:.3e}".format(f_PBH_approx[0] / f_PBH_simplified - 1))
-        print("Fractional difference from full problem = {:.3e}".format(f_PBH_full[0] / f_PBH_simplified - 1))
-   """
    
-#%% Calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass. Plot results.  
+#%% Calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass. Plot results. 
+ 
 if "__main__" == __name__:    
     m_delta_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
     m_delta_extrapolated_upper = np.logspace(15, 16, 11)
@@ -2282,3 +2188,45 @@ if "__main__" == __name__:
         ax.set_title("$m_p$ = {:.1e} g".format(m_p))
         fig.tight_layout()
 
+#%% Plot fractional difference between the delta-function MF constraint and a power-law in m^2.
+if "__main__" == __name__:
+        
+    fig, ax = plt.subplots(figsize=(7,7))
+    
+    # Korwar & Profumo (2023) 511 keV line constraints
+    m_delta_values_loaded, f_max_loaded = load_data("./2302.04408/2302.04408_MW_diffuse_SPI.csv")
+    # Power-law exponent to use between 1e15g and 1e16g.
+    exponent_PL_upper = 2.0
+    # Power-law exponent to use between 1e11g and 1e15g.
+    exponent_PL_lower = 2.0
+    
+    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
+    
+    f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_values_loaded), exponent_PL_upper)
+    f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+
+    m_pbh_values_upper = np.concatenate((m_delta_extrapolated_upper, m_delta_values_loaded))
+    f_max_upper = np.concatenate((f_max_extrapolated_upper, f_max_loaded))
+    
+    f_max = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
+    m_pbh_values = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
+    
+    # set x-axis and y-axis ticks
+    # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
+    
+    y_major = mpl.ticker.LinearLocator(numticks = 11)
+    ax.yaxis.set_major_locator(y_major)
+    y_minor = mpl.ticker.LinearLocator(numticks = 11)
+    ax.yaxis.set_minor_locator(y_minor)
+    ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+
+    
+    ax.plot(m_pbh_values, f_max / (min(f_max_loaded) * np.power(m_pbh_values / min(m_delta_values_loaded), exponent_PL_upper)) - 1, color=(0.5294, 0.3546, 0.7020))
+    ax.set_ylabel("$f_\mathrm{max} / (km^2) - 1$")
+    ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_xlim(1e16, 1e17)
+    ax.set_ylim(0, 1)
+    ax.grid()
+    fig.tight_layout()
+    fig.savefig("./Tests/Figures/EMF_constraints_work/fmax_fracdifff_from_m^2.png")
