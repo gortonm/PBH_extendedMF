@@ -235,6 +235,25 @@ def load_data_GECCO(Deltas, i, mf=None, exponent_PL_lower=2, NFW=True):
         
     return mp_GECCO, f_PBH_GECCO
 
+
+def load_data_Sugiyama(Deltas, i, mf=None):
+    
+    if mf == None:
+        mp_Subaru, f_PBH_Subaru = load_data("1905.06066/1905.06066_Fig8_finite+wave.csv")
+
+    elif mf == LN:
+        mc_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/LN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t") 
+        mp_Subaru = mc_Subaru * np.exp(-sigmas_LN[i]**2)
+
+    elif mf == SLN:
+        mc_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/SLN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t") 
+        mp_Subaru = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_Subaru]
+
+    elif mf == CC3:
+        mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t") 
+        
+    return mp_Subaru, f_PBH_Subaru
+
     
 def find_label(mf):
     """
@@ -308,7 +327,6 @@ def plotter_KP23(Deltas, i, ax, color, mf=None, exponent_PL_lower=2, evolved=Tru
 
     
 def plotter_Subaru_Croon20(Deltas, i, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1):
-    
     mp_Subaru, f_PBH_Subaru = load_data_Subaru_Croon20(Deltas, i, mf)
     
     if show_label:
@@ -326,6 +344,16 @@ def plotter_GECCO(Deltas, i, ax, color, mf=None, exponent_PL_lower=2, NFW=True, 
         ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linestyle=linestyle, label=label)
     else:
         ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linestyle=linestyle)
+
+
+def plotter_Sugiyama(Deltas, i, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1):
+    mp_Sugiyama, f_PBH_Sugiyama = load_data_Sugiyama(Deltas, i, mf)
+    
+    if show_label:
+        label = find_label(mf)
+        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linestyle=linestyle, label=label)
+    else:
+        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linestyle=linestyle)
 
 
 #%% Tests of the method frac_diff:
@@ -583,9 +611,11 @@ if "__main__" == __name__:
         ax2 = axes[2]
         
         # Load prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].
+        """
         mc_micro_SLN, f_PBH_micro_SLN = np.genfromtxt("./Data/SLN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         mp_micro_CC3, f_PBH_micro_CC3 = np.genfromtxt("./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         mc_micro_LN, f_PBH_micro_LN = np.genfromtxt("./Data/LN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
+        """
         """
         # Load prospective extended MF constraints from GECCO. 
         exponent_PL_lower = 2
@@ -609,11 +639,14 @@ if "__main__" == __name__:
         # Estimate peak mass of skew-lognormal MF
         mp_GECCO_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_GECCO_SLN_NFW]
         """
+        """
         mp_micro_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_micro_SLN]
-        
+        """
 
         # Load delta-function MF constraints
+        """
         m_delta_evap, f_PBH_delta_evap = load_data("1905.06066/1905.06066_Fig8_finite+wave.csv")
+        """
         """
         m_delta_micro_NFW, f_PBH_delta_micro_NFW = load_data("2101.01370/2101.01370_Fig9_GC_NFW.csv")
         m_delta_micro_Einasto, f_PBH_delta_micro_Einasto = load_data("2101.01370/2101.01370_Fig9_GC_Einasto.csv")
@@ -623,8 +656,9 @@ if "__main__" == __name__:
         
         for ax in [ax0, ax1, ax2]:
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.plot(m_delta_evap, f_PBH_delta_evap, color=colors[0], label="Delta function", linewidth=2)
             """
+            ax.plot(m_delta_evap, f_PBH_delta_evap, color=colors[0], label="Delta function", linewidth=2)
+            
             #ax.plot(m_delta_micro_NFW, f_PBH_delta_micro_NFW, color=colors[0], linewidth=2)
             ax.plot(m_delta_micro_Einasto, f_PBH_delta_micro_Einasto, color=colors[0], linewidth=2)
             """
@@ -649,10 +683,16 @@ if "__main__" == __name__:
             plotter_GECCO(Deltas, i, ax, color=colors[1], NFW=False, mf=LN, linestyle=(0, (5, 1)))
             plotter_GECCO(Deltas, i, ax, color=colors[2], NFW=False, mf=SLN, linestyle=(0, (5, 7)))
             plotter_GECCO(Deltas, i, ax, color=colors[3], NFW=False, mf=CC3, linestyle="dashed")
-            
+            """
             ax.plot(mp_micro_SLN, f_PBH_micro_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
             ax.plot(mp_micro_CC3, f_PBH_micro_CC3, color=colors[3], label="CC3", linestyle="dashed")
             ax.plot(mc_micro_LN * np.exp(-sigmas_LN[i]**2), f_PBH_micro_LN, color=colors[1], dashes=[6, 2], label="LN")
+            """
+            plotter_Sugiyama(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
+            plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
+            plotter_Sugiyama(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
+            plotter_Sugiyama(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
+
             
             # set x-axis and y-axis ticks
             # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
