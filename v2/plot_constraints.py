@@ -413,7 +413,7 @@ if "__main__" == __name__:
     # If True, plot unevolved MF constraint
     plot_unevolved = True
     # If True, plot the fractional difference between evolved and unevolved MF results
-    plot_fracdiff = False
+    plot_fracdiff = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'r', 'b', 'g', 'k']
@@ -459,12 +459,21 @@ if "__main__" == __name__:
             plotter_GC_Isatis(Deltas, i, ax, mf=SLN, color=colors[2], linestyle=(0, (5, 7)))
             plotter_GC_Isatis(Deltas, i, ax, mf=CC3, color=colors[3], linestyle="dashed")
 
-            """
+            
             if plot_unevolved and plot_fracdiff:
                 fig1, ax1a = plt.subplots(figsize=(6,6))
-                ax1a.plot(mc_values_evap * np.exp(-sigmas_LN[i]**2), np.abs(frac_diff(f_PBH_GC_LN_unevolved, f_PBH_GC_LN, mp_LN_unevolved_approx, mc_values_evap * np.exp(-sigmas_LN[i]**2))), label="LN", color="r")
-                ax1a.plot(mp_SLN_evap, np.abs(frac_diff(f_PBH_GC_SLN_unevolved, f_PBH_GC_SLN, mp_SLN_unevolved_approx, mp_SLN_evap)), label="SLN", color="b")
-                ax1a.plot(mc_values_evap, np.abs(frac_diff(f_PBH_GC_CC3_unevolved, f_PBH_GC_CC3, mp_CC3_unevolved_approx, mc_values_evap)), label="CC3", color="g")
+                
+                mp_LN_evolved, f_PBH_LN_evolved = load_data_GC_Isatis(Deltas, i, mf=LN, evolved=True)
+                mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GC_Isatis(Deltas, i, mf=SLN, evolved=True)
+                mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GC_Isatis(Deltas, i, mf=CC3, evolved=True)
+               
+                mp_LN_unevolved, f_PBH_LN_unevolved = load_data_GC_Isatis(Deltas, i, mf=LN, evolved=False)
+                mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_GC_Isatis(Deltas, i, mf=SLN, evolved=False)
+                mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_GC_Isatis(Deltas, i, mf=CC3, evolved=False)
+                
+                ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_unevolved, f_PBH_LN_evolved, mp_LN_unevolved, mp_LN_evolved)), label="LN", color="r")
+                ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_unevolved, f_PBH_SLN_evolved, mp_SLN_unevolved, mp_SLN_evolved)), label="SLN", color="b")
+                ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_unevolved, f_PBH_CC3_evolved, mp_CC3_unevolved, mp_CC3_evolved)), label="CC3", color="g")
                 ax1a.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
                 ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
                 ax1a.set_xscale("log")
@@ -475,7 +484,7 @@ if "__main__" == __name__:
                 ax1a.set_ylim(ymax=1e2)
                 ax1a.grid()
                 fig1.tight_layout()
-            """
+            
             
         elif plot_KP23:
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -490,13 +499,19 @@ if "__main__" == __name__:
             plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
             plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
             
-            """
+            
             # If required, plot the fractional difference from the delta-function MF constraint
             if plot_fracdiff:
+                
+                m_delta, f_PBH_delta =  load_data_KP23(Deltas, i, evolved=True)
+                mp_LN, f_PBH_LN = load_data_KP23(Deltas, i, mf=LN, evolved=True)
+                mp_SLN, f_PBH_SLN = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
+                mp_CC3, f_PBH_CC3 = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
+               
                 fig1, ax1a = plt.subplots(figsize=(6,6))
-                ax1a.plot(mc_KP23_LN * np.exp(-sigmas_LN[i]**2), (frac_diff(f_PBH_KP23_LN, f_PBH_delta_evap, mc_KP23_LN * np.exp(-sigmas_LN[i]**2), m_delta_evap)), label="LN", color="r")
-                ax1a.plot(mp_KP23_SLN, (frac_diff(f_PBH_KP23_SLN, f_PBH_delta_evap, mp_KP23_SLN, m_delta_evap)), label="SLN", color="b")
-                ax1a.plot(mp_KP23_CC3, (frac_diff(f_PBH_KP23_CC3, f_PBH_delta_evap, mp_KP23_CC3, m_delta_evap)), label="CC3", color="g")
+                ax1a.plot(mp_LN, frac_diff(f_PBH_LN, f_PBH_delta, mp_LN, m_delta), label="LN", color="r")
+                ax1a.plot(mp_SLN, frac_diff(f_PBH_SLN, f_PBH_delta, mp_SLN, m_delta), label="SLN", color="b")
+                ax1a.plot(mp_CC3, frac_diff(f_PBH_CC3, f_PBH_delta, mp_CC3, m_delta), label="CC3", color="g")
                 ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
                 ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
                 ax1a.set_xscale("log")
@@ -507,7 +522,7 @@ if "__main__" == __name__:
                 ax1a.set_ylim(-0.1, 0.1)
                 ax1a.grid()
                 fig1.tight_layout()
-            """
+            
             # If required, plot constraints obtained with unevolved MF
             if plot_unevolved:
                 plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
@@ -550,10 +565,8 @@ if "__main__" == __name__:
         plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
 
         set_ticks_grid(ax)
-        # Set axis limits
         
-        ymin, ymax = 1e-3, 1
-
+        # Set axis limits
         if Deltas[i] < 5:
             xmin_evap, xmax_evap = 1e16, 2.5e17
             xmin_HSC, xmax_HSC = 1e21, 1e29
@@ -563,7 +576,6 @@ if "__main__" == __name__:
                 
             elif plot_BC19:
                 xmin_evap, xmax_evap = 1e16, 3e17
-       
         else:
             xmin_evap, xmax_evap = 1e16, 7e17
             xmin_HSC, xmax_HSC = 9e18, 1e29
@@ -573,6 +585,8 @@ if "__main__" == __name__:
                 
             elif plot_BC19:
                 xmin_evap, xmax_evap = 1e16, 1e19
+                
+        ymin, ymax = 1e-3, 1
 
         ax.set_xlim(xmin_evap, 1e24)
         ax.set_ylim(ymin, ymax)
@@ -636,7 +650,7 @@ if "__main__" == __name__:
             xmin_evap, xmax_evap = 1e16, 5e18
             xmin_micro, xmax_micro = 2e17, 5e23
             
-        ymin, ymax = 1e-5, 1
+        ymin, ymax = 1e-3, 1
 
         ax.set_xlim(xmin_evap, xmax_micro)
         ax.set_ylim(ymin, ymax)
