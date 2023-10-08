@@ -126,6 +126,9 @@ def load_data_KP23(Deltas, i, mf=None, evolved=True, exponent_PL_lower=2):
     
     # Load data for the appropriate extended mass function (or delta-function MF):
     if mf == None:
+        
+        exponent_PL_upper = 2
+        
         m_delta_values_loaded, f_max_loaded = load_data("./2302.04408/2302.04408_MW_diffuse_SPI.csv")
         
         m_delta_extrapolated_upper = np.logspace(15, 16, 11)
@@ -279,6 +282,24 @@ def find_label(mf):
     elif mf == CC3:
         label = "CC3"
     return label
+
+def set_ticks_grid(ax):
+    # set x-axis and y-axis ticks
+    # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
+    
+    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+    ax.xaxis.set_major_locator(x_major)
+    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+    ax.xaxis.set_minor_locator(x_minor)
+    ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+
+    y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+    ax.yaxis.set_major_locator(y_major)
+    y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+    ax.yaxis.set_minor_locator(y_minor)
+    ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+    
+    ax.grid()
 
 
 def plotter_GC_Isatis(Deltas, i, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1):
@@ -528,23 +549,7 @@ if "__main__" == __name__:
         plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
         plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
 
-        # set x-axis and y-axis ticks
-        # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
-        
-        x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
-        ax.xaxis.set_major_locator(x_major)
-        x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
-        ax.xaxis.set_minor_locator(x_minor)
-        ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-        y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
-        ax.yaxis.set_major_locator(y_major)
-        y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
-        ax.yaxis.set_minor_locator(y_minor)
-        ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-        
-        ax.grid()
-
+        set_ticks_grid(ax)
         # Set axis limits
         
         ymin, ymax = 1e-3, 1
@@ -594,139 +599,48 @@ if "__main__" == __name__:
         
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'r', 'b', 'g', 'k']
-    
-    # Parameters used for convergence tests in Galactic Centre constraints.
-    cutoff = 1e-4
-    delta_log_m = 1e-3
-    E_number = 500    
-                
+                    
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
         
-    for i in range(len(Deltas[0:1])):
+    for i in range(len(Deltas)):
                         
-        fig, axes = plt.subplots(1, 3, figsize=(17, 5.5))
-        ax0 = axes[0]
-        ax1 = axes[1]
-        ax2 = axes[2]
+        fig, ax = plt.subplots(figsize=(10, 5))
+        # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].
         
-        # Load prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].
-        """
-        mc_micro_SLN, f_PBH_micro_SLN = np.genfromtxt("./Data/SLN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-        mp_micro_CC3, f_PBH_micro_CC3 = np.genfromtxt("./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-        mc_micro_LN, f_PBH_micro_LN = np.genfromtxt("./Data/LN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
-        """
-        """
-        # Load prospective extended MF constraints from GECCO. 
-        exponent_PL_lower = 2
-        data_folder = "./Data-tests/PL_exp_{:.0f}/".format(exponent_PL_lower) 
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
         
-        data_filename_LN_NFW = data_folder + "LN_2101.01370_Carr_Delta={:.1f}_NFW_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower) 
-        data_filename_SLN_NFW = data_folder + "SLN_2101.01370_Carr_Delta={:.1f}_NFW_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower) 
-        data_filename_CC3_NFW = data_folder + "CC3_2101.01370_Carr_Delta={:.1f}_NFW_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower) 
-        mc_GECCO_LN_NFW, f_PBH_GECCO_LN_NFW = np.genfromtxt(data_filename_LN_NFW, delimiter="\t")
-        mc_GECCO_SLN_NFW, f_PBH_GECCO_SLN_NFW = np.genfromtxt(data_filename_SLN_NFW, delimiter="\t")
-        mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW = np.genfromtxt(data_filename_CC3_NFW, delimiter="\t")
-           
-        data_filename_LN_Einasto = data_folder + "LN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower) 
-        data_filename_SLN_Einasto = data_folder + "SLN_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower) 
-        data_filename_CC3_Einasto = data_folder + "CC3_2101.01370_Carr_Delta={:.1f}_Einasto_extrapolated_exp{:.0f}.txt".format(Deltas[i], exponent_PL_lower) 
-        mc_GECCO_LN_Einasto, f_PBH_GECCO_LN_Einasto = np.genfromtxt(data_filename_LN_Einasto, delimiter="\t")
-        mc_GECCO_SLN_Einasto, f_PBH_GECCO_SLN_Einasto = np.genfromtxt(data_filename_SLN_Einasto, delimiter="\t")
-        mp_GECCO_CC3_Einasto, f_PBH_GECCO_CC3_Einasto = np.genfromtxt(data_filename_CC3_Einasto, delimiter="\t")
-        
-        
-        # Estimate peak mass of skew-lognormal MF
-        mp_GECCO_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_GECCO_SLN_NFW]
-        """
-        """
-        mp_micro_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_micro_SLN]
-        """
+        NFW = False
 
-        # Load delta-function MF constraints
-        """
-        m_delta_evap, f_PBH_delta_evap = load_data("1905.06066/1905.06066_Fig8_finite+wave.csv")
-        """
-        """
-        m_delta_micro_NFW, f_PBH_delta_micro_NFW = load_data("2101.01370/2101.01370_Fig9_GC_NFW.csv")
-        m_delta_micro_Einasto, f_PBH_delta_micro_Einasto = load_data("2101.01370/2101.01370_Fig9_GC_Einasto.csv")
-        """
-        
-        # Plot constraints
-        
-        for ax in [ax0, ax1, ax2]:
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            """
-            ax.plot(m_delta_evap, f_PBH_delta_evap, color=colors[0], label="Delta function", linewidth=2)
-            
-            #ax.plot(m_delta_micro_NFW, f_PBH_delta_micro_NFW, color=colors[0], linewidth=2)
-            ax.plot(m_delta_micro_Einasto, f_PBH_delta_micro_Einasto, color=colors[0], linewidth=2)
-            """
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
+        # plot Einasto profile results            
+        plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=NFW, linestyle="solid", linewidth=2)
+        plotter_GECCO(Deltas, i, ax, color=colors[1], NFW=NFW, mf=LN, linestyle=(0, (5, 1)))
+        plotter_GECCO(Deltas, i, ax, color=colors[2], NFW=NFW, mf=SLN, linestyle=(0, (5, 7)))
+        plotter_GECCO(Deltas, i, ax, color=colors[3], NFW=NFW, mf=CC3, linestyle="dashed")
 
-            # plot Einasto profile results
-            """
-            ax.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_Einasto, color=colors[2], linestyle=(0, (5, 7)))
-            ax.plot(mp_GECCO_CC3_Einasto, f_PBH_GECCO_CC3_Einasto, color=colors[3], linestyle="dashed")
-            ax.plot(mc_GECCO_LN_Einasto * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_Einasto, color=colors[1], dashes=[6, 2])
-            """
-            """
-            #Uncomment to plot NFW results
-            ax.plot(mp_GECCO_SLN, f_PBH_GECCO_SLN_NFW, color=colors[2], linestyle=(0, (5, 7)))
-            ax.plot(mp_GECCO_CC3_NFW, f_PBH_GECCO_CC3_NFW, color=colors[3], linestyle="dashed")
-            ax.plot(mc_GECCO_LN_NFW * np.exp(-sigmas_LN[i]**2), f_PBH_GECCO_LN_NFW, color=colors[1], dashes=[6, 2], label="LN")
-            """
-            
-            plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=False, linestyle="solid", linewidth=2)
-            plotter_GECCO(Deltas, i, ax, color=colors[1], NFW=False, mf=LN, linestyle=(0, (5, 1)))
-            plotter_GECCO(Deltas, i, ax, color=colors[2], NFW=False, mf=SLN, linestyle=(0, (5, 7)))
-            plotter_GECCO(Deltas, i, ax, color=colors[3], NFW=False, mf=CC3, linestyle="dashed")
-            """
-            ax.plot(mp_micro_SLN, f_PBH_micro_SLN, color=colors[2], label="SLN", linestyle=(0, (5, 7)))
-            ax.plot(mp_micro_CC3, f_PBH_micro_CC3, color=colors[3], label="CC3", linestyle="dashed")
-            ax.plot(mc_micro_LN * np.exp(-sigmas_LN[i]**2), f_PBH_micro_LN, color=colors[1], dashes=[6, 2], label="LN")
-            """
-            plotter_Sugiyama(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
-            plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
-            plotter_Sugiyama(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
-            plotter_Sugiyama(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
+        plotter_Sugiyama(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
+        plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
+        plotter_Sugiyama(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
+        plotter_Sugiyama(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
 
-            
-            # set x-axis and y-axis ticks
-            # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
-            
-            x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
-            ax.xaxis.set_major_locator(x_major)
-            x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
-            ax.xaxis.set_minor_locator(x_minor)
-            ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-            y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
-            ax.yaxis.set_major_locator(y_major)
-            y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
-            ax.yaxis.set_minor_locator(y_minor)
-            ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+        set_ticks_grid(ax)
 
         # Set axis limits
         if Deltas[i] < 5:
             xmin_evap, xmax_evap = 1e16, 2e18
             xmin_micro, xmax_micro = 2e20, 5e23
-            ymin, ymax = 1e-5, 1
         else:
             xmin_evap, xmax_evap = 1e16, 5e18
             xmin_micro, xmax_micro = 2e17, 5e23
-            ymin, ymax = 1e-5, 1
+            
+        ymin, ymax = 1e-5, 1
 
-        ax0.set_xlim(xmin_evap, 1e22)
-        ax0.set_ylim(ymin, ymax)
-        ax1.set_xlim(xmin_evap, xmax_evap)
-        ax1.set_ylim(ymin, ymax)
-        ax2.set_xlim(xmin_micro, xmax_micro)
-        ax2.set_ylim(1e-3, 1)
-       
-        ax0.legend(fontsize="xx-small")
+        ax.set_xlim(xmin_evap, xmax_micro)
+        ax.set_ylim(ymin, ymax)
+        ax.legend(fontsize="xx-small")
         
         plt.suptitle("Prospective constraints, $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
         fig.tight_layout()
