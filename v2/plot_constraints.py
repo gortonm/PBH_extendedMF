@@ -69,7 +69,7 @@ def frac_diff(y1, y2, x1, x2, interp_log = True):
         return np.interp(x1, x2, y2) / y1 - 1
 
 
-def load_data_GC_Isatis(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower=2):
+def load_data_GC_Isatis(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower=2, approx=True):
     """
     Load extended MF constraints from Galactic Centre photons.
 
@@ -85,6 +85,8 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_
         If True, use the evolved form of the fitting function. The default is True.
     exponent_PL_lower : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-function MF constraint. The default is 2.
+    approx : Boolean, optional
+        If True, load constraints obtained using f_max calculated from Isatis. Otherwise, load constraints calculated from the minimum constraint over each energy bin. The default is True.
 
     Returns
     -------
@@ -121,7 +123,10 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_
         
         for k in range(len(constraints_names_short)):
             # Load constraints for an evolved extended mass function obtained from each instrument
-            data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_approx%s.txt" % evolved_string
+            if not approx:
+                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_approx%s.txt" % evolved_string
+            else:
+                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_%s.txt" % evolved_string
             mc_values, f_PBH_k = np.genfromtxt(data_filename, delimiter="\t")
     
             # Compile constraints from all instruments
@@ -451,7 +456,7 @@ def set_ticks_grid(ax):
     ax.grid()
 
 
-def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1):
+def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, approx=True, show_label=False, linestyle="solid", linewidth=1):
     """
     Plot extended MF constraints from Galactic Centre photons.    
 
@@ -471,6 +476,8 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower
         Denotes the exponent of the power-law used to extrapolate the delta-function MF. The default is 2.
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is True.
+    approx : Boolean, optional
+        If True, plot constraints obtained using f_max calculated from Isatis. Otherwise, plot constraints calculated from the minimum constraint over each energy bin. The default is True.
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
@@ -484,7 +491,7 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower
 
     """
     
-    mp, f_PBH = load_data_GC_Isatis(Deltas, Delta_index, mf, evolved, exponent_PL_lower)
+    mp, f_PBH = load_data_GC_Isatis(Deltas, Delta_index, mf, evolved, exponent_PL_lower, approx)
     
     if not evolved:
         alpha=0.4
