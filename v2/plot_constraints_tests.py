@@ -191,7 +191,75 @@ if "__main__" == __name__:
         ax2.set_ylim(4e-3, 1)
         ax0.legend(fontsize="xx-small")
         fig.tight_layout()
-                        
+        
+#%% Plot the Galactic Centre photon constraints for an unevolved MF (and no power-law extrapolation in the delta-function MF constraint below 1e13g), calculated as the minimum over each energy bin
+# Compare results to those obtained before June 2023.
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    mc_values_new = np.logspace(14, 20, 120)
+    mc_values_old = np.logspace(14, 19, 100)
+   
+    # Parameters used for convergence tests in Galactic Centre constraints.
+    cutoff = 1e-4
+    delta_log_m = 1e-3
+    E_number = 500    
+    
+    if E_number < 1e3:
+        energies_string = "E{:.0f}".format(E_number)
+    else:
+        energies_string = "E{:.0f}".format(np.log10(E_number))
+    
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    
+    # Folder that new results are stored in.
+    data_folder = "./Data-tests/unevolved"
+    
+    # Booleans control which mass function to load constraints from:
+    plot_LN = False
+    plot_SLN = False
+    plot_CC3 = True
+    
+    if plot_LN:
+        mf_string_old = mf_string_new = "LN"
+    elif plot_SLN:
+        mf_string_old = "SL"
+        mf_string_new = "SLN"
+    elif plot_CC3:
+        mf_string_old = "CC"
+        mf_string_new = "CC3"
+
+    for i in range(len(Deltas)):
+        fig, ax = plt.subplots(figsize=(7,7))
+        
+        mc_values_old = np.logspace(14, 19, 100)          
+        fname_base = mf_string_old + "_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+        constraints_names, f_PBHs_GC_old = load_results_Isatis(mf_string=fname_base, modified=True)
+
+        for j in range(len(constraints_names_short)):
+            
+            data_filename = data_folder + "/%s_GC_%s" % (mf_string_new, constraints_names_short[j]) + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[i])
+
+            mc_new, f_PBH_new = np.genfromtxt(data_filename)
+ 
+            ax.plot(mc_new, f_PBH_new, color=colors_evap[j], linestyle="None", marker="x")
+            ax.plot(mc_values_old, f_PBHs_GC_old[j], color=colors_evap[j])
+        
+        if plot_CC3:
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        else:
+            ax.set_xlabel("$m_c~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_title("$\Delta={:.1f}$".format(Deltas[i]) + ", %s" % mf_string_new)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(1e14, 1e18)
+        ax.set_ylim(1e-10, 1)
+        plt.tight_layout()
 
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses (Korwar & Profumo (2023) [2302.04408])
 
@@ -396,7 +464,7 @@ if "__main__" == __name__:
     prop_A = True
     prop_B = not prop_A
     
-    with_bkg = False
+    with_bkg = True
     
     if prop_A:
         prop_string = "prop_A"

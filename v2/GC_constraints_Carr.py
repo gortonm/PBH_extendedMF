@@ -35,7 +35,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
 
 #%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Calculated using f_max as the minimum constraint over each energy bin.
-
+"""
 if "__main__" == __name__:
 
     # Load mass function parameters.
@@ -156,17 +156,147 @@ if "__main__" == __name__:
         f_PBH_Carr_CC3 = envelope(mc_constraints_CC3)
             
         if evolved == False:
-            data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
-            data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
-            data_filename_CC3 = data_folder + "/CC3_GC_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+            data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_CC3 = data_folder + "/CC3_GC_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
         else:
-            data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-            data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-            data_filename_CC3 = data_folder + "/CC3_GC_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+            data_filename_LN = data_folder + "/LN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_SLN = data_folder + "/SLN_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_CC3 = data_folder + "/CC3_GC_Carr_Delta={:.1f}.txt".format(Deltas[j])
             
         np.savetxt(data_filename_LN, [mc_values, f_PBH_Carr_LN], delimiter="\t")
         np.savetxt(data_filename_SLN, [mc_values, f_PBH_Carr_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_PBH_Carr_CC3], delimiter="\t")
+"""
+
+#%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Calculated using f_max as the minimum constraint over each energy bin.
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Boolean determines whether to useFalse evolved mass function.
+    evolved = False
+    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    t_initial = False
+    if t_initial:
+        evolved = True
+    
+    # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
+    include_extrapolated = False
+    # If True, plot extrapolated delta-function MF constraints down to 1e11g.
+    plot_extrapolated = False
+    
+    m_delta_values_loaded = np.logspace(11, 22, 1000)
+    colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+    
+    mc_values = np.logspace(14, 20, 120)
+    
+    t = t_0
+    
+    if not evolved:
+        data_folder = "./Data-tests/unevolved"
+    elif t_initial:
+        data_folder = "./Data-tests/t_initial"
+        t = 0
+    else:
+        data_folder = "./Data-tests/"
+        
+        
+    if include_extrapolated:
+        # Power-law exponent to use
+        exponent_PL_lower = 2.0
+        m_delta_extrapolated = np.logspace(11, 13, 21)
+        data_folder += "/PL_exp_{:.0f}/".format(exponent_PL_lower)
+        
+
+    for j in range(len(Deltas)):
+        params_LN = [sigmas_LN[j]]
+        params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+        params_CC3 = [alphas_CC3[j], betas[j]]
+        
+        for i in range(len(constraints_names_short)):
+            
+            f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
+            
+            if len(f_max_Isatis) == len(m_delta_values_loaded):
+                print("Error: will not loop over the number of energy bins. f_max_Isatis needs to be transposed.")
+                break
+            else:
+                n_bins = len(f_max_Isatis)
+            
+            f_PBH_allbins_LN = []
+            f_PBH_allbins_SLN = []
+            f_PBH_allbins_CC3 = []
+            
+            if plot_extrapolated:
+                fig, ax = plt.subplots(figsize=(7,7))
+        
+            for k in range(len(f_max_Isatis)):
+                                
+                # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
+                f_max_allpositive = []
+        
+                for f_max in f_max_Isatis[k]:
+                    if f_max == -1:
+                        f_max_allpositive.append(1e100)
+                    else:
+                        f_max_allpositive.append(f_max)
+                
+                # Extrapolate f_max at masses below 1e13g using a power-law
+                if include_extrapolated:
+                    f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
+                    f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
+                    f_max_k = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+                    m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
+                else:
+                    f_max_k = f_max_allpositive
+                    m_delta_values = m_delta_values_loaded
+            
+                # Plot the extrapolated power-law fit to f_max
+                if plot_extrapolated:
+                    ax.plot(m_delta_extrapolated, f_max_extrapolated, linestyle="dashed")
+                    ax.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_loaded_truncated)
+                                
+                f_PBH_allbins_LN.append(constraint_Carr(mc_values, m_delta_values, f_max_k, LN, params_LN, evolved, t))
+                f_PBH_allbins_SLN.append(constraint_Carr(mc_values, m_delta_values, f_max_k, SLN, params_SLN, evolved, t))
+                f_PBH_allbins_CC3.append(constraint_Carr(mc_values, m_delta_values, f_max_k, CC3, params_CC3, evolved, t))
+                
+            if plot_extrapolated: 
+                ax.set_xlim(1e11, 1e18)
+                ax.set_ylim(10**(-14), 1)
+                ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                ax.legend(fontsize="small")
+                fig.tight_layout()
+
+            if len(f_PBH_allbins_LN) != n_bins:
+                print("Error: length of calculated constraint from each energy bin does not equal number of energy bins.")
+                break
+                        
+            f_PBH_i_LN = envelope(f_PBH_allbins_LN)
+            f_PBH_i_SLN = envelope(f_PBH_allbins_SLN)
+            f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3)
+            
+            print(f_PBH_i_LN)
+      
+            if evolved == False:
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            else:
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+    
+            np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
+            np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
+            np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
+
 
 
 #%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
