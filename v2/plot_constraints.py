@@ -126,7 +126,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_
             if not approx:
                 data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_approx%s.txt" % evolved_string
             else:
-                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_%s.txt" % evolved_string
+                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "%s.txt" % evolved_string
             mc_values, f_PBH_k = np.genfromtxt(data_filename, delimiter="\t")
     
             # Compile constraints from all instruments
@@ -239,7 +239,9 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg, mf=None, evolv
     f_PBH_BC19 : Array-like
         Constraint on f_PBH.
 
-    """    
+    """
+    
+    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     
     if prop_A:
         prop_string = "prop_A"
@@ -359,7 +361,7 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, NFW=True)
     return mp_GECCO, f_PBH_GECCO
 
 
-def load_data_Sugiyama(Deltas, i, mf=None):
+def load_data_Sugiyama(Deltas, Delta_index, mf=None):
     """
     Load extended MF constraints from the prospective white dwarf microlensing delta-function MF constraints from Sugiyama et al. (2020) [1905.06066].
 
@@ -754,15 +756,13 @@ if "__main__" == __name__:
     plot_KP23 = True
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
     plot_BC19 = False
-    # If True, use extended MF constraint calculated from the delta-function MF extrapolated down to 5e14g using a power-law fit
-    include_extrapolated = False
     # If True, plot unevolved MF constraint
-    plot_unevolved = True
+    plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
     plot_fracdiff = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
-    colors = ['silver', 'r', 'b', 'g', 'k']
+    colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
     
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
@@ -780,9 +780,9 @@ if "__main__" == __name__:
     # Load Subaru-HSC delta-function MF constraint
     m_delta_Subaru, f_PBH_delta_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
     
-    for i in range(len(Deltas[0:1])):
+    for i in range(len(Deltas)):
                         
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(9, 5))
         
         if plot_GC_Isatis:
 
@@ -793,7 +793,7 @@ if "__main__" == __name__:
                 plotter_GC_Isatis(Deltas, i, ax, mf=SLN, evolved=False, color=colors[2])
                 plotter_GC_Isatis(Deltas, i, ax, mf=CC3, evolved=False, color=colors[3])
 
-            plt.suptitle("Existing constraints (showing Galactic Centre photon constraints (Isatis)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+            #plt.suptitle("Existing constraints (showing Galactic Centre photon constraints (Isatis)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
             
             ax.set_xlabel("$m_p~[\mathrm{g}]$")                
             ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -834,7 +834,7 @@ if "__main__" == __name__:
             
         elif plot_KP23:
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            fig.suptitle("Existing constraints (showing Korwar \& Profumo 2023 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+            #fig.suptitle("Existing constraints (showing Korwar \& Profumo 2023 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
 
             ax.set_ylabel("$f_\mathrm{PBH}$")
             ax.set_xscale("log")
@@ -879,6 +879,7 @@ if "__main__" == __name__:
                 
         elif plot_BC19:
             
+            """
             # Boolean determines which propagation model to load data from
             for prop_A in [True, False]:
                 prop_B = not prop_A
@@ -891,24 +892,37 @@ if "__main__" == __name__:
 
                     else:
                         linestyle = "dotted"                                                    
-
-                    ax.set_xlabel("$m_p~[\mathrm{g}]$")
-                    ax.set_ylabel("$f_\mathrm{PBH}$")
-                    ax.set_xscale("log")
-                    ax.set_yscale("log")
                                        
                     plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg, mf=None, linestyle=linestyle)
                     plotter_BC19(Deltas, i, ax, colors[1], prop_A, with_bkg, mf=LN, linestyle=linestyle)
                     plotter_BC19(Deltas, i, ax, colors[2], prop_A, with_bkg, mf=SLN, linestyle=linestyle)
                     plotter_BC19(Deltas, i, ax, colors[3], prop_A, with_bkg, mf=CC3, linestyle=linestyle)
+                """
+            #plt.suptitle("Existing constraints (showing Voyager 1 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+            
+            # For Delta = 5, tightest constraint comes from the Prop A model with background subtraction
+            prop_A = False
+            with_bkg = True
 
-            plt.suptitle("Existing constraints (showing Voyager 1 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+            plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg)
+            plotter_BC19(Deltas, i, ax, colors[1], prop_A, with_bkg, mf=LN, linestyle=(0, (5, 1)))
+            plotter_BC19(Deltas, i, ax, colors[2], prop_A, with_bkg, mf=SLN, linestyle=(0, (5, 7)))
+            plotter_BC19(Deltas, i, ax, colors[3], prop_A, with_bkg, mf=CC3, linestyle="dashed")
 
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+
+        if Deltas[i] < 5:
+            show_label_Subaru = False
+        else:
+            show_label_Subaru = True
         # Plot Subaru-HSC constraints        
-        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
-        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=(0, (5, 1)))
-        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
-        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
+        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=(0, (5, 1)), show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=show_label_Subaru)
 
         set_ticks_grid(ax)
         
@@ -937,9 +951,9 @@ if "__main__" == __name__:
         ax.set_xlim(xmin_evap, 1e24)
         ax.set_ylim(ymin, ymax)
        
-        ax.legend(fontsize="xx-small")
+        ax.legend(fontsize="xx-small", title="$\Delta={:.0f}$".format(Deltas[i]), loc="upper right")
         fig.tight_layout()
-        """
+        
         if plot_GC_Isatis:
             fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_GC_Isatis.pdf".format(Deltas[i]))
             fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_GC_Isatis.png".format(Deltas[i]))
@@ -947,25 +961,25 @@ if "__main__" == __name__:
         elif plot_KP23:
             fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_KP23.pdf".format(Deltas[i]))
             fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_KP23.png".format(Deltas[i]))
-
+        
         elif plot_BC19:
             fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_BC19.pdf".format(Deltas[i]))
             fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_BC19.png".format(Deltas[i]))
-        """
+        
                 
 #%% Prospective constraints
 
 if "__main__" == __name__:
         
     # Choose colors to match those from Fig. 5 of 2009.03204
-    colors = ['silver', 'r', 'b', 'g', 'k']
+    colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
                     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
         
     for i in range(len(Deltas)):
                         
-        fig, ax = plt.subplots(figsize=(10, 5))
+        fig, ax = plt.subplots(figsize=(9, 5))
         # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].
         
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -974,6 +988,16 @@ if "__main__" == __name__:
         ax.set_yscale("log")
         
         NFW = False
+        
+        # Set axis limits
+        if Deltas[i] < 5:
+            xmin_evap, xmax_evap = 1e16, 2e18
+            xmin_micro, xmax_micro = 2e20, 5e23
+            show_label = False
+        else:
+            xmin_evap, xmax_evap = 1e16, 5e18
+            xmin_micro, xmax_micro = 2e17, 5e23
+            show_label = True
 
         # plot Einasto profile results            
         plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=NFW, linestyle="solid", linewidth=2)
@@ -981,28 +1005,19 @@ if "__main__" == __name__:
         plotter_GECCO(Deltas, i, ax, color=colors[2], NFW=NFW, mf=SLN, linestyle=(0, (5, 7)))
         plotter_GECCO(Deltas, i, ax, color=colors[3], NFW=NFW, mf=CC3, linestyle="dashed")
 
-        plotter_Sugiyama(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
-        plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
-        plotter_Sugiyama(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
-        plotter_Sugiyama(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
+        plotter_Sugiyama(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=show_label)
+        plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)), show_label=show_label)
+        plotter_Sugiyama(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=show_label)
+        plotter_Sugiyama(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=show_label)
 
         set_ticks_grid(ax)
-
-        # Set axis limits
-        if Deltas[i] < 5:
-            xmin_evap, xmax_evap = 1e16, 2e18
-            xmin_micro, xmax_micro = 2e20, 5e23
-        else:
-            xmin_evap, xmax_evap = 1e16, 5e18
-            xmin_micro, xmax_micro = 2e17, 5e23
-            
         ymin, ymax = 1e-3, 1
 
         ax.set_xlim(xmin_evap, xmax_micro)
         ax.set_ylim(ymin, ymax)
-        ax.legend(fontsize="xx-small")
+        ax.legend(fontsize="xx-small", title="$\Delta={:.0f}$".format(Deltas[i]), loc="upper right")
         
-        plt.suptitle("Prospective constraints, $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+        #plt.suptitle("Prospective constraints, $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
         fig.tight_layout()
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.pdf".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.png".format(Deltas[i]))
@@ -1109,7 +1124,7 @@ if "__main__" == __name__:
     exponent_PL_lower = 2
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
             
-    fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, ncols=1, hspace=0, tight_layout = {'pad': 0}, figsize=(10,15))
+    fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, ncols=1, tight_layout = {'pad': 0}, figsize=(10,15))
        
     # Linestyles for different constraints
     linestyles = ["dashdot", "dashed", "dotted"]
