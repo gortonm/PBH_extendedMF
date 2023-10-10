@@ -69,7 +69,7 @@ def frac_diff(y1, y2, x1, x2, interp_log = True):
         return np.interp(x1, x2, y2) / y1 - 1
 
 
-def load_data_GC_Isatis(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower=2, approx=True):
+def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True, exponent_PL_lower=2, approx=True):
     """
     Load extended MF constraints from Galactic Centre photons.
 
@@ -123,7 +123,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_
         
         for k in range(len(constraints_names_short)):
             # Load constraints for an evolved extended mass function obtained from each instrument
-            if not approx:
+            if approx:
                 data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_approx%s.txt" % evolved_string
             else:
                 data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "%s.txt" % evolved_string
@@ -135,10 +135,14 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_
         f_PBH_GC = envelope(f_PBH_instrument)
         
         if mf==LN:
-            mp_GC = mc_values * np.exp(-sigmas_LN[Delta_index]**2)
+            sigma_LN = params[0]
+            mp_GC = mc_values * np.exp(-sigma_LN**2)
+            print("\n data_filename [in load_data_GC_Isatis]")
+            print(data_filename)
+            print("approx = %s" % approx)
 
         elif mf==SLN:
-            mp_GC = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_values]
+            mp_GC = [m_max_SLN(m_c, *params, log_m_factor=3, n_steps=1000) for m_c in mc_values]
 
         elif mf==CC3:
             mp_GC = mc_values
@@ -458,7 +462,7 @@ def set_ticks_grid(ax):
     ax.grid()
 
 
-def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, approx=True, show_label=False, linestyle="solid", linewidth=1):
+def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=True, show_label=False, linestyle="solid", linewidth=1):
     """
     Plot extended MF constraints from Galactic Centre photons.    
 
@@ -493,7 +497,7 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower
 
     """
     
-    mp, f_PBH = load_data_GC_Isatis(Deltas, Delta_index, mf, evolved, exponent_PL_lower, approx)
+    mp, f_PBH = load_data_GC_Isatis(Deltas, Delta_index, mf, params, evolved, exponent_PL_lower, approx)
     
     if not evolved:
         alpha=0.4
