@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from extended_MF_checks import envelope, load_results_Isatis
-from preliminaries import load_data, m_max_SLN, LN, SLN, CC3
+from preliminaries import load_data, m_max_SLN, LN, SLN, CC3, PL_MF
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24, 'font.family':'serif'})
@@ -118,15 +118,27 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
             mf_string = "SLN"
         elif mf==CC3:
             mf_string = "CC3"
+        elif mf==PL_MF:
+            mf_string = "PL"
+
             
         f_PBH_instrument = []
         
         for k in range(len(constraints_names_short)):
             # Load constraints for an evolved extended mass function obtained from each instrument
-            if approx:
-                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_approx%s.txt" % evolved_string
+            
+            if mf != PL_MF:
+                if approx:
+                    data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_approx%s.txt" % evolved_string
+                else:
+                    data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "%s.txt" % evolved_string
+            
             else:
-                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "%s.txt" % evolved_string
+                if approx:
+                    data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_approx%s.txt" % evolved_string
+                else:
+                    data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr%s.txt" % evolved_string
+            
             mc_values, f_PBH_k = np.genfromtxt(data_filename, delimiter="\t")
     
             # Compile constraints from all instruments
@@ -144,7 +156,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
         elif mf==SLN:
             mp_GC = [m_max_SLN(m_c, *params, log_m_factor=3, n_steps=1000) for m_c in mc_values]
 
-        elif mf==CC3:
+        elif mf==CC3 or mf == PL_MF:
             mp_GC = mc_values
             
     return mp_GC, f_PBH_GC
@@ -212,6 +224,10 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
         data_filename = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
         mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
 
+    elif mf == PL_MF:
+        data_filename = data_folder + "/PL_2302.04408_Carr_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
+        mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
+
     return mp_KP23, f_PBH_KP23
 
     
@@ -245,7 +261,10 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg, mf=None, evolv
 
     """
     
-    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+    if evolved:
+        data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+    else:
+        data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
     
     if prop_A:
         prop_string = "prop_A"
@@ -272,7 +291,11 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg, mf=None, evolv
     elif mf == CC3:
         data_filename = data_folder + "/CC3_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
         mp_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
-        
+ 
+    elif mf == PL_MF:
+        data_filename = data_folder + "/PL_1807.03075_Carr_" + prop_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
+        mp_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
+ 
     return mp_BC19, f_PBH_BC19
 
     
@@ -311,7 +334,10 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
 
     elif mf == CC3:
         mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
-        
+ 
+    elif mf == PL_MF:
+        mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/PL_HSC_Carr.txt", delimiter="\t")
+
     return mp_Subaru, f_PBH_Subaru
 
 
@@ -361,6 +387,9 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, NFW=True)
 
     elif mf == CC3:
         mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
+
+    elif mf == PL_MF:
+        mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "PL_2101.01370_Carr_%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
         
     return mp_GECCO, f_PBH_GECCO
 
@@ -400,7 +429,10 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None):
 
     elif mf == CC3:
         mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t") 
-        
+    
+    elif mf == PL_MF:
+        mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/PL_Sugiyama20_Carr.txt", delimiter="\t")        
+    
     return mp_Sugiyama, f_PBH_Sugiyama
 
     
@@ -428,6 +460,8 @@ def find_label(mf=None):
         label = "SLN"
     elif mf == CC3:
         label = "CC3"
+    elif mf == PL_MF:
+        label = "PL"
     return label
 
 
