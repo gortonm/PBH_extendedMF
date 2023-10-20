@@ -50,7 +50,7 @@ if "__main__" == __name__:
         evolved = True
     
     # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
-    include_extrapolated = False
+    include_extrapolated = True
     # If True, plot extrapolated delta-function MF constraints down to 1e11g.
     plot_extrapolated = False
     
@@ -79,7 +79,7 @@ if "__main__" == __name__:
         
     # Power-law exponent to use for extrapolating the delta-function MF constraint below 1e13g
     #for exponent_PL_lower in [0, 2, 3, 4]:
-    for exponent_PL_lower in [0]:
+    for exponent_PL_lower in [2]:
         if include_extrapolated:
             data_folder = data_folder_base + "/PL_exp_{:.0f}/".format(exponent_PL_lower)
         else:
@@ -638,7 +638,7 @@ if "__main__" == __name__:
             np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
             np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
             np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-            np.savetxt(data_filename_CC3, [mc_values, f_pbh_PL], delimiter="\t")
+            np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
 
 
 #%% Extragalactic gamma-ray background from Isatis.
@@ -883,7 +883,7 @@ if "__main__" == __name__:
     if include_extrapolated:
 
         # Power-law exponent to use between 1e11g and 1e15g.
-        exponent_PL_lower = 0.0
+        exponent_PL_lower = 2.0
         
         m_delta_extrapolated = np.logspace(11, 15, 41)
         f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
