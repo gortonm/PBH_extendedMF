@@ -234,8 +234,8 @@ if "__main__" == __name__:
         mf_string_old = "CC"
         mf_string_new = "CC3"
 
-    for i in range(len(Deltas)):
-        fig, ax = plt.subplots(figsize=(7,7))
+    for i in range(len(Deltas[0:3])):
+        fig, ax = plt.subplots(figsize=(6,6))
         
         mc_values_old = np.logspace(14, 19, 100)          
         fname_base = mf_string_old + "_D={:.1f}_dm{:.0f}_".format(Deltas[i], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
@@ -1743,11 +1743,12 @@ from preliminaries import load_results_Isatis
 
 if "__main__" == __name__:
     
-    #m_pbh_values = np.logspace(14, 17, 32)
-    m_pbh_values = 10**np.arange(14, 17.04, 0.05)
+    m_pbh_values = np.logspace(14, 17, 32)
+    m_pbh_values_long = 10**np.arange(14, 17.04, 0.05)
     
     constraints_names, constraints_Hazma = load_results_Isatis(mf_string="EXGB_Hazma")   
     constraints_names, constraints_PYTHIA = load_results_Isatis(mf_string="EXGB_PYTHIA")
+    constraints_names, constraints_PYTHIA_BBN = load_results_Isatis(mf_string="EXGB_PYTHIA_BBN")
     
     fig, ax = plt.subplots(figsize=(7,7))
     
@@ -1759,10 +1760,11 @@ if "__main__" == __name__:
             print(constraints_names[i])
             ax.plot(m_pbh_values, constraints_Hazma[i], color=colors[int(i/2)], label=constraints_names[i])
             ax.plot(m_pbh_values, constraints_PYTHIA[i], color=colors[int(i/2)], linestyle="None", marker="x")
-        
-    ax.legend()
-    #ax.set_xlabel("$m_i~[\mathrm{g}]$")
-    #ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.plot(m_pbh_values_long, constraints_PYTHIA_BBN[i], color=colors[int(i/2)], linestyle="None", marker="+")
+       
+    ax.legend(fontsize="xx-small")
+    ax.set_xlabel("$m_i~[\mathrm{g}]$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(1e14, 1e18)
@@ -1771,3 +1773,76 @@ if "__main__" == __name__:
     fig.tight_layout()
     fig.savefig("EXGB_Hazma_PYTHIA.pdf")
     fig.savefig("EXGB_Hazma_PYTHIA.png")
+    
+    
+#%% Compare extended MF constraints obtained with a power-law MF to the delta-function MF constraints
+from preliminaries import PL_MF
+from plot_constraints import plotter_GC_Isatis, plotter_BC19, plotter_KP23, plotter_Subaru_Croon20, plotter_Sugiyama
+
+if "__main__" == __name__:
+    
+        Deltas = [0]
+        Delta_index = 0
+
+        """Isatis Galactic Centre photon constraints"""   
+        fig1, ax1 = plt.subplots(figsize=(7,7))
+        
+        m_delta_values_loaded = np.logspace(11, 22, 1000)
+        colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
+        
+        m_min_values = np.logspace(14, 20, 120)
+        
+        include_extrapolated = True
+        data_folder_base = "./Data-tests/unevolved"
+        exponent_PL_lower = 2
+
+        plotter_GC_Isatis(Deltas, Delta_index, ax1, color="tab:blue", mf=PL_MF, evolved=False, approx=False)
+        plotter_GC_Isatis(Deltas, Delta_index, ax1, color="tab:grey", mf=None, show_label=True)
+
+        """Korwar & Profumo (2023) constraints"""
+        fig2, ax2 = plt.subplots(figsize=(7,7))
+
+        plotter_KP23(Deltas, Delta_index, ax2, color="tab:grey", mf=None, evolved=False, show_label=True)     
+        plotter_KP23(Deltas, Delta_index, ax2, color="tab:blue", mf=PL_MF, evolved=False)
+        
+        """Boudaud & Cirelli Voyager-1 constraints"""
+        fig3, ax3 = plt.subplots(figsize=(7,7))
+        
+        plotter_BC19(Deltas, Delta_index, ax3, color="tab:grey", prop_A=True, with_bkg=False, mf=None)
+        plotter_BC19(Deltas, Delta_index, ax3, color="tab:grey", prop_A=True, with_bkg=True, mf=None, evolved=False, linestyle="dotted")
+        plotter_BC19(Deltas, Delta_index, ax3, color="tab:grey", prop_A=False, with_bkg=False, mf=None)
+        plotter_BC19(Deltas, Delta_index, ax3, color="tab:grey", prop_A=False, with_bkg=True, mf=None, evolved=False, linestyle="dotted")
+      
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=False, mf=PL_MF, evolved=False)
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=True, mf=PL_MF, evolved=False, linestyle="dotted")
+        
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=False, mf=PL_MF, evolved=False)
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=True, mf=PL_MF, evolved=False, linestyle="dotted")
+        
+       
+        """Microlensing constraints (existing and prospective)"""
+        fig4, ax4 = plt.subplots(figsize=(7,7))
+ 
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax4, color="silver")
+        plotter_Sugiyama(Deltas, Delta_index, ax4, color="tab:grey")    
+ 
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax4, mf=PL_MF, color="tab:blue")
+        plotter_Sugiyama(Deltas, Delta_index, ax4, mf=PL_MF, color="k")
+       
+        """Other evaporation constraints (existing and prospective)"""
+        fig5, ax5 = plt.subplots(figsize=(7,7))
+        
+        for ax in [ax1, ax2, ax3, ax4, ax5]:
+            ax.set_xlabel("$m_\mathrm{min}~[\mathrm{g}]$")
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_ylim(1e-10, 1)
+            ax.legend(fontsize="small")
+        for fig in [fig1, fig2, fig3, fig4, fig5]:
+            fig.suptitle("PL MF, $\gamma=-1/2$")
+            fig.tight_layout()
+
+           
+       
+        
