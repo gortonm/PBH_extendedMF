@@ -1777,16 +1777,20 @@ if "__main__" == __name__:
     
 #%% Compare extended MF constraints obtained with a power-law MF to the delta-function MF constraints
 from preliminaries import PL_MF
-from plot_constraints import plotter_GC_Isatis, plotter_BC19, plotter_KP23, plotter_Subaru_Croon20, plotter_Sugiyama
+from plot_constraints import plotter_GC_Isatis, plotter_BC19, plotter_KP23, plotter_Subaru_Croon20, plotter_Sugiyama, plotter_GECCO
 
 if "__main__" == __name__:
+    
+        title_string = ", PL MF, $\gamma=-1/2$"
     
         Deltas = [0]
         Delta_index = 0
 
+
         """Isatis Galactic Centre photon constraints"""   
         fig1, ax1 = plt.subplots(figsize=(7,7))
-        
+        fig1.suptitle("GC Isatis %s" % title_string)
+      
         m_delta_values_loaded = np.logspace(11, 22, 1000)
         colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
         
@@ -1795,54 +1799,157 @@ if "__main__" == __name__:
         include_extrapolated = True
         data_folder_base = "./Data-tests/unevolved"
         exponent_PL_lower = 2
-
-        plotter_GC_Isatis(Deltas, Delta_index, ax1, color="tab:blue", mf=PL_MF, evolved=False, approx=False)
+        
         plotter_GC_Isatis(Deltas, Delta_index, ax1, color="tab:grey", mf=None, show_label=True)
+        plotter_GC_Isatis(Deltas, Delta_index, ax1, color="tab:blue", mf=PL_MF, evolved=False, approx=False)
+        ax1.plot(0, 0, color="tab:blue", alpha=0.5, label="Extended MF")
+        
 
         """Korwar & Profumo (2023) constraints"""
         fig2, ax2 = plt.subplots(figsize=(7,7))
+        fig2.suptitle("KP '23 %s" % title_string)
 
         plotter_KP23(Deltas, Delta_index, ax2, color="tab:grey", mf=None, evolved=False, show_label=True)     
         plotter_KP23(Deltas, Delta_index, ax2, color="tab:blue", mf=PL_MF, evolved=False)
         
+        # Sanity check: re-calculate results directly
+        m_delta_values_loaded, f_max_loaded = load_data("./2302.04408/2302.04408_MW_diffuse_SPI.csv")
+        # Power-law exponent to use between 1e15g and 1e16g.
+        exponent_PL_upper = 2.0
+        # Power-law exponent to use between 1e11g and 1e15g.
+        exponent_PL_lower = 2.0
+        
+        m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+        m_delta_extrapolated_lower = np.logspace(11, 15, 41)
+        
+        f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_values_loaded), exponent_PL_upper)
+        f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+    
+        f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
+        m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
+
+        f_PBH_sanity_check = 1 / np.array([np.trapz(PL_MF(m_delta_total, m_min, m_max=1e20) / f_max_total, m_delta_total) for m_min in m_min_values])
+        ax2.plot(m_min_values, f_PBH_sanity_check, marker="+", linestyle="None", color="tab:blue", label="Extended MF (sanity check)")
+            
+        
         """Boudaud & Cirelli Voyager-1 constraints"""
         fig3, ax3 = plt.subplots(figsize=(7,7))
+        fig3.suptitle("BC '19 %s" % title_string)
         
-        plotter_BC19(Deltas, Delta_index, ax3, color="tab:grey", prop_A=True, with_bkg=False, mf=None)
-        plotter_BC19(Deltas, Delta_index, ax3, color="tab:grey", prop_A=True, with_bkg=True, mf=None, evolved=False, linestyle="dotted")
-        plotter_BC19(Deltas, Delta_index, ax3, color="tab:grey", prop_A=False, with_bkg=False, mf=None)
-        plotter_BC19(Deltas, Delta_index, ax3, color="tab:grey", prop_A=False, with_bkg=True, mf=None, evolved=False, linestyle="dotted")
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=False, mf=None)
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=True, mf=None, evolved=False, linestyle="dotted")
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=False, mf=None)
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=True, mf=None, evolved=False, linestyle="dotted")
       
-        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=False, mf=PL_MF, evolved=False)
-        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=True, mf=PL_MF, evolved=False, linestyle="dotted")
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=False, mf=PL_MF, evolved=False, linestyle="None", marker="x")
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=True, mf=PL_MF, evolved=False,  linestyle="None", marker="1")
         
-        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=False, mf=PL_MF, evolved=False)
-        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=True, mf=PL_MF, evolved=False, linestyle="dotted")
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=False, mf=PL_MF, evolved=False, linestyle="None", marker="x")
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=True, mf=PL_MF, evolved=False, linestyle="None", marker="1")
         
-       
+        ax3.plot(0, 0, color="b", label="Prop A (delta func.)", alpha=0.5)        
+        ax3.plot(0, 0, color="r", label="Prop B (delta func.)", alpha=0.5)
+        ax3.plot(0, 0, color="k", label="w/o background subtraction (delta func.)")
+        ax3.plot(0, 0, color="k", linestyle="dotted", label="w background subtraction (delta func.)")
+        ax3.plot(0, 0, color="k", linestyle="None", marker="x", label="Extended MF (w/o background subtraction)")
+        ax3.plot(0, 0, color="k", linestyle="None", marker="1", label="Extended MF (w/o background subtraction)")
+    
+    
         """Microlensing constraints (existing and prospective)"""
         fig4, ax4 = plt.subplots(figsize=(7,7))
+        fig4.suptitle("Microlensing (existing and prospective) %s" % title_string, fontsize="x-small")
  
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax4, color="silver")
-        plotter_Sugiyama(Deltas, Delta_index, ax4, color="tab:grey")    
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax4, color="tab:blue", show_label=False)
+        plotter_Sugiyama(Deltas, Delta_index, ax4, color="tab:orange", show_label=False)
  
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax4, mf=PL_MF, color="tab:blue")
-        plotter_Sugiyama(Deltas, Delta_index, ax4, mf=PL_MF, color="k")
-       
-        """Other evaporation constraints (existing and prospective)"""
-        fig5, ax5 = plt.subplots(figsize=(7,7))
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax4, mf=PL_MF, color="tab:blue", show_label=False, linestyle="None", marker="x")
+        plotter_Sugiyama(Deltas, Delta_index, ax4, mf=PL_MF, color="tab:orange", linestyle="None", show_label=False, marker="x")
         
-        for ax in [ax1, ax2, ax3, ax4, ax5]:
+        ax4.plot(0, 0, color="k", label="Delta func.")
+        ax4.plot(0, 0, marker="x", linestyle="None", color="k", label="Extended MF")
+        ax4.plot(0, 0, color="tab:blue", label="Subaru-HSC")        
+        ax4.plot(0, 0, color="tab:orange", linestyle="dashed", label="Prospective")
+       
+        
+        """Coogan et al. (prospective evaporation constraints)"""
+        fig5, ax5 = plt.subplots(figsize=(7,7))
+        fig5.suptitle("GECCO %s" % title_string)
+        
+        plotter_GECCO(Deltas, Delta_index, ax5, color="tab:grey", mf=None, show_label=True)
+        plotter_GECCO(Deltas, Delta_index, ax5, color="tab:blue", mf=PL_MF, show_label=False, evolved=False)
+        
+        ax5.plot(0, 0, color="tab:blue", label="Extended MF")
+      
+        
+        """Other (existing) evaporation constraints"""
+        fig6, ax6 = plt.subplots(figsize=(7,7))
+        fig6.suptitle("Other evap. %s" % title_string)
+        
+        mp_511keV, f_PBH_511keV = np.genfromtxt("./Data-tests/unevolved/PL_exp_-2/PL_1912.01014_Carr_extrapolated_exp-2.txt")
+        m_delta_511keV, f_max_511keV = load_data("1912.01014/1912.01014_Fig2_a__0_newaxes_2.csv")
+        mp_CMB, f_PBH_CMB = np.genfromtxt("./Data-tests/unevolved/PL_exp_-2/PL_2108.13256_Carr_extrapolated_exp-2.txt")
+        m_delta_CMB, f_max_CMB = load_data("2108.13256/2108.13256_Fig4_CMB.csv") 
+        
+        # Sanity check: re-calculate results directly
+        exponent_PL_lower = -2
+        m_delta_extrapolated_CMB = 10**np.arange(11, np.log10(min(m_delta_CMB))+0.01, 0.1)
+        m_delta_extrapolated_511keV = 10**np.arange(11, np.log10(min(m_delta_511keV))+0.01, 0.1)
+        f_max_extrapolated_511keV = f_max_511keV[0] * np.power(m_delta_extrapolated_511keV / min(m_delta_511keV), exponent_PL_lower)
+        f_max_extrapolated_CMB = f_max_CMB[0] * np.power(m_delta_extrapolated_CMB / min(m_delta_CMB), exponent_PL_lower)
+      
+        f_max_total_511keV = np.concatenate((f_max_extrapolated_511keV, f_PBH_511keV))
+        m_delta_total_511keV = np.concatenate((m_delta_extrapolated_511keV, m_delta_511keV))
+
+        f_PBH_511keV_sanity_check = 1 / np.array([np.trapz(PL_MF(m_delta_511keV, m_min, m_max=1e20) / f_max_511keV, m_delta_511keV) for m_min in m_min_values])
+        f_PBH_CMB_sanity_check = 1 / np.array([np.trapz(PL_MF(m_delta_CMB, m_min, m_max=1e20) / f_max_CMB, m_delta_CMB) for m_min in m_min_values])
+       
+        ax6.plot(m_delta_511keV, f_max_511keV, color="tab:blue", alpha=0.5, label="511 keV line (delta func.)")
+        ax6.plot(m_delta_CMB, f_max_CMB, linestyle="dashed", color="tab:red", alpha=0.5, label="CMB (delta func.)")
+
+        ax6.plot(mp_511keV, f_PBH_511keV, color="tab:blue", label="511 keV line (extended MF)")        
+        ax6.plot(mp_CMB, f_PBH_CMB, linestyle="dashed", color="tab:red", label="CMB (extended MF)")
+
+        ax6.plot(mp_511keV, f_PBH_511keV_sanity_check, linestyle="None", marker="x", color="tab:blue", label="511 keV line (extended MF, sanity check)")            
+        ax6.plot(mp_CMB, f_PBH_CMB_sanity_check, linestyle="None", marker="x", color="tab:red", label="CMB (extended MF, sanity check)")        
+
+        """EXGB photon constraints"""
+        fig7, ax7 = plt.subplots(figsize=(7,7))
+        fig7.suptitle("EXGB %s" % title_string)
+
+        colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue", "k"]
+        constraints_names_short = ["COMPTEL_1502.06116", "COMPTEL_1107.0200", "EGRET_0405441", "EGRET_9811211", "Fermi-LAT_1410.3696", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200", "HEAO+balloon_9903492"]
+
+        exponent_PL_lower = -2
+        data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+        constraints_names, f_max_Isatis = load_results_Isatis(mf_string="EXGB_Hazma")
+        m_delta_values_loaded = np.logspace(14, 17, 32)
+
+        f_PBH_instrument_PL = []
+        
+        for i in range(len(constraints_names_short)):
+            
+            if i in (0, 2, 4, 7):
+
+                # Load constraints for an evolved extended mass function obtained from each instrument
+                data_filename_PL = data_folder + "/PL_EXGB_%s" % constraints_names_short[i]  + "_Carr_approx_unevolved.txt"
+                mp_PL, f_PBH_PL = np.genfromtxt(data_filename_PL, delimiter="\t")
+                                                            
+                # Plot the tightest constraint (of the different instruments) for each peak mass
+                ax7.plot(m_delta_values_loaded, f_max_Isatis[i], color=colors_evap[int(i/2)], label=constraints_names_short[i])
+                ax7.plot(mp_PL, f_PBH_PL, color=colors_evap[int(i/2)], marker="x", linestyle="None")
+        
+        ax7.plot(color="k", label="Delta-func.")
+        ax7.plot(color="k", marker="x", linestyle="None", label="Extended MF")
+        
+        for ax in [ax1, ax2, ax3, ax4, ax5, ax6, ax7]:
             ax.set_xlabel("$m_\mathrm{min}~[\mathrm{g}]$")
             ax.set_ylabel("$f_\mathrm{PBH}$")
             ax.set_xscale("log")
             ax.set_yscale("log")
             ax.set_ylim(1e-10, 1)
-            ax.legend(fontsize="small")
-        for fig in [fig1, fig2, fig3, fig4, fig5]:
-            fig.suptitle("PL MF, $\gamma=-1/2$")
+            ax.legend(fontsize="xx-small")
+            
+        ax4.set_ylim(1e-3, 1)    
+            
+        for fig in [fig1, fig2, fig3, fig4, fig5, fig6, fig7]:
             fig.tight_layout()
-
-           
-       
-        
