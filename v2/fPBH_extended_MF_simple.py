@@ -154,7 +154,7 @@ if "__main__" == __name__:
         fig.tight_layout()
      
 #%%
-
+from preliminaries import PL_MF as power_law_mf_v2
 
 def power_law_mf(m_pbh_values, m_min, m_max, gamma):
     """
@@ -220,16 +220,17 @@ if "__main__" == __name__:
 
     m_min_values = np.logspace(13, 18, 100)
     m_max = 1e25
-    gamma = -1/2
+    gamma = -1
     
     # Functional form of f_max
-    PL_exp = 1
+    PL_exp = -2
     m_pbh_values = np.logspace(11, 20, 1000)
     f_max = (1 / max(m_pbh_values**PL_exp)) * m_pbh_values**PL_exp
     
     params_PL = [m_max, gamma]
     f_PBH_values_PL = constraint_Carr(m_min_values, m_pbh_values, f_max, power_law_mf, params_PL, evolved=False)
-    
+    f_PBH_values_PL_v2 = constraint_Carr(m_min_values, m_pbh_values, f_max, power_law_mf_v2, params_PL, evolved=False)
+   
     f_PBH_values_PL_analytic = fPBH_power_law_analytic(m_min_values, m_max, gamma, PL_exp, (1 / max(m_pbh_values**PL_exp)))
     
     # Power-law mass function
@@ -237,6 +238,7 @@ if "__main__" == __name__:
     ax.plot(m_pbh_values, f_max, color="tab:grey", label="Delta function", linewidth=2)
 
     ax.plot(m_min_values, f_PBH_values_PL, color="tab:blue", linestyle="dashed", label="PL")
+    ax.plot(m_min_values, f_PBH_values_PL_v2, color="tab:blue", marker="x", linestyle="None", label="PL [preliminaries.py]", alpha=0.5)
     ax.plot(m_min_values, f_PBH_values_PL_analytic, color="k", linestyle="dotted", label="PL [analytic]")
 
     ax.set_xscale("log")
@@ -245,6 +247,6 @@ if "__main__" == __name__:
     ax.set_ylim(min(f_PBH_values_PL), max(f_PBH_values_PL))
     ax.set_xlabel("$m_\mathrm{min}~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.legend(fontsize="small")
-    fig.suptitle("$m_\mathrm{max}=" + "{:.1e}".format(m_max) + "~[\mathrm{g}]$" + ", $f_\mathrm{max}(m) " + "\propto m^{:.0f}$".format(PL_exp))
+    ax.legend(fontsize="x-small")
+    fig.suptitle("$m_\mathrm{max}=" + "{:.1e}".format(m_max) + "~[\mathrm{g}]$" + ", $f_\mathrm{max}(m) " + "\propto m^{:.0f}$".format(PL_exp) + ", $\gamma={:.1f}$".format(gamma), fontsize="small")
     fig.tight_layout()

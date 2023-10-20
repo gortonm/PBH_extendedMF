@@ -140,6 +140,42 @@ def CC3(m, m_p, alpha, beta):
     return np.exp(log_psi)
 
 
+def PL_MF(m_values, m_min, m_max, gamma=-1/2):
+    """
+    Power-law mass function, defined in e.g. Eq. (3.1) of Bellomo et al. (2018) [1709.07467].
+
+    Parameters
+    ----------
+    m_values : Array-like
+        PBH mass values.
+    m_min : Float
+        Minimum mass at which the power-law mass function is defined.
+    m_max : Float
+        Maximum mass at which the power-law mass function is defined.
+    gamma : Float, optional
+        Power law exponent. The default is -1/2 (the value for PBHs formed during the radiation-dominated epoch).
+
+    Returns
+    -------
+    Array-like
+        Value of the power-law mass function.
+
+    """
+    if gamma == 0:
+        normalisation = 1 / np.log(m_max/m_min)
+    else:
+        normalisation = gamma / (np.power(m_max, gamma) - np.power(m_min, gamma))
+
+    PL_MF_values = []
+    for m in m_values:
+        if m < m_min or m > m_max:
+            PL_MF_values.append(0)
+        else:
+            PL_MF_values.append(normalisation / np.power(m, 1-gamma))
+    
+    return np.array(PL_MF_values)
+        
+
 def m_peak_LN(m_c, sigma):
     """
     Calculate the mass at which the log-normal mass function is maximised.
@@ -2055,10 +2091,10 @@ if "__main__" == __name__:
                 frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
             
             fig, ax = plt.subplots(figsize=(9,6))
-            ax.plot(mp_values, frac_diff_full, marker="x", linestyle="None", label="Full calculation", color="k")
+            ax.plot(mp_values, frac_diff_full, marker="x", linestyle="None", label="$f_\mathrm{max}$ from KP '23, evolved $\psi_\mathrm{N}$", color="k")
             ax.plot(mp_values, frac_diff_approx_fmax, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
-            ax.plot(mp_values, frac_diff_approx_LN, marker="x", linestyle="None", label="Full $f_\mathrm{max}$, CC3 $\psi_\mathrm{N}$", color="tab:red")
-            ax.plot(mp_values, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, CC3 $\psi_\mathrm{N}$", color="tab:red")
+            ax.plot(mp_values, frac_diff_approx_LN, marker="x", linestyle="None", label="$f_\mathrm{max}$ from KP '23, unevolved $\psi_\mathrm{N}$", color="tab:red")
+            #ax.plot(mp_values, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, unevolved $\psi_\mathrm{N}$", color="tab:red")
             ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
             ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
@@ -2085,21 +2121,21 @@ if "__main__" == __name__:
             params=[sigmas_LN[i]]
             mc_values = [m_p * np.exp(sigmas_LN[i]**2)]
             
-            f_PBH_approx_both = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=False)
+            #f_PBH_approx_both = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=False)
             f_PBH_approx_fmax = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=True)
             f_PBH_approx_LN = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=False)
             f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
             
-            frac_diff_approx_both.append(f_PBH_approx_both[0] / f_PBH_simplified - 1)
+            #frac_diff_approx_both.append(f_PBH_approx_both[0] / f_PBH_simplified - 1)
             frac_diff_approx_fmax.append(f_PBH_approx_fmax[0] / f_PBH_simplified - 1)
             frac_diff_approx_LN.append(f_PBH_approx_LN[0] / f_PBH_simplified - 1)
             frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
             
         fig, ax = plt.subplots(figsize=(9,6))   
-        ax.plot(Deltas, frac_diff_full, marker="x", markersize=10, linestyle="None", label="Full calculation", color="k")
+        ax.plot(Deltas, frac_diff_full, marker="x", markersize=10, linestyle="None", label="f_\mathrm{max}$ from KP '23, evolved $\psi_\mathrm{N}$", color="k")
         ax.plot(Deltas, frac_diff_approx_fmax, marker="+", markersize=10, linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
-        ax.plot(Deltas, frac_diff_approx_LN, marker="x", linestyle="None", label="Full $f_\mathrm{max}$, LN $\psi_\mathrm{N}$", color="tab:red")
-        ax.plot(Deltas, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, LN $\psi_\mathrm{N}$", color="tab:red")
+        ax.plot(Deltas, frac_diff_approx_LN, marker="x", linestyle="None", label="Full $f_\mathrm{max}$, unevolved $\psi_\mathrm{N}$", color="tab:red")
+        #ax.plot(Deltas, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, LN $\psi_\mathrm{N}$", color="tab:red")
         ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
         ax.set_xlabel("$\Delta$")
         ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
@@ -2138,9 +2174,9 @@ if "__main__" == __name__:
             
             fig, ax = plt.subplots(figsize=(9,6))
             ax.plot(mp_values, frac_diff_full, marker="x", linestyle="None", label="Full calculation", color="k")
-            ax.plot(mp_values, frac_diff_approx_fmax, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
-            ax.plot(mp_values, frac_diff_approx_LN, marker="x", linestyle="None", label="Full $f_\mathrm{max}$, CC3 $\psi_\mathrm{N}$", color="tab:green")
-            ax.plot(mp_values, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, CC3 $\psi_\mathrm{N}$", color="tab:green")
+            ax.plot(mp_values, frac_diff_approx_fmax, marker="+", linestyle="None", label="f_\mathrm{max}$ from KP '23, evolved $\psi_\mathrm{N}$", color="k")
+            ax.plot(mp_values, frac_diff_approx_LN, marker="x", linestyle="None", label="$f_\mathrm{max}$ from KP '23, CC3 $\psi_\mathrm{N}$", color="tab:green")
+            #ax.plot(mp_values, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, CC3 $\psi_\mathrm{N}$", color="tab:green")
             ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
             ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
@@ -2176,9 +2212,9 @@ if "__main__" == __name__:
             frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
             
         fig, ax = plt.subplots(figsize=(9,6))   
-        ax.plot(Deltas, frac_diff_full, marker="x", markersize=10, linestyle="None", label="Full calculation", color="k")
+        ax.plot(Deltas, frac_diff_full, marker="x", markersize=10, linestyle="None", label="f_\mathrm{max}$ from KP '23, evolved $\psi_\mathrm{N}$", color="k")
         ax.plot(Deltas, frac_diff_approx_fmax, marker="+", markersize=10, linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
-        ax.plot(Deltas, frac_diff_approx_LN, marker="x", linestyle="None", label="Full $f_\mathrm{max}$, CC3 $\psi_\mathrm{N}$", color="tab:green")
+        ax.plot(Deltas, frac_diff_approx_LN, marker="x", linestyle="None", label="$f_\mathrm{max}$ from KP '23, CC3 $\psi_\mathrm{N}$", color="tab:green")
         ax.plot(Deltas, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, CC3 $\psi_\mathrm{N}$", color="tab:green")
         ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
         ax.set_xlabel("$\Delta$")
@@ -2189,6 +2225,7 @@ if "__main__" == __name__:
         fig.tight_layout()
 
 #%% Plot fractional difference between the delta-function MF constraint and a power-law in m^2.
+
 if "__main__" == __name__:
         
     fig, ax = plt.subplots(figsize=(7,7))
