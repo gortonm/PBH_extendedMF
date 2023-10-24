@@ -117,9 +117,13 @@ sigma = sigmas_LN[j]
 mp_values = np.logspace(14, 18, 100)
 mc_values = mp_values * np.exp(sigma**2)
 
+
 # Extended MF constraints calculated before June 2023
 mc_values_old = np.logspace(14, 19, 100)
-fname_base = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+"""REMOVE ME!!!!!!!!!!!!!"""
+#fname_base = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
+fname_base = "CC_D={:.1f}_test_range_wide".format(Deltas[j])
+
 constraints_names, f_PBHs_GC_old = load_results_Isatis(mf_string=fname_base, modified=True)
 
 # Folder that new results are stored in.
@@ -204,7 +208,6 @@ for i in range(len(f_max_Isatis[:-1])):
                        
     f_PBH_i_LN = envelope(f_PBH_allbins_LN)
     f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3)
-    print(f_PBH_i_CC3[-20:-10])
 
     if i == 0:
         ax2.plot(mc_values_old, f_PBHs_GC_old[i], color=colors_evap[i], label="Isatis")
