@@ -8,6 +8,7 @@ Created on Wed Oct 11 10:42:31 2023
 import matplotlib.pyplot as plt
 import numpy as np
 from preliminaries import load_results_Isatis, envelope, LN, CC3, constraint_Carr, mass_evolved, psi_evolved_normalised
+from plot_constraints import frac_diff
 
 m_Pl = 2.176e-5    # Planck mass, in grams
 t_Pl = 5.391e-44    # Planck time, in seconds
@@ -85,27 +86,27 @@ def constraint_Carr_Isatis(mc_values, m_delta, f_max, psi_initial, params, evolv
     return f_pbh
 
 
-Isatis_results = load_results_Isatis(mf_string="GC_mono", wide=True)[1]
 colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
 constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
-
-m_pbh_values = np.logspace(11, 22, 1000)
 
 fig, ax = plt.subplots(figsize=(6,6))
 fig1, ax1 = plt.subplots(figsize=(6,6))
 fig2, ax2 = plt.subplots(figsize=(6,6))
-
-# Extended MF constraints
 
 # Parameters used for convergence tests in Galactic Centre constraints.
 cutoff = 1e-4
 delta_log_m = 1e-3
 E_number = 500
 
-if E_number < 1e3:
+if E_number == 500:
     energies_string = "E{:.0f}".format(E_number)
+    f_max_Isatis = load_results_Isatis(mf_string="GC_mono_E500", wide=True)[1]
 else:
     energies_string = "E{:.0f}".format(np.log10(E_number))
+    f_max_Isatis = load_results_Isatis(mf_string="GC_mono", wide=True)[1]
+
+m_pbh_values_repr = np.logspace(11, 22, 1000)
+m_pbh_values_Isatis = np.logspace(11, 22, 1000)
 
 # Load mass function parameters.
 [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -124,7 +125,7 @@ constraints_names, f_PBHs_GC_old = load_results_Isatis(mf_string=fname_base, mod
 # Folder that new results are stored in.
 data_folder = "./Data-tests/unevolved"
 
-for i in range(len(Isatis_results)):
+for i in range(len(f_max_Isatis[:-1])):
     
     # Newer evolved MF constraints calculated with the aid of isatis_reproduction.py
     data_filename = data_folder + "/CC3_GC_%s" % (constraints_names_short[i]) + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
@@ -132,33 +133,39 @@ for i in range(len(Isatis_results)):
     
     f_max_threshold = np.infty
     
-    Isatis_results_i = np.array(Isatis_results[i])
+    f_max_Isatis_i = np.array(f_max_Isatis[i])
     print("\n%s" % constraints_names_short[i])
-    print("len(Isatis results)")
-    print(len(Isatis_results_i))
-    print("len(Isatis results > 0)")
-    print(len(Isatis_results_i[Isatis_results_i > 0.]))
-    Isatis_results_i_truncated = Isatis_results_i[Isatis_results_i > 0.]
-    m_pbh_allpos_Isatis = m_pbh_values[Isatis_results_i > 0.]
+    print("len(f_max_Isatis_i)")
+    print(len(f_max_Isatis_i))
+    print("len(f_max_Isatis_i > 0)")
+    print(len(f_max_Isatis_i[f_max_Isatis_i > 0.]))
+    f_max_Isatis_i_truncated = f_max_Isatis_i[f_max_Isatis_i > 0.]
+    m_pbh_allpos_Isatis = m_pbh_values_Isatis[f_max_Isatis_i > 0.]
  
     print("len(Isatis results < {:.2e})".format(f_max_threshold))
-    print(len(Isatis_results_i[Isatis_results_i < f_max_threshold]))   
+    print(len(f_max_Isatis_i[f_max_Isatis_i < f_max_threshold]))   
  
     # Load data from isatis_reproduction.py
-    f_max_Isatis_reproduction_all = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
-    f_max_Isatis_reproduction = envelope(np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True))
+    if E_number == 500:
+        f_max_Isatis_reproduction_all = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_E500_wide.txt" % constraints_names_short[i], unpack=True)
+    else:
+        f_max_Isatis_reproduction_all = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
+    
+    f_max_Isatis_reproduction = envelope(f_max_Isatis_reproduction_all)
+
     print("len(Isatis results reproduction)")
     print(len(f_max_Isatis_reproduction))
     print("len(Isatis results reproduction < {:.2e})".format(f_max_threshold))
     print(len(f_max_Isatis_reproduction[f_max_Isatis_reproduction < f_max_threshold]))
-    f_max_Isatis_reproduction_truncated = f_max_Isatis_reproduction[Isatis_results_i > 0.] 
+    f_max_Isatis_reproduction_truncated = f_max_Isatis_reproduction[f_max_Isatis_reproduction > 0.] 
+    m_pbh_allpos_repr = m_pbh_values_repr[f_max_Isatis_reproduction > 0.]
 
     #ax.plot(m_pbh_allpos_Isatis, frac_diff(Isatis_results_i_truncated, f_max_Isatis_reproduction_truncated, m_pbh_allpos_Isatis, m_pbh_allpos_Isatis), label=constraints_names_short[i], color=colors_evap[i])
-    print("f_max (Isatis) = {:.10e}".format(Isatis_results_i_truncated[500]))
+    print("f_max (Isatis) = {:.10e}".format(f_max_Isatis_i_truncated[500]))
     print("f_max (Isatis reproduction) = {:.10e}".format(f_max_Isatis_reproduction_truncated[500]))
 
-    print("Frac diff = {:.9e}".format(Isatis_results_i_truncated[500] / f_max_Isatis_reproduction_truncated[500] -1))
-    ax.plot(m_pbh_allpos_Isatis, Isatis_results_i_truncated / f_max_Isatis_reproduction_truncated -1 , label=constraints_names_short[i], color=colors_evap[i])
+    print("Frac diff = {:.9e}".format(f_max_Isatis_i_truncated[500] / f_max_Isatis_reproduction_truncated[500] -1))
+    ax.plot(m_pbh_allpos_Isatis, frac_diff(f_max_Isatis_i_truncated, f_max_Isatis_reproduction_truncated, m_pbh_allpos_Isatis, m_pbh_allpos_repr), label=constraints_names_short[i], color=colors_evap[i])
     ax.set_xlabel("$m~[\mathrm{g}]$")
     ax.set_ylabel("$\Delta f_\mathrm{max} / f_\mathrm{max}$")
     ax.set_xscale("log")
@@ -166,8 +173,8 @@ for i in range(len(Isatis_results)):
     ax.legend(fontsize="xx-small")
     fig.tight_layout()
     
-    ax1.plot(m_pbh_allpos_Isatis, Isatis_results_i_truncated, color=colors_evap[i], label=constraints_names_short[i])
-    ax1.plot(m_pbh_allpos_Isatis, f_max_Isatis_reproduction_truncated, color=colors_evap[i], marker="x", linestyle="None")
+    ax1.plot(m_pbh_allpos_Isatis, f_max_Isatis_i_truncated, color=colors_evap[i], label=constraints_names_short[i])
+    ax1.plot(m_pbh_allpos_repr, f_max_Isatis_reproduction_truncated, color=colors_evap[i], marker="x", linestyle="None")
     ax1.set_xlabel("$m~[\mathrm{g}]$")
     ax1.set_ylabel("$f_\mathrm{max}$")
     ax1.set_xscale("log")
@@ -192,8 +199,8 @@ for i in range(len(Isatis_results)):
                 f_max_allpositive.append(np.infty)
             else:
                 f_max_allpositive.append(f_max)
-        f_PBH_allbins_LN.append(constraint_Carr_Isatis(mc_values, m_pbh_values, f_max_allpositive, LN, [sigma], evolved=False))
-        f_PBH_allbins_CC3.append(constraint_Carr_Isatis(mc_values, m_pbh_values, f_max_allpositive, CC3, [alphas_CC3[j], betas[j]], evolved=False))
+        f_PBH_allbins_LN.append(constraint_Carr_Isatis(mc_values, m_pbh_values_repr, f_max_allpositive, LN, [sigma], evolved=False))
+        f_PBH_allbins_CC3.append(constraint_Carr_Isatis(mc_values, m_pbh_values_repr, f_max_allpositive, CC3, [alphas_CC3[j], betas[j]], evolved=False))
                        
     f_PBH_i_LN = envelope(f_PBH_allbins_LN)
     f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3)
