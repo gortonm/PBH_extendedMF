@@ -311,10 +311,13 @@ def galactic(spectrum, b_max, l_max, m_pbh):
 if "__main__" == __name__:
 
     monochromatic_MF = True
+    # If True, use spectra calculated at 500 energies
+    E500 = True
     
     if Auffinger and monochromatic_MF:
         filename_append = "_monochromatic"
-        m_pbh_mono = np.logspace(11, 22, 999)
+        m_pbh_mono = np.logspace(11, 22, 1000)
+            
         
     elif Mosbech_Picker and monochromatic_MF:
         filename_append = "_monochromatic"
@@ -323,14 +326,11 @@ if "__main__" == __name__:
     
     f_PBH_isatis = []
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
-    
-    # If True, use spectra calculated at 500 energies
-    E500 = True
-    
-    COMPTEL = False
+        
+    COMPTEL = True
     INTEGRAL = False
     EGRET = False
-    FermiLAT = True
+    FermiLAT = False
     FermiLAT_2015 = False
     CL = 0
     
@@ -379,14 +379,13 @@ if "__main__" == __name__:
     
     
     for i, m_pbh in enumerate(m_pbh_mono):
-                
         # Load photon spectra from BlackHawk outputs
         exponent = np.floor(np.log10(m_pbh))
         coefficient = m_pbh / 10**exponent
     
         if Auffinger and monochromatic_MF:
             if E500:
-                file_path_BlackHawk_data = "./../../Downloads/version_finale/results/mono_E500_wide_{:.0f}/".format(i+1)
+                file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_E500_wide_{:.0f}/".format(i+1)
             else:
                 file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
             
@@ -453,10 +452,10 @@ if "__main__" == __name__:
                 f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
                 #print(f_PBH)
             """
-            print("flux from PBHs:")  
+            print("measured flux:")  
             print(flux * (energies_plus + energies_minus))
             
-            print("measured flux:")
+            print("flux from PBHs:")
             print(binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
             print("f_PBH (all):")
             print(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
