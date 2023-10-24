@@ -54,7 +54,13 @@ if "__main__" == __name__:
     # If True, plot extrapolated delta-function MF constraints down to 1e11g.
     plot_extrapolated = False
     
-    m_delta_values_loaded = np.logspace(11, 22, 1000)
+    # If True, use BlackHawk spectra calculated at 500 energies
+    E500 = True
+    
+    if not E500:
+        m_delta_values_loaded = np.logspace(11, 22, 1000)
+    else:
+        m_delta_values_loaded = np.logspace(11, 22, 999)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
@@ -93,8 +99,11 @@ if "__main__" == __name__:
             
             for i in range(len(constraints_names_short)):
                 
-                f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
-                
+                if not E500:
+                    f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
+                else:
+                    f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_E500_wide.txt" % constraints_names_short[i], unpack=True)
+               
                 if len(f_max_Isatis) == len(m_delta_values_loaded):
                     print("Error: will not loop over the number of energy bins. f_max_Isatis needs to be transposed.")
                     break
@@ -160,16 +169,28 @@ if "__main__" == __name__:
                 f_PBH_i_PL = envelope(f_PBH_allbins_PL)
                       
                 if evolved == False:
-                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                    data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr_unevolved.txt"
+                    if not E500:
+                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                        data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr_unevolved.txt"
+                    else:
+                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                        data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_E500_Carr_unevolved.txt"
                 else:
-                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr.txt"
-        
+                    if not E500:
+                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                        data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr.txt"
+                    else:
+                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                        data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_E500_Carr.txt"
+
                 np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
                 np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
                 np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")

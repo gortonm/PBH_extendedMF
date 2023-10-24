@@ -38,26 +38,13 @@ file_path_extracted = './Extracted_files/'
 g_to_solar_mass = 1 / 1.989e33    # g to solar masses
 pc_to_cm = 3.0857e18    # conversion factor from pc to cm
 
-Auffinger = False
-Korwar_Profumo = False
-Mosbech_Picker = True
+Auffinger = True
+Mosbech_Picker = False
 
 if Auffinger or Mosbech_Picker:
     r_s = 17 * 1000 * pc_to_cm    # scale radius, in cm
     r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
     rho_0 = 8.5e-25	    # characteristic halo density in g/cm^3
-
-elif Korwar_Profumo:
-    r_s = 9.98 * 1000 * pc_to_cm    # scale radius, in cm
-    r_odot = 8.5 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
-    rho_0 = 2.2e-24	    # characteristic halo density in g/cm^3
-
-"""
-elif Mosbech_Picker:
-    r_s = 9.2 * 1000 * pc_to_cm    # scale radius, in cm
-    r_odot = 8.122 * 1000 * pc_to_cm   # galactocentric solar radius, in cm
-    rho_0 = 5.350023093424651e-25	    # characteristic halo density in g/cm^3
-"""
 
 def read_col(fname, first_row=0, col=1, convert=int, sep=None):
     """
@@ -312,7 +299,7 @@ def galactic(spectrum, b_max, l_max, m_pbh):
     # Calculate J-factor
     j_factor = J_D(-l_max, l_max, -b_max, b_max)
 
-    print("J_D = {:.5e} g / cm^2".format(j_factor))
+    #print("J_D = {:.5e} g / cm^2".format(j_factor))
 
     galactic = []
     for i in range(n_spec):
@@ -327,7 +314,7 @@ if "__main__" == __name__:
     
     if Auffinger and monochromatic_MF:
         filename_append = "_monochromatic"
-        m_pbh_mono = np.logspace(11, 22, 1000)
+        m_pbh_mono = np.logspace(11, 22, 999)
         
     elif Mosbech_Picker and monochromatic_MF:
         filename_append = "_monochromatic"
@@ -337,12 +324,15 @@ if "__main__" == __name__:
     f_PBH_isatis = []
     file_path_data = "./../../Downloads/version_finale/scripts/Isatis/constraints/photons/"
     
+    # If True, use spectra calculated at 500 energies
+    E500 = True
+    
     COMPTEL = False
     INTEGRAL = False
     EGRET = False
-    FermiLAT = False
-    FermiLAT_2015 = True
-    CL = -1
+    FermiLAT = True
+    FermiLAT_2015 = False
+    CL = 0
     
     exclude_last_bin = False
     save_each_bin = True
@@ -368,8 +358,8 @@ if "__main__" == __name__:
         b_max, l_max = np.radians(3.5), np.radians(3.5)
             
     energies, energies_minus, energies_plus, flux, flux_minus, flux_plus = np.genfromtxt("%sflux_%s.txt"%(file_path_data, append), skip_header = 6).transpose()[0:6]
-    print(append)
-    print(flux)
+    #print(append)
+    #print(flux)
     
     if not exclude_last_bin:
         append = "all_bins_%s"%(append)
@@ -389,18 +379,21 @@ if "__main__" == __name__:
     
     
     for i, m_pbh in enumerate(m_pbh_mono):
-        
+                
         # Load photon spectra from BlackHawk outputs
         exponent = np.floor(np.log10(m_pbh))
         coefficient = m_pbh / 10**exponent
     
         if Auffinger and monochromatic_MF:
-            file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
+            if E500:
+                file_path_BlackHawk_data = "./../../Downloads/version_finale/results/mono_E500_wide_{:.0f}/".format(i+1)
+            else:
+                file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_wide_{:.0f}/".format(i+1)
             
         elif Mosbech_Picker and monochromatic_MF:
             file_path_BlackHawk_data = "./../../Downloads/version_finale/results/GC_mono_PYTHIA_v2_{:.0f}/".format(i+1)
    
-        print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
+        #print("{:.1f}e{:.0f}g/".format(coefficient, exponent))
     
         ener_spec, spectrum = read_blackhawk_spectra(file_path_BlackHawk_data + "instantaneous_secondary_spectra.txt", col=1)
     
@@ -459,7 +452,20 @@ if "__main__" == __name__:
             if save_each_bin:
                 f_PBH = flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus)
                 #print(f_PBH)
+            """
+            print("flux from PBHs:")  
+            print(flux * (energies_plus + energies_minus))
+            
+            print("measured flux:")
+            print(binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+            print("f_PBH (all):")
+            print(flux * (energies_plus + energies_minus) / binned_flux(flux_refined, ener_refined, energies, energies_minus, energies_plus))
+            print("f_PBH = {:.9e}".format(min(f_PBH)))
+            """
         f_PBH_isatis.append(f_PBH)
     
     # Save calculated results for f_PBH
-    np.savetxt("./Data/fPBH_GC_%s_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
+    if E500:
+        np.savetxt("./Data/fPBH_GC_%s_E500_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
+    else:
+        np.savetxt("./Data/fPBH_GC_%s_wide.txt"%(append+filename_append), f_PBH_isatis, delimiter="\t", fmt="%s")
