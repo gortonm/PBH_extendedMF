@@ -85,7 +85,7 @@ def constraint_Carr_Isatis(mc_values, m_delta, f_max, psi_initial, params, evolv
     return f_pbh
 
 
-Isatis_results = load_results_Isatis(wide=True)[1]
+Isatis_results = load_results_Isatis(mf_string="GC_mono", wide=True)[1]
 colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
 constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
@@ -100,7 +100,7 @@ fig2, ax2 = plt.subplots(figsize=(6,6))
 # Parameters used for convergence tests in Galactic Centre constraints.
 cutoff = 1e-4
 delta_log_m = 1e-3
-E_number = 500    
+E_number = 500
 
 if E_number < 1e3:
     energies_string = "E{:.0f}".format(E_number)
@@ -154,9 +154,13 @@ for i in range(len(Isatis_results)):
     f_max_Isatis_reproduction_truncated = f_max_Isatis_reproduction[Isatis_results_i > 0.] 
 
     #ax.plot(m_pbh_allpos_Isatis, frac_diff(Isatis_results_i_truncated, f_max_Isatis_reproduction_truncated, m_pbh_allpos_Isatis, m_pbh_allpos_Isatis), label=constraints_names_short[i], color=colors_evap[i])
+    print("f_max (Isatis) = {:.10e}".format(Isatis_results_i_truncated[500]))
+    print("f_max (Isatis reproduction) = {:.10e}".format(f_max_Isatis_reproduction_truncated[500]))
+
+    print("Frac diff = {:.9e}".format(Isatis_results_i_truncated[500] / f_max_Isatis_reproduction_truncated[500] -1))
     ax.plot(m_pbh_allpos_Isatis, Isatis_results_i_truncated / f_max_Isatis_reproduction_truncated -1 , label=constraints_names_short[i], color=colors_evap[i])
     ax.set_xlabel("$m~[\mathrm{g}]$")
-    ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
+    ax.set_ylabel("$\Delta f_\mathrm{max} / f_\mathrm{max}$")
     ax.set_xscale("log")
     ax.set_xlim(min(m_pbh_allpos_Isatis), max(m_pbh_allpos_Isatis))
     ax.legend(fontsize="xx-small")
@@ -188,20 +192,23 @@ for i in range(len(Isatis_results)):
                 f_max_allpositive.append(np.infty)
             else:
                 f_max_allpositive.append(f_max)
-        f_PBH_allbins_LN.append(constraint_Carr(mc_values, m_pbh_values, f_max_allpositive, LN, [sigma], evolved=False))
-        f_PBH_allbins_CC3.append(constraint_Carr(mc_values, m_pbh_values, f_max_allpositive, CC3, [alphas_CC3[j], betas[j]], evolved=False))
+        f_PBH_allbins_LN.append(constraint_Carr_Isatis(mc_values, m_pbh_values, f_max_allpositive, LN, [sigma], evolved=False))
+        f_PBH_allbins_CC3.append(constraint_Carr_Isatis(mc_values, m_pbh_values, f_max_allpositive, CC3, [alphas_CC3[j], betas[j]], evolved=False))
                        
     f_PBH_i_LN = envelope(f_PBH_allbins_LN)
     f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3)
+    print(f_PBH_i_CC3[-20:-10])
 
     if i == 0:
-        ax2.plot(mc_values_old, f_PBHs_GC_old[i], color=colors_evap[i], label="Original Isatis")
-        ax2.plot(mc_new, f_PBH_new, color=colors_evap[i], alpha=0.5, label="New (Isatis reproduction)")
-        ax2.plot(mc_values, f_PBH_i_CC3, color=colors_evap[i], alpha=0.5, marker="x", label="New (Isatis reproduction), recalculated", linestyle="None")
+        ax2.plot(mc_values_old, f_PBHs_GC_old[i], color=colors_evap[i], label="Isatis")
+        ax2.plot(mc_new, f_PBH_new, color=colors_evap[i], alpha=0.5, label="New calculation", marker="x", linestyle="None")
+        #ax2.plot(mc_values, f_PBH_i_CC3, color=colors_evap[i], alpha=0.5, marker="+", label="New calculation (recalculated)", linestyle="None")
     else:
         ax2.plot(mc_values_old, f_PBHs_GC_old[i], color=colors_evap[i])
-        ax2.plot(mc_new, f_PBH_new, color=colors_evap[i], alpha=0.5)
-        ax2.plot(mc_values, f_PBH_i_CC3, color=colors_evap[i], alpha=0.5, marker="x", linestyle="None")
+        ax2.plot(mc_new, f_PBH_new, color=colors_evap[i], marker="x", alpha=0.5)
+        #ax2.plot(mc_values, f_PBH_i_CC3, color=colors_evap[i], alpha=0.5, marker="+", linestyle="None")
+        
+    #ax2.plot(mc_values, max(f_PBH_i_CC3) * np.power(mc_values/max(mc_values), 4.1), marker="+", linestyle="None", color=colors_evap[i])
 
 ax2.legend(fontsize="xx-small")
 ax2.set_xlabel("$m_c~[\mathrm{g}]$")
