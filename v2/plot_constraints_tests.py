@@ -1750,6 +1750,8 @@ if "__main__" == __name__:
     constraints_names, constraints_PYTHIA = load_results_Isatis(mf_string="EXGB_PYTHIA")
     constraints_names, constraints_PYTHIA_BBN = load_results_Isatis(mf_string="EXGB_PYTHIA_BBN")
     
+    constraints_names_short = ["COMPTEL", "EGRET", "Fermi-LAT", "HEAO balloon"]
+    
     fig, ax = plt.subplots(figsize=(7,7))
     
     colors = ["tab:orange", "tab:green", "tab:red", "tab:blue", "k"]
@@ -1758,10 +1760,14 @@ if "__main__" == __name__:
         # Select constraints calculated from existing measurements of the extragalactic photon background.
         if i in (0, 2, 4, 7):
             print(constraints_names[i])
-            ax.plot(m_pbh_values, constraints_Hazma[i], color=colors[int(i/2)], label=constraints_names[i])
+            ax.plot(m_pbh_values, constraints_Hazma[i], color=colors[int(i/2)], label=constraints_names_short[int(i/2)])
             ax.plot(m_pbh_values, constraints_PYTHIA[i], color=colors[int(i/2)], linestyle="None", marker="x")
             ax.plot(m_pbh_values_long, constraints_PYTHIA_BBN[i], color=colors[int(i/2)], linestyle="None", marker="+")
-       
+
+    ax.plot(0, 0, color="k", label="Hazma")    
+    ax.plot(0, 0, color="k", linestyle="None", marker="x", label="PYTHIA (present-day)")
+    ax.plot(0, 0, color="k", linestyle="None", marker="+", label="PYTHIA (BBN)")
+    
     ax.legend(fontsize="xx-small")
     ax.set_xlabel("$m_i~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
