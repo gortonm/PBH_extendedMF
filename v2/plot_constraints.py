@@ -69,7 +69,7 @@ def frac_diff(y1, y2, x1, x2, interp_log = True):
         return np.interp(x1, x2, y2) / y1 - 1
 
 
-def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True, exponent_PL_lower=2, approx=True):
+def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True, exponent_PL_lower=2, approx=False):
     """
     Load extended MF constraints from Galactic Centre photons.
 
@@ -86,7 +86,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
     exponent_PL_lower : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-function MF constraint. The default is 2.
     approx : Boolean, optional
-        If True, load constraints obtained using f_max calculated from Isatis. Otherwise, load constraints calculated from the minimum constraint over each energy bin. The default is True.
+        If True, load constraints obtained using f_max calculated from Isatis. Otherwise, load constraints calculated from the minimum constraint over each energy bin. The default is False.
 
     Returns
     -------
@@ -341,7 +341,7 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
     return mp_Subaru, f_PBH_Subaru
 
 
-def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, NFW=True):
+def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=True, NFW=True):
     """
     Load extended MF constraints from the prospective GECCO delta-function MF constraints from Coogan et al. (2023) [2101.10370].
 
@@ -353,6 +353,8 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, NFW=True)
         Index of the array Delta corresponding to the desired value of Delta.
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
+    evolved : Boolean, optional
+        If True, use the evolved form of the fitting function. The default is True.
     exponent_PL_lower : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-function MF constraint. The default is 2.
     NFW : Boolean, optional
@@ -367,7 +369,10 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, NFW=True)
 
     """
     
-    data_folder = "./Data-tests/PL_exp_{:.0f}/".format(exponent_PL_lower) 
+    if evolved:
+        data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+    else:
+        data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
     
     if NFW:
         density_string = "NFW"
@@ -378,18 +383,18 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, NFW=True)
         mp_GECCO, f_PBH_GECCO = load_data("2101.01370/2101.01370_Fig9_GC_%s.csv" % density_string)
 
     elif mf == LN:
-        mc_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
+        mc_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
         mp_GECCO = mc_GECCO * np.exp(-sigmas_LN[Delta_index]**2)
 
     elif mf == SLN:
-        mc_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
+        mc_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
         mp_GECCO = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_GECCO]
 
     elif mf == CC3:
-        mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
+        mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
 
     elif mf == PL_MF:
-        mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "PL_2101.01370_Carr_%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
+        mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/PL_2101.01370_Carr_%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
         
     return mp_GECCO, f_PBH_GECCO
 
@@ -496,7 +501,7 @@ def set_ticks_grid(ax):
     ax.grid()
 
 
-def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=True, show_label=False, linestyle="solid", linewidth=1):
+def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
     """
     Plot extended MF constraints from Galactic Centre photons.    
 
@@ -540,12 +545,12 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
-def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1):
+def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
     """
     Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].    
 
@@ -575,6 +580,8 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, expo
         Linestyle to use for pplotting. The default is "solid".
     linewidth : Float, optional
         Line width to use for pplotting. The default is 1.
+    marker : String, optional
+        Marker to use for plotting. The default is None.
 
     Returns
     -------
@@ -591,12 +598,12 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, expo
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
-def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1):
+def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
     """
     Plot extended MF constraints from the delta-function MF constraints obtained by Korwar & Profumo (2023) [2302.04408].    
 
@@ -622,6 +629,8 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, e
         Linestyle to use for pplotting. The default is "solid".
     linewidth : Float, optional
         Line width to use for pplotting. The default is 1.
+    marker : String, optional
+        Marker to use for plotting. The default is None.
 
     Returns
     -------
@@ -638,12 +647,12 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, e
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha, marker=marker)
 
     
-def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1):
+def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None):
     """
     Plot extended MF constraints from the Subaru-HSC delta-function MF constraints obtained by Croon et al. (2020) [2007.12697].    
 
@@ -665,6 +674,8 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=T
         Linestyle to use for pplotting. The default is "solid".
     linewidth : Float, optional
         Line width to use for pplotting. The default is 1.
+    marker : String, optional
+        Marker to use for plotting. The default is None.
 
     Returns
     -------
@@ -676,12 +687,12 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=T
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linestyle=linestyle, label=label)
+        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linestyle=linestyle, label=label, marker=marker)
     else:
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linestyle=linestyle)
+        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linestyle=linestyle, marker=marker)
         
         
-def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, NFW=True, show_label=False, linestyle="solid", linewidth=1):
+def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
     """
     Plot extended MF constraints from the prospective GECCO delta-function MF constraints from Coogan et al. (2023) [2101.10370].    
 
@@ -699,16 +710,18 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
         Fitting function to use. The default is None (delta-function).
     exponent_PL_lower : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-function MF. The default is 2.
-    NFW : Boolean, optional
-        If True, load constraints obtained using an NFW profile. If False, load constraints obtained using an Einasto profile.   
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is True.
+    NFW : Boolean, optional
+        If True, load constraints obtained using an NFW profile. If False, load constraints obtained using an Einasto profile.   
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
         Linestyle to use for pplotting. The default is "solid".
     linewidth : Float, optional
         Line width to use for pplotting. The default is 1.
+    marker : String, optional
+        Marker to use for plotting. The default is None.
 
     Returns
     -------
@@ -716,16 +729,16 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
 
     """    
     
-    mp_GECCO, f_PBH_GECCO = load_data_GECCO(Deltas, Delta_index, mf, exponent_PL_lower=exponent_PL_lower, NFW=NFW)
+    mp_GECCO, f_PBH_GECCO = load_data_GECCO(Deltas, Delta_index, mf, exponent_PL_lower=exponent_PL_lower, evolved=evolved, NFW=NFW)
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linestyle=linestyle, label=label)
+        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linestyle=linestyle, label=label, marker=marker)
     else:
-        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linestyle=linestyle)
+        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linestyle=linestyle, marker=marker)
 
 
-def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1):
+def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None):
     """
     Plot extended MF constraints from the prospective white dwarf microlensing delta-function MF constraints from Sugiyama et al. (2020) [1905.06066].
 
@@ -747,6 +760,8 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, l
         Linestyle to use for pplotting. The default is "solid".
     linewidth : Float, optional
         Line width to use for pplotting. The default is 1.
+    marker : String, optional
+        Marker to use for plotting. The default is None.
 
     Returns
     -------
@@ -758,9 +773,9 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, l
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linestyle=linestyle, label=label)
+        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linestyle=linestyle, label=label, marker=marker)
     else:
-        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linestyle=linestyle)
+        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linestyle=linestyle, marker=marker)
 
 
 #%% Tests of the method frac_diff:
