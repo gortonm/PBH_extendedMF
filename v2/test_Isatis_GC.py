@@ -85,7 +85,6 @@ def constraint_Carr_Isatis(mc_values, m_delta, f_max, psi_initial, params, evolv
             
     return f_pbh
 
-
 colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
 constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
@@ -120,8 +119,6 @@ mc_values = mp_values * np.exp(sigma**2)
 
 # Extended MF constraints calculated before June 2023
 mc_values_old = np.logspace(14, 19, 100)
-"""REMOVE ME!!!!!!!!!!!!!"""
-#fname_base = "CC_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
 fname_base = "CC_D={:.1f}_test_range_wide".format(Deltas[j])
 
 constraints_names, f_PBHs_GC_old = load_results_Isatis(mf_string=fname_base, modified=True)
