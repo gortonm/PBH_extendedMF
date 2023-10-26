@@ -387,7 +387,7 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     return f_pbh
 
 
-def envelope(constraints):
+def envelope(constraints, save_argmin=False, fname=None):
     """
     Calculate the tightest constraint at a given mass, from a set of 
     constraints.
@@ -397,6 +397,12 @@ def envelope(constraints):
     constraints : Array-like
         Constraints on PBH abundance. All should have the same length and be
         evaluated at the same PBH mass.
+    save : Boolean, optional
+        If True, save the index of the constraint that places the tightest
+        constraint. The default is False.
+    fname : String, optional
+        Name of file containing index of constraint that places tightest 
+        constraint. Not needed if save == False. The default is None.
 
     Returns
     -------
@@ -405,7 +411,8 @@ def envelope(constraints):
 
     """
     tightest = np.ones(len(constraints[0]))
-
+    tightest_arg = np.ones(len(constraints[0]))
+    
     for i in range(len(constraints[0])):
 
         constraints_values = []
@@ -415,8 +422,11 @@ def envelope(constraints):
                 constraints_values.append(1e100)
             else:
                 constraints_values.append(abs(constraints[j][i]))
-
+        tightest_arg[i] = np.argmin(constraints_values)
         tightest[i] = min(constraints_values)
+
+    if save_argmin:
+        np.savetxt(fname, tightest_arg)
 
     return tightest
 
@@ -1266,7 +1276,7 @@ if "__main__" == __name__:
 
 #%% Plot the integrand appearing in Eq. 12 of 1705.05567, for different delta-function MF constraints
  
-def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower=2):
+def extract_GC_Isatis(j, k, f_max_all, exponent_PL_lower=2, include_extrapolated=True):
     """
     Load delta-function MF constraint on f_PBH from Galactic Centre photons.
 
@@ -1274,8 +1284,10 @@ def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower=2):
     ----------
     j : Integer
         Index for which instrument to load data from (0 for COMPTEL, 1 for EGRET, 2 for Fermi-LAT, 3 for INTEGRAL).
-    f_max_Isatis : Array-like
-        Array containing constraints on the delta-function MF obtained by Isatis.
+    k : Integer
+        Index for which energy bin of the instrument to load data from.
+    f_max_all : Array-like
+        Array containing constraints on PBHs with a delta-function MF from isatis_reproduction.py
     exponent_PL_lower : Float
         Power-law exponent to use between 1e11g and 1e13g.
 
@@ -1287,27 +1299,35 @@ def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower=2):
         PBH masses the delta-function mass function constraint is evaluated at, in grams.
 
     """
-    
-    m_delta_values_loaded = np.logspace(11, 21, 1000)            
+    m_delta_values_loaded = np.logspace(11, 22, 1000)            
     m_delta_extrapolated = np.logspace(11, 13, 21)
     
-    # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
-    f_max_allpositive = []
+    constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
-    for f_max_value in f_max_Isatis[j]:
-        if f_max_value == -1:
-            f_max_allpositive.append(1e100)
+    f_max_all = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[j], unpack=True)
+          
+    for k in range(len(f_max_Isatis)):
+                        
+        # Set non-physical values of f_max (-1 or np.infty) to 1e100 from the f_max values calculated using Isatis
+        f_max_allpositive = []
+
+        for f_max in f_max_all[k]:
+            if f_max == -1 or f_max == np.infty:
+                f_max_allpositive.append(1e100)
+            else:
+                f_max_allpositive.append(f_max)
+        
+        # Extrapolate f_max at masses below 1e13g using a power-law
+        if include_extrapolated:
+            f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
+            f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
+            f_max_k = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+            m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
         else:
-            f_max_allpositive.append(f_max_value)
-            
-    # Extrapolate f_max at masses below 1e13g using a power-law
-    f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
-    f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
-    f_max = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
-    
-    m_pbh_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
-    
-    return f_max, m_pbh_values
+            f_max_k = f_max_allpositivef
+            m_delta_values = m_delta_values_loaded
+                        
+    return f_max_k, m_delta_values
 
 
 if "__main__" == __name__:

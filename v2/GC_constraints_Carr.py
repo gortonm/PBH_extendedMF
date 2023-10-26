@@ -43,7 +43,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Boolean determines whether to useFalse evolved mass function.
-    evolved = False
+    evolved = True
     # Boolean determines whether to evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
@@ -55,12 +55,9 @@ if "__main__" == __name__:
     plot_extrapolated = False
     
     # If True, use BlackHawk spectra calculated at 500 energies
-    E500 = True
+    E500 = False
     
-    if not E500:
-        m_delta_values_loaded = np.logspace(11, 22, 1000)
-    else:
-        m_delta_values_loaded = np.logspace(11, 22, 999)
+    m_delta_values_loaded = np.logspace(11, 22, 1000)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
@@ -84,8 +81,8 @@ if "__main__" == __name__:
         m_delta_extrapolated = np.logspace(11, 13, 21)
         
     # Power-law exponent to use for extrapolating the delta-function MF constraint below 1e13g
-    #for exponent_PL_lower in [0, 2, 3, 4]:
-    for exponent_PL_lower in [2]:
+    for exponent_PL_lower in [0, 2, 3, 4]:
+
         if include_extrapolated:
             data_folder = data_folder_base + "/PL_exp_{:.0f}/".format(exponent_PL_lower)
         else:
@@ -95,7 +92,7 @@ if "__main__" == __name__:
             params_LN = [sigmas_LN[j]]
             params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
             params_CC3 = [alphas_CC3[j], betas[j]]
-            params_PL = [m_max_PL, gamma_PL]
+            #params_PL = [m_max_PL, gamma_PL]
             
             for i in range(len(constraints_names_short)):
                 
@@ -113,7 +110,7 @@ if "__main__" == __name__:
                 f_PBH_allbins_LN = []
                 f_PBH_allbins_SLN = []
                 f_PBH_allbins_CC3 = []
-                f_PBH_allbins_PL = []
+                #f_PBH_allbins_PL = []
                
                 if plot_extrapolated:
                     fig, ax = plt.subplots(figsize=(7,7))
@@ -147,7 +144,7 @@ if "__main__" == __name__:
                     f_PBH_allbins_LN.append(constraint_Carr(mc_values, m_delta_values, f_max_k, LN, params_LN, evolved, t))
                     f_PBH_allbins_SLN.append(constraint_Carr(mc_values, m_delta_values, f_max_k, SLN, params_SLN, evolved, t))
                     f_PBH_allbins_CC3.append(constraint_Carr(mc_values, m_delta_values, f_max_k, CC3, params_CC3, evolved, t))
-                    f_PBH_allbins_PL.append(constraint_Carr(mc_values, m_delta_values, f_max_k, PL_MF, params_LN, evolved, t))
+                    #f_PBH_allbins_PL.append(constraint_Carr(mc_values, m_delta_values, f_max_k, PL_MF, params_LN, evolved, t))
                    
                 if plot_extrapolated: 
                     ax.set_xlim(1e11, 1e18)
@@ -163,38 +160,38 @@ if "__main__" == __name__:
                     print("Error: length of calculated constraint from each energy bin does not equal number of energy bins.")
                     break
                             
-                f_PBH_i_LN = envelope(f_PBH_allbins_LN)
-                f_PBH_i_SLN = envelope(f_PBH_allbins_SLN)
-                f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3)
-                f_PBH_i_PL = envelope(f_PBH_allbins_PL)
+                f_PBH_i_LN = envelope(f_PBH_allbins_LN, save=True, fname=data_folder + "/argmin/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j]))
+                f_PBH_i_SLN = envelope(f_PBH_allbins_SLN, save=True, fname=data_folder + "/argmin/SLN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j]))
+                f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3, save=True, fname=data_folder + "/argmin/CC3_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j]))
+                #f_PBH_i_PL = envelope(f_PBH_allbins_PL)
                       
                 if evolved == False:
                     if not E500:
                         data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
                         data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
                         data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr_unevolved.txt"
+                        #data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr_unevolved.txt"
                     else:
                         data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
                         data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
                         data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_E500_Carr_unevolved.txt"
+                        #data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_E500_Carr_unevolved.txt"
                 else:
                     if not E500:
                         data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
                         data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
                         data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr.txt"
+                        #data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr.txt"
                     else:
                         data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
                         data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
                         data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_E500_Carr.txt"
+                        #data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_E500_Carr.txt"
 
                 np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
                 np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
                 np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
-                np.savetxt(data_filename_PL, [mc_values, f_PBH_i_CC3], delimiter="\t")
+                #np.savetxt(data_filename_PL, [mc_values, f_PBH_i_CC3], delimiter="\t")
 
 #%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
 
