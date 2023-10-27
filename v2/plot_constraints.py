@@ -98,7 +98,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
     """
 
     if mf == None:
-        constraints_names_evap, f_PBHs_GC_delta = load_results_Isatis(modified=True)
+        constraints_names_evap, f_PBHs_GC_delta = load_results_Isatis(mf_string="GC_mono", wide=True)
         f_PBH_GC = envelope(f_PBHs_GC_delta)
         mp_GC = np.logspace(11, 21, 1000)
     
@@ -501,7 +501,7 @@ def set_ticks_grid(ax):
     ax.grid()
 
 
-def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
+def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=False, show_label=False, linestyle="solid", linewidth=1, marker=None):
     """
     Plot extended MF constraints from Galactic Centre photons.    
 
@@ -522,7 +522,7 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is True.
     approx : Boolean, optional
-        If True, plot constraints obtained using f_max calculated from Isatis. Otherwise, plot constraints calculated from the minimum constraint over each energy bin. The default is True.
+        If True, plot constraints obtained using f_max calculated from Isatis. Otherwise, plot constraints calculated from the minimum constraint over each energy bin. The default is False.
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
@@ -804,15 +804,15 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = False
+    plot_GC_Isatis = True
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = True
+    plot_KP23 = False
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
     plot_BC19 = False
     # If True, plot unevolved MF constraint
     plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
-    plot_fracdiff = True
+    plot_fracdiff = False
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
@@ -854,8 +854,8 @@ if "__main__" == __name__:
             ax.set_yscale("log")
 
             plotter_GC_Isatis(Deltas, i, ax, mf=None, color=colors[0])
-            plotter_GC_Isatis(Deltas, i, ax, mf=LN, color=colors[1], linestyle=(0, (5, 1)))
-            plotter_GC_Isatis(Deltas, i, ax, mf=SLN, color=colors[2], linestyle=(0, (5, 7)))
+            plotter_GC_Isatis(Deltas, i, ax, mf=LN, color=colors[1], params=[sigmas_LN[i]], linestyle=(0, (5, 1)))
+            plotter_GC_Isatis(Deltas, i, ax, mf=SLN, color=colors[2], params=[sigmas_SLN[i], alphas_SLN[i]], linestyle=(0, (5, 7)))
             plotter_GC_Isatis(Deltas, i, ax, mf=CC3, color=colors[3], linestyle="dashed")
 
             
@@ -1099,7 +1099,7 @@ if "__main__" == __name__:
     
     # Power-law exponent to use between 1e11g and 1e15g.
     exponent_PL_lower = 2.0
-    m_delta, f_PBH_delta = load_data_KP23(Deltas, i=0, evolved=True, exponent_PL_lower=exponent_PL_lower)
+    m_delta, f_PBH_delta = load_data_KP23(Deltas, Delta_index=0, evolved=True, exponent_PL_lower=exponent_PL_lower)
     ax.plot(m_delta, f_PBH_delta, color="tab:gray", label="Delta func.", linewidth=2)
 
     colors=["tab:blue", "tab:orange", "tab:green", "tab:red"]
@@ -1182,12 +1182,6 @@ if "__main__" == __name__:
     # Linestyles for different constraints
     linestyles = ["dashdot", "dashed", "dotted"]
        
-    # Delta-function MF constraints
-    m_delta_GC = np.logspace(11, 21, 1000)
-    constraints_names_GC, f_PBHs_GC_delta = load_results_Isatis(modified=True)
-    f_PBH_delta_GC = envelope(f_PBHs_GC_delta)
-    m_delta_Subaru, f_PBH_delta_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
-
     m_delta_values_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
     # Power-law exponent to use between 1e15g and 1e16g.
     exponent_PL_upper = 2.0
@@ -1211,12 +1205,18 @@ if "__main__" == __name__:
     
     for ax in [ax0, ax1, ax2]:
         ax.plot(0, 0, color="tab:gray", linewidth=2, label="$\delta$ func.")
-        ax.plot(m_delta_Subaru, f_PBH_delta_Subaru, color="tab:gray", linewidth=2, linestyle=linestyles[0])
-        ax.plot(m_delta_GC, f_PBH_delta_GC, color="tab:gray", linewidth=2, linestyle=linestyles[1])
-        ax.plot(m_delta_KP23, f_PBH_delta_KP23, color="tab:gray", linewidth=2, linestyle=linestyles[2])
+        #ax.plot(m_delta_Subaru, f_PBH_delta_Subaru, color="tab:gray", linewidth=2, linestyle=linestyles[0])
+        #ax.plot(m_delta_GC, f_PBH_delta_GC, color="tab:gray", linewidth=2, linestyle=linestyles[1])
+        #ax.plot(m_delta_KP23, f_PBH_delta_KP23, color="tab:gray", linewidth=2, linestyle=linestyles[2])
 
     
     for i, Delta_index in enumerate([0, 5, 6]):
+        
+        # Delta-function MF constraints
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:gray", linewidth=2, linestyle=linestyles[0])
+        plotter_GC_Isatis(Deltas, Delta_index, ax, color="tab:gray", linewidth=2, linestyle=linestyles[1])
+        plotter_KP23(Deltas, Delta_index, ax, color="tab:gray", linewidth=2, linestyle=linestyles[2])
+
         
         # Loading constraints from Subaru-HSC
         mc_Subaru_SLN, f_PBH_Subaru_SLN = np.genfromtxt("./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
@@ -1236,9 +1236,9 @@ if "__main__" == __name__:
 
         for k in range(len(constraints_names_short)):
             # Load constraints for an evolved extended mass function obtained from each instrument
-            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[Delta_index])
-            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[Delta_index])
-            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[Delta_index])
+            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index])
+            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index])
+            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index])
                 
             mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
@@ -1267,7 +1267,7 @@ if "__main__" == __name__:
         mp_Subaru_LN = mc_Subaru_SLN * np.exp(-sigmas_LN[Delta_index]**2) 
         ax0.plot(mp_Subaru_LN, f_PBH_Subaru_LN, color=colors_LN[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax0.plot(mp_GC_LN, f_PBH_GC_LN, color=colors_LN[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
-        ax0.plot(mp_KP23_LN, f_PBH_KP23_LN, color=colors_LN[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+        #ax0.plot(mp_KP23_LN, f_PBH_KP23_LN, color=colors_LN[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
         ax0.plot(0,0, color=colors_LN[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax0a = ax0.twinx()
         ax0a.legend(title="LN", loc="upper right", fontsize="x-small")
@@ -1279,7 +1279,7 @@ if "__main__" == __name__:
         mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Subaru_SLN]
         ax1.plot(mp_Subaru_SLN, f_PBH_Subaru_SLN, color=colors_SLN[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax1.plot(mp_GC_SLN, f_PBH_GC_SLN, color=colors_SLN[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
-        ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors_SLN[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+        #ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors_SLN[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
         ax1.plot(0,0, color=colors_SLN[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax1a = ax1.twinx()
         ax1a.legend(title="SLN", loc="upper right", fontsize="x-small")
@@ -1289,7 +1289,7 @@ if "__main__" == __name__:
         mp_GC_CC3 = mc_values_GC
         ax2.plot(mp_Subaru_CC3, f_PBH_Subaru_CC3, color=colors_CC3[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax2.plot(mp_GC_CC3, f_PBH_GC_CC3, color=colors_CC3[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
-        ax2.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors_CC3[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+        #ax2.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors_CC3[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
         ax2.plot(0,0, color=colors_CC3[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax2a = ax2.twinx()
         ax2a.legend(title="CC3", loc="upper right", fontsize="x-small")
