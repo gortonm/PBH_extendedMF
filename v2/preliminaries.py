@@ -397,7 +397,7 @@ def envelope(constraints, save_argmin=False, fname=None):
     constraints : Array-like
         Constraints on PBH abundance. All should have the same length and be
         evaluated at the same PBH mass.
-    save : Boolean, optional
+    save_argmin : Boolean, optional
         If True, save the index of the constraint that places the tightest
         constraint. The default is False.
     fname : String, optional
@@ -422,7 +422,7 @@ def envelope(constraints, save_argmin=False, fname=None):
                 constraints_values.append(1e100)
             else:
                 constraints_values.append(abs(constraints[j][i]))
-        tightest_arg[i] = np.argmin(constraints_values)
+        tightest_arg[i] = np.argmax(constraints_values)
         tightest[i] = min(constraints_values)
 
     if save_argmin:
