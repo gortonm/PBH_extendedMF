@@ -1276,7 +1276,7 @@ if "__main__" == __name__:
 
 #%% Plot the integrand appearing in Eq. 12 of 1705.05567, for different delta-function MF constraints
  
-def extract_GC_Isatis(j, k, f_max_all, exponent_PL_lower=2, include_extrapolated=True):
+def extract_GC_Isatis(j, k, exponent_PL_lower=2, include_extrapolated=True):
     """
     Load delta-function MF constraint on f_PBH from Galactic Centre photons.
 
@@ -1286,10 +1286,10 @@ def extract_GC_Isatis(j, k, f_max_all, exponent_PL_lower=2, include_extrapolated
         Index for which instrument to load data from (0 for COMPTEL, 1 for EGRET, 2 for Fermi-LAT, 3 for INTEGRAL).
     k : Integer
         Index for which energy bin of the instrument to load data from.
-    f_max_all : Array-like
-        Array containing constraints on PBHs with a delta-function MF from isatis_reproduction.py
     exponent_PL_lower : Float
         Power-law exponent to use between 1e11g and 1e13g.
+    include_extrapolated : Boolean
+        If True, extrapolate delta-function MF constraints using a power-law below 1e13g. The default is True.
 
     Returns
     -------
@@ -1305,27 +1305,25 @@ def extract_GC_Isatis(j, k, f_max_all, exponent_PL_lower=2, include_extrapolated
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
     f_max_all = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[j], unpack=True)
-          
-    for k in range(len(f_max_Isatis)):
-                        
-        # Set non-physical values of f_max (-1 or np.infty) to 1e100 from the f_max values calculated using Isatis
-        f_max_allpositive = []
+                                  
+    # Set non-physical values of f_max (-1 or np.infty) to 1e100 from the f_max values calculated using Isatis
+    f_max_allpositive = []
 
-        for f_max in f_max_all[k]:
-            if f_max == -1 or f_max == np.infty:
-                f_max_allpositive.append(1e100)
-            else:
-                f_max_allpositive.append(f_max)
-        
-        # Extrapolate f_max at masses below 1e13g using a power-law
-        if include_extrapolated:
-            f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
-            f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
-            f_max_k = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
-            m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
+    for f_max in f_max_all[k]:
+        if f_max == -1 or f_max == np.infty:
+            f_max_allpositive.append(1e100)
         else:
-            f_max_k = f_max_allpositivef
-            m_delta_values = m_delta_values_loaded
+            f_max_allpositive.append(f_max)
+    
+    # Extrapolate f_max at masses below 1e13g using a power-law
+    if include_extrapolated:
+        f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
+        f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
+        f_max_k = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+        m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
+    else:
+        f_max_k = f_max_allpositive
+        m_delta_values = m_delta_values_loaded
                         
     return f_max_k, m_delta_values
 
@@ -1341,6 +1339,20 @@ if "__main__" == __name__:
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Peak mass, in grams
+    m_p = 1e16
+    
+    # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
+    if Delta == 0:
+        i = 0
+        mc_SLN = 1.53 * m_p   # for Delta = 0
+    elif Delta == 2:
+        i = 5
+        mc_SLN = 3.24 * m_p   # for Delta = 2
+    elif Delta == 5:
+        i = 6
+        mc_SLN = 6.8 * m_p   # for Delta = 5
     
     # Constraints for monochromatic MF
     
@@ -1388,6 +1400,8 @@ if "__main__" == __name__:
         # Select which instrument places the tightest constraint, for the evolved MF constraints (depends on Delta and the peak mass). Values are for a peak mass m_p = 1e16g
         # 0 for COMPTEL, 1 for EGRET, 2 for Fermi-LAT, 3 for INTEGRAL
         # Note: the defaults here apply to the evolved MF constraints and a peak mass m_p = 1e16g, and do not depend on the fitting function at m_p = 1e16g 
+        
+        """ double check the j's"""
         if Delta == 0:
             j = 0
         elif Delta == 2:
@@ -1398,10 +1412,41 @@ if "__main__" == __name__:
         constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
         colours_GC_fit = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
         
-        f_max, m_pbh_values = extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower)
-        # For the unevolved MF constraints, j=2 when m_p = 1e16g
-        f_max_FermiLAT, m_pbh_values_FermiLAT = extract_GC_Isatis(2, f_max_Isatis, exponent_PL_lower)
+        mc_values = np.logspace(14, 20, 120)
         
+        # Find index of mc_values for which the peak mass is closest to the desired m_p:
+        mp_values_SLN = np.array([m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000) for mc_SLN in mc_values])
+        mp_values_LN = mc_values * np.exp(-sigmas_LN[i]**2)
+        mp_values_CC3 = mc_values
+        argmin_SLN = np.argmax(mp_values_SLN > m_p)
+        argmin_LN = np.argmax(mp_values_LN > m_p)
+        argmin_CC3 = np.argmax(mp_values_CC3 > m_p)
+        
+        print("SLN \n m_p[arg - 1] = {:.3e}g, m_p[arg] = {:.3e} g.".format(mp_values_SLN[argmin_SLN-1], mp_values_SLN[argmin_SLN]))
+        print("LN \n m_p[arg - 1] = {:.3e}g, m_p[arg] = {:.3e} g.".format(mp_values_LN[argmin_LN-1], mp_values_LN[argmin_LN]))
+        print("CC3 \n m_p[arg - 1] = {:.3e}g, m_p[arg] = {:.3e} g.".format(mp_values_CC3[argmin_CC3-1], mp_values_CC3[argmin_CC3]))
+               
+        constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+        # Find the energy bin that places the tightest constraint on f_PBH at the given peak mass
+        data_folder_base = "./Data-tests/"
+        data_folder = data_folder_base + "/PL_exp_{:.0f}/argmin/".format(exponent_PL_lower)
+        fname_LN = data_folder + "LN_GC_%s" % constraints_names_short[j] + "_Delta={:.1f}.txt".format(Deltas[j])
+        fname_SLN = data_folder + "SLN_GC_%s" % constraints_names_short[j] + "_Delta={:.1f}.txt".format(Deltas[j])
+        fname_CC3 = data_folder + "CC3_GC_%s" % constraints_names_short[j] + "_Delta={:.1f}.txt".format(Deltas[j])
+        
+        k_LN = int(np.genfromtxt(fname_LN)[argmin_LN])
+        k_SLN = int(np.genfromtxt(fname_LN)[argmin_SLN])
+        k_CC3 = int(np.genfromtxt(fname_LN)[argmin_CC3])
+        k_LN = k_CC3 = 1
+        
+        if k_LN == k_SLN == k_CC3:
+            
+            f_max, m_pbh_values = extract_GC_Isatis(j, k_LN, exponent_PL_lower)
+            # For the unevolved MF constraints, j=2 when m_p = 1e16g
+            f_max_FermiLAT, m_pbh_values_FermiLAT = extract_GC_Isatis(2, k_LN, exponent_PL_lower)
+
+        else:
+            print("Error: different energy bins place constraint for different fitting functions.")
         
     elif plot_BC19:
         # Voyager 1 cosmic ray constraints, from Boudaud & Cirelli (2019) [1807.03075]
@@ -1427,19 +1472,7 @@ if "__main__" == __name__:
             else:
                 m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
     
-    # Peak mass, in grams
-    m_p = 1e16
     
-    # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
-    if Delta == 0:
-        i = 0
-        mc_SLN = 1.53 * m_p   # for Delta = 0
-    elif Delta == 2:
-        i = 5
-        mc_SLN = 3.24 * m_p   # for Delta = 2
-    elif Delta == 5:
-        i = 6
-        mc_SLN = 6.8 * m_p   # for Delta = 5
             
     
     mp_SLN = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
