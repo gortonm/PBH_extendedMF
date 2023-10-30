@@ -1239,7 +1239,7 @@ if "__main__" == __name__:
             data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[k] + "_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index])
             data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index])
             data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[k]  + "_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index])
-                
+                            
             mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
             mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
@@ -1263,7 +1263,7 @@ if "__main__" == __name__:
 
         # Plot LN MF results
         mp_KP23_LN = mc_KP23_LN * np.exp(-sigmas_LN[Delta_index]**2)
-        mp_GC_LN = mc_values_GC * np.exp(-sigmas_LN[Delta_index]**2)
+        mp_GC_LN = mc_LN_evolved * np.exp(-sigmas_LN[Delta_index]**2)
         mp_Subaru_LN = mc_Subaru_SLN * np.exp(-sigmas_LN[Delta_index]**2) 
         ax0.plot(mp_Subaru_LN, f_PBH_Subaru_LN, color=colors_LN[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax0.plot(mp_GC_LN, f_PBH_GC_LN, color=colors_LN[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
@@ -1275,7 +1275,7 @@ if "__main__" == __name__:
         
         # Plot SLN MF results
         mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
-        mp_GC_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_values_GC]
+        mp_GC_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
         mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Subaru_SLN]
         ax1.plot(mp_Subaru_SLN, f_PBH_Subaru_SLN, color=colors_SLN[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax1.plot(mp_GC_SLN, f_PBH_GC_SLN, color=colors_SLN[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
@@ -1286,7 +1286,7 @@ if "__main__" == __name__:
         ax1a.axis("off")
         
         # Plot CC3 MF results
-        mp_GC_CC3 = mc_values_GC
+        mp_GC_CC3 = mp_CC3_evolved
         ax2.plot(mp_Subaru_CC3, f_PBH_Subaru_CC3, color=colors_CC3[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax2.plot(mp_GC_CC3, f_PBH_GC_CC3, color=colors_CC3[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
         #ax2.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors_CC3[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
