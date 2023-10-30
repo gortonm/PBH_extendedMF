@@ -33,7 +33,7 @@ mpl.rc('text', usetex=True)
 mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 
 t_0 = 13.8e9 * 365.25 * 86400    # Age of Universe, in seconds
-gamma_PL = -1/2   # Exponent in power-law mass function
+#gamma_PL = -1/2   # Exponent in power-law mass function
 
 #%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Calculated using f_max as the minimum constraint over each energy bin.
 
@@ -42,9 +42,9 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    # Boolean determines whether to useFalse evolved mass function.
+    # If True, use the evolved mass function.
     evolved = True
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -61,7 +61,7 @@ if "__main__" == __name__:
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
-    mc_values = np.logspace(14, 20, 120)
+    mc_values = np.logspace(14, 20, 121)
     
     # Maximum mass at which the power-law MF is defined
     m_max_PL = 100 * max(m_delta_values_loaded)
@@ -159,12 +159,11 @@ if "__main__" == __name__:
                 if len(f_PBH_allbins_LN) != n_bins:
                     print("Error: length of calculated constraint from each energy bin does not equal number of energy bins.")
                     break
-                            
-                f_PBH_i_LN = envelope(f_PBH_allbins_LN, save=True, fname=data_folder + "/argmin/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j]))
-                f_PBH_i_SLN = envelope(f_PBH_allbins_SLN, save=True, fname=data_folder + "/argmin/SLN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j]))
-                f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3, save=True, fname=data_folder + "/argmin/CC3_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j]))
-                #f_PBH_i_PL = envelope(f_PBH_allbins_PL)
-                      
+                
+                f_PBH_i_LN = envelope(f_PBH_allbins_LN, save_argmin=True, fname=data_folder + "/argmin/LN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
+                f_PBH_i_SLN = envelope(f_PBH_allbins_SLN, save_argmin=True, fname=data_folder + "/argmin/SLN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
+                f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3, save_argmin=True, fname=data_folder + "/argmin/CC3_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
+                                
                 if evolved == False:
                     if not E500:
                         data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
@@ -200,9 +199,9 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    # Boolean determines whether to useFalse evolved mass function.
+    # If True, useFalse evolved mass function.
     evolved = True
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -305,9 +304,9 @@ if "__main__" == __name__:
     include_extrapolated_upper = False    
     # If True, plot extrapolated delta-function MF constraints down to 1e11g.
     plot_extrapolate = False
-    # Boolean determines whether to use evolved mass function.
-    evolved = False
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, use evolved mass function.
+    evolved = True
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -375,28 +374,28 @@ if "__main__" == __name__:
             data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_PL = data_folder + "/PL_2302.04408_Carr_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
+            #data_filename_PL = data_folder + "/PL_2302.04408_Carr_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
 
         else:          
             data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
             data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_PL = data_folder + "/PL_2302.04408_Carr.txt"
+            #data_filename_PL = data_folder + "/PL_2302.04408_Carr.txt"
             
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
-        params_PL = [m_max_PL, gamma_PL]
+        #params_PL = [m_max_PL, gamma_PL]
         
         f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
         f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
         f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
-        f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
+        #f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
         
         np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-        np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
+        #np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
 
 
 #%% Constraints from 2202.07483 (SPI constraints using NFW template).
@@ -404,9 +403,9 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
     include_extrapolated = True
-    # Boolean determines whether to use evolved mass function.
+    # If True, use evolved mass function.
     evolved = False
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -465,29 +464,32 @@ if "__main__" == __name__:
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
-        params_PL = [m_max_PL, gamma_PL]
+        #params_PL = [m_max_PL, gamma_PL]
       
         f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
         f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
         f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
-        f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
+        #f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
        
         np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-        np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
+        #np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
 
 #%% Constraints from 2202.07483 (Voyager-1 electron / positron detections).
 
 if "__main__" == __name__:
     # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
     include_extrapolated = True
-    # Boolean determines whether to use evolved mass function.
-    evolved = False
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, use evolved mass function.
+    evolved = True
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
+        
+    # If True, load the more stringent or less stringent "prop B" data
+    prop_B_lower = False
             
     t = t_0
     mc_values = 10**np.arange(14, 20.5, 0.1)
@@ -508,7 +510,7 @@ if "__main__" == __name__:
     for prop_A in [True, False]:
         prop_B = not prop_A
         
-        # Boolean determines whether to load constraint obtained with a background or without a background
+        # If True, load constraint obtained with a background or without a background
         for with_bkg in [True, False]:
             
             # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
@@ -525,10 +527,15 @@ if "__main__" == __name__:
                 if with_bkg:
                     m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
                 else:
-                    m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
+                    if not prop_B_lower:
+                        m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
+                    else:
+                        m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")                        
                 
             if not with_bkg:
                 prop_string += "_nobkg"
+                if prop_B_lower:
+                    prop_string += "lower"
 
             # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.            
             for exponent_PL_lower in [0, 2, 3, 4]:
@@ -556,28 +563,28 @@ if "__main__" == __name__:
                         data_filename_LN = data_folder + "/LN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
                         data_filename_SLN = data_folder + "/SLN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
                         data_filename_CC3 = data_folder + "/CC3_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                        data_filename_PL = data_folder + "/PL_1807.03075_Carr_" + prop_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
+                        #data_filename_PL = data_folder + "/PL_1807.03075_Carr_" + prop_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
            
                     else:          
                         data_filename_LN = data_folder + "/LN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}.txt".format(Deltas[j])
                         data_filename_SLN = data_folder + "/SLN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}.txt".format(Deltas[j])
                         data_filename_CC3 = data_folder + "/CC3_1807.03075_Carr_" + prop_string + "_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_PL = data_folder + "/PL_1807.03075_Carr_" + prop_string + ".txt"
+                        #data_filename_PL = data_folder + "/PL_1807.03075_Carr_" + prop_string + ".txt"
                        
                     params_LN = [sigmas_LN[j]]
                     params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
                     params_CC3 = [alphas_CC3[j], betas[j]]
-                    params_PL = [m_max_PL, gamma_PL]
+                    #params_PL = [m_max_PL, gamma_PL]
         
                     f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
                     f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
                     f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
-                    f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
+                    #f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
               
                     np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
                     np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
                     np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-                    np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
+                    #np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
 
 
 #%% Constraints from 1912.01014 (511 keV line).
@@ -585,9 +592,9 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
     include_extrapolated = True
-    # Boolean determines whether to use evolved mass function.
+    # If True, use evolved mass function.
     evolved = False
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -646,17 +653,17 @@ if "__main__" == __name__:
             params_LN = [sigmas_LN[j]]
             params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
             params_CC3 = [alphas_CC3[j], betas[j]]
-            params_PL = [m_max_PL, gamma_PL]
+            #params_PL = [m_max_PL, gamma_PL]
             
             f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
             f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
             f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
-            f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
+            #f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
             
             np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
             np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
             np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-            np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
+            #np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
 
 
 #%% Extragalactic gamma-ray background from Isatis.
@@ -666,9 +673,9 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    # Boolean determines whether to useFalse evolved mass function.
+    # If True, useFalse evolved mass function.
     evolved = False
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -716,7 +723,7 @@ if "__main__" == __name__:
             params_LN = [sigmas_LN[j]]
             params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
             params_CC3 = [alphas_CC3[j], betas[j]]
-            params_PL = [m_max_PL, gamma_PL]
+            #params_PL = [m_max_PL, gamma_PL]
             
             for i in range(len(constraints_names)):
                 
@@ -750,23 +757,23 @@ if "__main__" == __name__:
                     f_PBH_i_LN = constraint_Carr(mc_values, m_delta_values, f_max_i, LN, params_LN, evolved, t)
                     f_PBH_i_SLN = constraint_Carr(mc_values, m_delta_values, f_max_i, SLN, params_SLN, evolved, t)
                     f_PBH_i_CC3 = constraint_Carr(mc_values, m_delta_values, f_max_i, CC3, params_CC3, evolved, t)
-                    f_PBH_i_PL = constraint_Carr(mc_values, m_delta_values, f_max_i, PL_MF, params_PL, evolved, t)
+                    #f_PBH_i_PL = constraint_Carr(mc_values, m_delta_values, f_max_i, PL_MF, params_PL, evolved, t)
               
                     if evolved == False:
                         data_filename_LN = data_folder + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
                         data_filename_SLN = data_folder + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
                         data_filename_CC3 = data_folder + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
-                        data_filename_PL = data_folder + "/PL_EXGB_%s" % constraints_names_short[i]  + "_Carr_approx_unevolved.txt"
+                        #data_filename_PL = data_folder + "/PL_EXGB_%s" % constraints_names_short[i]  + "_Carr_approx_unevolved.txt"
                     else:
                         data_filename_LN = data_folder + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
                         data_filename_SLN = data_folder + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
                         data_filename_CC3 = data_folder + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-                        data_filename_PL = data_folder + "/PL_EXGB_%s" % constraints_names_short[i]  + "_Carr_approx.txt"
+                        #data_filename_PL = data_folder + "/PL_EXGB_%s" % constraints_names_short[i]  + "_Carr_approx.txt"
             
                     np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
                     np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
                     np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
-                    np.savetxt(data_filename_PL, [mc_values, f_PBH_i_PL], delimiter="\t")
+                    #np.savetxt(data_filename_PL, [mc_values, f_PBH_i_PL], delimiter="\t")
        
         if plot_extrapolated: 
             ax.set_xlim(1e11, 1e18)
@@ -783,9 +790,9 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
     include_extrapolated = True
-    # Boolean determines whether to use evolved mass function.
+    # If True, use evolved mass function.
     evolved = False
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -845,17 +852,17 @@ if "__main__" == __name__:
             params_LN = [sigmas_LN[j]]
             params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
             params_CC3 = [alphas_CC3[j], betas[j]]
-            params_PL = [m_max_PL, gamma_PL]
+            #params_PL = [m_max_PL, gamma_PL]
             
             f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
             f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
             f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
-            f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
+            #f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
             
             np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
             np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
             np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-            np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
+            #np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
 
 #%% Prospective constraints from 2101.01370 (GECCO).
 
@@ -864,7 +871,7 @@ if "__main__" == __name__:
     include_extrapolated = True
     # If True, plot extrapolated delta-function MF constraints down to 1e11g
     evolved = False
-    # Boolean determines whether to evaluate the evolved mass function at t=0.
+    # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -920,28 +927,28 @@ if "__main__" == __name__:
             data_filename_LN = data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + "extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
             data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + "extrapolated_exp{:.0f}.txt".format( exponent_PL_lower)
             data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + "extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
-            data_filename_PL = data_folder + "/PL_2101.01370_Carr_%s_" % profile_string + "extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
+            #data_filename_PL = data_folder + "/PL_2101.01370_Carr_%s_" % profile_string + "extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
                                  
         else:           
             data_filename_LN = data_folder + "/LN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
             data_filename_SLN = data_folder + "/SLN_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
             data_filename_CC3 = data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[j]) + "%s_" % profile_string + ".txt"
-            data_filename_PL = data_folder + "/PL_2101.01370_Carr_%s_" % profile_string + ".txt"
+            #data_filename_PL = data_folder + "/PL_2101.01370_Carr_%s_" % profile_string + ".txt"
            
         params_LN = [sigmas_LN[j]]
         params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
         params_CC3 = [alphas_CC3[j], betas[j]]
-        params_PL = [m_max_PL, gamma_PL]
+        #params_PL = [m_max_PL, gamma_PL]
         
         f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
         f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
         f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
-        f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
+        #f_pbh_PL = constraint_Carr(mc_values, m_delta_total, f_max_total, PL_MF, params_PL, evolved, t)
        
         np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
         np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
         np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-        np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
+        #np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")
 
 #%% Constraints from 2302.04408 (MW diffuse SPI with NFW template).
 # Use for convergence tests with number of masses in preliminaries.py and range of masses included in power-law extrapolation of the delta-function MF constraint.
@@ -1010,7 +1017,7 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    # Boolean determines whether to useFalse evolved mass function.
+    # If True, useFalse evolved mass function.
     evolved = True
     include_extrapolated = True
     
