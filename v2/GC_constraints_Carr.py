@@ -337,7 +337,7 @@ if "__main__" == __name__:
         # Power-law exponent to use between 1e15g and 1e16g.
         exponent_PL_upper = 2.0
         # Power-law exponent to use between 1e11g and 1e15g.
-        exponent_PL_lower = 2.0
+        exponent_PL_lower = 0.0
         
         m_delta_extrapolated_upper = np.logspace(15, 16, 11)
         m_delta_extrapolated_lower = np.logspace(11, 15, 41)
@@ -489,7 +489,7 @@ if "__main__" == __name__:
         evolved = True
         
     # If True, load the more stringent or less stringent "prop B" data
-    prop_B_lower = False
+    prop_B_lower = True
             
     t = t_0
     mc_values = 10**np.arange(14, 20.5, 0.1)
@@ -507,24 +507,27 @@ if "__main__" == __name__:
 
 
     # Boolean determines which propagation model to load delta-function MF constraint from
-    for prop_A in [True, False]:
+    #for prop_A in [True, False]:
+    for prop_A in [False]:
+
         prop_B = not prop_A
         
-        # If True, load constraint obtained with a background or without a background
-        for with_bkg in [True, False]:
+        # If True, load constraint obtained with a background or without background subtraction.
+        #for with_bkg_subtr in [True, False]:
+        for with_bkg_subtr in [False]:
             
             # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
             # Load the most stringent delta-function MF constraints.
             if prop_A:
                 prop_string = "prop_A"
-                if with_bkg:
+                if with_bkg_subtr:
                     m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
                 else:
                     m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
         
             elif prop_B:
                 prop_string = "prop_B"
-                if with_bkg:
+                if with_bkg_subtr:
                     m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
                 else:
                     if not prop_B_lower:
@@ -532,7 +535,7 @@ if "__main__" == __name__:
                     else:
                         m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")                        
                 
-            if not with_bkg:
+            if not with_bkg_subtr:
                 prop_string += "_nobkg"
                 if prop_B_lower:
                     prop_string += "lower"

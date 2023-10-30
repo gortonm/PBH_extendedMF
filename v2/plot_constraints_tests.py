@@ -452,15 +452,15 @@ if "__main__" == __name__:
     linestyles = ["solid", "dashed", "dashdot", "dotted"]
     
     # Boolean determines which propagation model to load data from
-    prop_A = True
+    prop_A = False
     prop_B = not prop_A
     
-    with_bkg = False
+    with_bkg_subtr = False
     
     if prop_A:
         prop_string = "prop_A"
         title_string = "(Prop A"
-        if with_bkg:
+        if with_bkg_subtr:
             m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
         else:
             m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
@@ -468,12 +468,12 @@ if "__main__" == __name__:
     elif prop_B:
         prop_string = "prop_B"
         title_string = "(Prop B"
-        if with_bkg:
+        if with_bkg_subtr:
             m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
         else:
             m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
         
-    if not with_bkg:
+    if not with_bkg_subtr:
         prop_string += "_nobkg"
         title_string += ")"
     else:
@@ -858,7 +858,9 @@ if "__main__" == __name__:
     
     style_markers = ["--", "+", "x"]
     
-    for j in range(len(Deltas[0:1])):
+    approx = False
+    
+    for j in range(len(Deltas)):
         
         fig, axes = plt.subplots(2, 2, figsize=(13, 13))
         
@@ -874,7 +876,6 @@ if "__main__" == __name__:
                                    
         m_delta_extrapolated = np.logspace(11, 13, 21)
         
-        
         for k, exponent_PL_lower in enumerate(exponents_PL_lower):
             data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
             
@@ -882,7 +883,6 @@ if "__main__" == __name__:
             f_PBH_instrument_SLN = []
             f_PBH_instrument_CC3 = []
                 
-            
             for i in range(len(constraints_names)):
                 
                 # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
@@ -902,12 +902,19 @@ if "__main__" == __name__:
 
                 ax0.plot(m_delta_extrapolated, f_max_extrapolated, style_markers[k], color=colors_evap[i])
                 ax0.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_loaded_truncated, color=colors_evap[i])
+                
+                if approx:
+                    # Load constraints for an evolved extended mass function obtained from each instrument
+                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                
+                else:
+                    # Load constraints for an evolved extended mass function obtained from each instrument
+                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
 
-                # Load constraints for an evolved extended mass function obtained from each instrument
-                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    
                 mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
                 mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
                 mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
@@ -930,10 +937,11 @@ if "__main__" == __name__:
             if exponent_PL_lower == 2:
                 print("\n data_filename_LN [in plot_constraints_tests.py]")
                 print(data_filename_LN)
+                
             # Plot extended MF constraints from Galactic Centre photons calculated using Isatis  [sanity check]   
-            plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted", approx=False)
-            plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted", approx=False)
-            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted", approx=False)
+            plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted", approx=approx, linewidth=5)
+            plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted", approx=approx, linewidth=5)
+            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted", approx=approx, linewidth=5)
                         
             ax1.set_title("LN")
             ax2.set_title("SLN")
@@ -1832,16 +1840,16 @@ if "__main__" == __name__:
         fig3, ax3 = plt.subplots(figsize=(7,7))
         fig3.suptitle("BC '19 %s" % title_string)
         
-        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=False, mf=None)
-        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=True, mf=None, evolved=False, linestyle="dotted")
-        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=False, mf=None)
-        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=True, mf=None, evolved=False, linestyle="dotted")
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg_subtr=False, mf=None)
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg_subtr=True, mf=None, evolved=False, linestyle="dotted")
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg_subtr=False, mf=None)
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg_subtr=True, mf=None, evolved=False, linestyle="dotted")
       
-        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=False, mf=PL_MF, evolved=False, linestyle="None", marker="x")
-        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg=True, mf=PL_MF, evolved=False,  linestyle="None", marker="1")
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg_subtr=False, mf=PL_MF, evolved=False, linestyle="None", marker="x")
+        plotter_BC19(Deltas, Delta_index, ax3, color="b", prop_A=True, with_bkg_subtr=True, mf=PL_MF, evolved=False,  linestyle="None", marker="1")
         
-        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=False, mf=PL_MF, evolved=False, linestyle="None", marker="x")
-        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg=True, mf=PL_MF, evolved=False, linestyle="None", marker="1")
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg_subtr=False, mf=PL_MF, evolved=False, linestyle="None", marker="x")
+        plotter_BC19(Deltas, Delta_index, ax3, color="r", prop_A=False, with_bkg_subtr=True, mf=PL_MF, evolved=False, linestyle="None", marker="1")
         
         ax3.plot(0, 0, color="b", label="Prop A (delta func.)", alpha=0.5)        
         ax3.plot(0, 0, color="r", label="Prop B (delta func.)", alpha=0.5)

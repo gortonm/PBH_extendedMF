@@ -233,7 +233,7 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
     return mp_KP23, f_PBH_KP23
 
     
-def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg, mf=None, evolved=True, exponent_PL_lower=2):
+def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None, evolved=True, exponent_PL_lower=2):
     """
     Load extended MF constraints from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].
 
@@ -245,7 +245,7 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg, mf=None, evolv
         Index of the array Delta corresponding to the desired value of Delta.
     prop_A : Boolean
         If True, load constraints obtained using propagation model prop A. If False, load constraints obtained using propagation model prop B.
-    with_bkg : Boolean
+    with_bkg_subtr : Boolean
         If True, load constraints obtained using background subtraction. If False, load constraints obtained without background subtraction.   
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
@@ -272,11 +272,11 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg, mf=None, evolv
         prop_string = "prop_A"
     else:
         prop_string = "prop_B"
-    if not with_bkg:
+    if not with_bkg_subtr:
         prop_string += "_nobkg"
         
     if mf == None:
-        if with_bkg:
+        if with_bkg_subtr:
             prop_string += "_bkg"
         mp_BC19, f_PBH_BC19 = load_data("1807.03075/1807.03075_" + prop_string + ".csv")
         
@@ -531,6 +531,8 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
         Linestyle to use for pplotting. The default is "solid".
     linewidth : Float, optional
         Line width to use for pplotting. The default is 1.
+    alpha : Float, optional
+        Transparency of the line. The default is 1 (zero transparency).
 
     Returns
     -------
@@ -552,7 +554,7 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].    
 
@@ -568,7 +570,7 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, expo
         Color to use for plotting.
     prop_A : Boolean
         If True, load constraints obtained using propagation model prop A. If False, load constraints obtained using propagation model prop B.
-    with_bkg : Boolean
+    with_bkg_subtr : Boolean
         If True, load constraints obtained using background subtraction. If False, load constraints obtained without background subtraction.   
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
@@ -584,6 +586,8 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, expo
         Line width to use for pplotting. The default is 1.
     marker : String, optional
         Marker to use for plotting. The default is None.
+    alpha : Float, optional
+        Transparency of the line. The default is 1 (zero transparency).
 
     Returns
     -------
@@ -591,7 +595,7 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, expo
 
     """
 
-    mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg, mf, evolved, exponent_PL_lower)
+    mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf, evolved, exponent_PL_lower)
     """
     if not evolved:
         alpha=0.4
@@ -633,6 +637,8 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, e
         Line width to use for pplotting. The default is 1.
     marker : String, optional
         Marker to use for plotting. The default is None.
+    alpha : Float, optional
+        Transparency of the line. The default is 1 (zero transparency).
 
     Returns
     -------
@@ -654,7 +660,7 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, e
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
     
-def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None):
+def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the Subaru-HSC delta-function MF constraints obtained by Croon et al. (2020) [2007.12697].    
 
@@ -678,6 +684,8 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=T
         Line width to use for pplotting. The default is 1.
     marker : String, optional
         Marker to use for plotting. The default is None.
+    alpha : Float, optional
+        Transparency of the line. The default is 1 (zero transparency).
 
     Returns
     -------
@@ -689,12 +697,12 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=T
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, label=label, marker=marker)
+        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, marker=marker)
+        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
         
         
-def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
+def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the prospective GECCO delta-function MF constraints from Coogan et al. (2023) [2101.10370].    
 
@@ -724,6 +732,8 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
         Line width to use for pplotting. The default is 1.
     marker : String, optional
         Marker to use for plotting. The default is None.
+    alpha : Float, optional
+        Transparency of the line. The default is 1 (zero transparency).
 
     Returns
     -------
@@ -735,12 +745,12 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth, linestyle=linestyle, label=label, marker=marker)
+        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth, linestyle=linestyle, marker=marker)
+        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
-def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None):
+def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the prospective white dwarf microlensing delta-function MF constraints from Sugiyama et al. (2020) [1905.06066].
 
@@ -764,6 +774,8 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, l
         Line width to use for pplotting. The default is 1.
     marker : String, optional
         Marker to use for plotting. The default is None.
+    alpha : Float, optional
+        Transparency of the line. The default is 1 (zero transparency).
 
     Returns
     -------
@@ -775,9 +787,9 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, l
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth, linestyle=linestyle, label=label, marker=marker)
+        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth, linestyle=linestyle, marker=marker)
+        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
 #%% Tests of the method frac_diff:
@@ -940,29 +952,29 @@ if "__main__" == __name__:
                 prop_B = not prop_A
             
                 # Boolean determines whether to load constraint obtained with a background or without a background
-                for with_bkg in [True, False]:
+                for with_bkg_subtr in [True, False]:
 
-                    if not with_bkg:
+                    if not with_bkg_subtr:
                         linestyle = "dashed"
 
                     else:
                         linestyle = "dotted"                                                    
                                        
-                    plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg, mf=None, linestyle=linestyle)
-                    plotter_BC19(Deltas, i, ax, colors[1], prop_A, with_bkg, mf=LN, linestyle=linestyle)
-                    plotter_BC19(Deltas, i, ax, colors[2], prop_A, with_bkg, mf=SLN, linestyle=linestyle)
-                    plotter_BC19(Deltas, i, ax, colors[3], prop_A, with_bkg, mf=CC3, linestyle=linestyle)
+                    plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg_subtr, mf=None, linestyle=linestyle)
+                    plotter_BC19(Deltas, i, ax, colors[1], prop_A, with_bkg_subtr, mf=LN, linestyle=linestyle)
+                    plotter_BC19(Deltas, i, ax, colors[2], prop_A, with_bkg_subtr, mf=SLN, linestyle=linestyle)
+                    plotter_BC19(Deltas, i, ax, colors[3], prop_A, with_bkg_subtr, mf=CC3, linestyle=linestyle)
                 """
             #plt.suptitle("Existing constraints (showing Voyager 1 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
             
             # For Delta = 5, tightest constraint comes from the Prop A model with background subtraction
             prop_A = True
-            with_bkg = True
+            with_bkg_subtr = True
 
-            plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg)
-            plotter_BC19(Deltas, i, ax, colors[1], prop_A, with_bkg, mf=LN, linestyle=(0, (5, 1)))
-            plotter_BC19(Deltas, i, ax, colors[2], prop_A, with_bkg, mf=SLN, linestyle=(0, (5, 7)))
-            plotter_BC19(Deltas, i, ax, colors[3], prop_A, with_bkg, mf=CC3, linestyle="dashed")
+            plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg_subtr)
+            plotter_BC19(Deltas, i, ax, colors[1], prop_A, with_bkg_subtr, mf=LN, linestyle=(0, (5, 1)))
+            plotter_BC19(Deltas, i, ax, colors[2], prop_A, with_bkg_subtr, mf=SLN, linestyle=(0, (5, 7)))
+            plotter_BC19(Deltas, i, ax, colors[3], prop_A, with_bkg_subtr, mf=CC3, linestyle="dashed")
 
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
             ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -1124,12 +1136,12 @@ if "__main__" == __name__:
          
     else:
         # Present constraints obtained without background subtraction with solid lines
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg=False)
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg=False)
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=False)
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=False)
         
         # Present constraints obtained using background subtraction with dashed lines
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg=True, linestyle="dashed")
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg=True, linestyle="dashed")
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
         
         ax.plot(0, 0, color="b", alpha=0.5, linewidth=2, label="w/o bkg. subtraction (delta func.)")
         ax.plot(0, 0, color="b", linewidth=2, label="w/o bkg. subtraction (%s)" % mf_label)
@@ -1494,7 +1506,7 @@ if "__main__" == __name__:
     linestyles = ["solid", "dashed"]
     
     prop_A = True
-    with_bkg = False
+    with_bkg_subtr = False
     
     # For Galactic Centre photon constraints
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
@@ -1509,7 +1521,7 @@ if "__main__" == __name__:
             
             prop_B = not prop_A
             
-            for linestyle_index, with_bkg in enumerate([False, True]):
+            for linestyle_index, with_bkg_subtr in enumerate([False, True]):
             
                 label=""
                 
@@ -1521,7 +1533,7 @@ if "__main__" == __name__:
                     prop_string = "prop_B"
                     label = "Prop B"
                     
-                if not with_bkg:
+                if not with_bkg_subtr:
                     prop_string += "_nobkg"
                     label += " w/o bkg subtraction "
                 else:
@@ -1544,7 +1556,7 @@ if "__main__" == __name__:
                 elif plot_CC3:
                     ax.plot(mp_CC3_evolved, f_PBH_CC3_evolved, color=BC19_colours[colour_index], linestyle=linestyles[linestyle_index], label="BC '19 (" + label + ")")
                     
-                with_bkg = not with_bkg
+                with_bkg_subtr = not with_bkg_subtr
                    
             prop_A = not prop_A
 
