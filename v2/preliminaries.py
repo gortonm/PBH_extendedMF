@@ -1401,13 +1401,12 @@ if "__main__" == __name__:
         # 0 for COMPTEL, 1 for EGRET, 2 for Fermi-LAT, 3 for INTEGRAL
         # Note: the defaults here apply to the evolved MF constraints and a peak mass m_p = 1e16g, and do not depend on the fitting function at m_p = 1e16g 
         
-        """ double check the j's"""
         if Delta == 0:
             j = 0
         elif Delta == 2:
-            j = 1
+            j = 0
         elif Delta == 5:
-            j = 1
+            j = 2
         
         constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
         colours_GC_fit = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
@@ -1437,13 +1436,17 @@ if "__main__" == __name__:
         k_LN = int(np.genfromtxt(fname_LN)[argmin_LN])
         k_SLN = int(np.genfromtxt(fname_LN)[argmin_SLN])
         k_CC3 = int(np.genfromtxt(fname_LN)[argmin_CC3])
-        k_LN = k_CC3 = 1
+        k_LN = k_SLN = k_CC3 = 2
         
         if k_LN == k_SLN == k_CC3:
             
             f_max, m_pbh_values = extract_GC_Isatis(j, k_LN, exponent_PL_lower)
-            # For the unevolved MF constraints, j=2 when m_p = 1e16g
+
+            f_max_EGRET, m_pbh_values_EGRET = extract_GC_Isatis(1, k_LN, exponent_PL_lower)
             f_max_FermiLAT, m_pbh_values_FermiLAT = extract_GC_Isatis(2, k_LN, exponent_PL_lower)
+            
+            # For Delta = 0 LN constraints
+            f_max_COMPTEL_k1, m_pbh_values_COMPTEL_k1 = extract_GC_Isatis(0, 1, exponent_PL_lower)
 
         else:
             print("Error: different energy bins place constraint for different fitting functions.")
@@ -1510,16 +1513,28 @@ if "__main__" == __name__:
     ymin, ymax = 1e-26, 2.5e-23
     xmin, xmax = 9e21, 1e25
 
-    ax.plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
-    ax.plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
-    ax.plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
+    if plot_GC_Isatis and Delta == 0:
+        print("plotting")
+        ax.plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
+        ax.plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
+        ax.plot(m_pbh_values, mf_LN_evolved / f_max_COMPTEL_k1, color="r", label="LN", dashes=[6, 2])
+
+    if plot_GC_Isatis and Delta >= 2:
+        ax.plot(m_pbh_values, mf_SLN_evolved / f_max_EGRET, color="b", label="SLN", linestyle=(0, (5, 7)))
+        ax.plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
+        ax.plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
+
+    else:
+        ax.plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
+        ax.plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
+        ax.plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
     
     # Plot the integrand obtained with the unevolved MF
     if plot_KP23:
         ax.plot(m_pbh_values_upper, SLN(m_pbh_values_upper, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max_upper, color="b", linestyle="dotted")
         ax.plot(m_pbh_values_upper, CC3(m_pbh_values_upper, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max_upper, color="g", linestyle="dotted")
         ax.plot(m_pbh_values_upper, LN(m_pbh_values_upper, mc_LN, sigma=sigmas_LN[i]) / f_max_upper, color="r", linestyle="dotted")
-
+    """
     if plot_GC_Isatis and Delta == 5:
         ax.plot(m_pbh_values_FermiLAT, mf_SLN_unevolved / f_max_FermiLAT, color="b", linestyle="dotted")
         ax.plot(m_pbh_values_FermiLAT, mf_CC3_unevolved / f_max_FermiLAT, color="g", linestyle="dotted")
@@ -1529,7 +1544,7 @@ if "__main__" == __name__:
         ax.plot(m_pbh_values, mf_SLN_unevolved / f_max, color="b", linestyle="dotted")
         ax.plot(m_pbh_values, mf_CC3_unevolved / f_max, color="g", linestyle="dotted")
         ax.plot(m_pbh_values, mf_LN_unevolved / f_max, color="r", linestyle="dotted")
-           
+    """
     ax.grid()
     ax.legend(fontsize="small")
     ax.set_xlabel("$m~[\mathrm{g}]$")
@@ -1583,9 +1598,11 @@ if "__main__" == __name__:
     axes[0].plot(m_pbh_values, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
     axes[0].plot(m_pbh_values, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
     axes[0].plot(m_pbh_values, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])
+    """
     axes[0].plot(m_pbh_values, mf_SLN_unevolved, color="b", linestyle="dotted", alpha=0.5)
     axes[0].plot(m_pbh_values, mf_CC3_unevolved, color="g", linestyle="dotted", alpha=0.5)
     axes[0].plot(m_pbh_values, mf_LN_unevolved, color="r", linestyle="dotted", alpha=0.5)
+    """
     axes[0].plot(m_pbh_values, psinorm_fit, linestyle="dotted", color="k", label="$m^3$ fit")
         
     if Delta >= 2 and plot_BC19:
@@ -1622,9 +1639,22 @@ if "__main__" == __name__:
 
     elif plot_GC_Isatis:
                
-        axes[1].plot(m_pbh_values, 1 / f_max, color=colours_GC_fit[j])
-        if Delta == 5:
-            axes[1].plot(m_pbh_values, 1 / f_max_FermiLAT, color="tab:red", linestyle="dotted", alpha=0.5)
+        axes[1].plot(m_pbh_values, 1 / f_max, color=colours_GC_fit[j], label=constraints_names_short[j])
+        
+        if Delta == 0:
+            print("second if statement")
+            axes[1].plot(m_pbh_values_COMPTEL_k1, 1 / f_max_COMPTEL_k1, label="COMPTEL (middle energy bin)", linestyle="dashed", color="tab:orange")
+            ax.plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
+            ax.plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
+            ax.plot(m_pbh_values, mf_LN_evolved / f_max_COMPTEL_k1, color="r", label="LN", dashes=[6, 2])
+            axes[1].legend(fontsize="x-small")
+        
+        if Delta >= 2:
+            axes[1].plot(m_pbh_values_EGRET, 1 / f_max_EGRET, color="tab:green", label="EGRET")
+            ax.plot(m_pbh_values, mf_SLN_evolved / f_max_EGRET, color="b", label="SLN", linestyle=(0, (5, 7)))
+            ax.plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
+            ax.plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
+            axes[1].legend(fontsize="x-small")
 
         axes[2].set_ylim(1e-13, 1e-11)
         exponent_fit = 2.8
@@ -1637,7 +1667,10 @@ if "__main__" == __name__:
         if Delta == 0:
             axes[2].set_ylim(1e-14, 2e-12)        
             
-        elif Delta == 5:
+        elif Delta >= 2:
+            axes[2].set_ylim(1e-14, 2e-12)        
+            
+        if Delta == 5:
             axes[2].set_ylim(1e-14, 1e-8)        
         
     else:
@@ -1670,10 +1703,23 @@ if "__main__" == __name__:
     axes[1].set_xscale("log")
     axes[1].set_yscale("log")
 
-    axes[2].plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
-    axes[2].plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
-    axes[2].plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
+    if plot_GC_Isatis and Delta == 0:
+        axes[2].plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
+        axes[2].plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
+        axes[2].plot(m_pbh_values, mf_LN_evolved / f_max_COMPTEL_k1, color="r", label="LN", dashes=[6, 2])
+
+    elif plot_GC_Isatis and Delta >= 2:
+        axes[2].plot(m_pbh_values, mf_SLN_evolved / f_max_EGRET, color="b", label="SLN", linestyle=(0, (5, 7)))
+        axes[2].plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
+        axes[2].plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
+        
+    else:
+        print("else")
+        axes[2].plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
+        axes[2].plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
+        axes[2].plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
     
+    """
     if plot_GC_Isatis and Delta == 5:
         axes[2].plot(m_pbh_values_FermiLAT, mf_SLN_unevolved / f_max_FermiLAT, color="b", linestyle="dotted")
         axes[2].plot(m_pbh_values_FermiLAT, mf_CC3_unevolved / f_max_FermiLAT, color="g", linestyle="dotted")
@@ -1683,7 +1729,7 @@ if "__main__" == __name__:
         axes[2].plot(m_pbh_values, mf_SLN_unevolved / f_max, color="b", linestyle="dotted")
         axes[2].plot(m_pbh_values, mf_CC3_unevolved / f_max, color="g", linestyle="dotted")
         axes[2].plot(m_pbh_values, mf_LN_unevolved / f_max, color="r", linestyle="dotted")
-    
+    """
     axes[2].set_ylabel("$\psi_\mathrm{N} / f_\mathrm{max}~[\mathrm{g}^{-1}]$")
     axes[2].set_xlabel("$m~[\mathrm{g}]$")
     
@@ -1753,6 +1799,8 @@ if "__main__" == __name__:
     print("\n Evolved MFs")
     print("Integral (M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
+    print("1 / total integral [SLN] = {:.2e}".format(1 / integral_total))
+    print("constraint_Carr result [SLN] = {:.2e}".format(constraint_Carr([mc_SLN], m_pbh_values, f_max, SLN, [sigmas_SLN[i], alphas_SLN[i]], evolved=True)[0]))
 
     integral_lower = np.trapz(mf_LN_evolved[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
     integral_upper = np.trapz(mf_LN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
