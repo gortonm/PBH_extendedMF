@@ -154,6 +154,8 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
             print("approx = %s" % approx)
 
         elif mf==SLN:
+            print(params)
+
             mp_GC = [m_max_SLN(m_c, *params, log_m_factor=3, n_steps=1000) for m_c in mc_values]
 
         elif mf==CC3 or mf == PL_MF:
@@ -501,7 +503,7 @@ def set_ticks_grid(ax):
     ax.grid()
 
 
-def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=False, show_label=False, linestyle="solid", linewidth=1, marker=None):
+def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from Galactic Centre photons.    
 
@@ -537,20 +539,20 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
     """
     
     mp, f_PBH = load_data_GC_Isatis(Deltas, Delta_index, mf, params, evolved, exponent_PL_lower, approx)
-    
+    """
     if not evolved:
         alpha=0.4
     else:
         alpha=1
-    
+    """
     if show_label:
         label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha, marker=marker)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
+def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].    
 
@@ -590,20 +592,20 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg, mf=None, expo
     """
 
     mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg, mf, evolved, exponent_PL_lower)
-    
+    """
     if not evolved:
         alpha=0.4
     else:
         alpha=1
-    
+    """
     if show_label:
         label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha, marker=marker)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
+def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the delta-function MF constraints obtained by Korwar & Profumo (2023) [2302.04408].    
 
@@ -639,17 +641,17 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, e
     """    
     
     mp, f_PBH = load_data_KP23(Deltas, Delta_index, mf, evolved, exponent_PL_lower)
-    
+    """
     if not evolved:
         alpha=0.4
     else:
         alpha=1
-    
+    """
     if show_label:
         label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, alpha=alpha, marker=marker)
+        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
     
 def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None):
@@ -687,9 +689,9 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=T
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linestyle=linestyle, label=label, marker=marker)
+        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, label=label, marker=marker)
     else:
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linestyle=linestyle, marker=marker)
+        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, marker=marker)
         
         
 def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, show_label=False, linestyle="solid", linewidth=1, marker=None):
@@ -733,9 +735,9 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linestyle=linestyle, label=label, marker=marker)
+        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth, linestyle=linestyle, label=label, marker=marker)
     else:
-        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linestyle=linestyle, marker=marker)
+        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth, linestyle=linestyle, marker=marker)
 
 
 def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None):
@@ -773,9 +775,9 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, l
     
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linestyle=linestyle, label=label, marker=marker)
+        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth, linestyle=linestyle, label=label, marker=marker)
     else:
-        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linestyle=linestyle, marker=marker)
+        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth, linestyle=linestyle, marker=marker)
 
 
 #%% Tests of the method frac_diff:
@@ -804,11 +806,11 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = True
+    plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = False
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
-    plot_BC19 = False
+    plot_BC19 = True
     # If True, plot unevolved MF constraint
     plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
@@ -954,7 +956,7 @@ if "__main__" == __name__:
             #plt.suptitle("Existing constraints (showing Voyager 1 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
             
             # For Delta = 5, tightest constraint comes from the Prop A model with background subtraction
-            prop_A = False
+            prop_A = True
             with_bkg = True
 
             plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg)
@@ -1075,6 +1077,74 @@ if "__main__" == __name__:
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.pdf".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.png".format(Deltas[i]))
             
+        
+#%% Plot the evaporation constraints on the same plot
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    plot_LN = False
+    plot_SLN = True
+    plot_CC3 = False
+    
+    Delta_index = 5
+    
+    if plot_LN:
+        mf = LN
+        params = [sigmas_LN[Delta_index]]
+        mf_label = "LN"
+    elif plot_SLN:
+        mf = SLN
+        params = [sigmas_SLN[Delta_index], alphas_SLN[Delta_index]]
+        mf_label="SLN"
+    elif CC3:
+        mf = CC3
+        params = [alphas_CC3[Delta_index], betas[Delta_index]]
+        mf_label="CC3"
+
+    fig, ax = plt.subplots(figsize=(7,7))
+    colors = ["tab:red", "tab:blue", "tab:orange"]
+
+    
+    if Deltas[Delta_index] < 5:
+        # Present constraints obtained without background subtraction with solid lines        
+        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=None, alpha=0.5)
+        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=mf, params=params)
+        
+        # Present constraints obtained using background subtraction with dashed lines
+        plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=None, linewidth=2, alpha=0.5, linestyle="dashed")
+        plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=mf, linewidth=2, linestyle="dashed")
+ 
+        ax.plot(0, 0, color="k", alpha=0.5, linewidth=2, label="GC photons (delta func.)")
+        ax.plot(0, 0, color="k", linestyle="dashed", linewidth=2, label="GC photons (%s)" % mf_label)
+        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=2, alpha=0.5, label="KP '23 (delta func.)")
+        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=2, label="KP '23 (%s)" % mf_label)   
+         
+    else:
+        # Present constraints obtained without background subtraction with solid lines
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg=False)
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg=False)
+        
+        # Present constraints obtained using background subtraction with dashed lines
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg=True, linestyle="dashed")
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg=True, linestyle="dashed")
+        
+        ax.plot(0, 0, color="b", alpha=0.5, linewidth=2, label="w/o bkg. subtraction (delta func.)")
+        ax.plot(0, 0, color="b", linewidth=2, label="w/o bkg. subtraction (%s)" % mf_label)
+        ax.plot(0, 0, color="b", alpha=0.5, linewidth=2, linestyle="dashed", label="w/ bkg. subtraction (delta func.)")
+        ax.plot(0, 0, color="b", linestyle="dashed", linewidth=2, label="w/ bkg. subtraction (%s)" % mf_label)
+
+    ax.legend(title="$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="xx-small")
+    ax.set_xlabel("$m_p~[\mathrm{g}]$")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e16, 1e19)
+    ax.set_ylim(1e-3, 1)
+    ax.grid()
+    fig.tight_layout()
 
 #%% Plot constraints for different Delta on the same plot
 
