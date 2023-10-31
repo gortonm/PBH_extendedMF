@@ -489,7 +489,7 @@ if "__main__" == __name__:
         evolved = True
         
     # If True, load the more stringent or less stringent "prop B" data
-    prop_B_lower = True
+    prop_B_lower = False
             
     t = t_0
     mc_values = 10**np.arange(14, 20.5, 0.1)
@@ -507,13 +507,11 @@ if "__main__" == __name__:
 
 
     # Boolean determines which propagation model to load delta-function MF constraint from
-    #for prop_A in [True, False]:
     for prop_A in [False]:
 
         prop_B = not prop_A
         
         # If True, load constraint obtained with a background or without background subtraction.
-        #for with_bkg_subtr in [True, False]:
         for with_bkg_subtr in [False]:
             
             # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
@@ -531,14 +529,16 @@ if "__main__" == __name__:
                     m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
                 else:
                     if not prop_B_lower:
-                        m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
+                        m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg_upper.csv")
                     else:
                         m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")                        
                 
             if not with_bkg_subtr:
                 prop_string += "_nobkg"
                 if prop_B_lower:
-                    prop_string += "lower"
+                    prop_string += "_lower"
+                elif prop_B:
+                    prop_string += "_upper"
 
             # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.            
             for exponent_PL_lower in [0, 2, 3, 4]:
