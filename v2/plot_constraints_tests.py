@@ -452,8 +452,9 @@ if "__main__" == __name__:
     linestyles = ["solid", "dashed", "dashdot", "dotted"]
     
     # Boolean determines which propagation model to load data from
-    prop_A = False
+    prop_A = True
     prop_B = not prop_A
+    prop_B_lower = False
     
     with_bkg_subtr = False
     
@@ -1957,3 +1958,24 @@ if "__main__" == __name__:
             
         for fig in [fig1, fig2, fig3, fig4, fig5, fig6, fig7]:
             fig.tight_layout()
+            
+#%% Check which constraint is being shown from the Voyager-1 delta function MF constraints
+
+with_bkg_subtr = True
+
+if with_bkg_subtr:
+    m_delta_values_propA, f_max_propA = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+    m_delta_values_propB, f_max_propB = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
+else:
+    m_delta_values_propA, f_max_propA = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
+    m_delta_values_propB, f_max_propB = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")
+
+fig, ax = plt.subplots(figsize=(5,5))
+ax.plot(m_delta_values_propA, f_max_propA, label="prop A")
+ax.plot(m_delta_values_propB, f_max_propB, label="prop B (lower)")
+ax.set_ylabel("$f_\mathrm{PBH}$")
+ax.set_xlabel("$m~[\mathrm{g}]$")
+ax.legend()
+ax.set_xscale("log")
+ax.set_yscale("log")
+fig.tight_layout()
