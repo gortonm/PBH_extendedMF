@@ -233,7 +233,7 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
     return mp_KP23, f_PBH_KP23
 
     
-def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None, evolved=True, exponent_PL_lower=2):
+def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None, evolved=True, exponent_PL_lower=2, prop_B_lower=False):
     """
     Load extended MF constraints from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].
 
@@ -272,12 +272,24 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
         prop_string = "prop_A"
     else:
         prop_string = "prop_B"
+        
     if not with_bkg_subtr:
         prop_string += "_nobkg"
         
+    if prop_A or with_bkg_subtr:
+        prop_B_lower = False
+            
     if mf == None:
         if with_bkg_subtr:
             prop_string += "_bkg"
+    
+    if not prop_A and not with_bkg_subtr:
+        if prop_B_lower:
+            prop_string += "_lower"
+        else:
+            prop_string += "_upper"        
+    
+    if mf == None:
         mp_BC19, f_PBH_BC19 = load_data("1807.03075/1807.03075_" + prop_string + ".csv")
         
     elif mf == LN:
@@ -594,7 +606,6 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
     None.
 
     """
-
     mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf, evolved, exponent_PL_lower)
     """
     if not evolved:
@@ -607,6 +618,50 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, marker=marker)
     else:
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
+
+
+def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True):
+    """
+    Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].
+    Unlike plotter_BC19(), show the range of constraints that is possible due to uncertainties arising from the electron/positron propagation model.       
+
+    Parameters
+    ----------
+    Deltas : Array-like
+        Array of power-spectrum widths, which correspond to a given fitting function.
+    Delta_index : Integer
+        Index of the array Delta corresponding to the desired value of Delta.
+    ax : Matplotlib Axes object
+        Axis to add ticks and grid to.
+    color : String
+        Color to use for plotting.
+    with_bkg_subtr : Boolean
+        If True, load constraints obtained using background subtraction. If False, load constraints obtained without background subtraction.   
+    mf : Function, optional
+        Fitting function to use. The default is None (delta-function).
+    exponent_PL_lower : Float, optional
+        Denotes the exponent of the power-law used to extrapolate the delta-function MF. The default is 2.
+    evolved : Boolean, optional
+        If True, use the evolved form of the fitting function. The default is True.
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower)
+    mp_propB, f_PBH_propB = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower)
+        
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB, f_PBH_propB), color=color, linewidth=0, alpha=1)
+    
+    if not with_bkg_subtr:
+
+        mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower, prop_B_lower=True)
+        
+        # Interpolate the data points
+        ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=1)
+        ax.fill_between(mp_propB, f_PBH_propB, np.interp(mp_propB, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=1)
 
 
 def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
@@ -1101,7 +1156,7 @@ if "__main__" == __name__:
     plot_SLN = True
     plot_CC3 = False
     
-    Delta_index = 5
+    Delta_index = 6
     
     if plot_LN:
         mf = LN
@@ -1136,10 +1191,16 @@ if "__main__" == __name__:
          
     else:
         # Present constraints obtained without background subtraction with solid lines
+        plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", with_bkg_subtr=False, mf=None)
+        plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", mf=mf, with_bkg_subtr=False)
+      
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=False)
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=False)
         
-        # Present constraints obtained using background subtraction with dashed lines
+        # Present constraints obtained using background subtraction with dashed lines        
+        plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", with_bkg_subtr=True, mf=None)
+        plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", mf=mf, with_bkg_subtr=True)
+        
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
         
