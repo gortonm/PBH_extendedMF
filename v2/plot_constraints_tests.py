@@ -455,34 +455,37 @@ if "__main__" == __name__:
     prop_A = False
     prop_B = not prop_A
     
-    with_bkg_subtr = False
+    with_bkg_subtr = True
     
     # If True, load the more stringent or less stringent "prop B" data
     prop_B_lower = False
     
     if prop_A:
         prop_string = "prop_A"
-        title_string = "(Prop A"
-        
+        if with_bkg_subtr:
+            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+        else:
+            m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
+
     elif prop_B:
         prop_string = "prop_B"
-        title_string = "(Prop B"
+        if with_bkg_subtr:
+            if not prop_B_lower:
+                m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg_upper.csv")
+            else:
+                m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg_lower.csv")                        
+        else:
+            if not prop_B_lower:
+                m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg_upper.csv")
+            else:
+                m_delta_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")                        
         
     if not with_bkg_subtr:
         prop_string += "_nobkg"
-        title_string += ")"
-    else:
-        title_string += " w/ background subtraction)"
-    
-    if prop_B:
-        if prop_B_lower:
-            prop_string += "_lower"
-            title_string += " (lower)"
-        else:
-            prop_string += "_upper"
-            title_string += " (upper)"
-            
-    m_delta_values, f_max = load_data("1807.03075/1807.03075_" + prop_string + ".csv")
+    if prop_B_lower:
+        prop_string += "_lower"
+    elif prop_B:
+        prop_string += "_upper"
     
     for j in range(len(Deltas)):
         
