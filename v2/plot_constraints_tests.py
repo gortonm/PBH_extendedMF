@@ -463,7 +463,7 @@ if "__main__" == __name__:
     if prop_A:
         prop_string = "prop_A"
         title_string = "(Prop A"
-
+        
     elif prop_B:
         prop_string = "prop_B"
         title_string = "(Prop B"
@@ -481,10 +481,12 @@ if "__main__" == __name__:
         else:
             prop_string += "_upper"
             title_string += " (upper)"
+            
+    m_delta_values, f_max = load_data("1807.03075/1807.03075_" + prop_string + ".csv")
     
     for j in range(len(Deltas)):
         
-        if Deltas[j] == 0:
+        if Deltas[j] == 5:
         
             fig, axes = plt.subplots(2, 2, figsize=(13, 13))
             
