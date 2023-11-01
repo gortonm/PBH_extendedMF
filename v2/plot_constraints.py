@@ -270,20 +270,18 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
     
     if prop_A:
         prop_string = "prop_A"
+        prop_B_lower = False
     else:
         prop_string = "prop_B"
         
     if not with_bkg_subtr:
         prop_string += "_nobkg"
-        
-    if prop_A or with_bkg_subtr:
-        prop_B_lower = False
-            
+                    
     if mf == None:
         if with_bkg_subtr:
             prop_string += "_bkg"
     
-    if not prop_A and not with_bkg_subtr:
+    if not prop_A :
         if prop_B_lower:
             prop_string += "_lower"
         else:
@@ -566,7 +564,7 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, prop_B_lower=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].    
 
@@ -606,7 +604,7 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
     None.
 
     """
-    mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf, evolved, exponent_PL_lower)
+    mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf, evolved, exponent_PL_lower, prop_B_lower)
     """
     if not evolved:
         alpha=0.4
@@ -651,18 +649,13 @@ def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, 
     """
     
     mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower)
-    mp_propB, f_PBH_propB = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower)
-        
-    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB, f_PBH_propB), color=color, linewidth=0, alpha=1)
+    mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower)
+    mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower, prop_B_lower=True)
     
-    if not with_bkg_subtr:
-
-        mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower, prop_B_lower=True)
-        
-        # Interpolate the data points
-        ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=1)
-        ax.fill_between(mp_propB, f_PBH_propB, np.interp(mp_propB, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=1)
-
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color=color, linewidth=0, alpha=1)
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=1)
+    ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=1)
+    
 
 def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
@@ -1153,8 +1146,8 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     plot_LN = False
-    plot_SLN = True
-    plot_CC3 = False
+    plot_SLN = False
+    plot_CC3 = True
     
     Delta_index = 6
     
@@ -1173,53 +1166,57 @@ if "__main__" == __name__:
 
     fig, ax = plt.subplots(figsize=(7,7))
     colors = ["tab:red", "tab:blue", "tab:orange"]
-
     
     if Deltas[Delta_index] < 5:
-        # Present constraints obtained without background subtraction with solid lines        
-        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=None, alpha=0.5)
-        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=mf, params=params)
         
         # Present constraints obtained using background subtraction with dashed lines
         plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=None, linewidth=2, alpha=0.5, linestyle="dashed")
         plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=mf, linewidth=2, linestyle="dashed")
  
         ax.plot(0, 0, color="k", alpha=0.5, linewidth=2, label="GC photons (delta func.)")
-        ax.plot(0, 0, color="k", linestyle="dashed", linewidth=2, label="GC photons (%s)" % mf_label)
+        ax.plot(0, 0, color="k", linewidth=2, label="GC photons (%s)" % mf_label)
         ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=2, alpha=0.5, label="KP '23 (delta func.)")
-        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=2, label="KP '23 (%s)" % mf_label)   
+        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=2, label="KP '23 (%s)" % mf_label)
+        
+        # Present constraints obtained without background subtraction with solid lines        
+        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=None, alpha=0.5, linewidth=2)
+        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=mf, params=params, linewidth=2)
          
     else:
         # Present constraints obtained without background subtraction with solid lines
-        plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", with_bkg_subtr=False, mf=None)
+        plotter_BC19_range(Deltas, Delta_index, ax, color="lightsteelblue", with_bkg_subtr=False, mf=None)
         plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", mf=mf, with_bkg_subtr=False)
       
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=False)
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=False)
-        
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=False, prop_B_lower=True)
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=False, prop_B_lower=False)
+       
         # Present constraints obtained using background subtraction with dashed lines        
-        plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", with_bkg_subtr=True, mf=None)
+        plotter_BC19_range(Deltas, Delta_index, ax, color="lightsteelblue", with_bkg_subtr=True, mf=None)
         plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", mf=mf, with_bkg_subtr=True)
         
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, linestyle="dashed")
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=True, prop_B_lower=False, linestyle="dashed")
         
         ax.plot(0, 0, color="b", alpha=0.5, linewidth=2, label="w/o bkg. subtraction (delta func.)")
         ax.plot(0, 0, color="b", linewidth=2, label="w/o bkg. subtraction (%s)" % mf_label)
         ax.plot(0, 0, color="b", alpha=0.5, linewidth=2, linestyle="dashed", label="w/ bkg. subtraction (delta func.)")
         ax.plot(0, 0, color="b", linestyle="dashed", linewidth=2, label="w/ bkg. subtraction (%s)" % mf_label)
-
+        
     ax.legend(title="$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="xx-small")
     ax.set_xlabel("$m_p~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_xlim(1e16, 1e19)
+    ax.set_xlim(1e16, 5e18)
     ax.set_ylim(1e-3, 1)
     ax.grid()
     fig.tight_layout()
 
-#%% Plot constraints for different Delta on the same plot
+#%% Plot constraints for different Delta on the same plot (Korwar & Profumo 2023)
 
 if "__main__" == __name__:
     
@@ -1274,7 +1271,7 @@ if "__main__" == __name__:
         if plot_unevolved:
             
             if plot_LN:
-                plotter_KP23(Deltas, Delta_index, ax, color=colors[i], mf=LN, evolved=False, exponent_PL_lower=exponent_PL_lower)                
+                plotter_KP23(Deltas, Delta_index, ax, color=colors[i], mf=LN, evolved=False, exponent_PL_lower=exponent_PL_lower)             
             elif plot_SLN:
                 plotter_KP23(Deltas, Delta_index, ax, color=colors[i], mf=SLN, evolved=False, exponent_PL_lower=exponent_PL_lower)
             elif plot_CC3:
@@ -1308,6 +1305,62 @@ if "__main__" == __name__:
     x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
     ax1.xaxis.set_minor_locator(x_minor)
     ax1.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+
+#%% Plot constraints for different Delta on the same plot (Boudaud & Cirelli 2019)
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+            
+    exponent_PL_lower = 2
+    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+    
+    plot_LN = True
+    plot_SLN = False
+    plot_CC3 = False
+        
+    fig, ax = plt.subplots(figsize=(6,6))       
+    
+    # Power-law exponent to use between 1e11g and 1e15g.
+    exponent_PL_lower = 2.0
+
+    colors=["tab:blue", "tab:orange", "tab:green", "tab:red"]
+    with_bkg_subtr = True
+        
+    for i, Delta_index in enumerate([0, 5, 6]):
+    #for i, Delta_index in enumerate([1, 2, 3, 4]):
+    
+        ax.plot(0, 0, color=colors[i], label="{:.0f}".format(Deltas[Delta_index]))
+
+        if plot_LN:
+            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[i], mf=LN, evolved=True, exponent_PL_lower=exponent_PL_lower, with_bkg_subtr=with_bkg_subtr)             
+            
+        elif plot_SLN:
+            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[i], mf=SLN, evolved=True, exponent_PL_lower=exponent_PL_lower, with_bkg_subtr=with_bkg_subtr)             
+
+        elif plot_CC3:
+            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[i], mf=CC3, evolved=True, exponent_PL_lower=exponent_PL_lower, with_bkg_subtr=with_bkg_subtr)             
+           
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xlabel("$m_p~[\mathrm{g}]$")
+    ax.legend(title="$\Delta$", fontsize="x-small")
+    ax.set_xscale("log")
+    ax.set_yscale("log")  
+    ax.set_xlim(1e16, 2e18)
+    ax.set_ylim(1e-5, 1)
+    
+    if plot_LN:
+        fig.suptitle("Boudaud \& Cirelli 2019 constraints (LN)", fontsize="small")
+    elif plot_SLN:
+        fig.suptitle("Boudaud \& Cirelli 2019 constraints (SLN)", fontsize="small")
+    elif plot_CC3:
+        fig.suptitle("Boudaud \& Cirelli 2019 constraints (CC3)", fontsize="small")
+    fig.tight_layout()
+ 
+    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+
 
 
 #%% Plot constraints for different Delta on the same plot
@@ -1410,7 +1463,7 @@ if "__main__" == __name__:
         mp_Subaru_LN = mc_Subaru_SLN * np.exp(-sigmas_LN[Delta_index]**2) 
         ax0.plot(mp_Subaru_LN, f_PBH_Subaru_LN, color=colors_LN[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax0.plot(mp_GC_LN, f_PBH_GC_LN, color=colors_LN[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
-        #ax0.plot(mp_KP23_LN, f_PBH_KP23_LN, color=colors_LN[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+        ax0.plot(mp_KP23_LN, f_PBH_KP23_LN, color=colors_LN[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
         ax0.plot(0,0, color=colors_LN[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax0a = ax0.twinx()
         ax0a.legend(title="LN", loc="upper right", fontsize="x-small")
@@ -1422,7 +1475,7 @@ if "__main__" == __name__:
         mp_Subaru_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Subaru_SLN]
         ax1.plot(mp_Subaru_SLN, f_PBH_Subaru_SLN, color=colors_SLN[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax1.plot(mp_GC_SLN, f_PBH_GC_SLN, color=colors_SLN[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
-        #ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors_SLN[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+        ax1.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color=colors_SLN[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
         ax1.plot(0,0, color=colors_SLN[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax1a = ax1.twinx()
         ax1a.legend(title="SLN", loc="upper right", fontsize="x-small")
@@ -1432,7 +1485,7 @@ if "__main__" == __name__:
         mp_GC_CC3 = mp_CC3_evolved
         ax2.plot(mp_Subaru_CC3, f_PBH_Subaru_CC3, color=colors_CC3[i], linestyle=linestyles[0], linewidth=linewidth_values[i])
         ax2.plot(mp_GC_CC3, f_PBH_GC_CC3, color=colors_CC3[i], linestyle=linestyles[1], linewidth=linewidth_values[i])
-        #ax2.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors_CC3[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
+        ax2.plot(mp_KP23_CC3, f_PBH_KP23_CC3, color=colors_CC3[i], linestyle=linestyles[2], linewidth=linewidth_values[i])
         ax2.plot(0,0, color=colors_CC3[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax2a = ax2.twinx()
         ax2a.legend(title="CC3", loc="upper right", fontsize="x-small")
@@ -1444,7 +1497,7 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")  
         ax.set_xlim(1e16, 1e24)
-        ax.set_ylim(1e-3, 1)
+        ax.set_ylim(1e-4, 1)
         ax.legend(fontsize="x-small")
             
         x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)

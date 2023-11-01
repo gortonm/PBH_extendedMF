@@ -455,7 +455,7 @@ if "__main__" == __name__:
     prop_A = False
     prop_B = not prop_A
     
-    with_bkg_subtr = True
+    with_bkg_subtr = False
     
     # If True, load the more stringent or less stringent "prop B" data
     prop_B_lower = False
@@ -472,11 +472,15 @@ if "__main__" == __name__:
         prop_string += "_nobkg"
         title_string += ")"
     else:
-        title_string += "w/ background subtraction)"
-        
-    if prop_B_lower:
-        prop_string += "_lower"
-        title_string += " (lower)"
+        title_string += " w/ background subtraction)"
+    
+    if prop_B:
+        if prop_B_lower:
+            prop_string += "_lower"
+            title_string += " (lower)"
+        else:
+            prop_string += "_upper"
+            title_string += " (upper)"
     
     for j in range(len(Deltas)):
         

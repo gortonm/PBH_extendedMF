@@ -371,6 +371,7 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
             # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
             m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
             psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
+
             psi_evolved_interp = 10**np.interp(np.log10(m_delta), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
             
             integrand = psi_evolved_interp / f_max
@@ -1331,8 +1332,8 @@ def extract_GC_Isatis(j, k, exponent_PL_lower=2, include_extrapolated=True):
 if "__main__" == __name__:
     
     plot_KP23 = False
-    plot_GC_Isatis = True
-    plot_BC19 = False
+    plot_GC_Isatis = False
+    plot_BC19 = True
     plot_Subaru = False
     plot_Sugiyama19 = False
     Delta = 5
@@ -1341,7 +1342,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Peak mass, in grams
-    m_p = 1e16
+    m_p = 2e18
     
     # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
     if Delta == 0:
@@ -1372,7 +1373,7 @@ if "__main__" == __name__:
         # Power-law exponent to use between 1e15g and 1e16g.
         exponent_PL_upper = 2.0
         # Power-law exponent to use between 1e11g and 1e15g.
-        exponent_PL_lower = 3.0
+        exponent_PL_lower = 2.0
         
         m_delta_extrapolated_upper = np.logspace(15, 16, 11)
         m_delta_extrapolated_lower = np.logspace(11, 15, 41)
@@ -1455,7 +1456,7 @@ if "__main__" == __name__:
         # Voyager 1 cosmic ray constraints, from Boudaud & Cirelli (2019) [1807.03075]
         
         # Boolean determines which propagation model to load data from
-        prop_A = True
+        prop_A = False
         prop_B = not prop_A
  
         # If True, use constraints obtained with background subtraction
@@ -1471,9 +1472,9 @@ if "__main__" == __name__:
         elif prop_B:
             prop_string = "prop_B"
             if with_bkg:
-                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg.csv")
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg_lower.csv")
             else:
-                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg.csv")
+                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")
     
     
             
@@ -1740,6 +1741,9 @@ if "__main__" == __name__:
         fig.suptitle("GC photon constraints, $\Delta={:.0f}$".format(Delta))
         
     elif plot_BC19:
+        axes[0].set_ylim(1e-24, 3e-21)
+        axes[1].set_ylim(1, 1e9)
+        axes[2].set_ylim(1e-20, 1e-14)
         fig.suptitle("Voyager 1 electron/positron constraints \n $\Delta={:.0f}$".format(Delta), fontsize="small")
 
     axes[0].legend(fontsize="xx-small")
