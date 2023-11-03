@@ -1342,7 +1342,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Peak mass, in grams
-    m_p = 2e18
+    m_p = 5.5e16
     
     # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
     if Delta == 0:
@@ -1394,7 +1394,7 @@ if "__main__" == __name__:
         
     elif plot_GC_Isatis:
         # Power-law exponent to use between 1e11g and 1e13g.
-        exponent_PL_lower = 2
+        exponent_PL_lower = 0
         
         # Constraints from Galactic Centre photons from Isatis (see Auffinger (2022) [2201.01265])
         
@@ -1403,11 +1403,12 @@ if "__main__" == __name__:
         # Note: the defaults here apply to the evolved MF constraints and a peak mass m_p = 1e16g, and do not depend on the fitting function at m_p = 1e16g 
         
         if Delta == 0:
-            j = 0
+            j = 0 # for m_p = 1e16g
         elif Delta == 2:
-            j = 0
+            j = 0 # for m_p = 1e16g
         elif Delta == 5:
-            j = 2
+            #j = 2 # for m_p = 1e16g
+            j = 1 # for m_p = 5e16g
         
         constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
         colours_GC_fit = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
@@ -1460,24 +1461,30 @@ if "__main__" == __name__:
         prop_B = not prop_A
  
         # If True, use constraints obtained with background subtraction
-        with_bkg = True
+        with_bkg = False
         
         if prop_A:
             prop_string = "prop_A"
             if with_bkg:
-                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
             else:
-                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
+                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
 
         elif prop_B:
             prop_string = "prop_B"
             if with_bkg:
-                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_bkg_lower.csv")
+                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_bkg_upper.csv")
             else:
-                m_pbh_values, f_max = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")
+                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_nobkg_upper.csv")
     
+        exponent_PL_lower = 2
     
-            
+        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_pbh_values_loaded))+0.01, 0.1)
+        f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_pbh_values_loaded), exponent_PL_lower)
+    
+        f_max = np.concatenate((f_max_extrapolated, f_max_loaded))
+        m_pbh_values = np.concatenate((m_delta_extrapolated, m_pbh_values_loaded))
+
     
     mp_SLN = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
     mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
