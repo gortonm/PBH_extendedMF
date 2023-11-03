@@ -871,11 +871,11 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = False
+    plot_GC_Isatis = True
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = False
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
-    plot_BC19 = True
+    plot_BC19 = False
     # If True, plot unevolved MF constraint
     plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
@@ -902,7 +902,7 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if Deltas[i] == 5:
+        if Deltas[i] == 1:
                         
             fig, ax = plt.subplots(figsize=(9, 5))
             
@@ -1127,13 +1127,77 @@ if "__main__" == __name__:
 
         ax.set_xlim(xmin_evap, xmax_micro)
         ax.set_ylim(ymin, ymax)
-        ax.legend(fontsize="xx-small", title="$\Delta={:.1f}$".format(Deltas[i]), loc="upper right")
+        ax.legend(fontsize="xx-small", title="$\Delta={:.0f}$".format(Deltas[i]), loc="upper right")
         
         #plt.suptitle("Prospective constraints, $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
         fig.tight_layout()
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.pdf".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.png".format(Deltas[i]))
-            
+     
+#%% Prospective constraints
+
+if "__main__" == __name__:
+        
+    # Choose colors to match those from Fig. 5 of 2009.03204
+    colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
+                    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    plt.figure(figsize=(10, 10))
+    Delta_indices = [0, 4, 5, 6]
+    
+    for axis_index, Delta_index in enumerate(Delta_indices):
+        
+        ax = plt.subplot(2, 2, axis_index + 1)
+                        
+        # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].        
+        NFW = False
+        
+        # Set axis limits
+        if Deltas[Delta_index] < 5:
+            xmin_evap, xmax_evap = 1e16, 2e18
+            xmin_micro, xmax_micro = 2e20, 5e23
+            show_label = False
+        else:
+            xmin_evap, xmax_evap = 1e16, 5e18
+            xmin_micro, xmax_micro = 2e17, 5e23
+            show_label = True
+
+        # plot Einasto profile results            
+        plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, linestyle="solid", linewidth=2)
+        plotter_GECCO(Deltas, Delta_index, ax, color=colors[1], NFW=NFW, mf=LN, linestyle=(0, (5, 1)), linewidth=2)
+        plotter_GECCO(Deltas, Delta_index, ax, color=colors[2], NFW=NFW, mf=SLN, linestyle=(0, (5, 7)), linewidth=2)
+        plotter_GECCO(Deltas, Delta_index, ax, color=colors[3], NFW=NFW, mf=CC3, linestyle="dashed", linewidth=2)
+
+        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=show_label)
+        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)), show_label=show_label, linewidth=2)
+        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=show_label, linewidth=2)
+        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=show_label, linewidth=2)
+        
+        ymin, ymax = 1e-3, 1
+        """
+        if axis_index in (2, 3):
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        if axis_index in (0, 2):
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xticks([], labels="")
+        if axis_index in (1, 3):
+            ax.tick_params(labelleft=False)    
+        if axis_index in (0, 1):
+            ax.tick_params(labelbottom=False)    
+        """
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(xmin_evap, xmax_micro)
+        ax.set_ylim(ymin, ymax)
+        ax.legend(fontsize="xx-small", title="$\Delta={:.0f}$".format(Deltas[Delta_index]), loc="upper right")
+        ax.grid()
+    
+    plt.tight_layout()
+    #plt.subplots_adjust(hspace=0., wspace=0.)
         
 #%% Plot the evaporation constraints on the same plot
 
