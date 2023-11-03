@@ -618,7 +618,7 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True):
+def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, alpha=1):
     """
     Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].
     Unlike plotter_BC19(), show the range of constraints that is possible due to uncertainties arising from the electron/positron propagation model.       
@@ -641,6 +641,8 @@ def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, 
         Denotes the exponent of the power-law used to extrapolate the delta-function MF. The default is 2.
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is True.
+    alpha : Float, optional
+        Transparency of the line. The default is 1 (zero transparency).
 
     Returns
     -------
@@ -652,10 +654,13 @@ def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, 
     mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower)
     mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower, prop_B_lower=True)
     
-    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color=color, linewidth=0, alpha=1)
-    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=1)
-    ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=1)
-    
+    """
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color=color, linewidth=0, alpha=alpha)
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=alpha)
+    ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=alpha)
+    """
+    ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=alpha)
+   
 
 def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
@@ -896,190 +901,182 @@ if "__main__" == __name__:
     m_delta_Subaru, f_PBH_delta_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
     
     for i in range(len(Deltas)):
+        
+        if Deltas[i] == 5:
                         
-        fig, ax = plt.subplots(figsize=(9, 5))
-        
-        if plot_GC_Isatis:
-
-            # If required, plot unevolved MF constraints.
-            if plot_unevolved:
+            fig, ax = plt.subplots(figsize=(9, 5))
+            
+            if plot_GC_Isatis:
+    
+                # If required, plot unevolved MF constraints.
+                if plot_unevolved:
+                    
+                    plotter_GC_Isatis(Deltas, i, ax, mf=LN, evolved=False, color=colors[1])
+                    plotter_GC_Isatis(Deltas, i, ax, mf=SLN, evolved=False, color=colors[2])
+                    plotter_GC_Isatis(Deltas, i, ax, mf=CC3, evolved=False, color=colors[3])
+    
+                #plt.suptitle("Existing constraints (showing Galactic Centre photon constraints (Isatis)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
                 
-                plotter_GC_Isatis(Deltas, i, ax, mf=LN, evolved=False, color=colors[1])
-                plotter_GC_Isatis(Deltas, i, ax, mf=SLN, evolved=False, color=colors[2])
-                plotter_GC_Isatis(Deltas, i, ax, mf=CC3, evolved=False, color=colors[3])
-
-            #plt.suptitle("Existing constraints (showing Galactic Centre photon constraints (Isatis)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
-            
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")                
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-
-            plotter_GC_Isatis(Deltas, i, ax, mf=None, color=colors[0])
-            plotter_GC_Isatis(Deltas, i, ax, mf=LN, color=colors[1], params=[sigmas_LN[i]], linestyle=(0, (5, 1)))
-            plotter_GC_Isatis(Deltas, i, ax, mf=SLN, color=colors[2], params=[sigmas_SLN[i], alphas_SLN[i]], linestyle=(0, (5, 7)))
-            plotter_GC_Isatis(Deltas, i, ax, mf=CC3, color=colors[3], linestyle="dashed")
-
-            
-            if plot_unevolved and plot_fracdiff:
-                fig1, ax1a = plt.subplots(figsize=(6,6))
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")                
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+    
+                plotter_GC_Isatis(Deltas, i, ax, mf=None, color=colors[0])
+                plotter_GC_Isatis(Deltas, i, ax, mf=LN, color=colors[1], params=[sigmas_LN[i]], linestyle=(0, (5, 1)))
+                plotter_GC_Isatis(Deltas, i, ax, mf=SLN, color=colors[2], params=[sigmas_SLN[i], alphas_SLN[i]], linestyle=(0, (5, 7)))
+                plotter_GC_Isatis(Deltas, i, ax, mf=CC3, color=colors[3], linestyle="dashed")
+    
                 
-                mp_LN_evolved, f_PBH_LN_evolved = load_data_GC_Isatis(Deltas, i, mf=LN, evolved=True)
-                mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GC_Isatis(Deltas, i, mf=SLN, evolved=True)
-                mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GC_Isatis(Deltas, i, mf=CC3, evolved=True)
-               
-                mp_LN_unevolved, f_PBH_LN_unevolved = load_data_GC_Isatis(Deltas, i, mf=LN, evolved=False)
-                mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_GC_Isatis(Deltas, i, mf=SLN, evolved=False)
-                mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_GC_Isatis(Deltas, i, mf=CC3, evolved=False)
+                if plot_unevolved and plot_fracdiff:
+                    fig1, ax1a = plt.subplots(figsize=(6,6))
+                    
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_GC_Isatis(Deltas, i, mf=LN, evolved=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GC_Isatis(Deltas, i, mf=SLN, evolved=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GC_Isatis(Deltas, i, mf=CC3, evolved=True)
+                   
+                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_GC_Isatis(Deltas, i, mf=LN, evolved=False)
+                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_GC_Isatis(Deltas, i, mf=SLN, evolved=False)
+                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_GC_Isatis(Deltas, i, mf=CC3, evolved=False)
+                    
+                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_unevolved, f_PBH_LN_evolved, mp_LN_unevolved, mp_LN_evolved)), label="LN", color="r")
+                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_unevolved, f_PBH_SLN_evolved, mp_SLN_unevolved, mp_SLN_evolved)), label="SLN", color="b")
+                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_unevolved, f_PBH_CC3_evolved, mp_CC3_unevolved, mp_CC3_evolved)), label="CC3", color="g")
+                    ax1a.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                    ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax1a.set_xscale("log")
+                    ax1a.set_yscale("log")
+                    ax1a.set_title("$\Delta={:.1f}$".format(Deltas[i]))
+                    ax1a.legend(title="Unevolved/evolved - 1", fontsize="x-small")
+                    ax1a.set_xlim(xmin=1e16)
+                    ax1a.set_ylim(ymax=1e2)
+                    ax1a.grid()
+                    fig1.tight_layout()
                 
-                ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_unevolved, f_PBH_LN_evolved, mp_LN_unevolved, mp_LN_evolved)), label="LN", color="r")
-                ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_unevolved, f_PBH_SLN_evolved, mp_SLN_unevolved, mp_SLN_evolved)), label="SLN", color="b")
-                ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_unevolved, f_PBH_CC3_evolved, mp_CC3_unevolved, mp_CC3_evolved)), label="CC3", color="g")
-                ax1a.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
-                ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
-                ax1a.set_xscale("log")
-                ax1a.set_yscale("log")
-                ax1a.set_title("$\Delta={:.1f}$".format(Deltas[i]))
-                ax1a.legend(title="Unevolved/evolved - 1", fontsize="x-small")
-                ax1a.set_xlim(xmin=1e16)
-                ax1a.set_ylim(ymax=1e2)
-                ax1a.grid()
-                fig1.tight_layout()
-            
-            
-        elif plot_KP23:
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            #fig.suptitle("Existing constraints (showing Korwar \& Profumo 2023 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
-
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-            
-            plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
-            plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
-            plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
-            plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
-            
-            
-            # If required, plot the fractional difference from the delta-function MF constraint
-            if plot_fracdiff:
                 
-                m_delta, f_PBH_delta =  load_data_KP23(Deltas, i, evolved=True)
-                mp_LN, f_PBH_LN = load_data_KP23(Deltas, i, mf=LN, evolved=True)
-                mp_SLN, f_PBH_SLN = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
-                mp_CC3, f_PBH_CC3 = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
-               
-                fig1, ax1a = plt.subplots(figsize=(6,6))
-                ax1a.plot(mp_LN, frac_diff(f_PBH_LN, f_PBH_delta, mp_LN, m_delta), label="LN", color="r")
-                ax1a.plot(mp_SLN, frac_diff(f_PBH_SLN, f_PBH_delta, mp_SLN, m_delta), label="SLN", color="b")
-                ax1a.plot(mp_CC3, frac_diff(f_PBH_CC3, f_PBH_delta, mp_CC3, m_delta), label="CC3", color="g")
-                ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
-                ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
-                ax1a.set_xscale("log")
-                #ax1a.set_yscale("log")
-                ax1a.set_title("$\Delta={:.1f}$".format(Deltas[i]))
-                ax1a.legend(title="Delta func./extended MF - 1", fontsize="x-small")
-                ax1a.set_xlim(xmin=5e14)
-                ax1a.set_ylim(-0.1, 0.1)
-                ax1a.grid()
-                fig1.tight_layout()
-            
-            # If required, plot constraints obtained with unevolved MF
-            if plot_unevolved:
+            elif plot_KP23:
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                #fig.suptitle("Existing constraints (showing Korwar \& Profumo 2023 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
+    
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                
                 plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
-                plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, evolved=False)
-                plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, evolved=False)
-                plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)
-
+                plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
+                plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
+                plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
                 
-        elif plot_BC19:
+                
+                # If required, plot the fractional difference from the delta-function MF constraint
+                if plot_fracdiff:
+                    
+                    m_delta, f_PBH_delta =  load_data_KP23(Deltas, i, evolved=True)
+                    mp_LN, f_PBH_LN = load_data_KP23(Deltas, i, mf=LN, evolved=True)
+                    mp_SLN, f_PBH_SLN = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
+                    mp_CC3, f_PBH_CC3 = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
+                   
+                    fig1, ax1a = plt.subplots(figsize=(6,6))
+                    ax1a.plot(mp_LN, frac_diff(f_PBH_LN, f_PBH_delta, mp_LN, m_delta), label="LN", color="r")
+                    ax1a.plot(mp_SLN, frac_diff(f_PBH_SLN, f_PBH_delta, mp_SLN, m_delta), label="SLN", color="b")
+                    ax1a.plot(mp_CC3, frac_diff(f_PBH_CC3, f_PBH_delta, mp_CC3, m_delta), label="CC3", color="g")
+                    ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
+                    ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax1a.set_xscale("log")
+                    #ax1a.set_yscale("log")
+                    ax1a.set_title("$\Delta={:.0f}$".format(Deltas[i]))
+                    ax1a.legend(title="Delta func./extended MF - 1", fontsize="x-small")
+                    ax1a.set_xlim(xmin=5e14)
+                    ax1a.set_ylim(-0.1, 0.1)
+                    ax1a.grid()
+                    fig1.tight_layout()
+                
+                # If required, plot constraints obtained with unevolved MF
+                if plot_unevolved:
+                    plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
+                    plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, evolved=False)
+                    plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, evolved=False)
+                    plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)
+    
+                    
+            if plot_BC19:
+                
+                with_bkg_subtr = True
+                
+                mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, i, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
+                mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, i, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
+                mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, i, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None, prop_B_lower=True)
+                ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=0, alpha=1)
+                ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=0, alpha=1)
+                ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=0, alpha=1)
+
+                plotter_BC19_range(Deltas, i, ax, color=colors[3], mf=CC3, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
+                plotter_BC19_range(Deltas, i, ax, color=colors[1], mf=LN, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
+                plotter_BC19_range(Deltas, i, ax, color=colors[2], mf=SLN, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
+                
+                plotter_BC19(Deltas, i, ax, color=colors[1], mf=LN, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True)
+                plotter_BC19(Deltas, i, ax, color=colors[1], mf=LN, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
+                plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True)
+                plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
+                plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True)
+                plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
+    
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+    
+            if Deltas[i] < 5:
+                show_label_Subaru = False
+            else:
+                show_label_Subaru = True
+            # Plot Subaru-HSC constraints        
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=show_label_Subaru)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=(0, (5, 1)), show_label=show_label_Subaru)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=show_label_Subaru)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=show_label_Subaru)
+    
+            set_ticks_grid(ax)
             
-            """
-            # Boolean determines which propagation model to load data from
-            for prop_A in [True, False]:
-                prop_B = not prop_A
-            
-                # Boolean determines whether to load constraint obtained with a background or without a background
-                for with_bkg_subtr in [True, False]:
-
-                    if not with_bkg_subtr:
-                        linestyle = "dashed"
-
-                    else:
-                        linestyle = "dotted"                                                    
-                                       
-                    plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg_subtr, mf=None, linestyle=linestyle)
-                    plotter_BC19(Deltas, i, ax, colors[1], prop_A, with_bkg_subtr, mf=LN, linestyle=linestyle)
-                    plotter_BC19(Deltas, i, ax, colors[2], prop_A, with_bkg_subtr, mf=SLN, linestyle=linestyle)
-                    plotter_BC19(Deltas, i, ax, colors[3], prop_A, with_bkg_subtr, mf=CC3, linestyle=linestyle)
-                """
-            #plt.suptitle("Existing constraints (showing Voyager 1 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
-            
-            # For Delta = 5, tightest constraint comes from the Prop A model with background subtraction
-            prop_A = True
-            with_bkg_subtr = True
-
-            plotter_BC19(Deltas, i, ax, colors[0], prop_A, with_bkg_subtr)
-            plotter_BC19(Deltas, i, ax, colors[1], prop_A, with_bkg_subtr, mf=LN, linestyle=(0, (5, 1)))
-            plotter_BC19(Deltas, i, ax, colors[2], prop_A, with_bkg_subtr, mf=SLN, linestyle=(0, (5, 7)))
-            plotter_BC19(Deltas, i, ax, colors[3], prop_A, with_bkg_subtr, mf=CC3, linestyle="dashed")
-
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-
-        if Deltas[i] < 5:
-            show_label_Subaru = False
-        else:
-            show_label_Subaru = True
-        # Plot Subaru-HSC constraints        
-        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=(0, (5, 1)), show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=show_label_Subaru)
-
-        set_ticks_grid(ax)
-        
-        # Set axis limits
-        if Deltas[i] < 5:
-            xmin_evap, xmax_evap = 1e16, 2.5e17
-            xmin_HSC, xmax_HSC = 1e21, 1e29
-            
-            if plot_KP23:
+            # Set axis limits
+            if Deltas[i] < 5:
+                xmin_evap, xmax_evap = 1e16, 2.5e17
+                xmin_HSC, xmax_HSC = 1e21, 1e29
+                
+                if plot_KP23:
+                    xmin_evap, xmax_evap = 1e16, 7e17
+                    
+                elif plot_BC19:
+                    xmin_evap, xmax_evap = 1e16, 3e17
+            else:
                 xmin_evap, xmax_evap = 1e16, 7e17
-                
-            elif plot_BC19:
-                xmin_evap, xmax_evap = 1e16, 3e17
-        else:
-            xmin_evap, xmax_evap = 1e16, 7e17
-            xmin_HSC, xmax_HSC = 9e18, 1e29
-
-            if plot_KP23:
-                xmin_evap, xmax_evap = 1e16, 2e18
-                
-            elif plot_BC19:
-                xmin_evap, xmax_evap = 1e16, 1e19
-                
-        ymin, ymax = 1e-3, 1
-
-        ax.set_xlim(xmin_evap, 1e24)
-        ax.set_ylim(ymin, ymax)
-       
-        ax.legend(fontsize="xx-small", title="$\Delta={:.0f}$".format(Deltas[i]), loc="upper right")
-        fig.tight_layout()
-        
-        if plot_GC_Isatis:
-            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_GC_Isatis.pdf".format(Deltas[i]))
-            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_GC_Isatis.png".format(Deltas[i]))
+                xmin_HSC, xmax_HSC = 9e18, 1e29
+    
+                if plot_KP23:
+                    xmin_evap, xmax_evap = 1e16, 2e18
+                    
+                elif plot_BC19:
+                    xmin_evap, xmax_evap = 1e16, 1e19
+                    
+            ymin, ymax = 1e-3, 1
+    
+            ax.set_xlim(xmin_evap, 1e24)
+            ax.set_ylim(ymin, ymax)
+           
+            ax.legend(fontsize="xx-small", title="$\Delta={:.0f}$".format(Deltas[i]), loc="upper right")
+            fig.tight_layout()
             
-        elif plot_KP23:
-            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_KP23.pdf".format(Deltas[i]))
-            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_KP23.png".format(Deltas[i]))
-        
-        elif plot_BC19:
-            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_BC19.pdf".format(Deltas[i]))
-            fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_BC19.png".format(Deltas[i]))
+            if plot_GC_Isatis:
+                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_GC_Isatis.pdf".format(Deltas[i]))
+                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_GC_Isatis.png".format(Deltas[i]))
+                
+            elif plot_KP23:
+                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_KP23.pdf".format(Deltas[i]))
+                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_KP23.png".format(Deltas[i]))
+            
+            elif plot_BC19:
+                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_BC19.pdf".format(Deltas[i]))
+                fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_existing_BC19.png".format(Deltas[i]))
         
                 
 #%% Prospective constraints
@@ -1130,7 +1127,7 @@ if "__main__" == __name__:
 
         ax.set_xlim(xmin_evap, xmax_micro)
         ax.set_ylim(ymin, ymax)
-        ax.legend(fontsize="xx-small", title="$\Delta={:.0f}$".format(Deltas[i]), loc="upper right")
+        ax.legend(fontsize="xx-small", title="$\Delta={:.1f}$".format(Deltas[i]), loc="upper right")
         
         #plt.suptitle("Prospective constraints, $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
         fig.tight_layout()
@@ -1146,8 +1143,8 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     plot_LN = False
-    plot_SLN = False
-    plot_CC3 = True
+    plot_SLN = True
+    plot_CC3 = False
     
     Delta_index = 6
     
@@ -1170,25 +1167,26 @@ if "__main__" == __name__:
     if Deltas[Delta_index] < 5:
         
         # Present constraints obtained using background subtraction with dashed lines
-        plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=None, linewidth=2, alpha=0.5, linestyle="dashed")
-        plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=mf, linewidth=2, linestyle="dashed")
+        plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=None, linewidth=3, alpha=0.5, linestyle="dashed")
+        plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=mf, linewidth=3, linestyle="dashed")
  
         ax.plot(0, 0, color="k", alpha=0.5, linewidth=2, label="GC photons (delta func.)")
         ax.plot(0, 0, color="k", linewidth=2, label="GC photons (%s)" % mf_label)
-        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=2, alpha=0.5, label="KP '23 (delta func.)")
-        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=2, label="KP '23 (%s)" % mf_label)
+        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=3, alpha=0.5, label="KP '23 (delta func.)")
+        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=3, label="KP '23 (%s)" % mf_label)
         
         # Present constraints obtained without background subtraction with solid lines        
-        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=None, alpha=0.5, linewidth=2)
-        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=mf, params=params, linewidth=2)
+        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=None, alpha=0.5, linewidth=3)
+        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=mf, params=params, linewidth=3)
          
     else:
         # Present constraints obtained without background subtraction with solid lines
         plotter_BC19_range(Deltas, Delta_index, ax, color="lightsteelblue", with_bkg_subtr=False, mf=None)
         plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", mf=mf, with_bkg_subtr=False)
       
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=False)
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=False)
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=False, prop_B_lower=False)
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=False, with_bkg_subtr=False, prop_B_lower=False)
+        #plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=False)
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=False, prop_B_lower=True)
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=False, prop_B_lower=False)
        
@@ -1197,7 +1195,9 @@ if "__main__" == __name__:
         plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", mf=mf, with_bkg_subtr=True)
         
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
+        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=False, with_bkg_subtr=True, prop_B_lower=False, linestyle="dashed")
+
+        #plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, linestyle="dashed")
         plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=True, prop_B_lower=False, linestyle="dashed")
         
@@ -1206,12 +1206,12 @@ if "__main__" == __name__:
         ax.plot(0, 0, color="b", alpha=0.5, linewidth=2, linestyle="dashed", label="w/ bkg. subtraction (delta func.)")
         ax.plot(0, 0, color="b", linestyle="dashed", linewidth=2, label="w/ bkg. subtraction (%s)" % mf_label)
         
-    ax.legend(title="$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="xx-small")
+    ax.legend(title="$\Delta={:.1f}$".format(Deltas[Delta_index]), fontsize="xx-small")
     ax.set_xlabel("$m_p~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
     ax.set_yscale("log")
-    ax.set_xlim(1e16, 5e18)
+    ax.set_xlim(1e16, 7e18)
     ax.set_ylim(1e-3, 1)
     ax.grid()
     fig.tight_layout()
@@ -1535,7 +1535,7 @@ if "__main__" == __name__:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
     plot_LN = False
-    plot_SLN = False
+    plot_SLN = True
     plot_CC3 = True
     
     approx = False
