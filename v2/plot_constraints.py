@@ -1084,6 +1084,7 @@ if "__main__" == __name__:
 if "__main__" == __name__:
         
     # Choose colors to match those from Fig. 5 of 2009.03204
+    #colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
     colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
                     
     # Load mass function parameters.
@@ -1134,23 +1135,132 @@ if "__main__" == __name__:
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.pdf".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.png".format(Deltas[i]))
      
+        
+#%% Existing constraints
+
+if "__main__" == __name__:
+        
+    
+    # If True, plot constraints obtained with background subtraction
+    with_bkg_subtr = True
+    
+    colors = ['silver', 'r', 'b', 'orange', 'k']
+    linestyles = ['solid', 'dashdot', 'dotted', 'dashed']
+                    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    Delta_indices = [0, 4, 6]
+    
+    if len(Delta_indices) == 4:
+        plt.figure(figsize=(12, 12))
+        ax0 = plt.subplot(2, 2, 1)
+
+    elif len(Delta_indices) == 3:
+        plt.figure(figsize=(18, 6))
+        ax = plt.subplot(1, 3, 1)
+                  
+    for axis_index, Delta_index in enumerate(Delta_indices):
+        
+        if len(Delta_indices) == 4:
+            ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+        elif len(Delta_indices) == 3:
+            ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
+                   
+        if Deltas[Delta_index] < 5:
+            
+            xmin_evap, xmax_evap = 1e16, 2e18
+            xmin_micro, xmax_micro = 2e20, 5e23
+            show_label = True
+            
+            if with_bkg_subtr:
+                plotter_KP23(Deltas, i, ax, color=colors[0], linestyle=linestyles[0], linewidth=3)
+                plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, linestyle=linestyles[1], linewidth=3)
+                plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=3)
+                plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=3)
+
+            else:
+                plotter_GC_Isatis(Deltas, i, ax, mf=None, evolved=False, color=colors[0], linestyle=linestyles[0], linewidth=3)
+                plotter_GC_Isatis(Deltas, i, ax, mf=LN, evolved=False, color=colors[1], linestyle=linestyles[1], linewidth=3)
+                plotter_GC_Isatis(Deltas, i, ax, mf=SLN, evolved=False, color=colors[2], linestyle=linestyles[2], linewidth=3)
+                plotter_GC_Isatis(Deltas, i, ax, mf=CC3, evolved=False, color=colors[3], linestyle=linestyles[3], linewidth=3)
+
+        elif Deltas[Delta_index] == 5:
+            
+            mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, i, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
+            mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, i, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
+            mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, i, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None, prop_B_lower=True)
+            ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=0, alpha=1)
+            ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=0, alpha=1)
+            ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=0, alpha=1)
+            plotter_BC19_range(Deltas, i, ax, color=colors[3], mf=CC3, with_bkg_subtr=with_bkg_subtr, alpha=0.5)
+            plotter_BC19_range(Deltas, i, ax, color=colors[1], mf=LN, with_bkg_subtr=with_bkg_subtr, alpha=0.5)
+            plotter_BC19_range(Deltas, i, ax, color=colors[2], mf=SLN, with_bkg_subtr=with_bkg_subtr, alpha=0.5)
+                    
+            xmin_evap, xmax_evap = 1e16, 5e18
+            xmin_micro, xmax_micro = 2e17, 5e23
+            show_label = True
+
+        ymin, ymax = 1e-3, 1
+        
+        if Deltas[Delta_index] == 1:
+            show_label_Subaru = True
+        else:
+            show_label_Subaru = False
+            
+        # Plot Subaru-HSC constraints        
+        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[0], linestyle=linestyles[0], linewidth=3, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=linestyles[1], linewidth=3, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=3, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=3, show_label=show_label_Subaru)
+
+        if axis_index == 0:
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+
+        ax.tick_params("x", pad=7)
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(xmin_evap, xmax_micro)
+        ax.set_ylim(ymin, ymax)
+        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]))
+        ax.grid()
+        
+        if Deltas[Delta_index] == 1:
+            ax.legend(fontsize="xx-small", loc="lower center")
+        if Deltas[Delta_index] > 0:
+            plt.tick_params("y", labelleft=False)
+    
+    plt.tight_layout(pad=0.1)
+    plt.subplots_adjust(wspace=0.)
+     
 #%% Prospective constraints
 
 if "__main__" == __name__:
         
-    # Choose colors to match those from Fig. 5 of 2009.03204
-    colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
+    colors = ['silver', 'r', 'b', 'orange', 'k']
+    linestyles = ['solid', 'dashdot', 'dotted', 'dashed']
                     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    Delta_indices = [0, 4, 6]
     
-    plt.figure(figsize=(10, 10))
-    Delta_indices = [0, 4, 5, 6]
-    
+    if len(Delta_indices) == 4:
+        plt.figure(figsize=(12, 12))
+        ax0 = plt.subplot(2, 2, 1)
+
+    elif len(Delta_indices) == 3:
+        plt.figure(figsize=(18, 6))
+        ax = plt.subplot(1, 3, 1)
+                  
     for axis_index, Delta_index in enumerate(Delta_indices):
         
-        ax = plt.subplot(2, 2, axis_index + 1)
-                        
+        if len(Delta_indices) == 4:
+            ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+        elif len(Delta_indices) == 3:
+            ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
+           
         # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].        
         NFW = False
         
@@ -1158,46 +1268,52 @@ if "__main__" == __name__:
         if Deltas[Delta_index] < 5:
             xmin_evap, xmax_evap = 1e16, 2e18
             xmin_micro, xmax_micro = 2e20, 5e23
-            show_label = False
+            show_label = True
         else:
             xmin_evap, xmax_evap = 1e16, 5e18
             xmin_micro, xmax_micro = 2e17, 5e23
             show_label = True
 
         # plot Einasto profile results            
-        plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, linestyle="solid", linewidth=2)
-        plotter_GECCO(Deltas, Delta_index, ax, color=colors[1], NFW=NFW, mf=LN, linestyle=(0, (5, 1)), linewidth=2)
-        plotter_GECCO(Deltas, Delta_index, ax, color=colors[2], NFW=NFW, mf=SLN, linestyle=(0, (5, 7)), linewidth=2)
-        plotter_GECCO(Deltas, Delta_index, ax, color=colors[3], NFW=NFW, mf=CC3, linestyle="dashed", linewidth=2)
+        plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, linestyle=linestyles[0], linewidth=3)
+        plotter_GECCO(Deltas, Delta_index, ax, color=colors[1], NFW=NFW, mf=LN, linestyle=linestyles[1], linewidth=3)
+        plotter_GECCO(Deltas, Delta_index, ax, color=colors[3], NFW=NFW, mf=CC3, linestyle=linestyles[3], linewidth=3)
+        plotter_GECCO(Deltas, Delta_index, ax, color=colors[2], NFW=NFW, mf=SLN, linestyle=linestyles[2], linewidth=3)
 
-        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=show_label)
-        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)), show_label=show_label, linewidth=2)
-        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=show_label, linewidth=2)
-        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=show_label, linewidth=2)
+        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], show_label=show_label, linewidth=3)
+        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=linestyles[1], show_label=show_label, linewidth=3)
+        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], show_label=show_label, linewidth=3)
+        plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], show_label=show_label, linewidth=3)
         
         ymin, ymax = 1e-3, 1
         """
         if axis_index in (2, 3):
             ax.set_xlabel("$m_p~[\mathrm{g}]$")
-        if axis_index in (0, 2):
+        """
+        if axis_index == 0:
             ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xticks([], labels="")
+        """
         if axis_index in (1, 3):
             ax.tick_params(labelleft=False)    
         if axis_index in (0, 1):
             ax.tick_params(labelbottom=False)    
         """
+        ax.tick_params("x", pad=7)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
-        ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_xlim(xmin_evap, xmax_micro)
         ax.set_ylim(ymin, ymax)
-        ax.legend(fontsize="xx-small", title="$\Delta={:.0f}$".format(Deltas[Delta_index]), loc="upper right")
+        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax.grid()
+        
+        if Deltas[Delta_index] == 1:
+            ax.legend(fontsize="xx-small", loc="lower center")
+        if Deltas[Delta_index] > 0:
+            plt.tick_params("y", labelleft=False)
     
-    plt.tight_layout()
-    #plt.subplots_adjust(hspace=0., wspace=0.)
+    plt.tight_layout(pad=0.1)
+    plt.subplots_adjust(wspace=0.)
         
 #%% Plot the evaporation constraints on the same plot
 
@@ -1271,6 +1387,7 @@ if "__main__" == __name__:
         ax.plot(0, 0, color="b", linestyle="dashed", linewidth=2, label="w/ bkg. subtraction (%s)" % mf_label)
         
     ax.legend(title="$\Delta={:.1f}$".format(Deltas[Delta_index]), fontsize="xx-small")
+    ax.tick_params("x", pad=7)
     ax.set_xlabel("$m_p~[\mathrm{g}]$")
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xscale("log")
@@ -1406,6 +1523,7 @@ if "__main__" == __name__:
         elif plot_CC3:
             plotter_BC19_range(Deltas, Delta_index, ax, color=colors[i], mf=CC3, evolved=True, exponent_PL_lower=exponent_PL_lower, with_bkg_subtr=with_bkg_subtr)             
            
+    ax.tick_params("x", pad=7)
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xlabel("$m_p~[\mathrm{g}]$")
     ax.legend(title="$\Delta$", fontsize="x-small")
@@ -1656,6 +1774,7 @@ if "__main__" == __name__:
 
         ax.set_xlim(1e16, 1e18)
         ax.set_ylim(10**(-6), 1)
+        ax.tick_params("x", pad=7)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
@@ -1788,6 +1907,7 @@ if "__main__" == __name__:
 
         ax.set_xlim(1e16, 5e18)
         ax.set_ylim(10**(-6), 1)
+        ax.tick_params("x", pad=7)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
@@ -1960,6 +2080,7 @@ if "__main__" == __name__:
         ax2.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_Carr21, color="tab:green", label="LN ($\sigma={:.2f}$)".format(sigma_Carr21))
         ax2.legend(title="Carr+ '21", fontsize="x-small", loc=(0.55, 0.02))
             
+    ax.tick_params("x", pad=7)
     ax.set_ylabel("$f_\mathrm{PBH}$")
     
     ax.legend(title="KP' 23", fontsize="x-small", loc=(0.55, 0.35))
@@ -2013,6 +2134,7 @@ if "__main__" == __name__:
     
         for ax in [ax1, ax2, ax3]:
             ax.set_xlabel("$m~[\mathrm{g}]$")
+            ax.tick_params("x", pad=7)
             ax.set_xlim(1e14, 1e17)
             ax.set_xscale("log")
             ax.set_yscale("log")
@@ -2023,6 +2145,7 @@ if "__main__" == __name__:
         ax4.plot(m_delta_Carr21, LN(m_delta_Carr21, m_c=m_c, sigma=sigma_Carr21)/f_max_Carr21, color="k", label="Carr+ '21")
         ax4.legend(fontsize="x-small")
         ax4.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
+        ax4.tick_params("x", pad=7)
         ax4.set_xlabel("$m~[\mathrm{g}]$")
         ax4.set_xlim(0, 1e15)
         
@@ -2115,6 +2238,8 @@ if "__main__" == __name__:
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xlabel("$m_c~[\mathrm{g}]$")
     ax1.set_xlabel("$m_c~[M_\odot]$")
+    ax.tick_params("x", pad=7)
+    ax1.tick_params("x", pad=7)
     ax.legend(title="$\sigma$", fontsize="x-small")
     ax.set_xscale("log")
     ax.set_yscale("log")
@@ -2139,6 +2264,8 @@ if "__main__" == __name__:
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xlabel("$m_p~[\mathrm{g}]$")
     ax1.set_xlabel("$m_p~[M_\odot]$")
+    ax.tick_params("x", pad=7)
+    ax1.tick_params("x", pad=7)
     ax.legend(title="$\sigma$", fontsize="x-small")
     ax.set_xscale("log")
     ax.set_yscale("log")
