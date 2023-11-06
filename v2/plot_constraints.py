@@ -1214,7 +1214,7 @@ if "__main__" == __name__:
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
         ax.set_xscale("log")
         ax.set_yscale("log")
-        ax.set_xlim(xmin_evap, xmax_micro)
+        ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
         ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax.grid()
@@ -1314,81 +1314,87 @@ if "__main__" == __name__:
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
-    plot_LN = False
-    plot_SLN = True
-    plot_CC3 = False
-    
-    Delta_index = 6
-    
-    if plot_LN:
-        mf = LN
-        params = [sigmas_LN[Delta_index]]
-        mf_label = "LN"
-    elif plot_SLN:
-        mf = SLN
-        params = [sigmas_SLN[Delta_index], alphas_SLN[Delta_index]]
-        mf_label="SLN"
-    elif CC3:
-        mf = CC3
-        params = [alphas_CC3[Delta_index], betas[Delta_index]]
-        mf_label="CC3"
 
-    fig, ax = plt.subplots(figsize=(7,7))
-    colors = ["tab:red", "tab:blue", "tab:orange"]
+    Delta_indices = [0, 4, 6]
     
-    if Deltas[Delta_index] < 5:
-        
-        # Present constraints obtained using background subtraction with dashed lines
-        plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=None, linewidth=3, alpha=0.5, linestyle="dashed")
-        plotter_KP23(Deltas, Delta_index, ax, color=(0.5294, 0.3546, 0.7020), mf=mf, linewidth=3, linestyle="dashed")
- 
-        ax.plot(0, 0, color="k", alpha=0.5, linewidth=2, label="GC photons (delta func.)")
-        ax.plot(0, 0, color="k", linewidth=2, label="GC photons (%s)" % mf_label)
-        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=3, alpha=0.5, label="KP '23 (delta func.)")
-        ax.plot(0, 0, color=(0.5294, 0.3546, 0.7020), linestyle="dashed", linewidth=3, label="KP '23 (%s)" % mf_label)
-        
-        # Present constraints obtained without background subtraction with solid lines        
-        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=None, alpha=0.5, linewidth=3)
-        plotter_GC_Isatis(Deltas, Delta_index, ax, color="k", mf=mf, params=params, linewidth=3)
-         
-    else:
-        # Present constraints obtained without background subtraction with solid lines
-        plotter_BC19_range(Deltas, Delta_index, ax, color="lightsteelblue", with_bkg_subtr=False, mf=None)
-        plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", mf=mf, with_bkg_subtr=False)
-      
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=False, prop_B_lower=False)
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=False, with_bkg_subtr=False, prop_B_lower=False)
-        #plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=False)
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=False, prop_B_lower=True)
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=False, prop_B_lower=False)
-       
-        # Present constraints obtained using background subtraction with dashed lines        
-        plotter_BC19_range(Deltas, Delta_index, ax, color="lightsteelblue", with_bkg_subtr=True, mf=None)
-        plotter_BC19_range(Deltas, Delta_index, ax, color="tab:blue", mf=mf, with_bkg_subtr=True)
-        
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=None, linewidth=2, alpha=0.5, prop_A=False, with_bkg_subtr=True, prop_B_lower=False, linestyle="dashed")
+    if len(Delta_indices) == 4:
+        plt.figure(figsize=(12, 12))
+        ax0 = plt.subplot(2, 2, 1)
 
-        #plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, linestyle="dashed")
-        plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=2, prop_A=False, with_bkg_subtr=True, prop_B_lower=False, linestyle="dashed")
+    elif len(Delta_indices) == 3:
+        plt.figure(figsize=(13, 5))
+        ax = plt.subplot(1, 3, 1)
+                  
+    for axis_index, Delta_index in enumerate(Delta_indices):
         
-        ax.plot(0, 0, color="b", alpha=0.5, linewidth=2, label="w/o bkg. subtraction (delta func.)")
-        ax.plot(0, 0, color="b", linewidth=2, label="w/o bkg. subtraction (%s)" % mf_label)
-        ax.plot(0, 0, color="b", alpha=0.5, linewidth=2, linestyle="dashed", label="w/ bkg. subtraction (delta func.)")
-        ax.plot(0, 0, color="b", linestyle="dashed", linewidth=2, label="w/ bkg. subtraction (%s)" % mf_label)
+        if len(Delta_indices) == 4:
+            ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+        elif len(Delta_indices) == 3:
+            ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
+    
+        if Deltas[Delta_index] < 5:
+            mf = CC3
+            params = [sigmas_SLN[Delta_index], alphas_SLN[Delta_index]]
+            mf_label="CC3"
+            
+            # Present constraints obtained using background subtraction with dashed lines
+            plotter_KP23(Deltas, Delta_index, ax, color="tab:grey", mf=None, linewidth=3, linestyle="dashed")
+            plotter_KP23(Deltas, Delta_index, ax, color="tab:orange", mf=mf, linewidth=3, linestyle="dashed")
+     
+            ax.plot(0, 0, color="tab:grey", linewidth=2, label="GC photons \n (delta func.)")
+            ax.plot(0, 0, color="tab:orange", linewidth=2, label="GC photons \n (%s)" % mf_label)
+            ax.plot(0, 0, color="tab:grey", linestyle="dashed", linewidth=3, label="KP '23 \n (delta func.)")
+            ax.plot(0, 0, color="tab:orange", linestyle="dashed", linewidth=3, label="KP '23 \n (%s)" % mf_label)
+            
+            # Present constraints obtained without background subtraction with solid lines        
+            plotter_GC_Isatis(Deltas, Delta_index, ax, color="tab:grey", mf=None, linewidth=3)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, color="tab:orange", mf=mf, params=params, linewidth=3)
+            
+        else:
+            mf = SLN
+            params = [alphas_CC3[Delta_index], betas[Delta_index]]
+            mf_label="SLN"
+                                                 # Present constraints obtained without background subtraction with solid lines
+            mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
+            mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
+            mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None, prop_B_lower=True)
+            ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=3, alpha=1)
+            ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=3, alpha=1)
+            ax.fill_between(mp_propB_lower, f_PBH_propB_lower, np.interp(mp_propB_lower, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=0, alpha=1)            
+          
+            plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=3, prop_A=False, with_bkg_subtr=False, prop_B_lower=True)
+            plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=3, prop_A=False, with_bkg_subtr=False, prop_B_lower=False)
+           
+            # Present constraints obtained using background subtraction with dashed lines        
+            plotter_BC19_range(Deltas, Delta_index, ax, color="silver", with_bkg_subtr=True, mf=None)
+            
+            plotter_BC19(Deltas, Delta_index, ax, color="tab:grey", mf=None, linewidth=3, alpha=1, prop_A=True, with_bkg_subtr=True, linestyle="dashed")
+            plotter_BC19(Deltas, Delta_index, ax, color="tab:grey", mf=None, linewidth=3, alpha=1, prop_A=False, with_bkg_subtr=True, prop_B_lower=False, linestyle="dashed")
+            plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=3, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, linestyle="dashed")
+            plotter_BC19(Deltas, Delta_index, ax, color="b", mf=mf, linewidth=3, prop_A=False, with_bkg_subtr=True, prop_B_lower=False, linestyle="dashed")
+            
+            ax.plot(0, 0, color="silver", linewidth=3, label="BC '19 w/o bkg. \n subtraction  \n(delta func.)")
+            ax.plot(0, 0, color="b", linewidth=3, label="BC '19 w/o bkg. \n subtraction \n (%s)" % mf_label)
+            ax.plot(0, 0, color="tab:grey", linewidth=3, linestyle="dashed", label="BC '19 w/ bkg. \n subtraction \n (delta func.)")
+            ax.plot(0, 0, color="b", linestyle="dashed", linewidth=3, label="BC '19 w/ bkg. \n subtraction \n (%s)" % mf_label)
         
-    ax.legend(title="$\Delta={:.1f}$".format(Deltas[Delta_index]), fontsize="xx-small")
-    ax.tick_params("x", pad=7)
-    ax.set_xlabel("$m_p~[\mathrm{g}]$")
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlim(1e16, 7e18)
-    ax.set_ylim(1e-3, 1)
-    ax.grid()
-    fig.tight_layout()
+        if Deltas[Delta_index] in (0, 5):
+            ax.legend(fontsize="xx-small")
+        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]))
+        ax.tick_params("x", pad=7)
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        if axis_index == 0:
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+        if Deltas[Delta_index] > 0:
+            plt.tick_params("y", labelleft=False)
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(1e16, 1e19)
+        ax.set_ylim(1e-3, 1)
+        ax.grid()
+        
+    plt.tight_layout(pad=0.1)
+    plt.subplots_adjust(wspace=0.)
 
 #%% Plot constraints for different Delta on the same plot (Korwar & Profumo 2023)
 
