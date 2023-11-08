@@ -1142,7 +1142,7 @@ if "__main__" == __name__:
         
     
     # If True, plot constraints obtained with background subtraction
-    with_bkg_subtr = True
+    with_bkg_subtr = False
     
     colors = ['silver', 'r', 'b', 'orange', 'k']
     linestyles = ['solid', 'dashdot', 'dotted', 'dashed']
@@ -1154,19 +1154,24 @@ if "__main__" == __name__:
     
     if len(Delta_indices) == 4:
         plt.figure(figsize=(12, 12))
-        ax0 = plt.subplot(2, 2, 1)
-
+        ax0 = plt.subplot(2, 2, 1)    
     elif len(Delta_indices) == 3:
+        
         plt.figure(figsize=(13, 5))
         ax = plt.subplot(1, 3, 1)
-                  
+        
+        """
+        plt.figure(figsize=(8, 9))
+        ax = plt.subplot(2, 2, 1)
+        """
     for axis_index, Delta_index in enumerate(Delta_indices):
         
         if len(Delta_indices) == 4:
             ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
         elif len(Delta_indices) == 3:
             ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
-                   
+            #ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+           
         if Deltas[Delta_index] < 5:
                         
             if with_bkg_subtr:
@@ -1196,10 +1201,7 @@ if "__main__" == __name__:
         xmin, xmax = 1e16, 5e23
         ymin, ymax = 1e-3, 1
         
-        if Deltas[Delta_index] == 1:
-            show_label_Subaru = True
-        else:
-            show_label_Subaru = False
+        show_label_Subaru = True
             
         # Plot Subaru-HSC constraints        
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=3, show_label=show_label_Subaru)
@@ -1219,7 +1221,7 @@ if "__main__" == __name__:
         ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax.grid()
         
-        if Deltas[Delta_index] == 1:
+        if Deltas[Delta_index] in (1,2):
             ax.legend(fontsize="xx-small", loc="lower center")
         if Deltas[Delta_index] > 0:
             plt.tick_params("y", labelleft=False)
@@ -1256,16 +1258,14 @@ if "__main__" == __name__:
            
         # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].        
         NFW = False
-        
+        show_label = True
         # Set axis limits
         if Deltas[Delta_index] < 5:
             xmin_evap, xmax_evap = 1e16, 2e18
             xmin_micro, xmax_micro = 2e20, 5e23
-            show_label = True
         else:
             xmin_evap, xmax_evap = 1e16, 5e18
             xmin_micro, xmax_micro = 2e17, 5e23
-            show_label = True
 
         # plot Einasto profile results            
         plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, linestyle=linestyles[0], linewidth=3)
@@ -1300,7 +1300,7 @@ if "__main__" == __name__:
         ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]))
         ax.grid()
         
-        if Deltas[Delta_index] == 1:
+        if Deltas[Delta_index] in (1,2):
             ax.legend(fontsize="xx-small", loc=[0.21, 0.05])
         if Deltas[Delta_index] > 0:
             plt.tick_params("y", labelleft=False)
