@@ -470,7 +470,7 @@ def find_label(mf=None):
     """
     
     if mf == None:
-        label="Delta function"
+        label="Delta func."
     elif mf == LN:
         label="LN"
     elif mf == SLN:
@@ -1152,51 +1152,67 @@ if "__main__" == __name__:
 
     Delta_indices = [0, 5, 6]
     
+    two_by_two = False
+    one_by_three = False
+    linewidth = 1
+
     if len(Delta_indices) == 4:
         plt.figure(figsize=(12, 12))
         ax0 = plt.subplot(2, 2, 1)    
+        
     elif len(Delta_indices) == 3:
+        if two_by_two:
+            plt.figure(figsize=(8, 9))
+            ax = plt.subplot(2, 2, 1)
+            
+        elif one_by_three:
+            plt.figure(figsize=(5, 10))
+            ax = plt.subplot(3, 1, 1)
+            
+        else:
+            plt.figure(figsize=(13, 5))
+            ax = plt.subplot(1, 3, 1)
         
-        plt.figure(figsize=(13, 5))
-        ax = plt.subplot(1, 3, 1)
-        
-        """
-        plt.figure(figsize=(8, 9))
-        ax = plt.subplot(2, 2, 1)
-        """
     for axis_index, Delta_index in enumerate(Delta_indices):
         
         if len(Delta_indices) == 4:
             ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
         elif len(Delta_indices) == 3:
-            ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
-            #ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+            if two_by_two:
+                ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+            elif one_by_three:
+                ax = plt.subplot(3, 1, axis_index + 1, sharex=ax)               
+            else:
+                ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
            
         if Deltas[Delta_index] < 5:
                         
             if with_bkg_subtr:
-                plotter_KP23(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=3)
-                plotter_KP23(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=linestyles[1], linewidth=3)
-                plotter_KP23(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=3)
-                plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=3)
+                plotter_KP23(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=linewidth)
+                plotter_KP23(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=linestyles[1], linewidth=linewidth)
+                plotter_KP23(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth)
+                plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth)
 
             else:
-                plotter_GC_Isatis(Deltas, Delta_index, ax, mf=None, evolved=False, color=colors[0], linestyle=linestyles[0], linewidth=3)
-                plotter_GC_Isatis(Deltas, Delta_index, ax, mf=LN, params=[sigmas_LN[Delta_index]], evolved=False, color=colors[1], linestyle=linestyles[1], linewidth=3)
-                plotter_GC_Isatis(Deltas, Delta_index, ax, mf=CC3, params=[alphas_CC3[Delta_index], betas[Delta_index]], evolved=False, color=colors[3], linestyle=linestyles[3], linewidth=3)
-                plotter_GC_Isatis(Deltas, Delta_index, ax, mf=SLN, params=[sigmas_SLN[Delta_index], alphas_SLN[Delta_index]], evolved=False, color=colors[2], linestyle=linestyles[2], linewidth=3)
+                plotter_GC_Isatis(Deltas, Delta_index, ax, mf=None, evolved=False, color=colors[0], linestyle=linestyles[0], linewidth=linewidth)
+                plotter_GC_Isatis(Deltas, Delta_index, ax, mf=LN, params=[sigmas_LN[Delta_index]], evolved=False, color=colors[1], linestyle=linestyles[1], linewidth=linewidth)
+                plotter_GC_Isatis(Deltas, Delta_index, ax, mf=CC3, params=[alphas_CC3[Delta_index], betas[Delta_index]], evolved=False, color=colors[3], linestyle=linestyles[3], linewidth=linewidth)
+                plotter_GC_Isatis(Deltas, Delta_index, ax, mf=SLN, params=[sigmas_SLN[Delta_index], alphas_SLN[Delta_index]], evolved=False, color=colors[2], linestyle=linestyles[2], linewidth=linewidth)
 
         elif Deltas[Delta_index] == 5:
             
             mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
             mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
             mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None, prop_B_lower=True)
-            ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=3, alpha=1)
-            ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=3, alpha=1)
+            ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=linewidth, alpha=1)
+            ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=linewidth, alpha=1)
             ax.fill_between(mp_propB_lower, f_PBH_propB_lower, np.interp(mp_propB_lower, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=0, alpha=1)            
-            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[3], mf=CC3, with_bkg_subtr=with_bkg_subtr, alpha=0.5)
-            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[1], mf=LN, with_bkg_subtr=with_bkg_subtr, alpha=0.5)
-            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[2], mf=SLN, with_bkg_subtr=with_bkg_subtr, alpha=0.5)
+            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[3], mf=CC3, with_bkg_subtr=with_bkg_subtr, alpha=0.7)
+            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[1], mf=LN, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
+            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[2], mf=SLN, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
+            plotter_BC19(Deltas, Delta_index, ax, color=colors[1], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[1], linewidth=linewidth)
+            plotter_BC19(Deltas, Delta_index, ax, color=colors[2], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[2], linewidth=linewidth)
+            plotter_BC19(Deltas, Delta_index, ax, color=colors[3], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[3], linewidth=linewidth)
                                 
         xmin, xmax = 1e16, 5e23
         ymin, ymax = 1e-3, 1
@@ -1204,13 +1220,16 @@ if "__main__" == __name__:
         show_label_Subaru = True
             
         # Plot Subaru-HSC constraints        
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=3, show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[1], mf=LN,  linestyle=linestyles[1], linewidth=3, show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=3, show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=3, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[1], mf=LN,  linestyle=linestyles[1], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth, show_label=show_label_Subaru)
 
-        if axis_index == 0:
-            ax.set_ylabel("$f_\mathrm{PBH}$")
+        if one_by_three:
+            ax.set_ylabel("$f_\mathrm{PBH}$")           
+        else:
+            if axis_index == 0:
+                ax.set_ylabel("$f_\mathrm{PBH}$")
 
         ax.tick_params("x", pad=7)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -1218,17 +1237,34 @@ if "__main__" == __name__:
         ax.set_yscale("log")
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]))
-        ax.grid()
         
-        if Deltas[Delta_index] in (1,2):
-            ax.legend(fontsize="xx-small", loc="lower center")
-        if Deltas[Delta_index] > 0:
-            plt.tick_params("y", labelleft=False)
+        if not one_by_three:
+            if Deltas[Delta_index] > 0:
+                plt.tick_params("y", labelleft=False)
+            if Deltas[Delta_index] in (1,2):
+                ax.legend(fontsize="xx-small", loc="lower center")
+
+        else:
+            if Deltas[Delta_index] < 5:
+                plt.tick_params("x", labelbottom=False)
+                
+        if not one_by_three:
+            ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="small")
+        else:
+            ax1 = ax.twinx()
+            ax1.axis("off")
+            ax1.legend(title="$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="xx-small", loc="lower center")
+        ax.grid()
+
     
     plt.tight_layout(pad=0.1)
-    plt.subplots_adjust(wspace=0.)
+    if one_by_three:
+        plt.subplots_adjust(hspace=0.)
+        
+    else:
+        plt.subplots_adjust(wspace=0.)
      
+    
 #%% Prospective constraints
 
 if "__main__" == __name__:
