@@ -864,7 +864,68 @@ if "__main__" == __name__:
     y1 = 1 + x1**2
     y2 = np.ones(10)
     print(frac_diff(y1, y2, x1, x2))
-       
+
+#%% Plot all delta-function MF constraints
+
+if "__main__" == __name__:
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    fig, ax = plt.subplots(figsize=(8, 5))
+    Delta_index = 0
+    
+    plotter_GC_Isatis(Deltas, Delta_index, ax, color="b")
+    ax.text(5e16, 0.6,"GC photons", fontsize="xx-small", color="b")
+    
+    #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=False, mf=None)
+    mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=None)
+    #mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=None, prop_B_lower=True)
+    """
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="r", linewidth=0, alpha=1)
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="r", linewidth=0, alpha=1)
+    ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color="r", linewidth=0, alpha=1)
+    """
+    #ax.plot(mp_propA, f_PBH_propA, color="r")
+    ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r")
+    #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r")
+   
+    #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=True, mf=None)
+    mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=None)
+    #mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=None, prop_B_lower=True)
+    """
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="r", alpha=0., linestyle="dashed")
+    ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="r", alpha=0, linestyle="dashed")
+    ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color="r", alpha=0., linestyle="dashed")
+    """
+    
+    #ax.plot(mp_propA, f_PBH_propA, color="r", linestyle="dashed")
+    ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
+    #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r", linestyle="dashed")
+
+    
+    ax.text(1.3e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
+    
+    plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashed")
+    ax.text(1e17, 0.005,"KP '23", fontsize="xx-small", color="orange")
+
+    plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="purple")
+    ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="purple")
+   
+    
+    plotter_GECCO(Deltas, Delta_index, ax, color="#5F9ED1", linestyle="dotted")
+    ax.text(4e17, 0.1,"Future MeV \n gamma-rays", fontsize="xx-small", color="#5F9ED1")
+
+    plotter_Sugiyama(Deltas, Delta_index, ax, color="#595959", linestyle="dotted")
+    ax.text(1e21, 0.002,"WD microlensing", fontsize="xx-small", color="#595959")
+
+    ax.tick_params("x", pad=7)
+    ax.set_yscale("log")
+    ax.set_xscale("log")
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_ylim(1e-3, 1)
+    ax.set_xlim(1e15, 1e24)
+    fig.tight_layout()
 
 #%% Existing constraints
 
@@ -1152,7 +1213,7 @@ if "__main__" == __name__:
 
     Delta_indices = [0, 5, 6]
     
-    two_by_two = False
+    two_by_two = True
     one_by_three = False
     linewidth = 1
 
@@ -1166,7 +1227,8 @@ if "__main__" == __name__:
             ax = plt.subplot(2, 2, 1)
             
         elif one_by_three:
-            plt.figure(figsize=(5, 10))
+            #plt.figure(figsize=(5, 10))
+            plt.figure(figsize=(10, 7))
             ax = plt.subplot(3, 1, 1)
             
         else:
@@ -1207,12 +1269,13 @@ if "__main__" == __name__:
             ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=linewidth, alpha=1)
             ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=linewidth, alpha=1)
             ax.fill_between(mp_propB_lower, f_PBH_propB_lower, np.interp(mp_propB_lower, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=0, alpha=1)            
-            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[3], mf=CC3, with_bkg_subtr=with_bkg_subtr, alpha=0.7)
-            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[1], mf=LN, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
+            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[1], mf=LN, with_bkg_subtr=with_bkg_subtr, alpha=0.5)
             plotter_BC19_range(Deltas, Delta_index, ax, color=colors[2], mf=SLN, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
-            plotter_BC19(Deltas, Delta_index, ax, color=colors[1], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[1], linewidth=linewidth)
-            plotter_BC19(Deltas, Delta_index, ax, color=colors[2], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[2], linewidth=linewidth)
-            plotter_BC19(Deltas, Delta_index, ax, color=colors[3], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[3], linewidth=linewidth)
+            plotter_BC19_range(Deltas, Delta_index, ax, color=colors[3], mf=CC3, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
+
+            plotter_BC19(Deltas, Delta_index, ax, color=colors[1], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[1], linewidth=linewidth)
+            plotter_BC19(Deltas, Delta_index, ax, color=colors[2], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[2], linewidth=linewidth)
+            plotter_BC19(Deltas, Delta_index, ax, color=colors[3], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[3], linewidth=linewidth)
                                 
         xmin, xmax = 1e16, 5e23
         ymin, ymax = 1e-3, 1
@@ -1238,7 +1301,15 @@ if "__main__" == __name__:
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
         
-        if not one_by_three:
+        if two_by_two:
+            if Deltas[Delta_index] == 2:
+                plt.tick_params("y", labelleft=False)
+            else:
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+            if Deltas[Delta_index] in (1,2):
+                ax.legend(fontsize="xx-small", loc="lower center")
+
+        elif not one_by_three:
             if Deltas[Delta_index] > 0:
                 plt.tick_params("y", labelleft=False)
             if Deltas[Delta_index] in (1,2):
@@ -1251,9 +1322,11 @@ if "__main__" == __name__:
         if not one_by_three:
             ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="small")
         else:
+            if Deltas[Delta_index] == 0:
+                ax.legend(fontsize="xx-small", loc="center")
             ax1 = ax.twinx()
             ax1.axis("off")
-            ax1.legend(title="$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="xx-small", loc="lower center")
+            ax1.legend(title="$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="xx-small", loc="upper right")
         ax.grid()
 
     
