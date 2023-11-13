@@ -1207,9 +1207,9 @@ if "__main__" == __name__:
         
     
     # If True, plot constraints obtained with background subtraction
-    with_bkg_subtr = True
+    with_bkg_subtr = False
     
-    colors = ['silver', 'r', 'b', 'orange', 'k']
+    colors = ['r', 'b', 'orange', 'purple']
     linestyles = ['solid', 'dashdot', 'dotted', 'dashed']
                     
     # Load mass function parameters.
@@ -1253,25 +1253,25 @@ if "__main__" == __name__:
            
                         
         if with_bkg_subtr:
-            plotter_KP23(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=linewidth)
-            plotter_KP23(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=linestyles[1], linewidth=linewidth)
-            plotter_KP23(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[2], linestyle=linestyles[0], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=LN, linestyle=linestyles[1], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=CC3, linestyle=linestyles[3], linewidth=linewidth, alpha=0.5)
             plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth)
 
         else:
-            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=None, evolved=False, color=colors[0], linestyle=linestyles[0], linewidth=linewidth)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=None, evolved=False, color=colors[1], linestyle=linestyles[0], linewidth=linewidth)
             plotter_GC_Isatis(Deltas, Delta_index, ax, mf=LN, params=[sigmas_LN[Delta_index]], evolved=False, color=colors[1], linestyle=linestyles[1], linewidth=linewidth)
-            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=CC3, params=[alphas_CC3[Delta_index], betas[Delta_index]], evolved=False, color=colors[3], linestyle=linestyles[3], linewidth=linewidth)
-            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=SLN, params=[sigmas_SLN[Delta_index], alphas_SLN[Delta_index]], evolved=False, color=colors[2], linestyle=linestyles[2], linewidth=linewidth)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=CC3, params=[alphas_CC3[Delta_index], betas[Delta_index]], evolved=False, color=colors[1], linestyle=linestyles[3], linewidth=linewidth, alpha=1)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=SLN, params=[sigmas_SLN[Delta_index], alphas_SLN[Delta_index]], evolved=False, color=colors[1], linestyle=linestyles[2], linewidth=linewidth)
 
         mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
         mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
         mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None, prop_B_lower=True)
 
-        plotter_BC19(Deltas, Delta_index, ax, color="silver", mf=None, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
-        plotter_BC19(Deltas, Delta_index, ax, color=colors[1], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[1], linewidth=linewidth)
-        plotter_BC19(Deltas, Delta_index, ax, color=colors[2], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[2], linewidth=linewidth)
-        plotter_BC19(Deltas, Delta_index, ax, color=colors[3], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[3], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=None, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[1], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[3], linewidth=linewidth, alpha=1)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[2], linewidth=linewidth)
                                 
         xmin, xmax = 1e16, 5e23
         ymin, ymax = 1e-3, 1
@@ -1279,10 +1279,10 @@ if "__main__" == __name__:
         show_label_Subaru = True
             
         # Plot Subaru-HSC constraints        
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=linewidth, show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[1], mf=LN,  linestyle=linestyles[1], linewidth=linewidth, show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth, show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], linestyle=linestyles[0], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=LN,  linestyle=linestyles[1], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth, show_label=show_label_Subaru, alpha=1)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=SLN, linestyle=linestyles[2], linewidth=linewidth, show_label=show_label_Subaru)
 
         ax.tick_params("x", pad=7)
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -1294,10 +1294,6 @@ if "__main__" == __name__:
         
         if Deltas[Delta_index] in (1,2):
             ax.legend(fontsize="xx-small", loc="lower center")
-
-        else:
-            if Deltas[Delta_index] < 5:
-                plt.tick_params("x", labelbottom=False)
                 
         if not one_by_three:
             ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="small")
@@ -1652,7 +1648,7 @@ if "__main__" == __name__:
     colors_CC3 = ["k", "tab:green", "lime"]
     
     # Opacities and line widths for different Delta:
-    linewidth_values = [2, 1.5, 1]
+    linewidth_values = [2, 2, 2]
     
     with_bkg_subtr = True
     
@@ -1716,9 +1712,9 @@ if "__main__" == __name__:
         else:
             plotter_GC_Isatis(Deltas, Delta_index, ax0, color=colors_LN[i], mf=LN, linestyle=linestyles[1], linewidth=linewidth_values[i], params=[sigmas_LN[Delta_index]])
         plotter_Subaru_Croon20(Deltas, Delta_index, ax0, color=colors_LN[i], mf=LN, linestyle=linestyles[0], linewidth=linewidth_values[i], show_label=False)
-        plotter_BC19(Deltas, Delta_index, ax0, color=colors_LN[i], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, linestyle=linestyles[3])
+        plotter_BC19(Deltas, Delta_index, ax0, color=colors_LN[i], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, linestyle=linestyles[3], linewidth=linewidth_values[i])
         ax0.set_title("LN") 
-        ax0.plot(0, 0, color=colors_LN[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
+        ax0.plot(0, 0, color=colors_LN[i], label="{:.0f}".format(Deltas[Delta_index]))
         
         # Plot SLN MF results
         if with_bkg_subtr: 
@@ -1726,9 +1722,9 @@ if "__main__" == __name__:
         else:
             plotter_GC_Isatis(Deltas, Delta_index, ax1, color=colors_SLN[i], mf=SLN, linestyle=linestyles[1], linewidth=linewidth_values[i], params=[sigmas_SLN[Delta_index], alphas_SLN[Delta_index]])
         plotter_Subaru_Croon20(Deltas, Delta_index, ax1, color=colors_SLN[i], mf=SLN, linestyle=linestyles[0], linewidth=linewidth_values[i], show_label=False)
-        plotter_BC19(Deltas, Delta_index, ax1, color=colors_SLN[i], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, linestyle=linestyles[3])
+        plotter_BC19(Deltas, Delta_index, ax1, color=colors_SLN[i], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, linestyle=linestyles[3], linewidth=linewidth_values[i])
         ax1.set_title("SLN") 
-        ax1.plot(0, 0, color=colors_SLN[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
+        ax1.plot(0, 0, color=colors_SLN[i], label="{:.0f}".format(Deltas[Delta_index]))
                
         # Plot CC3 MF results
         if with_bkg_subtr:
@@ -1736,9 +1732,9 @@ if "__main__" == __name__:
         else:
             plotter_GC_Isatis(Deltas, Delta_index, ax2, color=colors_CC3[i], mf=CC3, linestyle=linestyles[1], linewidth=linewidth_values[i], params=[alphas_CC3[Delta_index], betas[Delta_index]])
         plotter_Subaru_Croon20(Deltas, Delta_index, ax2, color=colors_CC3[i], mf=CC3, linestyle=linestyles[0], linewidth=linewidth_values[i], show_label=False)
-        plotter_BC19(Deltas, Delta_index, ax2, color=colors_CC3[i], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, linestyle=linestyles[3])
+        plotter_BC19(Deltas, Delta_index, ax2, color=colors_CC3[i], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, linestyle=linestyles[3], linewidth=linewidth_values[i])
         ax2.set_title("CC3") 
-        ax2.plot(0, 0, color=colors_CC3[i], label="$\Delta={:.0f}$".format(Deltas[Delta_index]))
+        ax2.plot(0, 0, color=colors_CC3[i], label="{:.0f}".format(Deltas[Delta_index]))
                
     for ax in[ax0, ax1, ax2]:
         ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -1747,7 +1743,7 @@ if "__main__" == __name__:
         ax.set_yscale("log")  
         ax.set_xlim(1e16, 1e24)
         ax.set_ylim(1e-3, 1)
-        ax.legend(fontsize="xx-small", loc="lower center")
+        ax.legend(title="$\Delta$", fontsize="xx-small", loc="lower center")
         ax.tick_params("x", pad=7)
         ax.plot(0, 0, color="tab:gray", linewidth=2, label="$\delta$ func.")
 
