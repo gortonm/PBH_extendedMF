@@ -1202,6 +1202,7 @@ if "__main__" == __name__:
      
         
 #%% Existing constraints
+# Version showing constraints obtained using different observations in different colours, and using line style to distinguish between fitting functions.
 
 if "__main__" == __name__:
         
@@ -1217,8 +1218,6 @@ if "__main__" == __name__:
 
     Delta_indices = [0, 5, 6]
     
-    two_by_two = False
-    one_by_three = False
     linewidth = 1
 
     if len(Delta_indices) == 4:
@@ -1226,30 +1225,15 @@ if "__main__" == __name__:
         ax0 = plt.subplot(2, 2, 1)    
         
     elif len(Delta_indices) == 3:
-        if two_by_two:
-            plt.figure(figsize=(8, 9))
-            ax = plt.subplot(2, 2, 1)
-            
-        elif one_by_three:
-            #plt.figure(figsize=(5, 10))
-            plt.figure(figsize=(10, 7))
-            ax = plt.subplot(3, 1, 1)
-            
-        else:
-            plt.figure(figsize=(14, 5))
-            ax = plt.subplot(1, 3, 1)
+        plt.figure(figsize=(14, 5))
+        ax = plt.subplot(1, 3, 1)
         
     for axis_index, Delta_index in enumerate(Delta_indices):
         
         if len(Delta_indices) == 4:
             ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
         elif len(Delta_indices) == 3:
-            if two_by_two:
-                ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
-            elif one_by_three:
-                ax = plt.subplot(3, 1, axis_index + 1, sharex=ax)               
-            else:
-                ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
+            ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
            
                         
         if with_bkg_subtr:
@@ -1295,6 +1279,189 @@ if "__main__" == __name__:
         if Deltas[Delta_index] in (1,2):
             ax.legend(fontsize="xx-small", loc="lower center")
                 
+        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="small")
+    
+    plt.tight_layout(pad=0.1)
+    plt.subplots_adjust(wspace=0.3)
+     
+    
+#%% Existing constraints
+# Version showing constraints obtained using different fitting functions in different colours
+
+if "__main__" == __name__:
+        
+    # If True, plot constraints obtained with background subtraction
+    with_bkg_subtr = False
+    
+    colors = ['silver', 'r', 'b', 'orange', 'k']
+    linestyles = ['solid', 'dashdot', 'dotted', 'dashed']
+                    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    Delta_indices = [0, 5, 6]
+    linewidth = 1
+
+    if len(Delta_indices) == 4:
+        plt.figure(figsize=(12, 12))
+        ax0 = plt.subplot(2, 2, 1)    
+        
+    elif len(Delta_indices) == 3:
+        plt.figure(figsize=(14, 5))
+        ax = plt.subplot(1, 3, 1)
+        
+    for axis_index, Delta_index in enumerate(Delta_indices):
+        
+        if len(Delta_indices) == 4:
+            ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+        elif len(Delta_indices) == 3:
+            ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
+           
+        if with_bkg_subtr:
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=linestyles[1], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth)
+
+        else:
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=None, evolved=False, color=colors[0], linestyle=linestyles[0], linewidth=linewidth)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=LN, params=[sigmas_LN[Delta_index]], evolved=False, color=colors[1], linestyle=linestyles[1], linewidth=linewidth)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=CC3, params=[alphas_CC3[Delta_index], betas[Delta_index]], evolved=False, color=colors[3], linestyle=linestyles[3], linewidth=linewidth)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=SLN, params=[sigmas_SLN[Delta_index], alphas_SLN[Delta_index]], evolved=False, color=colors[2], linestyle=linestyles[2], linewidth=linewidth)
+
+        mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
+        mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
+        mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None, prop_B_lower=True)
+
+        plotter_BC19(Deltas, Delta_index, ax, color="silver", mf=None, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[1], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[1], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[2], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[2], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[3], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[3], linewidth=linewidth)
+                                
+        xmin, xmax = 1e16, 5e23
+        ymin, ymax = 1e-3, 1
+        
+        show_label_Subaru = True
+            
+        # Plot Subaru-HSC constraints        
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[1], mf=LN,  linestyle=linestyles[1], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth, show_label=show_label_Subaru)
+
+        ax.tick_params("x", pad=7)
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")           
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+        
+        if Deltas[Delta_index] in (1,2):
+            ax.legend(fontsize="xx-small", loc="lower center")
+                
+    plt.tight_layout(pad=0.1)
+    plt.subplots_adjust(wspace=0.3)
+
+        
+#%% Existing constraints
+
+if "__main__" == __name__:
+        
+    
+    # If True, plot constraints obtained with background subtraction
+    with_bkg_subtr = True
+    
+    colors = ['silver', 'r', 'b', 'orange', 'k']
+    linestyles = ['solid', 'dashdot', 'dotted', 'dashed']
+                    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    Delta_indices = [0, 5, 6]
+    
+    two_by_two = False
+    one_by_three = False
+    linewidth = 1
+
+    if len(Delta_indices) == 4:
+        plt.figure(figsize=(12, 12))
+        ax0 = plt.subplot(2, 2, 1)    
+        
+    elif len(Delta_indices) == 3:
+        if two_by_two:
+            plt.figure(figsize=(8, 9))
+            ax = plt.subplot(2, 2, 1)
+            
+        elif one_by_three:
+            #plt.figure(figsize=(5, 10))
+            plt.figure(figsize=(10, 7))
+            ax = plt.subplot(3, 1, 1)
+            
+        else:
+            plt.figure(figsize=(14, 5))
+            ax = plt.subplot(1, 3, 1)
+        
+    for axis_index, Delta_index in enumerate(Delta_indices):
+        
+        if len(Delta_indices) == 4:
+            ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+        elif len(Delta_indices) == 3:
+            if two_by_two:
+                ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
+            elif one_by_three:
+                ax = plt.subplot(3, 1, axis_index + 1, sharex=ax)               
+            else:
+                ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
+           
+                        
+        if with_bkg_subtr:
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=linestyles[1], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth)
+            plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth)
+
+        else:
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=None, evolved=False, color=colors[0], linestyle=linestyles[0], linewidth=linewidth)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=LN, params=[sigmas_LN[Delta_index]], evolved=False, color=colors[1], linestyle=linestyles[1], linewidth=linewidth)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=CC3, params=[alphas_CC3[Delta_index], betas[Delta_index]], evolved=False, color=colors[3], linestyle=linestyles[3], linewidth=linewidth)
+            plotter_GC_Isatis(Deltas, Delta_index, ax, mf=SLN, params=[sigmas_SLN[Delta_index], alphas_SLN[Delta_index]], evolved=False, color=colors[2], linestyle=linestyles[2], linewidth=linewidth)
+
+        mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
+        mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
+        mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None, prop_B_lower=True)
+
+        plotter_BC19(Deltas, Delta_index, ax, color="silver", mf=None, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[1], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[1], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[2], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[2], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[3], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[3], linewidth=linewidth)
+                                
+        xmin, xmax = 1e16, 5e23
+        ymin, ymax = 1e-3, 1
+        
+        show_label_Subaru = True
+            
+        # Plot Subaru-HSC constraints        
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[0], linestyle=linestyles[0], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[1], mf=LN,  linestyle=linestyles[1], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth, show_label=show_label_Subaru)
+        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth, show_label=show_label_Subaru)
+
+        ax.tick_params("x", pad=7)
+        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_ylabel("$f_\mathrm{PBH}$")           
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlim(xmin, xmax)
+        ax.set_ylim(ymin, ymax)
+        
+        if Deltas[Delta_index] in (1,2):
+            ax.legend(fontsize="xx-small", loc="lower center")
+
+        else:
+            if Deltas[Delta_index] < 5:
+                plt.tick_params("x", labelbottom=False)
+                
         if not one_by_three:
             ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="small")
         else:
@@ -1309,8 +1476,8 @@ if "__main__" == __name__:
         plt.subplots_adjust(hspace=0.)
         
     else:
-        plt.subplots_adjust(wspace=0.3)
-     
+        plt.subplots_adjust(wspace=0.3)    
+    
     
 #%% Prospective constraints
 
