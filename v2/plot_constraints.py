@@ -81,6 +81,8 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
         Index of the array Delta corresponding to the desired value of Delta.
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
+    params : Array-like, optional
+        Parameters of the mass function. Not required for a delta function, required for extended MFs.
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is True.
     exponent_PL_lower : Float, optional
@@ -149,12 +151,8 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
         if mf==LN:
             sigma_LN = params[0]
             mp_GC = mc_values * np.exp(-sigma_LN**2)
-            print("\n data_filename [in load_data_GC_Isatis]")
-            print(data_filename)
-            print("approx = %s" % approx)
 
         elif mf==SLN:
-            print(params)
 
             mp_GC = [m_max_SLN(m_c, *params, log_m_factor=3, n_steps=1000) for m_c in mc_values]
 
@@ -333,6 +331,8 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
 
     """
     
+    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
     if mf == None:
         mp_Subaru, f_PBH_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
@@ -432,6 +432,7 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None):
         Constraint on f_PBH.
 
     """    
+    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     if mf == None:
         mp_Sugiyama, f_PBH_Sugiyama = load_data("1905.06066/1905.06066_Fig8_finite+wave.csv")
