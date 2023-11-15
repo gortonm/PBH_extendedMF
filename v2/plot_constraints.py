@@ -936,15 +936,15 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = True
+    plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = False
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
-    plot_BC19 = False
+    plot_BC19 = True
     # If True, plot unevolved MF constraint
-    plot_unevolved = False
+    plot_unevolved = True
     # If True, plot the fractional difference between evolved and unevolved MF results
-    plot_fracdiff = False
+    plot_fracdiff = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
@@ -967,7 +967,7 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if Deltas[i] == 1:
+        if Deltas[i] < 10:
                         
             fig, ax = plt.subplots(figsize=(9, 5))
             
@@ -976,9 +976,9 @@ if "__main__" == __name__:
                 # If required, plot unevolved MF constraints.
                 if plot_unevolved:
                     
-                    plotter_GC_Isatis(Deltas, i, ax, mf=LN, evolved=False, color=colors[1])
-                    plotter_GC_Isatis(Deltas, i, ax, mf=SLN, evolved=False, color=colors[2])
-                    plotter_GC_Isatis(Deltas, i, ax, mf=CC3, evolved=False, color=colors[3])
+                    plotter_GC_Isatis(Deltas, i, ax, mf=LN, evolved=False, params=[sigmas_LN[i]], color=colors[1])
+                    plotter_GC_Isatis(Deltas, i, ax, mf=SLN, evolved=False, params=[sigmas_SLN[i], alphas_SLN[i]], color=colors[2])
+                    plotter_GC_Isatis(Deltas, i, ax, mf=CC3, evolved=False, params=[alphas_CC3[i], betas[i]], color=colors[3])
     
                 #plt.suptitle("Existing constraints (showing Galactic Centre photon constraints (Isatis)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
                 
@@ -990,29 +990,29 @@ if "__main__" == __name__:
                 plotter_GC_Isatis(Deltas, i, ax, mf=None, color=colors[0])
                 plotter_GC_Isatis(Deltas, i, ax, mf=LN, color=colors[1], params=[sigmas_LN[i]], linestyle=(0, (5, 1)))
                 plotter_GC_Isatis(Deltas, i, ax, mf=SLN, color=colors[2], params=[sigmas_SLN[i], alphas_SLN[i]], linestyle=(0, (5, 7)))
-                plotter_GC_Isatis(Deltas, i, ax, mf=CC3, color=colors[3], linestyle="dashed")
+                plotter_GC_Isatis(Deltas, i, ax, mf=CC3, color=colors[3], params=[alphas_CC3[i], betas[i]], linestyle="dashed")
     
                 
                 if plot_unevolved and plot_fracdiff:
                     fig1, ax1a = plt.subplots(figsize=(6,6))
                     
-                    mp_LN_evolved, f_PBH_LN_evolved = load_data_GC_Isatis(Deltas, i, mf=LN, evolved=True)
-                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GC_Isatis(Deltas, i, mf=SLN, evolved=True)
-                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GC_Isatis(Deltas, i, mf=CC3, evolved=True)
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_GC_Isatis(Deltas, i, mf=LN, params=[sigmas_LN[i]], evolved=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GC_Isatis(Deltas, i, mf=SLN, params=[sigmas_SLN[i], alphas_SLN[i]], evolved=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GC_Isatis(Deltas, i, mf=CC3, params=[alphas_CC3[i], betas[i]], evolved=True)
                    
-                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_GC_Isatis(Deltas, i, mf=LN, evolved=False)
-                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_GC_Isatis(Deltas, i, mf=SLN, evolved=False)
-                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_GC_Isatis(Deltas, i, mf=CC3, evolved=False)
+                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_GC_Isatis(Deltas, i, mf=LN, params=[sigmas_LN[i]], evolved=False)
+                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_GC_Isatis(Deltas, i, mf=SLN, params=[sigmas_SLN[i], alphas_SLN[i]], evolved=False)
+                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_GC_Isatis(Deltas, i, mf=CC3, params=[alphas_CC3[i], betas[i]], evolved=False)
                     
-                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_unevolved, f_PBH_LN_evolved, mp_LN_unevolved, mp_LN_evolved)), label="LN", color="r")
-                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_unevolved, f_PBH_SLN_evolved, mp_SLN_unevolved, mp_SLN_evolved)), label="SLN", color="b")
-                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_unevolved, f_PBH_CC3_evolved, mp_CC3_unevolved, mp_CC3_evolved)), label="CC3", color="g")
+                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_LN_unevolved, mp_LN_evolved, mp_LN_unevolved)), label="LN", color="r")
+                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
+                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
                     ax1a.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
                     ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
                     ax1a.set_xscale("log")
                     ax1a.set_yscale("log")
                     ax1a.set_title("$\Delta={:.1f}$".format(Deltas[i]))
-                    ax1a.legend(title="Unevolved/evolved - 1", fontsize="x-small")
+                    ax1a.legend(title="Evolved/unevolved - 1", fontsize="x-small")
                     ax1a.set_xlim(xmin=1e16)
                     ax1a.set_ylim(ymax=1e2)
                     ax1a.grid()
@@ -1036,29 +1036,33 @@ if "__main__" == __name__:
                 # If required, plot the fractional difference from the delta-function MF constraint
                 if plot_fracdiff:
                     
-                    m_delta, f_PBH_delta =  load_data_KP23(Deltas, i, evolved=True)
-                    mp_LN, f_PBH_LN = load_data_KP23(Deltas, i, mf=LN, evolved=True)
-                    mp_SLN, f_PBH_SLN = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
-                    mp_CC3, f_PBH_CC3 = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_KP23(Deltas, i, mf=LN, evolved=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
+                    
+                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_KP23(Deltas, i, mf=LN, evolved=False)
+                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_KP23(Deltas, i, mf=SLN, evolved=False)
+                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_KP23(Deltas, i, mf=CC3, evolved=False)
                    
                     fig1, ax1a = plt.subplots(figsize=(6,6))
-                    ax1a.plot(mp_LN, frac_diff(f_PBH_LN, f_PBH_delta, mp_LN, m_delta), label="LN", color="r")
-                    ax1a.plot(mp_SLN, frac_diff(f_PBH_SLN, f_PBH_delta, mp_SLN, m_delta), label="SLN", color="b")
-                    ax1a.plot(mp_CC3, frac_diff(f_PBH_CC3, f_PBH_delta, mp_CC3, m_delta), label="CC3", color="g")
+                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_LN_unevolved, mp_LN_evolved, mp_LN_unevolved)), label="LN", color="r")
+                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
+                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
+
                     ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
                     ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
                     ax1a.set_xscale("log")
-                    #ax1a.set_yscale("log")
+                    ax1a.set_yscale("log")
                     ax1a.set_title("$\Delta={:.0f}$".format(Deltas[i]))
-                    ax1a.legend(title="Delta func./extended MF - 1", fontsize="x-small")
-                    ax1a.set_xlim(xmin=5e14)
-                    ax1a.set_ylim(-0.1, 0.1)
+                    ax1a.legend(title="Evolved/unevolved - 1", fontsize="x-small")
+                    ax1a.set_xlim(xmin=1e16)
+                    ax1a.set_ylim(ymax=1e2)
                     ax1a.grid()
                     fig1.tight_layout()
                 
                 # If required, plot constraints obtained with unevolved MF
                 if plot_unevolved:
-                    plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
+                    plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid")
                     plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, evolved=False)
                     plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, evolved=False)
                     plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)
@@ -1066,7 +1070,9 @@ if "__main__" == __name__:
                     
             if plot_BC19:
                 
-                with_bkg_subtr = True
+                prop_A = False
+                with_bkg_subtr = False
+                prop_B_lower = False
                 
                 mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, i, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
                 mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, i, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
@@ -1074,22 +1080,49 @@ if "__main__" == __name__:
                 ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="silver", linewidth=0, alpha=1)
                 ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=0, alpha=1)
                 ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color="silver", linewidth=0, alpha=1)
-
-                plotter_BC19_range(Deltas, i, ax, color=colors[3], mf=CC3, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
-                plotter_BC19_range(Deltas, i, ax, color=colors[1], mf=LN, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
-                plotter_BC19_range(Deltas, i, ax, color=colors[2], mf=SLN, with_bkg_subtr=with_bkg_subtr, alpha=0.3)
                 
-                plotter_BC19(Deltas, i, ax, color=colors[1], mf=LN, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True)
-                plotter_BC19(Deltas, i, ax, color=colors[1], mf=LN, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
-                plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True)
-                plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
-                plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True)
-                plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, linewidth=1, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
+                for evolved in [True, False]:
+                    if evolved == False:
+                        alpha = 0.4
+                    else:
+                        alpha = 1
+                    plotter_BC19(Deltas, i, ax, color=colors[1], mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
+                    plotter_BC19(Deltas, i, ax, color=colors[1], mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
+                    plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
+                    plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
+                    plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
+                    plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
     
                 ax.set_xlabel("$m_p~[\mathrm{g}]$")
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
+                
+                # If required, plot the fractional difference from the delta-function MF constraint
+                if plot_fracdiff:
+                    
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_Voyager_BC19(Deltas, i, mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Voyager_BC19(Deltas, i, mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Voyager_BC19(Deltas, i, mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True)
+                    
+                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_Voyager_BC19(Deltas, i, mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False)
+                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_Voyager_BC19(Deltas, i, mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False)
+                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_Voyager_BC19(Deltas, i, mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False)
+                   
+                    fig1, ax1a = plt.subplots(figsize=(6,6))
+                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_LN_unevolved, mp_LN_evolved, mp_LN_unevolved)), label="LN", color="r")
+                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
+                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
+                    ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
+                    ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax1a.set_xscale("log")
+                    ax1a.set_yscale("log")
+                    ax1a.set_title("$\Delta={:.0f}$".format(Deltas[i]))
+                    ax1a.legend(title="Evolved/unevolved - 1", fontsize="x-small")
+                    ax1a.set_xlim(xmin=1e16)
+                    ax1a.set_ylim(ymax=1e2)
+                    ax1a.grid()
+                    fig1.tight_layout()
     
             if Deltas[i] < 5:
                 show_label_Subaru = False
@@ -1250,10 +1283,10 @@ if "__main__" == __name__:
         mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
         mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None, prop_B_lower=True)
 
-        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=None, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False)
-        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[1], linewidth=linewidth)
-        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[2], linewidth=linewidth)
-        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=False, linestyle=linestyles[3], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=None, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=LN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[1], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=SLN, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[2], linewidth=linewidth)
+        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=CC3, prop_A=False, with_bkg_subtr=with_bkg_subtr, prop_B_lower=True, linestyle=linestyles[3], linewidth=linewidth)
                                 
         xmin, xmax = 1e16, 5e23
         ymin, ymax = 1e-3, 1
