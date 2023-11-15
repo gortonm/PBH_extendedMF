@@ -455,7 +455,7 @@ if "__main__" == __name__:
     prop_A = False
     prop_B = not prop_A
     
-    with_bkg_subtr = True
+    with_bkg_subtr = False
     
     # If True, load the more stringent or less stringent "prop B" data
     prop_B_lower = False
@@ -531,7 +531,7 @@ if "__main__" == __name__:
             # Plot extended MF constraints from Galactic Centre photons calculated using Isatis         
             plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
-            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
+            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, params=[alphas_CC3[j], betas[j]], linestyle="dotted")
             
             ax0.plot(m_delta_values, f_max, color="tab:grey")
             ax0.set_xlabel("$m$ [g]")
@@ -555,7 +555,7 @@ if "__main__" == __name__:
     
             ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
             ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
-            fig.suptitle("Voyager 1 [1807.03075], $\Delta={:.1f}$".format(Deltas[j]) + " %s" % title_string)
+            fig.suptitle("Voyager 1 [1807.03075], $\Delta={:.1f}$".format(Deltas[j]) + " %s" % prop_string)
             fig.tight_layout()
 
 #%% Tests of the results obtained using different power-law exponents in f_max at low masses 
@@ -1988,3 +1988,80 @@ ax.legend()
 ax.set_xscale("log")
 ax.set_yscale("log")
 fig.tight_layout()
+
+
+#%% Compare microlensing constraints obtained with an evolved MF and without
+
+from plot_constraints import plotter_Subaru_Croon20, plotter_Sugiyama
+
+if "__main__" == __name__:
+
+    mc_subaru = 10**np.linspace(17, 29, 1000)
+        
+    # Mass function parameter values, from 2009.03204.
+    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+            
+    for i in range(len(Deltas)):
+        
+        fig1, ax1 = plt.subplots(figsize=(7, 7))
+        fig2, ax2 = plt.subplots(figsize=(7, 7))
+               
+        # Unevolved MF constraints
+        plotter_Subaru_Croon20(Deltas, i, ax1, mf=LN, color="r", linestyle="dotted")
+        plotter_Subaru_Croon20(Deltas, i, ax1, mf=SLN, color="b", linestyle="dotted")
+        plotter_Subaru_Croon20(Deltas, i, ax1, mf=CC3, color="g", linestyle="dotted")
+
+        plotter_Sugiyama(Deltas, i, ax2, mf=LN, color="r", linestyle="dotted")
+        plotter_Sugiyama(Deltas, i, ax2, mf=SLN, color="b", linestyle="dotted")
+        plotter_Sugiyama(Deltas, i, ax2, mf=CC3, color="g", linestyle="dotted")
+
+        # Evolved MF constraints (Subaru-HSC):            
+        data_filename_SLN = "./Data-tests/SLN_HSC_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
+        data_filename_CC3 = "./Data-tests/CC3_HSC_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
+        data_filename_LN = "./Data-tests/LN_HSC_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
+        
+        mc_LN, f_PBH_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+        mc_SLN, f_PBH_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+        mp_CC3, f_PBH_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+        
+        mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_SLN]
+        mp_LN = mc_LN * np.exp(-sigmas_LN[i]**2)
+                    
+        ax1.plot(mp_LN, f_PBH_LN, color="r", marker="None", alpha=0.5, label="Evolved")
+        ax1.plot(mp_SLN, f_PBH_SLN, color="b", marker="None", alpha=0.5, label="Evolved")
+        ax1.plot(mp_CC3, f_PBH_CC3, color="g", marker="None", alpha=0.5, label="Evolved")
+ 
+        # Evolved MF constraints (Sugiyama):            
+        data_filename_SLN = "./Data-tests/SLN_Sugiyama20_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
+        data_filename_CC3 = "./Data-tests/CC3_Sugiyama20_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
+        data_filename_LN = "./Data-tests/LN_Sugiyama20_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
+        
+        mc_LN, f_PBH_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
+        mc_SLN, f_PBH_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
+        mp_CC3, f_PBH_CC3 = np.genfromtxt(data_filename_CC3, delimiter="\t")
+        
+        mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=3, n_steps=1000) for m_c in mc_SLN]
+        mp_LN = mc_LN * np.exp(-sigmas_LN[i]**2)
+                    
+        ax2.plot(mp_LN, f_PBH_LN, color="r", marker="None", alpha=0.3, label="Evolved")
+        ax2.plot(mp_SLN, f_PBH_SLN, color="b", marker="None", alpha=0.3, label="Evolved")
+        ax2.plot(mp_CC3, f_PBH_CC3, color="g", marker="None", alpha=0.3, label="Evolved")
+   
+        for ax in [ax1, ax2]:
+            if Deltas[i] < 5:
+                ax.set_xlim(1e21, 1e29)
+            else:
+                ax.set_xlim(1e19, 1e29)
+               
+            ax.set_ylim(1e-3, 1)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.legend(fontsize="x-small")
+
+        ax1.set_title("Subaru-HSC, $\Delta={:.1f}$".format(Deltas[i]))
+        ax2.set_title("Sugiyama et al. (2020), $\Delta={:.1f}$".format(Deltas[i]))
+        fig1.tight_layout()
+        fig2.tight_layout()
+

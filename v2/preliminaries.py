@@ -351,9 +351,10 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     
     """
     # If delta-function mass function constraints are only calculated for PBH masses greater than 1e18g, ignore the effect of evaporation
+    """
     if min(m_delta) > 1e18:
         evolved = False
-    
+    """
     if evolved:
         # Find PBH masses at time t
         m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
