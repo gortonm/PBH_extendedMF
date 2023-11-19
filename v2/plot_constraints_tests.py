@@ -457,7 +457,7 @@ if "__main__" == __name__:
     
     with_bkg_subtr = False
     
-    # If True, load the more stringent or less stringent "prop B" data
+    # If True, load the more stringent "prop B" constraint
     prop_B_lower = False
     
     if prop_A:
@@ -863,10 +863,7 @@ if "__main__" == __name__:
     
     approx = False
 
-    if approx:
-        mc_values = np.logspace(14, 20, 120)
-    else:
-        mc_values = np.logspace(14, 20, 121)
+    mc_values = np.logspace(14, 20, 121)
 
     # Array of power law exponents to use at masses below 1e15g
     exponents_PL_lower = [0, 2, 4]
