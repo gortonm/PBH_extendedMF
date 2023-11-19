@@ -861,15 +861,18 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = np.logspace(14, 20, 120)
+    approx = False
+
+    if approx:
+        mc_values = np.logspace(14, 20, 120)
+    else:
+        mc_values = np.logspace(14, 20, 121)
 
     # Array of power law exponents to use at masses below 1e15g
     exponents_PL_lower = [0, 2, 4]
     
     style_markers = ["--", "+", "x"]
-    
-    approx = False
-    
+        
     for j in range(len(Deltas)):
         
         fig, axes = plt.subplots(2, 2, figsize=(13, 13))
@@ -949,9 +952,9 @@ if "__main__" == __name__:
                 print(data_filename_LN)
                 
             # Plot extended MF constraints from Galactic Centre photons calculated using Isatis  [sanity check]   
-            plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted", approx=approx, linewidth=5)
-            plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted", approx=approx, linewidth=5)
-            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted", approx=approx, linewidth=5)
+            plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted", approx=True, linewidth=2)
+            plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted", approx=True, linewidth=2)
+            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted", approx=True, linewidth=2)
                         
             ax1.set_title("LN")
             ax2.set_title("SLN")
