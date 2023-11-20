@@ -1737,7 +1737,7 @@ if "__main__" == __name__:
     fig.subplots_adjust(wspace=0.3)
  
     
-#%% Plot the most stringent GC photon constraint (calculated using the method from 1705.05567 with the delta-function MF constraint from Isatis).
+#%% Plot the most stringent GC photon constraint.
 
 if "__main__" == __name__:
     
@@ -1760,9 +1760,9 @@ if "__main__" == __name__:
     else:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
-    plot_LN = False
-    plot_SLN = True
-    plot_CC3 = True
+    plot_LN = True
+    plot_SLN = False
+    plot_CC3 = False
     
     approx = False
         
@@ -2197,8 +2197,7 @@ if "__main__" == __name__:
             fig.suptitle("$m_p = {:.1e}".format(m_p) + "~\mathrm{g}$" + ", $\sigma={:.2f}$".format(sigma_Carr21), fontsize="small")
             fig.tight_layout()
         
-#%%
-    # Plot psi_N, f_max and the integrand in the same figure window (sigma=2 case), using constraints from Auffinger (2022) [2201.01265] Fig. 3 RH panel
+#%% Plot psi_N, f_max and the integrand in the same figure window (sigma=2 case), using constraints from Auffinger (2022) [2201.01265] Fig. 3 RH panel
     m_delta_A22, f_max_A22 = load_data("./2201.01265/2201.01265_Fig3_EGXB.csv")   
 
     sigma_A22 = 2
