@@ -845,6 +845,16 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, l
         ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
+def Solmass_to_g(m):
+    """Convert a mass m (in solar masses) to grams."""
+    return 1.989e33 * m
+
+
+def g_to_Solmass(m):
+    """Convert a mass m (in grams) to solar masses."""
+    return m / 1.989e33
+
+
 #%% Tests of the method frac_diff:
     
 if "__main__" == __name__:
@@ -874,7 +884,7 @@ if "__main__" == __name__:
     plot_existing = True
     plot_prospective = True
     
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(8.5, 5.5))
     Delta_index = 0
     
     if plot_existing:
@@ -928,7 +938,15 @@ if "__main__" == __name__:
     ax.set_xlabel("$m~[\mathrm{g}]$")
     ax.set_ylim(1e-3, 1)
     ax.set_xlim(1e15, 1e24)
-    fig.tight_layout()
+    
+    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
+    ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+    ax1.tick_params("x")
+    
+    ax2 = ax.secondary_yaxis('right')
+    ax2.set_yticklabels([])
+      
+    fig.tight_layout(pad=0.1)
     
 
 #%% Existing constraints
@@ -1240,9 +1258,9 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # If True, plot constraints obtained with background subtraction
-    with_bkg_subtr = False
+    with_bkg_subtr = True
     # If True, load the more stringent "prop B" constraint
-    prop_B_lower = False
+    prop_B_lower = True
     
     colors = ['r', 'b', 'orange', 'tab:grey']
     linestyles = ['solid', 'dotted', 'dashdot', 'dashed']
@@ -1259,7 +1277,7 @@ if "__main__" == __name__:
         ax0 = plt.subplot(2, 2, 1)    
         
     elif len(Delta_indices) == 3:
-        plt.figure(figsize=(14, 5))
+        plt.figure(figsize=(14, 5.5))
         ax = plt.subplot(1, 3, 1)
         
     for axis_index, Delta_index in enumerate(Delta_indices):
@@ -1314,14 +1332,21 @@ if "__main__" == __name__:
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
         
+        ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
+        ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+        ax1.tick_params("x")
+        
+        ax2 = ax.secondary_yaxis('right')
+        ax2.set_yticklabels([])
+        
         if Deltas[Delta_index] in (1,2):
             ax.legend(fontsize="xx-small", loc="lower center")
                 
-        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="small")
-    
+        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), pad=25)
+        
     plt.tight_layout(pad=0.1)
     plt.subplots_adjust(wspace=0.3)
-     
+    
 #%% Prospective constraints
 # Version showing constraints obtained using different observations in different colours, and using line style to distinguish between fitting functions.
 
@@ -1333,14 +1358,14 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
-    Delta_indices = [0, 4, 6]
+    Delta_indices = [0, 5, 6]
     
     if len(Delta_indices) == 4:
         plt.figure(figsize=(12, 12))
         ax0 = plt.subplot(2, 2, 1)
 
     elif len(Delta_indices) == 3:
-        plt.figure(figsize=(14, 5))
+        plt.figure(figsize=(14, 5.5))
         ax = plt.subplot(1, 3, 1)
                   
     for axis_index, Delta_index in enumerate(Delta_indices):
@@ -1382,10 +1407,17 @@ if "__main__" == __name__:
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
         
+        ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
+        ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+        ax1.tick_params("x")
+        
+        ax2 = ax.secondary_yaxis('right')
+        ax2.set_yticklabels([])
+        
         if Deltas[Delta_index] in (1,2):
-            ax.legend(fontsize="xx-small", loc=[0.22, 0.03])
-            
-        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), fontsize="small")
+            ax.legend(fontsize="xx-small", loc="lower center")
+                
+        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), pad=15)
    
     plt.tight_layout(pad=0.1)
     plt.subplots_adjust(wspace=0.3)
@@ -1760,9 +1792,9 @@ if "__main__" == __name__:
     else:
         energies_string = "E{:.0f}".format(np.log10(E_number))
     
-    plot_LN = True
+    plot_LN = False
     plot_SLN = False
-    plot_CC3 = False
+    plot_CC3 = True
     
     approx = False
         
