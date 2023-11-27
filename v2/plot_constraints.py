@@ -919,7 +919,7 @@ if "__main__" == __name__:
         ax.text(1.3e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
         
         plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashed")
-        ax.text(1e17, 0.005,"KP '23", fontsize="xx-small", color="orange")
+        ax.text(1.2e17, 0.005, "Photons \n (from $e^+$ annihilation)", fontsize="xx-small", color="orange")
     
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey")
         ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="tab:grey")
@@ -1381,7 +1381,7 @@ if "__main__" == __name__:
         
         # Set axis limits
         xmin, xmax = 1e16, 5e23
-        ymin, ymax = 1e-3, 1
+        ymin, ymax = 1e-5, 1
 
         # plot Einasto profile results            
         plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, linestyle=linestyles[0])
@@ -1415,7 +1415,7 @@ if "__main__" == __name__:
         ax2.set_yticklabels([])
         
         if Deltas[Delta_index] in (1,2):
-            ax.legend(fontsize="xx-small", loc="lower center")
+            ax.legend(fontsize="xx-small", loc=[0.21, 0.05])
                 
         ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), pad=15)
    
@@ -1462,7 +1462,7 @@ if "__main__" == __name__:
         plotter_GC_Isatis(Deltas, Delta_index, ax, color="b", mf=mf, params=params)
         
         ax.plot(0, 0, color="b", label="GC photons")
-        ax.plot(0, 0, color="tab:orange", linestyle="dashed", label="KP '23")
+        ax.plot(0, 0, color="tab:orange", linestyle="dashed", label="Photons \n (from $e^+$ annihilation)")
         
         #plotter_BC19(Deltas, Delta_index, ax, color="r", mf=mf, prop_A=False, with_bkg_subtr=False, prop_B_lower=True)
         plotter_BC19(Deltas, Delta_index, ax, color="r", mf=mf, prop_A=False, with_bkg_subtr=False, prop_B_lower=False)
@@ -1486,7 +1486,7 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.set_xlim(1e16, 1e19)
-        ax.set_ylim(1e-3, 1)
+        ax.set_ylim(1e-5, 1)
         
         x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
         ax.xaxis.set_major_locator(x_major)
@@ -1760,7 +1760,7 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")  
         ax.set_xlim(1e16, 1e24)
-        ax.set_ylim(1e-3, 1)
+        ax.set_ylim(1e-5, 1)
         ax.legend(title="$\Delta$", fontsize="xx-small", loc="lower center")
         ax.tick_params("x", pad=7)
         ax.plot(0, 0, color="tab:gray", linewidth=2, label="$\delta$ func.")
@@ -2319,7 +2319,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
-    ax.set_ylim(1e-4, 1)
+    ax.set_ylim(1e-5, 1)
     fig.tight_layout()    
     
     
@@ -2345,7 +2345,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
-    ax.set_ylim(1e-4, 1)
+    ax.set_ylim(1e-5, 1)
     fig.tight_layout()    
 
     
