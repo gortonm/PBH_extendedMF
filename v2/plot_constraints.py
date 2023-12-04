@@ -948,6 +948,152 @@ if "__main__" == __name__:
       
     fig.tight_layout(pad=0.1)
     
+#%% Plot all extended MF constraints
+
+    if "__main__" == __name__:
+        # Load mass function parameters.
+        [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+        
+        plot_existing = True
+        plot_prospective = False
+        
+        mf = CC3
+        Delta_index = 0
+        
+        if mf == LN:
+            params = [sigmas_LN[Delta_index]]
+            mf_string = "LN"
+        elif mf == SLN:
+            params = [sigmas_SLN[Delta_index], alphas_SLN[Delta_index]]
+            mf_string = "SLN"
+        elif mf == CC3:
+            params = [alphas_CC3[Delta_index], betas[Delta_index]]      
+            mf_string = "CC3"
+        
+        fig, ax = plt.subplots(figsize=(8.5, 5.5))
+        
+        if plot_existing:
+            plotter_GC_Isatis(Deltas, Delta_index, ax, color="b", mf=mf, params=params)
+            ax.text(3e17, 0.6,"GC photons", fontsize="xx-small", color="b")
+            
+            #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=False, mf=mf)
+            mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=mf)
+            #mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=mf, prop_B_lower=True)
+
+            #ax.plot(mp_propA, f_PBH_propA, color="r")
+            ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r")
+            #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r")
+           
+            #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=True, mf=mf)
+            mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf)
+            #mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf, prop_B_lower=True)
+            
+            #ax.plot(mp_propA, f_PBH_propA, color="r", linestyle="dashed")
+            ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
+            #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r", linestyle="dashed")
+        
+            ax.text(1.3e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
+            
+            plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashed", mf=mf)
+            ax.text(1.2e17, 0.002, "Photons \n (from $e^+/e^-$ annihilation)", fontsize="xx-small", color="orange")
+        
+            plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey", mf=mf)
+            ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="tab:grey")
+            
+            # Calculate uncertainty in 511 keV line from the propagation model
+            
+            # Density profile parameters
+            rho_odot = 0.4 # Local DM density, in GeV / cm^3
+            # Maximum distance (from Galactic Centre) where positrons are injected that annhihilate within 1.5kpc of the Galactic Centre, in kpc
+            R_large = 3.5
+            R_small = 1.5
+            # Scale radius, in kpc (values from Ng+ '14 [1310.1915])
+            r_s_Iso = 3.5
+            r_s_NFW = 20
+            r_odot = 8.5 # Galactocentric distance of Sun, in kpc
+            annihilation_factor = 0.8 # For most stringgent constraints, consider the scenario where 80% of all positrons injected within R_NFW of the Galactic Centre annihilate
+            
+            density_integral_NFW = annihilation_factor * rho_odot * r_odot * (r_s_NFW + r_odot)**2 * (np.log(1 + (R_large / r_s_NFW)) - R_large / (R_large + r_s_NFW))
+            density_integral_Iso = rho_odot * (r_s_Iso**2 + r_odot**2) * (R_small - r_s_Iso * np.arctan(R_small/r_s_Iso))
+            
+            print(density_integral_NFW / density_integral_Iso)
+            
+            mc_511keV, f_PBH_511keV = np.genfromtxt("./Data-tests/unevolved/PL_exp_-2/%s" % mf_string + "_1912.01014_Carr_Delta={:.1f}_extrapolated_exp-2.txt".format(Deltas[Delta_index]))
+            mc_CMB, f_PBH_CMB = np.genfromtxt("./Data-tests/unevolved/PL_exp_-2/%s" % mf_string + "_2108.13256_Carr_Delta={:.1f}_extrapolated_exp-2.txt".format(Deltas[Delta_index]))
+            
+            if mf == LN:
+                mp_CMB = mc_CMB * np.exp(-sigmas_LN[Delta_index])
+                mp_511keV = mc_511keV * np.exp(-sigmas_LN[Delta_index])
+            elif mf == SLN:
+                mp_CMB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_CMB]
+                mp_511keV = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_511keV]
+            elif mf == CC3:
+                mp_CMB = mc_CMB
+                mp_511keV = mc_511keV
+                print(f_PBH_CMB[0:10])
+                print(mp_CMB[0:10])
+                                 
+            ax.plot(mp_511keV, f_PBH_511keV, color="g")
+            ax.fill_between(mp_511keV, f_PBH_511keV, (density_integral_NFW / density_integral_Iso)*f_PBH_511keV, color="g", alpha=0.3)        
+            ax.text(3e17, 5e-2,"511 keV line", fontsize="xx-small", color="g")
+
+            ax.plot(mp_CMB, f_PBH_CMB, linestyle="dashed", color="cyan")
+            ax.text(3e15, 0.5,"CMB \n anisotropies", fontsize="xx-small", color="cyan")
+
+            constraints_names_short = ["COMPTEL_1502.06116", "COMPTEL_1107.0200", "EGRET_0405441", "EGRET_9811211", "Fermi-LAT_1410.3696", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200", "HEAO+balloon_9903492"]
+            exponent_PL_lower = -2
+            data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+            constraints_names, f_max_Isatis = load_results_Isatis(mf_string="EXGB_Hazma")
+            m_delta_values_loaded = np.logspace(14, 17, 32)
+
+            f_PBH_instrument = []
+            
+            for i in range(len(constraints_names_short)):
+                
+                if i in (0, 2, 4, 7):
+
+                    # Load constraints for an evolved extended mass function obtained from each instrument
+                    data_filename_EXGB = data_folder + "/%s_EXGB_%s" % (mf_string, constraints_names_short[i])  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[Delta_index])
+                    mc_EXGB, f_PBH_k = np.genfromtxt(data_filename_EXGB, delimiter="\t")
+                    f_PBH_instrument.append(f_PBH_k)
+                
+            f_PBH_EXGB = envelope(f_PBH_instrument)
+            
+            if mf == LN:
+                mp_EXGB = mc_EXGB * np.exp(-sigmas_LN[Delta_index])
+            elif mf == SLN:
+                mp_EXGB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_EXGB]
+            elif mf == CC3:
+                mp_EXGB = mc_EXGB
+
+            ax.plot(mp_EXGB, f_PBH_EXGB, color="pink", label="EXGB")
+            ax.text(6e16, 1e-2,"EXGB (Isatis)", fontsize="xx-small", color="pink")
+                   
+        if plot_prospective:
+            plotter_GECCO(Deltas, Delta_index, ax, color="#5F9ED1", linestyle="dotted", mf=mf)
+            ax.text(4e17, 0.1,"Future MeV \n gamma-rays", fontsize="xx-small", color="#5F9ED1")
+        
+            plotter_Sugiyama(Deltas, Delta_index, ax, color="k", linestyle="dotted", mf=mf)
+            ax.text(1e21, 0.002,"WD microlensing", fontsize="xx-small", color="k")
+
+        ax.tick_params("x", pad=7)
+        ax.set_yscale("log")
+        ax.set_xscale("log")
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xlabel("$m~[\mathrm{g}]$")
+        ax.set_ylim(1e-3, 1)
+        ax.set_xlim(1e15, 1e24)
+        ax.set_title("%s" % mf_string + ", $\Delta={:.1f}$".format(Deltas[Delta_index]))
+        
+        ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
+        ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+        ax1.tick_params("x")
+        
+        ax2 = ax.secondary_yaxis('right')
+        ax2.set_yticklabels([])
+          
+        fig.tight_layout(pad=0.1)
+
 
 #%% Existing constraints
 
@@ -2182,6 +2328,7 @@ if "__main__" == __name__:
     fig.tight_layout()
     
     #%%
+if "__main__" == __name__:
     # Plot psi_N, f_max and the integrand in the same figure window
     for sigma_Carr21 in [sigmas_LN[5], 2]:
         m_p = 1e17
@@ -2230,6 +2377,8 @@ if "__main__" == __name__:
             fig.tight_layout()
         
 #%% Plot psi_N, f_max and the integrand in the same figure window (sigma=2 case), using constraints from Auffinger (2022) [2201.01265] Fig. 3 RH panel
+if "__main__" == __name__:
+
     m_delta_A22, f_max_A22 = load_data("./2201.01265/2201.01265_Fig3_EGXB.csv")   
 
     sigma_A22 = 2
@@ -2275,77 +2424,3 @@ if "__main__" == __name__:
     ax4.plot(m_delta_A22, psi_evolved_interp_A22/f_max_A22, color="k", label="Auffinger '22")
     ax4.legend(fontsize="x-small")
     ax4.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
-    ax4.set_xlim(0, 5e16)
-    
-    for fig in [fig1, fig2]:
-        fig.suptitle("$m_p = {:.1e}".format(m_p) + "~\mathrm{g}$", fontsize="small")
-        fig.tight_layout()
-
-        
-#%% Test: log-normal plots. Aim is to understand why the extended MF constraints shown in Fig. 20 of 2002.12778 differ so much from the delta-function MF constraints compared to the versions Im using.
-    
-    # Plot the constraints shown in Fig. 20 of 2002.12778
-    m_min = 1e11
-    m_max = 1e20
-    epsilon = 0.4
-    m_star = 5.1e14
-    
-    m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
-    f_max_values = f_PBH_beta_prime(m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
-    #f_max_values /= 2
-    mc_values = np.logspace(15, 22, 70)
-    
-    sigma = 2
-    
-    fig, ax = plt.subplots(figsize=(8,7))
-    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
-
-    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
-
-    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
-    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
-    
-    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded, color="tab:grey", label="Delta func.")
-    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
-    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
-    ax.plot(mc_values, f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
-
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xlabel("$m_c~[\mathrm{g}]$")
-    ax1.set_xlabel("$m_c~[M_\odot]$")
-    ax.tick_params("x", pad=7)
-    ax1.tick_params("x", pad=7)
-    ax.legend(title="$\sigma$", fontsize="x-small")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
-    ax.set_ylim(1e-5, 1)
-    fig.tight_layout()    
-    
-    
-    fig, ax = plt.subplots(figsize=(8,7))
-    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
-
-    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
-
-    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
-    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
-    
-    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded, color="tab:grey", label="Delta func.")
-    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
-    ax.plot(mc_LN_values_loaded * 1.989e33 * np.exp(-sigma**2), f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
-    ax.plot(mc_values  * np.exp(-sigma**2), f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
-
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xlabel("$m_p~[\mathrm{g}]$")
-    ax1.set_xlabel("$m_p~[M_\odot]$")
-    ax.tick_params("x", pad=7)
-    ax1.tick_params("x", pad=7)
-    ax.legend(title="$\sigma$", fontsize="x-small")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
-    ax.set_ylim(1e-5, 1)
-    fig.tight_layout()    
-
-    
