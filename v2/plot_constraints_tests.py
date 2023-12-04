@@ -575,6 +575,26 @@ if "__main__" == __name__:
     
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     m_delta_values, f_max = load_data("1912.01014/1912.01014_Fig2_a__0_newaxes_2.csv")
+    
+    
+    # Calculate uncertainty in 511 keV line from the propagation model
+    
+    # Density profile parameters
+    rho_odot = 0.4 # Local DM density, in GeV / cm^3
+    # Maximum distance (from Galactic Centre) where positrons are injected that annhihilate within 1.5kpc of the Galactic Centre, in kpc
+    R_large = 3.5
+    R_small = 1.5
+    # Scale radius, in kpc (values from Ng+ '14 [1310.1915])
+    r_s_Iso = 3.5
+    r_s_NFW = 20
+    r_odot = 8.5 # Galactocentric distance of Sun, in kpc
+    annihilation_factor = 0.8 # For most stringgent constraints, consider the scenario where 80% of all positrons injected within R_NFW of the Galactic Centre annihilate
+    
+    density_integral_NFW = annihilation_factor * rho_odot * r_odot * (r_s_NFW + r_odot)**2 * (np.log(1 + (R_large / r_s_NFW)) - R_large / (R_large + r_s_NFW))
+    density_integral_Iso = rho_odot * (r_s_Iso**2 + r_odot**2) * (R_small - r_s_Iso * np.arctan(R_small/r_s_Iso))
+    
+    print(density_integral_NFW / density_integral_Iso)
+
         
     for j in range(len(Deltas)):
         
@@ -684,15 +704,19 @@ if "__main__" == __name__:
                 data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
             
             data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
-            data_filename_LN = data_folder + "/LN_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2201.01265_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_LN = data_folder + "/LN_2108.13256_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2108.13256_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2108.13256_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
             
             mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
             mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
             mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
             mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
+            
+            if j == 0 and k==1:
+                print(f_PBH_CC3_evolved[0:10])
+                print(mp_CC3_evolved[0:10])
                         
             ax1.plot(mp_LN, f_PBH_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
             ax2.plot(mp_SLN, f_PBH_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
