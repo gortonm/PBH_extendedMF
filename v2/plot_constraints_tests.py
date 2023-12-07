@@ -1070,9 +1070,9 @@ if "__main__" == __name__:
                     ax0.plot(m_delta_values_loaded[m_delta_values_loaded > 1e14], f_max_loaded_truncated, color=colors_evap[int(i/2)])
     
                     # Load constraints for an evolved extended mass function obtained from each instrument
-                    data_filename_LN = data_folder + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                    data_filename_SLN = data_folder + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                    data_filename_CC3 = data_folder + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                    data_filename_LN = data_folder + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                    data_filename_SLN = data_folder + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
+                    data_filename_CC3 = data_folder + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
                         
                     mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
                     mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
@@ -1087,6 +1087,10 @@ if "__main__" == __name__:
             mp_LN = mc_values * np.exp(-sigmas_LN[j]**2)
             mp_CC3 = mc_values
             
+            if j==6 and k==1:
+                print(mp_LN[0:10])
+                print(envelope(f_PBH_instrument_LN)[0:10])
+
             # Plot the tightest constraint (of the different instruments) for each peak mass
             ax1.plot(mp_LN, envelope(f_PBH_instrument_LN), style_markers[k], color="r")
             ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN), style_markers[k], color="b")
