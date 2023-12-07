@@ -958,7 +958,7 @@ if "__main__" == __name__:
         plot_prospective = False
         
         mf = CC3
-        Delta_index = 0
+        Delta_index = 6
         
         if mf == LN:
             params = [sigmas_LN[Delta_index]]
@@ -1022,16 +1022,14 @@ if "__main__" == __name__:
             mc_CMB, f_PBH_CMB = np.genfromtxt("./Data-tests/unevolved/PL_exp_-2/%s" % mf_string + "_2108.13256_Carr_Delta={:.1f}_extrapolated_exp-2.txt".format(Deltas[Delta_index]))
             
             if mf == LN:
-                mp_CMB = mc_CMB * np.exp(-sigmas_LN[Delta_index])
-                mp_511keV = mc_511keV * np.exp(-sigmas_LN[Delta_index])
+                mp_CMB = mc_CMB * np.exp(-sigmas_LN[Delta_index]**2)
+                mp_511keV = mc_511keV * np.exp(-sigmas_LN[Delta_index]**2)
             elif mf == SLN:
                 mp_CMB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_CMB]
                 mp_511keV = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_511keV]
             elif mf == CC3:
                 mp_CMB = mc_CMB
                 mp_511keV = mc_511keV
-                print(f_PBH_CMB[0:10])
-                print(mp_CMB[0:10])
                                  
             ax.plot(mp_511keV, f_PBH_511keV, color="g")
             ax.fill_between(mp_511keV, f_PBH_511keV, (density_integral_NFW / density_integral_Iso)*f_PBH_511keV, color="g", alpha=0.3)        
@@ -1042,7 +1040,7 @@ if "__main__" == __name__:
 
             constraints_names_short = ["COMPTEL_1502.06116", "COMPTEL_1107.0200", "EGRET_0405441", "EGRET_9811211", "Fermi-LAT_1410.3696", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200", "HEAO+balloon_9903492"]
             exponent_PL_lower = -2
-            data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+            data_folder_EXGB = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
             constraints_names, f_max_Isatis = load_results_Isatis(mf_string="EXGB_Hazma")
             m_delta_values_loaded = np.logspace(14, 17, 32)
 
@@ -1053,20 +1051,21 @@ if "__main__" == __name__:
                 if i in (0, 2, 4, 7):
 
                     # Load constraints for an evolved extended mass function obtained from each instrument
-                    data_filename_EXGB = data_folder + "/%s_EXGB_%s" % (mf_string, constraints_names_short[i])  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[Delta_index])
+                    data_filename_EXGB = data_folder_EXGB + "/%s_EXGB_%s" % (mf_string, constraints_names_short[i])  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[Delta_index])
                     mc_EXGB, f_PBH_k = np.genfromtxt(data_filename_EXGB, delimiter="\t")
                     f_PBH_instrument.append(f_PBH_k)
                 
             f_PBH_EXGB = envelope(f_PBH_instrument)
             
             if mf == LN:
-                mp_EXGB = mc_EXGB * np.exp(-sigmas_LN[Delta_index])
+                mp_EXGB = mc_EXGB * np.exp(-sigmas_LN[Delta_index]**2)
             elif mf == SLN:
                 mp_EXGB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_EXGB]
             elif mf == CC3:
                 mp_EXGB = mc_EXGB
 
-            ax.plot(mp_EXGB, f_PBH_EXGB, color="pink", label="EXGB")
+            ax.plot(mp_EXGB, f_PBH_EXGB, color="pink")
+            ax.fill_between(mp_EXGB, f_PBH_EXGB, 2*f_PBH_EXGB, color="pink", alpha=0.3)
             ax.text(6e16, 1e-2,"EXGB (Isatis)", fontsize="xx-small", color="pink")
                    
         if plot_prospective:
