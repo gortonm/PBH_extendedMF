@@ -2496,7 +2496,7 @@ if "__main__" == __name__:
    
 #%% Calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass. Plot results. 
  
-if "__main__" == __name__:    
+if "__main__" == __name__:
     m_delta_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
     m_delta_extrapolated_upper = np.logspace(15, 16, 11)
     m_delta_extrapolated_lower = np.logspace(11, 15, 41)
@@ -2721,3 +2721,32 @@ if "__main__" == __name__:
     ax.grid()
     fig.tight_layout()
     fig.savefig("./Tests/Figures/EMF_constraints_work/fmax_fracdifff_from_m^2.png")
+
+#%% Plot the SLN at small masses, compare to (m/m_p)^|alpha|.
+
+if "__main__" == __name__:
+    
+    # Mass function parameter values, from 2009.03204.
+    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    for Delta_index in range(len(Deltas)):
+        
+        print(Delta_index)
+        
+        fig, ax = plt.subplots(figsize=(6,6))
+        m_c = 1e20
+        m_p = m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000)
+        m_pbh_values = np.logspace(np.log10(m_p)-5, np.log10(m_p)+5, 1000)
+        
+        SLN_actual = SLN(m_pbh_values, m_c, sigmas_SLN[Delta_index], alphas_SLN[Delta_index])
+        SLN_fit_alpha_power = SLN_actual[0] * np.power(m_pbh_values/m_pbh_values[0], np.abs(alphas_SLN[Delta_index]))
+        
+        ax.plot(m_pbh_values[SLN_actual > 0], SLN_actual[SLN_actual > 0])
+        ax.plot(m_pbh_values, SLN_fit_alpha_power, linestyle="dotted", label="$\propto (m / m_\mathrm{p})^\alpha$")
+        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+        ax.set_ylim(SLN_actual[0], 10*max(SLN_actual))
+        ax.set_title("SLN, $\Delta={:.1f}$".format(Deltas[Delta_index]))
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        fig.tight_layout()
+    
