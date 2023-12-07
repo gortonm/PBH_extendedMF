@@ -164,4 +164,10 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Folders
+/v2/Convergence_tests/
+/v2/Data-tests/
+/v2/Data/
+/v2/Tests/
+
 # End of https://www.toptal.com/developers/gitignore/api/python
