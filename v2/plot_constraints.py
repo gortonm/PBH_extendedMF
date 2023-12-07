@@ -1079,13 +1079,13 @@ if "__main__" == __name__:
         ax.set_yscale("log")
         ax.set_xscale("log")
         ax.set_ylabel("$f_\mathrm{PBH}$")
-        ax.set_xlabel("$m~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         ax.set_ylim(1e-3, 1)
         ax.set_xlim(1e15, 1e24)
         ax.set_title("%s" % mf_string + ", $\Delta={:.1f}$".format(Deltas[Delta_index]))
         
         ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
-        ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+        ax1.set_xlabel("$m_\mathrm{p}~[M_\odot]$", labelpad=14)
         ax1.tick_params("x")
         
         ax2 = ax.secondary_yaxis('right')
