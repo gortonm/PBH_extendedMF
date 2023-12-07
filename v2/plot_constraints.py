@@ -918,12 +918,16 @@ if "__main__" == __name__:
     
         ax.text(1.3e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
         
-        plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashed")
+        plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashdot")
         ax.text(1.2e17, 0.005, "Photons \n (from $e^+$ annihilation)", fontsize="xx-small", color="orange")
     
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey")
         ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="tab:grey")
-   
+        
+        m_delta_values_Berteaud, f_max_Berteaud = load_data("2202.07483/2202.07483_Fig3.csv")
+        ax.plot(m_delta_values_Berteaud, f_max_Berteaud, linestyle="dashdot", color="brown")
+        ax.text(1e17, 0.02, "GC photons \n (template fit)", fontsize="xx-small", color="brown")
+    
     if plot_prospective:
         plotter_GECCO(Deltas, Delta_index, ax, color="#5F9ED1", linestyle="dotted")
         ax.text(4e17, 0.1,"Future MeV \n gamma-rays", fontsize="xx-small", color="#5F9ED1")
@@ -958,7 +962,7 @@ if "__main__" == __name__:
         plot_prospective = False
         
         mf = CC3
-        Delta_index = 6
+        Delta_index = 0
         
         if mf == LN:
             params = [sigmas_LN[Delta_index]]
@@ -994,7 +998,7 @@ if "__main__" == __name__:
         
             ax.text(1.3e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
             
-            plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashed", mf=mf)
+            plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashdot", mf=mf)
             ax.text(1.2e17, 0.002, "Photons \n (from $e^+/e^-$ annihilation)", fontsize="xx-small", color="orange")
         
             plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey", mf=mf)
@@ -1018,18 +1022,22 @@ if "__main__" == __name__:
             
             print(density_integral_NFW / density_integral_Iso)
             
-            mc_511keV, f_PBH_511keV = np.genfromtxt("./Data-tests/unevolved/PL_exp_-2/%s" % mf_string + "_1912.01014_Carr_Delta={:.1f}_extrapolated_exp-2.txt".format(Deltas[Delta_index]))
+            mc_511keV, f_PBH_511keV = np.genfromtxt("./Data-tests/PL_exp_-2/%s" % mf_string + "_1912.01014_Carr_Delta={:.1f}_extrapolated_exp-2.txt".format(Deltas[Delta_index]))
             mc_CMB, f_PBH_CMB = np.genfromtxt("./Data-tests/unevolved/PL_exp_-2/%s" % mf_string + "_2108.13256_Carr_Delta={:.1f}_extrapolated_exp-2.txt".format(Deltas[Delta_index]))
+            mc_Berteaud, f_PBH_Berteaud = np.genfromtxt("./Data-tests/PL_exp_2/%s" % mf_string +"_2202.07483_Carr_Delta={:.1f}_extrapolated_exp2.txt".format(Deltas[Delta_index]))
             
             if mf == LN:
                 mp_CMB = mc_CMB * np.exp(-sigmas_LN[Delta_index]**2)
                 mp_511keV = mc_511keV * np.exp(-sigmas_LN[Delta_index]**2)
+                mp_Berteaud = mc_Berteaud * np.exp(-sigmas_LN[Delta_index]**2)
             elif mf == SLN:
                 mp_CMB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_CMB]
                 mp_511keV = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_511keV]
+                mp_Berteaud = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Berteaud]
             elif mf == CC3:
                 mp_CMB = mc_CMB
                 mp_511keV = mc_511keV
+                mp_Berteaud = mc_Berteaud
                                  
             ax.plot(mp_511keV, f_PBH_511keV, color="g")
             ax.fill_between(mp_511keV, f_PBH_511keV, (density_integral_NFW / density_integral_Iso)*f_PBH_511keV, color="g", alpha=0.3)        
@@ -1037,6 +1045,9 @@ if "__main__" == __name__:
 
             ax.plot(mp_CMB, f_PBH_CMB, linestyle="dashed", color="cyan")
             ax.text(3e15, 0.5,"CMB \n anisotropies", fontsize="xx-small", color="cyan")
+
+            ax.plot(mp_Berteaud, f_PBH_Berteaud, linestyle="dashdot", color="brown")
+            ax.text(3e17, 0.1,"GC photons \n (template fit)", fontsize="xx-small", color="brown")
 
             constraints_names_short = ["COMPTEL_1502.06116", "COMPTEL_1107.0200", "EGRET_0405441", "EGRET_9811211", "Fermi-LAT_1410.3696", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200", "HEAO+balloon_9903492"]
             exponent_PL_lower = -2
