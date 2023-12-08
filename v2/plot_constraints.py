@@ -961,8 +961,8 @@ if "__main__" == __name__:
         plot_existing = True
         plot_prospective = False
         
-        mf = CC3
-        Delta_index = 0
+        mf = SLN
+        Delta_index = 6
         
         if mf == LN:
             params = [sigmas_LN[Delta_index]]
@@ -2224,9 +2224,10 @@ if "__main__" == __name__:
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     
     plot_unevolved = True
+    plot_evolved = False
     plot_against_mc = False
     
-    fig, ax = plt.subplots(figsize=(7,6))
+    fig, ax = plt.subplots(figsize=(8,7))
        
     
     # Delta-function MF constraints from Korwar & Profumo (2023)
@@ -2244,6 +2245,7 @@ if "__main__" == __name__:
     f_max_KP23 = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_KP23_loaded))
     m_delta_KP23 = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_KP23_loaded))
     
+    m_delta_BC19, f_max_BC19 = load_data_Voyager_BC19(Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, mf=None)
     
     # Width of log-normal MF used in Carr et al. (2021)
     sigma_Carr21 = 2
@@ -2253,27 +2255,36 @@ if "__main__" == __name__:
     colors=["tab:blue", "tab:orange"]
     
     ax.plot(m_delta_KP23, f_max_KP23, color="tab:gray", label="$\delta$ func.", linewidth=2)
-    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
-    
+    ax0 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
+    ax1 = ax.twinx()    
+    ax1.plot(m_delta_BC19, f_max_BC19, color="tab:gray", label="$\delta$ func.", linestyle="dashdot", linewidth=2)
     
     # Calculate extended MF constraints obtained for a log-normal with the delta-function MF constraint from Korwar & Profumo (2023).
     for i, sigma in enumerate([sigma_Carr21]):
         
-        f_PBH_evolved = constraint_Carr(mc_Carr21, m_delta_KP23, f_max_KP23, LN, [sigma], evolved=True)
-        f_PBH_unevolved = constraint_Carr(mc_Carr21, m_delta_KP23, f_max_KP23, LN, [sigma], evolved=False)
+        f_PBH_KP23_evolved = constraint_Carr(mc_Carr21, m_delta_KP23, f_max_KP23, LN, [sigma], evolved=True)
+        f_PBH_KP23_unevolved = constraint_Carr(mc_Carr21, m_delta_KP23, f_max_KP23, LN, [sigma], evolved=False)
         
-        if plot_against_mc:
-            ax.plot(mc_Carr21, f_PBH_evolved, color=colors[i], dashes=[6, 2], label="LN ($\sigma={:.2f})$".format(sigma))
-        else:
-            ax.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_evolved, color=colors[i], dashes=[6, 2], label="LN ($\sigma={:.2f})$".format(sigma))
+        f_PBH_BC19_evolved = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=True)
+        f_PBH_BC19_unevolved = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=False)
+        
+        if plot_evolved:
+            if plot_against_mc:
+                ax.plot(mc_Carr21, f_PBH_KP23_evolved, color=colors[i], dashes=[6, 2], label="LN ($\sigma={:.2f})$".format(sigma))
+                ax1.plot(mc_Carr21, f_PBH_BC19_evolved, color="r", dashes=[6, 2], label="LN ($\sigma={:.2f})$".format(sigma))
+            else:
+                ax.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_KP23_evolved, color=colors[i], dashes=[6, 2], label="LN ($\sigma={:.2f})$".format(sigma))
+                ax1.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_BC19_evolved, color="r", dashes=[6, 2], label="LN ($\sigma={:.2f})$".format(sigma))
                         
         # Plot constraint obtained with unevolved MF
         if plot_unevolved:
 
             if plot_against_mc:
-                ax.plot(mc_Carr21, f_PBH_unevolved, color=colors[i], alpha=0.4)
+                ax.plot(mc_Carr21, f_PBH_KP23_unevolved, color=colors[i], alpha=0.4)
+                ax1.plot(mc_Carr21, f_PBH_BC19_unevolved, color="r", alpha=0.4, label="LN ($\sigma={:.2f})$".format(sigma))
             else:
-                ax.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_unevolved, color=colors[i], alpha=0.4)
+                ax.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_KP23_unevolved, color=colors[i], alpha=0.4, label="LN ($\sigma={:.2f})$".format(sigma))
+                ax1.plot(mc_Carr21 * np.exp(-sigma**2), f_PBH_BC19_unevolved, color="r", alpha=0.4, label="LN ($\sigma={:.2f})$".format(sigma))
             
     # Calculate constraints shown in Fig. 20 of 2002.12778
     m_min = 1e11
@@ -2310,14 +2321,15 @@ if "__main__" == __name__:
         ax2.plot(m_delta_Carr21, f_max_Carr21, color="k", label="$\delta$ func.", linestyle="dotted")
         #ax2.plot(Solmass_to_g(mc_Carr21_LN_loaded) / np.exp(sigma_Carr21**2), fPBH_Carr21_LN_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma_Carr21))
         ax2.plot(mc_Carr21 * np.exp(-sigma_Carr21**2), f_PBH_Carr21, color="tab:green", label="LN ($\sigma={:.2f}$)".format(sigma_Carr21))
-        ax2.legend(title="Carr+ '21", fontsize="x-small", loc=(0.55, 0.02))
+        ax2.legend(title="Carr+ '21", fontsize="xx-small", loc=(0.65, 0.02))
             
     ax.tick_params("x", pad=7)
     ax.set_ylabel("$f_\mathrm{PBH}$")
     
-    ax.legend(title="KP' 23", fontsize="x-small", loc=(0.55, 0.35))
-    
-    for a in [ax, ax2]:
+    ax.legend(title="KP' 23", fontsize="xx-small", loc=(0.65, 0.25))
+    ax1.legend(title="BC' 19", fontsize="xx-small", loc=(0.3, 0.02))
+   
+    for a in [ax, ax1, ax2]:
         a.set_xscale("log")
         a.set_yscale("log")
         
