@@ -161,7 +161,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
         elif mf==CC3 or mf == PL_MF:
             mp_GC = mc_values
             
-    return mp_GC, f_PBH_GC
+    return np.array(mp_GC), np.array(f_PBH_GC)
 
     
 def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower=2):
@@ -230,7 +230,7 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
         data_filename = data_folder + "/PL_2302.04408_Carr_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
         mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
 
-    return mp_KP23, f_PBH_KP23
+    return np.array(mp_KP23), np.array(f_PBH_KP23)
 
     
 def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None, evolved=True, exponent_PL_lower=2, prop_B_lower=False):
@@ -308,7 +308,7 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
         data_filename = data_folder + "/PL_1807.03075_Carr_" + prop_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
         mp_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
  
-    return mp_BC19, f_PBH_BC19
+    return np.array(mp_BC19), np.array(f_PBH_BC19)
 
     
 def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
@@ -350,7 +350,7 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
     elif mf == PL_MF:
         mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/PL_HSC_Carr.txt", delimiter="\t")
 
-    return mp_Subaru, f_PBH_Subaru
+    return np.array(mp_Subaru), np.array(f_PBH_Subaru)
 
 
 def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=True, NFW=True):
@@ -408,7 +408,7 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=T
     elif mf == PL_MF:
         mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/PL_2101.01370_Carr_%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
         
-    return mp_GECCO, f_PBH_GECCO
+    return np.array(mp_GECCO), np.array(f_PBH_GECCO)
 
 
 def load_data_Sugiyama(Deltas, Delta_index, mf=None):
@@ -450,7 +450,7 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None):
     elif mf == PL_MF:
         mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/PL_Sugiyama20_Carr.txt", delimiter="\t")        
     
-    return mp_Sugiyama, f_PBH_Sugiyama
+    return np.array(mp_Sugiyama), np.array(f_PBH_Sugiyama)
 
     
 def find_label(mf=None):
@@ -1118,7 +1118,9 @@ if "__main__" == __name__:
     # If True, plot unevolved MF constraint
     plot_unevolved = True
     # If True, plot the fractional difference between evolved and unevolved MF results
-    plot_fracdiff = True
+    plot_fracdiff = False
+    # If True, plot the fractional difference between the different fitting functions
+    plot_fracdiff_fits = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
@@ -1141,7 +1143,7 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if Deltas[i] == 5:
+        if Deltas[i] in (0, 2, 5):
                         
             fig, ax = plt.subplots(figsize=(9, 5))
             
@@ -1192,6 +1194,28 @@ if "__main__" == __name__:
                     ax1a.grid()
                     fig1.tight_layout()
                 
+                if plot_fracdiff_fits:
+                    fig2, ax2 = plt.subplots(figsize=(6,6))
+                    
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_GC_Isatis(Deltas, i, mf=LN, params=[sigmas_LN[i]], evolved=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GC_Isatis(Deltas, i, mf=SLN, params=[sigmas_SLN[i], alphas_SLN[i]], evolved=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GC_Isatis(Deltas, i, mf=CC3, params=[alphas_CC3[i], betas[i]], evolved=True)
+                                       
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved, mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
+                    ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
+                    ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                    ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax2.set_xscale("log")
+                    ax2.set_yscale("log")
+                    ax2.set_title("$\Delta={:.1f}$ (GC photons)".format(Deltas[i]))
+                    ax2.legend(fontsize="xx-small")
+                    # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
+                    ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
+                    ax2.set_ylim(ymin=1e-2, ymax=1e2)
+                    ax2.grid()
+                    fig2.tight_layout()
+                    fig2.savefig("./Tests/Figures/Fracdiff_fits/GC_Delta={:.1f}.png".format(Deltas[i]))
                 
             elif plot_KP23:
                 ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -1233,16 +1257,38 @@ if "__main__" == __name__:
                     ax1a.set_ylim(ymax=1e2)
                     ax1a.grid()
                     fig1.tight_layout()
-                
+                    
+                if plot_fracdiff_fits:
+                    fig2, ax2 = plt.subplots(figsize=(6,6))
+                    
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_KP23(Deltas, i, mf=LN, evolved=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
+                                       
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved, mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
+                    ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
+                    ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                    ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax2.set_xscale("log")
+                    ax2.set_yscale("log")
+                    ax2.set_title("$\Delta={:.1f}$ (KP '23)".format(Deltas[i]))
+                    ax2.legend(fontsize="xx-small")
+                    # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
+                    ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
+                    ax2.set_ylim(ymin=1e-2, ymax=1e2)
+                    ax2.grid()
+                    fig2.tight_layout()
+                    fig2.savefig("./Tests/Figures/Fracdiff_fits/KP23_Delta={:.1f}.png".format(Deltas[i]))
+               
                 # If required, plot constraints obtained with unevolved MF
                 if plot_unevolved:
                     plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid")
                     plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, evolved=False)
                     plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, evolved=False)
-                    plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)
+                    plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)                
     
-                    
-            if plot_BC19:
+            elif plot_BC19:
                 
                 prop_A = False
                 with_bkg_subtr = False
@@ -1297,7 +1343,53 @@ if "__main__" == __name__:
                     ax1a.set_ylim(ymax=1e2)
                     ax1a.grid()
                     fig1.tight_layout()
+                    
+                if plot_fracdiff_fits:
+                    fig2, ax2 = plt.subplots(figsize=(6,6))
+                    
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_Voyager_BC19(Deltas, i, mf=LN, evolved=True, prop_A=False, with_bkg_subtr=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Voyager_BC19(Deltas, i, mf=SLN, evolved=True, prop_A=False, with_bkg_subtr=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Voyager_BC19(Deltas, i, mf=CC3, evolved=True, prop_A=False, with_bkg_subtr=True)
+                                       
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved, mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
+                    ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
+                    ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                    ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax2.set_xscale("log")
+                    ax2.set_yscale("log")
+                    ax2.set_title("$\Delta={:.1f}$ (Voyager 1)".format(Deltas[i]))
+                    ax2.legend(fontsize="xx-small")
+                    # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
+                    ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
+                    ax2.set_ylim(ymin=1e-2, ymax=1e2)
+                    ax2.grid()
+                    fig2.tight_layout()
+                    fig2.savefig("./Tests/Figures/Fracdiff_fits/BC19_Delta={:.1f}.png".format(Deltas[i]))
+   
+            if plot_fracdiff_fits:
+                fig2, ax2 = plt.subplots(figsize=(6,6))
     
+                mp_LN_evolved, f_PBH_LN_evolved = load_data_Subaru_Croon20(Deltas, i, mf=LN)
+                mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Subaru_Croon20(Deltas, i, mf=SLN)
+                mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Subaru_Croon20(Deltas, i, mf=CC3)
+                                   
+                ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_SLN_evolved, mp_LN_evolved, mp_SLN_evolved)), label="LN vs SLN", color="purple")
+                ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_LN_evolved, mp_CC3_evolved, mp_LN_evolved)), label="LN vs CC3", color="brown")
+                ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_SLN_evolved, mp_CC3_evolved, mp_SLN_evolved)), label="SLN vs CC3", color="turquoise")
+                ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax2.set_xscale("log")
+                ax2.set_yscale("log")
+                ax2.set_title("$\Delta={:.1f}$ (Subaru-HSC)".format(Deltas[i]))
+                ax2.legend(fontsize="xx-small")
+                # Set lower x-axis limit to the minimum m_p where f_PBH = 1 is allowed for any of the fitting functions
+                ax2.set_xlim(xmin=min([min(mp_CC3_evolved[f_PBH_CC3_evolved < 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved < 1]), min(mp_LN_evolved[f_PBH_LN_evolved < 1])]), xmax=1e24)
+                ax2.set_ylim(ymin=1e-2, ymax=1e3)
+                ax2.grid()
+                fig2.tight_layout()
+                fig2.savefig("./Tests/Figures/Fracdiff_fits/Subaru_Delta={:.1f}.png".format(Deltas[i]))
+ 
             if Deltas[i] < 5:
                 show_label_Subaru = False
             else:
