@@ -1110,11 +1110,11 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
-    plot_GC_Isatis = True
+    plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
     plot_KP23 = True
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
-    plot_BC19 = True
+    plot_BC19 = False
     # If True, plot unevolved MF constraint
     plot_unevolved = True
     # If True, plot the fractional difference between evolved and unevolved MF results
@@ -1138,7 +1138,7 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
         
-    # Load Subaru-HSC delta-function MF constraint
+    # Load Subaru-HSC delta-fubhnction MF constraint
     m_delta_Subaru, f_PBH_delta_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
     
     for i in range(len(Deltas)):
@@ -1303,8 +1303,8 @@ if "__main__" == __name__:
             if plot_BC19:
                 
                 prop_A = False
-                with_bkg_subtr = False
-                prop_B_lower = False
+                with_bkg_subtr = True
+                prop_B_lower = True
                 
                 mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, i, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
                 mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, i, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
@@ -1503,13 +1503,13 @@ if "__main__" == __name__:
 
         # plot Einasto profile results            
         plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=NFW, linestyle="solid", linewidth=1)
-        plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=NFW, mf=LN, linestyle=(0, (5, 1)))
-        plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=NFW, mf=SLN, linestyle=(0, (5, 7)))
+        plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=NFW, mf=LN, linestyle="dotted")
+        plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=NFW, mf=SLN, linestyle="dashdot")
         plotter_GECCO(Deltas, i, ax, color=colors[0], NFW=NFW, mf=CC3, linestyle="dashed")
 
         plotter_Sugiyama(Deltas, i, ax, color=colors[1], linestyle="solid", linewidth=1, show_label=show_label)
-        plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)), show_label=show_label)
-        plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=SLN, linestyle=(0, (5, 7)), show_label=show_label)
+        plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=LN, linestyle="dotted", show_label=show_label)
+        plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=SLN, linestyle="dashdot", show_label=show_label)
         plotter_Sugiyama(Deltas, i, ax, color=colors[1], mf=CC3, linestyle="dashed", show_label=show_label)
 
         set_ticks_grid(ax)
@@ -1523,6 +1523,66 @@ if "__main__" == __name__:
         fig.tight_layout()
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.pdf".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.png".format(Deltas[i]))
+        
+        if plot_fracdiff_fits:
+            
+            if Deltas[i] in (0, 2, 5):
+                fig2, ax2 = plt.subplots(figsize=(5,5))                    
+                mp_LN_evolved, f_PBH_LN_evolved = load_data_GECCO(Deltas, i, mf=LN, evolved=True)
+                mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GECCO(Deltas, i, mf=SLN, evolved=True)
+                mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GECCO(Deltas, i, mf=CC3, evolved=True)
+                                   
+                ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved, mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
+                ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
+                ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
+                ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax2.set_xscale("log")
+                ax2.set_yscale("log")
+                ax2.set_title("$\Delta={:.1f}$ (future MeV telescopes)".format(Deltas[i]), fontsize="small")
+                ax2.legend(fontsize="xx-small")
+                # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
+                ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
+                ax2.set_ylim(ymin=1e-2, ymax=1e2)
+                
+                y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+                ax2.yaxis.set_major_locator(y_major)
+                y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+                ax2.yaxis.set_minor_locator(y_minor)
+                ax2.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+                
+                ax2.grid()
+                fig2.tight_layout()
+                fig2.savefig("./Tests/Figures/Fracdiff_fits/GECCO_Delta={:.1f}.png".format(Deltas[i]))
+    
+                fig3, ax3 = plt.subplots(figsize=(5,5))                    
+                mp_LN_evolved, f_PBH_LN_evolved = load_data_Sugiyama(Deltas, i, mf=LN)
+                mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Sugiyama(Deltas, i, mf=SLN)
+                mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Sugiyama(Deltas, i, mf=CC3)
+                                   
+                ax3.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved, mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
+                ax3.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
+                ax3.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
+                ax3.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                ax3.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax3.set_xscale("log")
+                ax3.set_yscale("log")
+                ax3.set_title("$\Delta={:.1f}$ (future WD microlensing)".format(Deltas[i]), fontsize="small")
+                ax3.legend(fontsize="xx-small")
+                # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
+                ax3.set_xlim(xmin=min([min(mp_CC3_evolved[f_PBH_CC3_evolved < 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved < 1]), min(mp_LN_evolved[f_PBH_LN_evolved < 1])]), xmax=1e24)
+                ax3.set_ylim(ymin=1e-2, ymax=1e2)
+                
+                y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+                ax3.yaxis.set_major_locator(y_major)
+                y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+                ax3.yaxis.set_minor_locator(y_minor)
+                ax3.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+                
+                ax3.grid()
+                fig3.tight_layout()
+                fig3.savefig("./Tests/Figures/Fracdiff_fits/WD_Delta={:.1f}.png".format(Deltas[i]))
+
      
         
 #%% Existing constraints
