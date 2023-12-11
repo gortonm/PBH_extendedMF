@@ -1112,9 +1112,9 @@ if "__main__" == __name__:
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
     plot_GC_Isatis = True
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = False
+    plot_KP23 = True
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
-    plot_BC19 = False
+    plot_BC19 = True
     # If True, plot unevolved MF constraint
     plot_unevolved = True
     # If True, plot the fractional difference between evolved and unevolved MF results
@@ -1195,8 +1195,7 @@ if "__main__" == __name__:
                     fig1.tight_layout()
                 
                 if plot_fracdiff_fits:
-                    fig2, ax2 = plt.subplots(figsize=(6,6))
-                    
+                    fig2, ax2 = plt.subplots(figsize=(5,5))                    
                     mp_LN_evolved, f_PBH_LN_evolved = load_data_GC_Isatis(Deltas, i, mf=LN, params=[sigmas_LN[i]], evolved=True)
                     mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GC_Isatis(Deltas, i, mf=SLN, params=[sigmas_SLN[i], alphas_SLN[i]], evolved=True)
                     mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GC_Isatis(Deltas, i, mf=CC3, params=[alphas_CC3[i], betas[i]], evolved=True)
@@ -1208,16 +1207,23 @@ if "__main__" == __name__:
                     ax2.set_xlabel("$m_p~[\mathrm{g}]$")
                     ax2.set_xscale("log")
                     ax2.set_yscale("log")
-                    ax2.set_title("$\Delta={:.1f}$ (GC photons)".format(Deltas[i]))
+                    ax2.set_title("$\Delta={:.1f}$ (GC photons)".format(Deltas[i]), fontsize="small")
                     ax2.legend(fontsize="xx-small")
                     # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
                     ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
                     ax2.set_ylim(ymin=1e-2, ymax=1e2)
+                    
+                    y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+                    ax2.yaxis.set_major_locator(y_major)
+                    y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+                    ax2.yaxis.set_minor_locator(y_minor)
+                    ax2.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+                    
                     ax2.grid()
                     fig2.tight_layout()
                     fig2.savefig("./Tests/Figures/Fracdiff_fits/GC_Delta={:.1f}.png".format(Deltas[i]))
                 
-            elif plot_KP23:
+            if plot_KP23:
                 ax.set_xlabel("$m_p~[\mathrm{g}]$")
                 #fig.suptitle("Existing constraints (showing Korwar \& Profumo 2023 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
     
@@ -1259,8 +1265,7 @@ if "__main__" == __name__:
                     fig1.tight_layout()
                     
                 if plot_fracdiff_fits:
-                    fig2, ax2 = plt.subplots(figsize=(6,6))
-                    
+                    fig2, ax2 = plt.subplots(figsize=(5,5))                    
                     mp_LN_evolved, f_PBH_LN_evolved = load_data_KP23(Deltas, i, mf=LN, evolved=True)
                     mp_SLN_evolved, f_PBH_SLN_evolved = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
                     mp_CC3_evolved, f_PBH_CC3_evolved = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
@@ -1272,11 +1277,18 @@ if "__main__" == __name__:
                     ax2.set_xlabel("$m_p~[\mathrm{g}]$")
                     ax2.set_xscale("log")
                     ax2.set_yscale("log")
-                    ax2.set_title("$\Delta={:.1f}$ (KP '23)".format(Deltas[i]))
+                    ax2.set_title("$\Delta={:.1f}$ (KP '23)".format(Deltas[i]), fontsize="small")
                     ax2.legend(fontsize="xx-small")
                     # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
                     ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
                     ax2.set_ylim(ymin=1e-2, ymax=1e2)
+                                        
+                    y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+                    ax2.yaxis.set_major_locator(y_major)
+                    y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+                    ax2.yaxis.set_minor_locator(y_minor)
+                    ax2.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+                    
                     ax2.grid()
                     fig2.tight_layout()
                     fig2.savefig("./Tests/Figures/Fracdiff_fits/KP23_Delta={:.1f}.png".format(Deltas[i]))
@@ -1288,7 +1300,7 @@ if "__main__" == __name__:
                     plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, evolved=False)
                     plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)                
     
-            elif plot_BC19:
+            if plot_BC19:
                 
                 prop_A = False
                 with_bkg_subtr = False
@@ -1345,8 +1357,7 @@ if "__main__" == __name__:
                     fig1.tight_layout()
                     
                 if plot_fracdiff_fits:
-                    fig2, ax2 = plt.subplots(figsize=(6,6))
-                    
+                    fig2, ax2 = plt.subplots(figsize=(5,5))                    
                     mp_LN_evolved, f_PBH_LN_evolved = load_data_Voyager_BC19(Deltas, i, mf=LN, evolved=True, prop_A=False, with_bkg_subtr=True)
                     mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Voyager_BC19(Deltas, i, mf=SLN, evolved=True, prop_A=False, with_bkg_subtr=True)
                     mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Voyager_BC19(Deltas, i, mf=CC3, evolved=True, prop_A=False, with_bkg_subtr=True)
@@ -1358,17 +1369,24 @@ if "__main__" == __name__:
                     ax2.set_xlabel("$m_p~[\mathrm{g}]$")
                     ax2.set_xscale("log")
                     ax2.set_yscale("log")
-                    ax2.set_title("$\Delta={:.1f}$ (Voyager 1)".format(Deltas[i]))
+                    ax2.set_title("$\Delta={:.1f}$ (Voyager 1)".format(Deltas[i]), fontsize="small")
                     ax2.legend(fontsize="xx-small")
                     # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
                     ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
                     ax2.set_ylim(ymin=1e-2, ymax=1e2)
+                                        
+                    y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+                    ax2.yaxis.set_major_locator(y_major)
+                    y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+                    ax2.yaxis.set_minor_locator(y_minor)
+                    ax2.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+                    
                     ax2.grid()
                     fig2.tight_layout()
                     fig2.savefig("./Tests/Figures/Fracdiff_fits/BC19_Delta={:.1f}.png".format(Deltas[i]))
    
             if plot_fracdiff_fits:
-                fig2, ax2 = plt.subplots(figsize=(6,6))
+                fig2, ax2 = plt.subplots(figsize=(5,5))
     
                 mp_LN_evolved, f_PBH_LN_evolved = load_data_Subaru_Croon20(Deltas, i, mf=LN)
                 mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Subaru_Croon20(Deltas, i, mf=SLN)
@@ -1381,11 +1399,18 @@ if "__main__" == __name__:
                 ax2.set_xlabel("$m_p~[\mathrm{g}]$")
                 ax2.set_xscale("log")
                 ax2.set_yscale("log")
-                ax2.set_title("$\Delta={:.1f}$ (Subaru-HSC)".format(Deltas[i]))
+                ax2.set_title("$\Delta={:.1f}$ (Subaru-HSC)".format(Deltas[i]), fontsize="small")
                 ax2.legend(fontsize="xx-small")
                 # Set lower x-axis limit to the minimum m_p where f_PBH = 1 is allowed for any of the fitting functions
                 ax2.set_xlim(xmin=min([min(mp_CC3_evolved[f_PBH_CC3_evolved < 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved < 1]), min(mp_LN_evolved[f_PBH_LN_evolved < 1])]), xmax=1e24)
                 ax2.set_ylim(ymin=1e-2, ymax=1e3)
+                                    
+                y_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+                ax2.yaxis.set_major_locator(y_major)
+                y_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+                ax2.yaxis.set_minor_locator(y_minor)
+                ax2.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+                    
                 ax2.grid()
                 fig2.tight_layout()
                 fig2.savefig("./Tests/Figures/Fracdiff_fits/Subaru_Delta={:.1f}.png".format(Deltas[i]))
