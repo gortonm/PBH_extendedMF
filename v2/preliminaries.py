@@ -2742,11 +2742,39 @@ if "__main__" == __name__:
         SLN_fit_alpha_power = SLN_actual[0] * np.power(m_pbh_values/m_pbh_values[0], np.abs(alphas_SLN[Delta_index]))
         
         ax.plot(m_pbh_values[SLN_actual > 0], SLN_actual[SLN_actual > 0])
-        ax.plot(m_pbh_values, SLN_fit_alpha_power, linestyle="dotted", label="$\propto (m / m_\mathrm{p})^\alpha$")
+        ax.plot(m_pbh_values, SLN_fit_alpha_power, linestyle="dotted", label=r"$\propto (m / m_\mathrm{p})^{|\alpha|}$")
         ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
         ax.set_ylim(SLN_actual[0], 10*max(SLN_actual))
         ax.set_title("SLN, $\Delta={:.1f}$".format(Deltas[Delta_index]))
         ax.set_xscale("log")
         ax.set_yscale("log")
+        ax.set_xlabel("$m~[\mathrm{g}]$")
+        ax.set_ylabel("$\psi~[\mathrm{g}^{-1}]$")
+        ax.legend()
         fig.tight_layout()
     
+#%% Plot the initial PBH mass against the evolved mass, using Eq.~~ of Mosbech & Picker (2022)
+if "__main__" == __name__:
+    
+    n_steps = 1000
+    m_delta = [1e14, 1e16]
+    m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
+    m_evolved_values = mass_evolved(m_init_values, t=t_0)
+    
+    fig, ax = plt.subplots(figsize=(5,5))
+    ax.plot(m_init_values, m_evolved_values)
+    ax.plot(m_init_values, m_init_values, linestyle="dotted", color="k")
+    ax.set_xlabel("$m_i~[\mathrm{g}]$")
+    ax.set_ylabel("$m(t=t_0)~[\mathrm{g}]$")
+    ax.set_xlim(min(m_init_values), max(m_init_values))
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    fig.tight_layout()
+    
+    fig, ax = plt.subplots(figsize=(5,5))
+    ax.plot(m_init_values, m_evolved_values/m_init_values - 1, marker="x", linestyle="None")
+    ax.set_xlabel("$m_i~[\mathrm{g}]$")
+    ax.set_ylabel("$m(t_0)/m_i - 1$")
+    ax.set_xlim(min(m_init_values), max(m_init_values))
+    ax.set_xscale("log")
+    fig.tight_layout()
