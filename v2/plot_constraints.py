@@ -916,18 +916,18 @@ if "__main__" == __name__:
         ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
         #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r", linestyle="dashed")
     
-        ax.text(1.3e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
+        ax.text(1.5e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
         
         plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashdot")
-        ax.text(1.2e17, 0.005, "Photons \n (from $e^+$ annihilation)", fontsize="xx-small", color="orange")
+        ax.text(1.4e17, 0.004, "Photons \n (from $e^+ e^-$ annihilation)", fontsize="xx-small", color="orange")
     
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey")
         ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="tab:grey")
-        
+        """
         m_delta_values_Berteaud, f_max_Berteaud = load_data("2202.07483/2202.07483_Fig3.csv")
         ax.plot(m_delta_values_Berteaud, f_max_Berteaud, linestyle="dashdot", color="brown")
         ax.text(1e17, 0.02, "GC photons \n (template fit)", fontsize="xx-small", color="brown")
-    
+        """
     if plot_prospective:
         plotter_GECCO(Deltas, Delta_index, ax, color="#5F9ED1", linestyle="dotted")
         ax.text(4e17, 0.1,"Future MeV \n gamma-rays", fontsize="xx-small", color="#5F9ED1")
@@ -1112,15 +1112,15 @@ if "__main__" == __name__:
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
     plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = True
+    plot_KP23 = False
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
     plot_BC19 = False
     # If True, plot unevolved MF constraint
     plot_unevolved = True
     # If True, plot the fractional difference between evolved and unevolved MF results
-    plot_fracdiff = False
+    plot_fracdiff = True
     # If True, plot the fractional difference between the different fitting functions
-    plot_fracdiff_fits = True
+    plot_fracdiff_fits = False
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
@@ -1143,7 +1143,7 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if Deltas[i] in (0, 2, 5):
+        if Deltas[i] in [5]:
                         
             fig, ax = plt.subplots(figsize=(9, 5))
             
@@ -1158,7 +1158,7 @@ if "__main__" == __name__:
     
                 #plt.suptitle("Existing constraints (showing Galactic Centre photon constraints (Isatis)), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
                 
-                ax.set_xlabel("$m_p~[\mathrm{g}]$")                
+                ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")                
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
@@ -1184,7 +1184,7 @@ if "__main__" == __name__:
                     ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
                     ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
                     ax1a.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
-                    ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax1a.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax1a.set_xscale("log")
                     ax1a.set_yscale("log")
                     ax1a.set_title("$\Delta={:.1f}$".format(Deltas[i]))
@@ -1204,7 +1204,7 @@ if "__main__" == __name__:
                     ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
                     ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
                     ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
-                    ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax2.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax2.set_xscale("log")
                     ax2.set_yscale("log")
                     ax2.set_title("$\Delta={:.1f}$ (GC photons)".format(Deltas[i]), fontsize="small")
@@ -1224,7 +1224,7 @@ if "__main__" == __name__:
                     fig2.savefig("./Tests/Figures/Fracdiff_fits/GC_Delta={:.1f}.png".format(Deltas[i]))
                 
             if plot_KP23:
-                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                 #fig.suptitle("Existing constraints (showing Korwar \& Profumo 2023 constraints), $\Delta={:.1f}$".format(Deltas[i]), fontsize="small")
     
                 ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -1254,7 +1254,7 @@ if "__main__" == __name__:
                     ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
 
                     ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
-                    ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax1a.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax1a.set_xscale("log")
                     ax1a.set_yscale("log")
                     ax1a.set_title("$\Delta={:.0f}$".format(Deltas[i]))
@@ -1274,7 +1274,7 @@ if "__main__" == __name__:
                     ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
                     ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
                     ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
-                    ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax2.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax2.set_xscale("log")
                     ax2.set_yscale("log")
                     ax2.set_title("$\Delta={:.1f}$ (KP '23)".format(Deltas[i]), fontsize="small")
@@ -1303,8 +1303,8 @@ if "__main__" == __name__:
             if plot_BC19:
                 
                 prop_A = False
-                with_bkg_subtr = True
-                prop_B_lower = True
+                with_bkg_subtr = False
+                prop_B_lower = False
                 
                 mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, i, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
                 mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, i, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
@@ -1325,7 +1325,7 @@ if "__main__" == __name__:
                     plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
                     plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
     
-                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
@@ -1346,7 +1346,7 @@ if "__main__" == __name__:
                     ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
                     ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
                     ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
-                    ax1a.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax1a.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax1a.set_xscale("log")
                     ax1a.set_yscale("log")
                     ax1a.set_title("$\Delta={:.0f}$".format(Deltas[i]))
@@ -1366,7 +1366,7 @@ if "__main__" == __name__:
                     ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
                     ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
                     ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
-                    ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                    ax2.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax2.set_xscale("log")
                     ax2.set_yscale("log")
                     ax2.set_title("$\Delta={:.1f}$ (Voyager 1)".format(Deltas[i]), fontsize="small")
@@ -1396,7 +1396,7 @@ if "__main__" == __name__:
                 ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_LN_evolved, mp_CC3_evolved, mp_LN_evolved)), label="LN vs CC3", color="brown")
                 ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_SLN_evolved, mp_CC3_evolved, mp_SLN_evolved)), label="SLN vs CC3", color="turquoise")
                 ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
-                ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax2.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                 ax2.set_xscale("log")
                 ax2.set_yscale("log")
                 ax2.set_title("$\Delta={:.1f}$ (Subaru-HSC)".format(Deltas[i]), fontsize="small")
@@ -1484,7 +1484,7 @@ if "__main__" == __name__:
         fig, ax = plt.subplots(figsize=(9, 5))
         # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].
         
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -1536,7 +1536,7 @@ if "__main__" == __name__:
                 ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
                 ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
                 ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
-                ax2.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax2.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                 ax2.set_xscale("log")
                 ax2.set_yscale("log")
                 ax2.set_title("$\Delta={:.1f}$ (future MeV telescopes)".format(Deltas[i]), fontsize="small")
@@ -1564,7 +1564,7 @@ if "__main__" == __name__:
                 ax3.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
                 ax3.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
                 ax3.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
-                ax3.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax3.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                 ax3.set_xscale("log")
                 ax3.set_yscale("log")
                 ax3.set_title("$\Delta={:.1f}$ (future WD microlensing)".format(Deltas[i]), fontsize="small")
@@ -1658,7 +1658,7 @@ if "__main__" == __name__:
         ax.plot(0, 0, color="k", linestyle=linestyles[3], label="CC3")
 
         ax.tick_params("x", pad=7)
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")           
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -1709,12 +1709,12 @@ if "__main__" == __name__:
             ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
            
         # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].        
-        NFW = False
+        NFW = True
         show_label = False
         
         # Set axis limits
         xmin, xmax = 1e16, 5e23
-        ymin, ymax = 1e-5, 1
+        ymin, ymax = 1e-3, 1
 
         # plot Einasto profile results            
         plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, linestyle=linestyles[0])
@@ -1733,7 +1733,7 @@ if "__main__" == __name__:
         ax.plot(0, 0, color="k", linestyle=linestyles[3], label="CC3")
 
         ax.tick_params("x", pad=7)
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")           
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -1814,7 +1814,7 @@ if "__main__" == __name__:
             
         ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]) + " (%s)" % mf_label, fontsize="small")
         ax.tick_params("x", pad=7)
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")           
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -1895,7 +1895,7 @@ if "__main__" == __name__:
     ax1.set_ylabel("$|f_\mathrm{PBH} / f_\mathrm{max} - 1|$")
     
     for a in [ax, ax1]:
-        a.set_xlabel("$m_p~[\mathrm{g}]$")
+        a.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         a.legend(title="$\Delta$", fontsize="x-small")
         a.set_xscale("log")
         a.set_yscale("log")
@@ -1958,7 +1958,7 @@ if "__main__" == __name__:
            
     ax.tick_params("x", pad=7)
     ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xlabel("$m_p~[\mathrm{g}]$")
+    ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
     ax.legend(title="$\Delta$", fontsize="x-small")
     ax.set_xscale("log")
     ax.set_yscale("log")  
@@ -2088,7 +2088,7 @@ if "__main__" == __name__:
         ax2.plot(0, 0, color=colors_CC3[i], label="{:.0f}".format(Deltas[Delta_index]))
                
     for ax in[ax0, ax1, ax2]:
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")  
@@ -2184,7 +2184,7 @@ if "__main__" == __name__:
         ax.set_xlim(1e16, 1e18)
         ax.set_ylim(10**(-6), 1)
         ax.tick_params("x", pad=7)
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -2317,7 +2317,7 @@ if "__main__" == __name__:
         ax.set_xlim(1e16, 5e18)
         ax.set_ylim(10**(-6), 1)
         ax.tick_params("x", pad=7)
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -2490,7 +2490,7 @@ if "__main__" == __name__:
         ax2.legend(title="Carr+ '21", fontsize="x-small", loc=(0.55, 0.02))
         
     else:
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
         #ax1.set_xlabel("$m_p~[M_\odot]$")
         
         ax2 = ax.twinx()        
