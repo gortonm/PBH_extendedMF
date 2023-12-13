@@ -1112,15 +1112,15 @@ if "__main__" == __name__:
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
     plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = False
+    plot_KP23 = True
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
     plot_BC19 = False
     # If True, plot unevolved MF constraint
-    plot_unevolved = True
+    plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
-    plot_fracdiff = True
+    plot_fracdiff = False
     # If True, plot the fractional difference between the different fitting functions
-    plot_fracdiff_fits = False
+    plot_fracdiff_fits = True
     
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
@@ -1143,7 +1143,7 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if Deltas[i] in [5]:
+        if Deltas[i] in [0.5]:
                         
             fig, ax = plt.subplots(figsize=(9, 5))
             
@@ -1303,8 +1303,8 @@ if "__main__" == __name__:
             if plot_BC19:
                 
                 prop_A = False
-                with_bkg_subtr = False
-                prop_B_lower = False
+                with_bkg_subtr = True
+                prop_B_lower = True
                 
                 mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, i, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=None)
                 mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, i, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=None)
@@ -1491,6 +1491,13 @@ if "__main__" == __name__:
         
         NFW = False
         
+        # If True, plot unevolved MF constraint
+        plot_unevolved = True
+        # If True, plot the fractional difference between evolved and unevolved MF results
+        plot_fracdiff = True
+        # If True, plot the fractional difference between the different fitting functions
+        plot_fracdiff_fits = False
+        
         # Set axis limits
         if Deltas[i] < 5:
             xmin_evap, xmax_evap = 1e16, 2e18
@@ -1523,6 +1530,32 @@ if "__main__" == __name__:
         fig.tight_layout()
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.pdf".format(Deltas[i]))
         fig.savefig("./Results/Figures/fPBH_Delta={:.1f}_prospective.png".format(Deltas[i]))
+        
+        if plot_unevolved and plot_fracdiff:
+            fig1, ax1a = plt.subplots(figsize=(6,6))
+            
+            mp_LN_evolved, f_PBH_LN_evolved = load_data_GECCO(Deltas, i, mf=LN, evolved=True)
+            mp_SLN_evolved, f_PBH_SLN_evolved = load_data_GECCO(Deltas, i, mf=SLN, evolved=True)
+            mp_CC3_evolved, f_PBH_CC3_evolved = load_data_GECCO(Deltas, i, mf=CC3, evolved=True)
+           
+            mp_LN_unevolved, f_PBH_LN_unevolved = load_data_GECCO(Deltas, i, mf=LN, evolved=False)
+            mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_GECCO(Deltas, i, mf=SLN, evolved=False)
+            mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_GECCO(Deltas, i, mf=CC3, evolved=False)
+            
+            ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_LN_unevolved, mp_LN_evolved, mp_LN_unevolved)), label="LN", color="r")
+            ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
+            ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
+            ax1a.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+            ax1a.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
+            ax1a.set_xscale("log")
+            ax1a.set_yscale("log")
+            ax1a.set_title("$\Delta={:.1f}$".format(Deltas[i]))
+            ax1a.legend(title="Evolved/unevolved - 1", fontsize="x-small")
+            ax1a.set_xlim(xmin=1e16)
+            ax1a.set_ylim(ymax=1e2)
+            ax1a.grid()
+            fig1.tight_layout()
+         
         
         if plot_fracdiff_fits:
             
