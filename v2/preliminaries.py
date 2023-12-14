@@ -1323,18 +1323,18 @@ def extract_GC_Isatis(j, k, exponent_PL_lower=2, include_extrapolated=True):
 
 if "__main__" == __name__:
     
-    plot_KP23 = False
+    plot_KP23 = True
     plot_GC_Isatis = False
-    plot_BC19 = True
+    plot_BC19 = False
     plot_Subaru = False
     plot_Sugiyama19 = False
-    Delta = 2
+    Delta = 0
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Peak mass, in grams
-    m_p = 1e16
+    m_p = 5e16
     
     # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
     if Delta == 0:
@@ -1362,12 +1362,13 @@ if "__main__" == __name__:
     elif plot_KP23:
         # Korwar & Profumo (2023) [2302.04408] constraints
         m_delta_values_loaded, f_max_loaded = load_data("./2302.04408/2302.04408_MW_diffuse_SPI.csv")
+
         # Power-law exponent to use between 1e15g and 1e16g.
         exponent_PL_upper = 2.0
         # Power-law exponent to use between 1e11g and 1e15g.
         exponent_PL_lower = 2.0
         
-        m_delta_extrapolated_upper = np.logspace(15, 16, 11)
+        m_delta_extrapolated_upper = np.logspace(15, np.log10(min(m_delta_values_loaded)), 11)
         m_delta_extrapolated_lower = np.logspace(11, 15, 41)
         
         f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_values_loaded), exponent_PL_upper)
@@ -1459,10 +1460,10 @@ if "__main__" == __name__:
         prop_B = not prop_A
  
         # If True, use constraints obtained with background subtraction
-        with_bkg_subtr = False
+        with_bkg_subtr = True
         
         # If True, load the more stringent "prop B" constraint
-        prop_B_lower = False
+        prop_B_lower = True
 
         
         if with_bkg_subtr:
@@ -1476,7 +1477,7 @@ if "__main__" == __name__:
             else:
                 m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")                        
     
-        exponent_PL_lower = 3
+        exponent_PL_lower = 2
     
         m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_pbh_values_loaded))+0.01, 0.1)
         f_max_extrapolated = min(f_max_loaded) * np.power(m_delta_extrapolated / min(m_pbh_values_loaded), exponent_PL_lower)
@@ -1577,7 +1578,7 @@ if "__main__" == __name__:
 
     elif plot_BC19:
         psinorm_fit_2 = mf_CC3_evolved[10] * np.power(m_pbh_values/m_pbh_values[10], 2)
-
+        
     ax.set_ylabel("$\psi_\mathrm{N} / f_\mathrm{max}~[\mathrm{g}^{-1}]$")
     #ax.set_ylim(ymin, ymax)
     
@@ -1587,11 +1588,12 @@ if "__main__" == __name__:
     fig, axes = plt.subplots(3, 1, figsize=(5, 14))
     
     psinorm_fit = mf_CC3_evolved[0] * np.power(m_pbh_values/m_pbh_values[0], 3)
-    
+    """
     for ax in axes.flatten():
         ax.grid('on', linestyle='--')
         ax.set_xticklabels([])
         ax.set_yticklabels([])
+    """
     axes[0].plot(m_pbh_values, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
     axes[0].plot(m_pbh_values, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
     axes[0].plot(m_pbh_values, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])
@@ -1600,7 +1602,7 @@ if "__main__" == __name__:
     axes[0].plot(m_pbh_values, mf_CC3_unevolved, color="g", linestyle="dotted", alpha=0.5)
     axes[0].plot(m_pbh_values, mf_LN_unevolved, color="r", linestyle="dotted", alpha=0.5)
     """
-    axes[0].plot(m_pbh_values, psinorm_fit, linestyle="dotted", color="k", label="$m^3$ fit")
+    #axes[0].plot(m_pbh_values, psinorm_fit, linestyle="dotted", color="k", label="$m^3$ fit")
         
     """
     if Delta >= 2 and plot_BC19:
@@ -1623,7 +1625,7 @@ if "__main__" == __name__:
             axes[1].set_ylim(1e3, 1e13)
 
         elif exponent_PL_lower == 2:
-            axes[1].text(2e14, 2e8,"$\propto m^{-2}$", fontsize="x-small")
+            #axes[1].text(2e14, 2e8,"$\propto m^{-2}$", fontsize="x-small")
             axes[1].set_ylim(1e4, 1e12)
 
         if Delta == 0:
@@ -1670,7 +1672,8 @@ if "__main__" == __name__:
         if Delta == 5:
             axes[2].set_ylim(1e-14, 1e-8)        
         
-    else:
+    elif plot_BC19:
+        
         if with_bkg_subtr:
             linestyle = "dashed"
         else:
@@ -1680,7 +1683,12 @@ if "__main__" == __name__:
         elif prop_B:
             axes[1].plot(m_pbh_values, 1 / f_max, color="r", linestyle=linestyle)
         
-        if Delta == 5:
+        if Delta == 0:                
+            axes[0].set_ylim(1e-24, 5e-18)    
+            axes[1].set_ylim(1, 1e11)
+            axes[2].set_ylim(1e-17, 1e-12)
+            
+        elif Delta == 5:
             PL_fit = (1 / f_max[0]) * np.power(m_pbh_values / m_pbh_values[0], -2)
             axes[1].plot(m_pbh_values, PL_fit, color="k", linestyle="dotted", label="$m^{-2}$ fit")
             axes[1].legend(fontsize="x-small")
@@ -1764,7 +1772,7 @@ if "__main__" == __name__:
 
     for ax in axes:
         
-        ax.set_xlim(1e13, 1e16)
+        ax.set_xlim(1e14, max(m_pbh_values[f_max < 1]))
         
         if m_p > 1e18:
             ax.set_xlim(5e14, 1e18)
@@ -1772,6 +1780,7 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")
         ax.grid('on')
+        ax.set_xlabel("$m~[\mathrm{g}]$")
         
         # set x-axis and y-axis ticks
         # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
@@ -1782,9 +1791,9 @@ if "__main__" == __name__:
         ax.xaxis.set_minor_locator(x_minor)
         ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
-
     fig.tight_layout()
-    
+    fig.subplots_adjust(hspace=0.4)
+   
     # Calculate the contribution to the integral in Eq. 12 of Carr et al. (2017) [1705.05567] (inverse of f_PBH), from different mass ranges.
 
     # Minimum and maximum masses for which the evolved CC3 MF for Delta = 2 is larger than the evolved Delta = 5 MF, for a peak mass M_p = 1e16g
@@ -2753,7 +2762,7 @@ if "__main__" == __name__:
         ax.legend()
         fig.tight_layout()
     
-#%% Plot the initial PBH mass against the evolved mass, using Eq.~~ of Mosbech & Picker (2022)
+#%% Plot the initial PBH mass against the evolved mass, using Eq. 7 of Mosbech & Picker (2022) [2203.05743].
 if "__main__" == __name__:
     
     n_steps = 1000
