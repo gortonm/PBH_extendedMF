@@ -2429,7 +2429,7 @@ if "__main__" == __name__:
     prop_B_lower = True
     
     # Load delta-function MF constraint from Boudaud & Cirelli (2019)
-    m_delta_BC19_loaded, f_max_BC19_loaded = load_data_Voyager_BC19(Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, mf=None)
+    m_delta_BC19_loaded, f_max_BC19_loaded = load_data_Voyager_BC19(Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
     m_delta_BC19_extrapolated = 10**np.arange(11, np.log10(min(m_delta_BC19_loaded))+0.01, 0.1)
     f_max_BC19_extrapolated = min(f_max_BC19_loaded) * np.power(m_delta_BC19_extrapolated / min(m_delta_BC19_loaded), exponent_PL_lower)
     f_max_BC19 = np.concatenate((f_max_BC19_extrapolated, f_max_BC19_loaded))
@@ -2437,22 +2437,22 @@ if "__main__" == __name__:
 
     # Range of characteristic masses for obtaining constraints
     mc_Carr21 = np.logspace(14, 22, 1000)
-    
+    mc_Carr21 = 10**np.arange(14, 22.5, 0.1)
     # Calculate delta-function MF constraints from Carr et al. (2021), using Eqs. 32-33 of 2002.12778 for beta_prime, and Eq. 57 to convert to f_PBH
     m_min = 1e11
     m_max = 1e20
     epsilon = 0.4
     m_star = 5.1e14
     
-    # Calculate delta-function MF constraint from Carr et al. (2021)
-    m_delta_Carr21 = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
-    f_max_Carr21 = f_PBH_beta_prime(m_delta_Carr21, beta_prime_gamma_rays(m_delta_Carr21))
-
+    # Calculate delta-function MF constraint from Carr et al. (2021), using the fitting formula for beta prime
+    m_delta_Carr21_fit = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
+    f_max_Carr21_fit = f_PBH_beta_prime(m_delta_Carr21_fit, beta_prime_gamma_rays(m_delta_Carr21_fit))
+    
     for i, ax in enumerate(axes.flatten()):
         
         plotter_BC19(Deltas, 0, ax, color="r", prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower)
 
-        ax.plot(m_delta_Carr21, f_max_Carr21, color="cyan", linestyle="solid")
+        ax.plot(m_delta_Carr21_fit, f_max_Carr21_fit, color="cyan", linestyle="solid")
         
         if i in (0, 2):
             sigma = 2
@@ -2463,12 +2463,12 @@ if "__main__" == __name__:
         f_PBH_BC19_evolved = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=True)
         f_PBH_BC19_unevolved = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=False)
         
-        f_PBH_Carr21_evolved = constraint_Carr(mc_Carr21, m_delta_Carr21, f_max_Carr21, LN, params=[sigma], evolved=True)
-        f_PBH_Carr21_unevolved = constraint_Carr(mc_Carr21, m_delta_Carr21, f_max_Carr21, LN, params=[sigma], evolved=False)
+        f_PBH_Carr21_fit_evolved = constraint_Carr(mc_Carr21, m_delta_Carr21_fit, f_max_Carr21_fit, LN, params=[sigma], evolved=True)
+        f_PBH_Carr21_fit_unevolved = constraint_Carr(mc_Carr21, m_delta_Carr21_fit, f_max_Carr21_fit, LN, params=[sigma], evolved=False)
 
         mp_Carr21 = mc_Carr21 * np.exp(-sigma**2)
         
-        ax.text(5e19, 1e-2, "$\sigma={:.1f}$".format(sigma))
+        ax.text(5e19, 5e-3, "$\sigma={:.1f}$".format(sigma))
         ax.set_ylabel(r"$f_{\rm PBH}$")
         ax.set_xlim(1e16, 1e21)
         ax.set_ylim(1e-3, 1)
@@ -2497,22 +2497,60 @@ if "__main__" == __name__:
             ax.set_xlabel(r"$m_c~[{\rm g}]$")
             ax.plot(mc_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted")
             ax.plot(mc_Carr21, f_PBH_BC19_unevolved, color="r", linestyle="dotted", alpha=0.5)
-            ax.plot(mc_Carr21, f_PBH_Carr21_evolved, color="tab:cyan", linestyle="dotted")
-            ax.plot(mc_Carr21, f_PBH_Carr21_unevolved, color="tab:cyan", linestyle="dotted", alpha=0.5)
+            ax.plot(mc_Carr21, f_PBH_Carr21_fit_evolved, color="tab:cyan", linestyle="dotted")
+            ax.plot(mc_Carr21, f_PBH_Carr21_fit_unevolved, color="tab:cyan", linestyle="dotted", alpha=0.5)
             ax1.set_xlabel("$m_c~[M_\odot]$", labelpad=14)
            
         else:
-            ax.set_xlabel(r"$m_p~[{\rm g}]$")
+            ax.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
             ax.plot(mp_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted")
             ax.plot(mp_Carr21, f_PBH_BC19_unevolved, color="r", linestyle="dotted", alpha=0.5)
-            ax.plot(mp_Carr21, f_PBH_Carr21_evolved, color="tab:cyan", linestyle="dotted")
-            ax.plot(mp_Carr21, f_PBH_Carr21_unevolved, color="tab:cyan", linestyle="dotted", alpha=0.5)
-            ax1.set_xlabel("$m_p~[M_\odot]$", labelpad=14)
+            ax.plot(mp_Carr21, f_PBH_Carr21_fit_evolved, color="tab:cyan", linestyle="dotted")
+            ax.plot(mp_Carr21, f_PBH_Carr21_fit_unevolved, color="tab:cyan", linestyle="dotted", alpha=0.5)
+            ax1.set_xlabel(r"$m_{\rm p}~[M_\odot]$", labelpad=14)
     
     fig.subplots_adjust(hspace=0.1)
     fig.tight_layout(pad=0.3)
-    fig.tight_layout(pad=0.3)
+
+
+#%% Test: log-normal plots. Aim is to understand why the extended MF constraints shown in Fig. 20 of 2002.12778 differ so much from the delta-function MF constraints compared to the versions Im using.
     
+    # Plot the constraints shown in Fig. 20 of 2002.12778
+    m_min = 1e11
+    m_max = 1e20
+    epsilon = 0.4
+    m_star = 5.1e14
+    
+    m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
+    f_max_values = f_PBH_beta_prime(m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
+    #f_max_values /= 2
+    mc_values = np.logspace(15, 22, 70)
+    
+    sigma = 2
+    
+    fig, ax = plt.subplots(figsize=(8,7))
+    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
+
+    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
+
+    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    
+    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded, color="tab:grey", label="Delta func.")
+    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
+    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
+    ax.plot(mc_values, f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
+
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xlabel("$m_c~[\mathrm{g}]$")
+    ax1.set_xlabel("$m_c~[M_\odot]$")
+    ax.legend(title="$\sigma$", fontsize="x-small")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
+    ax.set_ylim(1e-4, 1)
+    fig.tight_layout()    
+
     #%%
 if "__main__" == __name__:
     # Plot psi_N, f_max and the integrand in the same figure window
