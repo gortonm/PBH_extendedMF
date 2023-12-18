@@ -2621,7 +2621,7 @@ if "__main__" == __name__:
     
     # Range of characteristic masses for obtaining constraints
     mc_Carr21 = 10**np.arange(14, 22.5, 0.1)
-    ax.plot(m_delta_BC19, f_max_BC19, color="r")
+    ax.plot(m_delta_BC19, f_max_BC19, color="k")
         
     # Values of sigma (parameter in log-normal distribution)
     sigmas = [sigmas_LN[-1], 2]
@@ -2631,36 +2631,38 @@ if "__main__" == __name__:
     
     ax1 = ax.twiny()
     ax1.set_xlabel(r"$m_c~[{\rm g}]$", labelpad=14, color="b")   
-    ax1.tick_params("x", pad=7, which="both", color="b")
     ax1.spines["top"].set_color("b")
+    ax1.spines["bottom"].set_color("r")
     
     for k, sigma in enumerate(sigmas):
                 
         f_PBH_BC19_evolved = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=True)
         mp_Carr21 = mc_Carr21 * np.exp(-sigma**2)
-        ax.plot(mp_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted", alpha=alphas[k], label="$\sigma={:.1f}$".format(sigma))
+        ax.plot(mp_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted", alpha=alphas[k])
         ax1.plot(mc_Carr21, f_PBH_BC19_evolved, color="b", linestyle="dotted", alpha=alphas[k])
-        ax.legend(fontsize="xx-small")
+        ax.plot(0, 0, linestyle="dotted", label="$\sigma={:.1f}$".format(sigma), color="k", alpha=alphas[k])
         
         if k == 1:
             ax1.plot(m_delta_BC19 * np.exp(-sigma**2), f_max_BC19, color="b")
 
     for a in [ax, ax1]:
         a.set_ylabel(r"$f_{\rm PBH}$")
-        a.set_xlim(1e14, 5e20)
         a.set_ylim(1e-3, 1)
         a.set_xscale("log")
         a.set_yscale("log")
-    
+        a.set_xlim(1e16, 5e20)    
+   
         x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
         a.xaxis.set_major_locator(x_major)
         x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
         a.xaxis.set_minor_locator(x_minor)
         a.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-        a.tick_params("x", pad=7)
-    
+
+    ax.legend(fontsize="x-small", loc=[0.15, 0.7])
+    ax.tick_params("x", pad=7, which="both", labelcolor="r", color="r")
+    ax1.tick_params("x", pad=7, which="both", labelcolor="b", color="b")
     ax.set_ylabel(r"$f_{\rm PBH}$")
-    ax.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
+    ax.set_xlabel(r"$m_{\rm p}~[{\rm g}]$", color="r")
     
     fig.tight_layout(pad=0.3)
 
