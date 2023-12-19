@@ -2472,17 +2472,34 @@ if "__main__" == __name__:
             
     fig, axes = plt.subplots(2, 2, figsize=(12, 12))
     
-    # Plot delta-function MF constraint from Boudaud & Cirelli (2019)
-    prop_A = False
-    with_bkg_subtr = True
-    prop_B_lower = True
+    plot_BC19 = False
+    plot_KP23 = True
     
-    # Load delta-function MF constraint from Boudaud & Cirelli (2019)
-    m_delta_BC19_loaded, f_max_BC19_loaded = load_data_Voyager_BC19(Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
-    m_delta_BC19_extrapolated = 10**np.arange(11, np.log10(min(m_delta_BC19_loaded))+0.01, 0.1)
-    f_max_BC19_extrapolated = min(f_max_BC19_loaded) * np.power(m_delta_BC19_extrapolated / min(m_delta_BC19_loaded), exponent_PL_lower)
-    f_max_BC19 = np.concatenate((f_max_BC19_extrapolated, f_max_BC19_loaded))
-    m_delta_BC19 = np.concatenate((m_delta_BC19_extrapolated, m_delta_BC19_loaded))
+    if plot_BC19:
+        comp_color = "r"
+        
+        # Plot delta-function MF constraint from Boudaud & Cirelli (2019)
+        prop_A = False
+        with_bkg_subtr = True
+        prop_B_lower = True
+        
+        # Load delta-function MF constraint from Boudaud & Cirelli (2019)
+        m_delta_BC19_loaded, f_max_BC19_loaded = load_data_Voyager_BC19(Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
+        m_delta_BC19_extrapolated = 10**np.arange(11, np.log10(min(m_delta_BC19_loaded))+0.01, 0.1)
+        f_max_BC19_extrapolated = min(f_max_BC19_loaded) * np.power(m_delta_BC19_extrapolated / min(m_delta_BC19_loaded), exponent_PL_lower)
+        f_max_comparison = np.concatenate((f_max_BC19_extrapolated, f_max_BC19_loaded))
+        m_delta_comparison = np.concatenate((m_delta_BC19_extrapolated, m_delta_BC19_loaded))
+    
+    elif plot_KP23:
+        comp_color = "orange"
+        
+        # Power-law exponent to use between 1e15g and 1e16g.
+        exponent_PL_upper = 2.0
+        # Power-law exponent to use between 1e11g and 1e15g.
+        exponent_PL_lower = 2.0
+        
+        # Load delta-function MF constraint from Boudaud & Cirelli (2019)
+        m_delta_values_comparison, f_max_comparison = load_data_KP23(Deltas=Deltas, Delta_index=0, mf=None, exponent_PL_lower=exponent_PL_lower)
 
     # Range of characteristic masses for obtaining constraints
     mc_Carr21 = np.logspace(14, 22, 1000)
@@ -2499,7 +2516,10 @@ if "__main__" == __name__:
     
     for i, ax in enumerate(axes.flatten()):
         
-        plotter_BC19(Deltas, 0, ax, color="r", prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower)
+        if plot_BC19:
+            plotter_BC19(Deltas, 0, ax, color="r", prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower)
+        elif plot_KP23:
+            plotter_KP23(Deltas, 0, ax, color="orange")
 
         ax.plot(m_delta_Carr21_fit, f_max_Carr21_fit, color="cyan", linestyle="solid")
         
@@ -2509,8 +2529,8 @@ if "__main__" == __name__:
         else:
             sigma = sigmas_LN[-1]
             
-        f_PBH_BC19_evolved = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=True)
-        f_PBH_BC19_unevolved = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=False)
+        f_PBH_comparison_evolved = constraint_Carr(mc_Carr21, m_delta_comparison, f_max_comparison, LN, [sigma], evolved=True)
+        f_PBH_comparison_unevolved = constraint_Carr(mc_Carr21, m_delta_comparison, f_max_comparison, LN, [sigma], evolved=False)
         
         f_PBH_Carr21_fit_evolved = constraint_Carr(mc_Carr21, m_delta_Carr21_fit, f_max_Carr21_fit, LN, params=[sigma], evolved=True)
         f_PBH_Carr21_fit_unevolved = constraint_Carr(mc_Carr21, m_delta_Carr21_fit, f_max_Carr21_fit, LN, params=[sigma], evolved=False)
@@ -2544,16 +2564,16 @@ if "__main__" == __name__:
         # Plot against m_c in the top two panels
         if i <= 1:
             ax.set_xlabel(r"$m_c~[{\rm g}]$")
-            ax.plot(mc_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted")
-            ax.plot(mc_Carr21, f_PBH_BC19_unevolved, color="r", linestyle="dotted", alpha=0.5)
+            ax.plot(mc_Carr21, f_PBH_comparison_evolved, color=comp_color, linestyle="dotted")
+            ax.plot(mc_Carr21, f_PBH_comparison_unevolved, color=comp_color, linestyle="dotted", alpha=0.5)
             ax.plot(mc_Carr21, f_PBH_Carr21_fit_evolved, color="tab:cyan", linestyle="dotted")
             ax.plot(mc_Carr21, f_PBH_Carr21_fit_unevolved, color="tab:cyan", linestyle="dotted", alpha=0.5)
             ax1.set_xlabel("$m_c~[M_\odot]$", labelpad=14)
            
         else:
             ax.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
-            ax.plot(mp_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted")
-            ax.plot(mp_Carr21, f_PBH_BC19_unevolved, color="r", linestyle="dotted", alpha=0.5)
+            ax.plot(mp_Carr21, f_PBH_comparison_evolved, color=comp_color, linestyle="dotted")
+            ax.plot(mp_Carr21, f_PBH_comparison_unevolved, color=comp_color, linestyle="dotted", alpha=0.5)
             ax.plot(mp_Carr21, f_PBH_Carr21_fit_evolved, color="tab:cyan", linestyle="dotted")
             ax.plot(mp_Carr21, f_PBH_Carr21_fit_unevolved, color="tab:cyan", linestyle="dotted", alpha=0.5)
             ax1.set_xlabel(r"$m_{\rm p}~[M_\odot]$", labelpad=14)
@@ -2655,7 +2675,7 @@ if "__main__" == __name__:
                 
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
             
-    fig, ax = plt.subplots(figsize=(6.5, 5))
+    fig, ax = plt.subplots(figsize=(7, 5))
     
     # Plot delta-function MF constraint from Boudaud & Cirelli (2019)
     prop_A = False
@@ -2671,29 +2691,19 @@ if "__main__" == __name__:
     
     # Range of characteristic masses for obtaining constraints
     mc_Carr21 = 10**np.arange(14, 22.5, 0.1)
-    ax.plot(m_delta_BC19, f_max_BC19, color="k")
+    ax.plot(m_delta_BC19, f_max_BC19, color="k", label="Delta func.")
         
     # Values of sigma (parameter in log-normal distribution)
     sigmas = [sigmas_LN[-1], 2]
-    
-    # Line styles to use for results obtained with different sigmas
-    alphas = [1, 0.5]
-    
-    ax1 = ax.twiny()
-    ax1.set_xlabel(r"$m_c~[{\rm g}]$", labelpad=14, color="b")   
-    ax1.spines["top"].set_color("b")
-    ax1.spines["bottom"].set_color("r")
-    
-    for k, sigma in enumerate(sigmas):
-                
-        f_PBH_BC19_evolved = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=True)
-        mp_Carr21 = mc_Carr21 * np.exp(-sigma**2)
-        ax.plot(mp_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted", alpha=alphas[k])
-        ax1.plot(mc_Carr21, f_PBH_BC19_evolved, color="b", linestyle="dotted", alpha=alphas[k])
-        ax.plot(0, 0, linestyle="dotted", label="$\sigma={:.1f}$".format(sigma), color="k", alpha=alphas[k])
-        
-        if k == 1:
-            ax1.plot(m_delta_BC19 * np.exp(-sigma**2), f_max_BC19, color="b")
+                            
+    f_PBH_BC19_evolved_sigma0 = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigmas[0]], evolved=True)
+    f_PBH_BC19_evolved_sigma1 = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigmas[1]], evolved=True)
+
+    mp_Carr21 = mc_Carr21 * np.exp(-sigma**2)
+    ax.plot(mp_Carr21, f_PBH_BC19_evolved_sigma0, color="r", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
+    ax.plot(mp_Carr21, f_PBH_BC19_evolved_sigma1, color="r", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
+    ax.plot(mc_Carr21, f_PBH_BC19_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_c$")
+    ax.plot(mc_Carr21, f_PBH_BC19_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_c$")
 
     for a in [ax, ax1]:
         a.set_ylabel(r"$f_{\rm PBH}$")
@@ -2708,11 +2718,10 @@ if "__main__" == __name__:
         a.xaxis.set_minor_locator(x_minor)
         a.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
-    ax.legend(fontsize="x-small", loc=[0.15, 0.7])
-    ax.tick_params("x", pad=7, which="both", labelcolor="r", color="r")
-    ax1.tick_params("x", pad=7, which="both", labelcolor="b", color="b")
+    ax.legend(fontsize="xx-small")
+    ax.tick_params("x", pad=7, which="both")
     ax.set_ylabel(r"$f_{\rm PBH}$")
-    ax.set_xlabel(r"$m_{\rm p}~[{\rm g}]$", color="r")
+    ax.set_xlabel(r"$m~[{\rm g}]$")
     
     fig.tight_layout(pad=0.3)
 
