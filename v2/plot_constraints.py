@@ -2358,10 +2358,13 @@ if "__main__" == __name__:
         fig.tight_layout()
         fig.suptitle("$\Delta={:.1f}$".format(Deltas[Delta_index]))
     
-        
-#%% Plot extended MF constraints shown in Fig. 20 of 2002.12778 on the same axes as in that figure.
+#%% Plot the constraints shown in Fig. 20 of Carr et al. (2021) [2002.12778].
 from preliminaries import constraint_Carr, LN
     
+m_min = 1e11
+m_max = 1e20
+epsilon = 0.4
+m_star = 5.1e14
 
 def f_PBH_beta_prime(m_values, beta_prime):
     """
@@ -2382,7 +2385,7 @@ def f_PBH_beta_prime(m_values, beta_prime):
     """
     return 3.81e8 * beta_prime * np.power(m_values / 1.989e33, -1/2)
  
-    
+
 def beta_prime_gamma_rays(m_values, epsilon=0.4):
     """
     Calculate values of beta prime allowed from extragalactic gamma-rays, using the simple power-law expressions in 2002.12778.
@@ -2410,6 +2413,42 @@ def beta_prime_gamma_rays(m_values, epsilon=0.4):
     
     return np.array(beta_prime_values)
 
+if "__main__" == __name__:
+    
+    m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
+    f_max_values = f_PBH_beta_prime(m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
+    mc_values = np.logspace(15, 22, 70)
+    
+    sigma = 2
+    
+    fig, ax = plt.subplots(figsize=(8,7))
+    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
+
+    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
+    f_PBH_values_evolved = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=True)
+
+    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    
+    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded, color="tab:grey", label="Delta func.")
+    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
+    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
+    ax.plot(mc_values, f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
+    ax.plot(mc_values, f_PBH_values_evolved, color="tab:green", label="LN ($\sigma={:.1f}$) \n [repr., evolved]".format(sigma), linestyle="dashed", alpha=0.5)
+
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xlabel("$m_c~[\mathrm{g}]$")
+    ax1.set_xlabel("$m_c~[M_\odot]$", labelpad=14)
+    ax.legend(title="$\sigma$", fontsize="x-small")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
+    ax.set_ylim(1e-4, 1)
+    ax.tick_params(pad=7)
+    fig.tight_layout()
+    
+        
+#%% Plot extended MF constraints shown in Fig. 20 of 2002.12778 on the same axes as in that figure.
 
 if "__main__" == __name__:
     
@@ -2755,7 +2794,6 @@ if "__main__" == __name__:
      
     fig.subplots_adjust(hspace=0.1)
     fig.tight_layout(pad=0.3)
-
 
 
 #%% Test: log-normal plots. Aim is to understand why the extended MF constraints shown in Fig. 20 of 2002.12778 differ so much from the delta-function MF constraints compared to the versions Im using.
