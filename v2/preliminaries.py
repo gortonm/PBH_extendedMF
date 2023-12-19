@@ -1594,8 +1594,8 @@ if "__main__" == __name__:
         ax.set_xticklabels([])
         ax.set_yticklabels([])
     """
-    axes[0].plot(m_pbh_values, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
     axes[0].plot(m_pbh_values, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
+    axes[0].plot(m_pbh_values, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
     axes[0].plot(m_pbh_values, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])
     """
     axes[0].plot(m_pbh_values, mf_SLN_unevolved, color="b", linestyle="dotted", alpha=0.5)
@@ -2787,3 +2787,62 @@ if "__main__" == __name__:
     ax.set_xlim(min(m_init_values), max(m_init_values))
     ax.set_xscale("log")
     fig.tight_layout()
+    
+#%% Find the slope of the numerical MFs obtained by Andrew Gow at masses much smaller than the peak mass
+if "__main__" == __name__:
+    # Load the data from the numerical MFs from Andrew Gow
+    
+    filepath = "./Data/psiData/"
+    fig, ax = plt.subplots(figsize=(7.5, 5.5))
+    
+    gamma = 0.36
+    PL_exp = 1/gamma
+    
+    colormap = mpl.colormaps['rainbow'].resampled(7)
+    colors = colormap(range(7))
+    print(colors)
+    
+    for i in range(len(Deltas)):
+                
+        if i == 0:
+            log_m_pbh_values, mf_values = np.genfromtxt(filepath + "psiData_Delta_k35.txt", unpack=True, skip_header=1)
+        else:
+            log_m_pbh_values, mf_values = np.genfromtxt(filepath + "psiData_Lognormal_D-{:.1f}.txt".format(Deltas[i]), unpack=True, skip_header=1)
+        
+        m_pbh_values = np.exp(log_m_pbh_values)
+        ax.plot(m_pbh_values, mf_values, color=colors[i], label="${:.1f}$".format(Deltas[i]))
+        ax.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color=colors[i], linestyle="dotted")
+ 
+        if i in (0, 4, 5, 6):
+            fig1, ax1 = plt.subplots(figsize=(6, 5.5))
+            ax1.plot(m_pbh_values, mf_values, color="k", label="Numeric MF")
+            ax1.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color="k", linestyle="dotted")
+            
+            # Find m_c for the lognormal fit by finding the PBH mass where the numerical MF is maximal
+            mp_LN = m_pbh_values[np.argmax(mf_values)]
+            mc_LN = mp_LN * np.exp(sigmas_LN[i]**2)
+
+            ax1.plot(m_pbh_values, LN(m_pbh_values, m_c=mc_LN, sigma=sigmas_LN[i]), color="r", dashes=[6, 2], label="LN")            
+            ax1.plot(m_pbh_values, SLN(m_pbh_values, m_c=np.exp(ln_mc_SL[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
+            ax1.plot(m_pbh_values, CC3(m_pbh_values, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
+            ax1.set_xlabel(r"$m~[M_\odot]$")
+            ax1.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
+            ax1.set_title("$\Delta={:.1f}$".format(Deltas[i]))
+            ax1.set_xlim(1, 200)
+            ax1.set_ylim(1e-6, 1e-1)
+            ax1.set_xscale("log")
+            ax1.set_yscale("log")
+            ax1.legend(fontsize="xx-small")
+            ax1.tick_params(pad=7)
+            fig1.tight_layout()
+    
+    ax.set_xlabel(r"$m~[M_\odot]$")
+    ax.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1, 200)
+    ax.set_ylim(1e-6, 1e-1)
+    ax.tick_params(pad=7)
+    ax.legend(fontsize="xx-small", title="$\Delta$")
+    fig.tight_layout()
+
