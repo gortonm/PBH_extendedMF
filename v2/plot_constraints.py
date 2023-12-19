@@ -1874,8 +1874,8 @@ if "__main__" == __name__:
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     
     plot_LN = False
-    plot_SLN = True
-    plot_CC3 = False
+    plot_SLN = False
+    plot_CC3 = True
     
     plot_unevolved = True
     
@@ -1901,18 +1901,18 @@ if "__main__" == __name__:
                
         if plot_LN:
             mp_LN, f_PBH_LN = load_data_KP23(Deltas, Delta_index, mf=LN, evolved=True)
-            ax.plot(mp_LN, f_PBH_LN, color=colors[i], dashes=[6, 2], label="{:.1f}".format(Deltas[Delta_index]))
-            ax1.plot(mp_LN, np.abs(frac_diff(f_PBH_LN, f_PBH_delta, mp_LN, m_delta)), color=colors[i], label="{:.1f}".format(Deltas[Delta_index]))
+            ax.plot(mp_LN, f_PBH_LN, color=colors[i], dashes=[6, 2], label="{:.0f}".format(Deltas[Delta_index]))
+            ax1.plot(mp_LN, np.abs(frac_diff(f_PBH_LN, f_PBH_delta, mp_LN, m_delta)), color=colors[i], label="{:.0f}".format(Deltas[Delta_index]))
             
         elif plot_SLN:
             mp_SLN, f_PBH_SLN = load_data_KP23(Deltas, Delta_index, mf=SLN, evolved=True)
-            ax.plot(mp_SLN, f_PBH_SLN, color=colors[i], linestyle=(0, (5, 7)), label="{:.1f}".format(Deltas[Delta_index]))
-            ax1.plot(mp_SLN, np.abs(frac_diff(f_PBH_SLN, f_PBH_delta, mp_SLN, m_delta)), color=colors[i], label="{:.1f}".format(Deltas[Delta_index]))
+            ax.plot(mp_SLN, f_PBH_SLN, color=colors[i], linestyle=(0, (5, 7)), label="{:.0f}".format(Deltas[Delta_index]))
+            ax1.plot(mp_SLN, np.abs(frac_diff(f_PBH_SLN, f_PBH_delta, mp_SLN, m_delta)), color=colors[i], label="{:.0f}".format(Deltas[Delta_index]))
 
         elif plot_CC3:
             mp_CC3, f_PBH_CC3 = load_data_KP23(Deltas, Delta_index, mf=CC3, evolved=True)
-            ax.plot(mp_CC3, f_PBH_CC3, color=colors[i], linestyle="dashed", label="{:.1f}".format(Deltas[Delta_index]))
-            ax1.plot(mp_CC3, np.abs(frac_diff(f_PBH_CC3, f_PBH_delta, mp_CC3, m_delta)), color=colors[i], label="{:.1f}".format(Deltas[Delta_index]))
+            ax.plot(mp_CC3, f_PBH_CC3, color=colors[i], linestyle="dashed", label="{:.0f}".format(Deltas[Delta_index]))
+            ax1.plot(mp_CC3, np.abs(frac_diff(f_PBH_CC3, f_PBH_delta, mp_CC3, m_delta)), color=colors[i], label="{:.0f}".format(Deltas[Delta_index]))
            
         # Plot constraint obtained with unevolved MF
         if plot_unevolved:
@@ -1933,10 +1933,17 @@ if "__main__" == __name__:
         a.set_xscale("log")
         a.set_yscale("log")
         
-    ax.set_xlim(1e16, 2e18)
-    ax.set_ylim(1e-5, 1)
+    ax.set_xlim(1e15, 2e18)
+    ax.set_ylim(1e-7, 1)
     ax1.set_xlim(1e15, max(m_delta))
     ax1.set_ylim(1e-2, 2)
+    
+    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+    ax.xaxis.set_major_locator(x_major)
+    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+    ax.xaxis.set_minor_locator(x_minor)
+    ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+    ax.tick_params("x", pad=7)
     
     for f in [fig, fig1]:
         if plot_LN:
@@ -1947,11 +1954,6 @@ if "__main__" == __name__:
             f.suptitle("Korwar \& Profumo 2023 constraints (CC3)", fontsize="small")
         f.tight_layout()
  
-    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
-    ax1.xaxis.set_major_locator(x_major)
-    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
-    ax1.xaxis.set_minor_locator(x_minor)
-    ax1.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
 #%% Plot constraints for different Delta on the same plot (Boudaud & Cirelli 2019)
 
@@ -1963,9 +1965,9 @@ if "__main__" == __name__:
     exponent_PL_lower = 2
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     
-    plot_LN = True
+    plot_LN = False
     plot_SLN = False
-    plot_CC3 = False
+    plot_CC3 = True
         
     fig, ax = plt.subplots(figsize=(6,6))       
     
@@ -1982,21 +1984,28 @@ if "__main__" == __name__:
 
         if plot_LN:
             plotter_BC19_range(Deltas, Delta_index, ax, color=colors[i], mf=LN, evolved=True, exponent_PL_lower=exponent_PL_lower, with_bkg_subtr=with_bkg_subtr)             
+            #plotter_BC19(Deltas, Delta_index, ax, color="k", mf=LN, evolved=True, exponent_PL_lower=exponent_PL_lower, with_bkg_subtr=with_bkg_subtr, prop_A=False, prop_B_lower=True)
             
         elif plot_SLN:
             plotter_BC19_range(Deltas, Delta_index, ax, color=colors[i], mf=SLN, evolved=True, exponent_PL_lower=exponent_PL_lower, with_bkg_subtr=with_bkg_subtr)             
 
         elif plot_CC3:
             plotter_BC19_range(Deltas, Delta_index, ax, color=colors[i], mf=CC3, evolved=True, exponent_PL_lower=exponent_PL_lower, with_bkg_subtr=with_bkg_subtr)             
-           
-    ax.tick_params("x", pad=7)
+    
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
-    ax.legend(title="$\Delta$", fontsize="x-small")
+    ax.legend(title="$\Delta$", fontsize="x-small", loc="lower right")
     ax.set_xscale("log")
     ax.set_yscale("log")  
-    ax.set_xlim(1e16, 2e18)
-    ax.set_ylim(1e-5, 1)
+    ax.set_xlim(1e14, 5e18)
+    ax.set_ylim(1e-10, 1)
+
+    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+    ax.xaxis.set_major_locator(x_major)
+    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+    ax.xaxis.set_minor_locator(x_minor)
+    ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+    ax.tick_params("x", pad=7)
     
     if plot_LN:
         fig.suptitle("Boudaud \& Cirelli 2019 constraints (LN)", fontsize="small")
@@ -2006,10 +2015,6 @@ if "__main__" == __name__:
         fig.suptitle("Boudaud \& Cirelli 2019 constraints (CC3)", fontsize="small")
     fig.tight_layout()
  
-    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
-    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
-
-
 
 #%% Plot constraints for different Delta on the same plot
 
@@ -2125,11 +2130,17 @@ if "__main__" == __name__:
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")  
-        ax.set_xlim(1e16, 1e24)
-        ax.set_ylim(1e-5, 1)
-        ax.legend(title="$\Delta$", fontsize="xx-small", loc="lower center")
+        ax.set_xlim(1e15, 1e18)
+        ax.set_ylim(1e-6, 1)
+        ax.legend(title="$\Delta$", fontsize="xx-small", loc="lower right")
         ax.tick_params("x", pad=7)
-        ax.plot(0, 0, color="tab:gray", linewidth=2, label="$\delta$ func.")
+        
+        x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+        ax.xaxis.set_major_locator(x_major)
+        x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+        ax.xaxis.set_minor_locator(x_minor)
+        ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+        ax.tick_params("x", pad=7)
 
     fig.tight_layout(pad=0.1)
     fig.subplots_adjust(wspace=0.3)
@@ -2795,44 +2806,6 @@ if "__main__" == __name__:
     fig.subplots_adjust(hspace=0.1)
     fig.tight_layout(pad=0.3)
 
-
-#%% Test: log-normal plots. Aim is to understand why the extended MF constraints shown in Fig. 20 of 2002.12778 differ so much from the delta-function MF constraints compared to the versions Im using.
-    
-    # Plot the constraints shown in Fig. 20 of 2002.12778
-    m_min = 1e11
-    m_max = 1e20
-    epsilon = 0.4
-    m_star = 5.1e14
-    
-    m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
-    f_max_values = f_PBH_beta_prime(m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
-    #f_max_values /= 2
-    mc_values = np.logspace(15, 22, 70)
-    
-    sigma = 2
-    
-    fig, ax = plt.subplots(figsize=(8,7))
-    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g)) 
-
-    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
-
-    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
-    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
-    
-    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded, color="tab:grey", label="Delta func.")
-    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
-    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
-    ax.plot(mc_values, f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
-
-    ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xlabel("$m_c~[\mathrm{g}]$")
-    ax1.set_xlabel("$m_c~[M_\odot]$")
-    ax.legend(title="$\sigma$", fontsize="x-small")
-    ax.set_xscale("log")
-    ax.set_yscale("log")
-    ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
-    ax.set_ylim(1e-4, 1)
-    fig.tight_layout()    
 
     #%%
 if "__main__" == __name__:
