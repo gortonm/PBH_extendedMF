@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from extended_MF_checks import envelope, load_results_Isatis
-from preliminaries import load_data, m_max_SLN, LN, SLN, CC3, PL_MF
+from preliminaries import load_data, m_max_SLN, LN, SLN, CC3, PL_MF, frac_diff
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24, 'font.family':'serif'})
@@ -37,38 +37,6 @@ plt.style.use('tableau-colorblind10')
 
 # Load mass function parameters
 [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-
-def frac_diff(y1, y2, x1, x2, interp_log = True):
-    """
-    Find the fractional difference between two arrays (y1, y2), evaluated
-    at (x1, x2), of the form (y1/y2 - 1).
-    
-    In the calculation, interpolation (logarithmic or linear) is used to 
-    evaluate the array y2 at x-axis values x1.
-
-    Parameters
-    ----------
-    y1 : Array-like
-        Array to find fractional difference of, evaluated at x1.
-    y2 : Array-like
-        Array to find fractional difference of, evaluated at x2.
-    x1 : Array-like
-        x-axis values that y1 is evaluated at.
-    x2 : Array-like
-        x-axis values that y2 is evaluated at.
-    interp_log : Boolean, optional
-        If True, use logarithmic interpolation to evaluate y1 at x2. The default is True.
-
-    Returns
-    -------
-    Array-like
-        Fractional difference between y1 and y2.
-
-    """
-    if interp_log:
-        return y1 / 10**np.interp(np.log10(x1), np.log10(x2), np.log10(y2)) - 1
-    else:
-        return np.interp(x1, x2, y2) / y1 - 1
 
 
 def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True, exponent_PL_lower=2, approx=False):
