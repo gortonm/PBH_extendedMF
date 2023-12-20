@@ -77,6 +77,39 @@ def load_data(filename, directory="./Extracted_files/"):
     return np.genfromtxt(directory+filename, delimiter=',', unpack=True)
 
 
+def frac_diff(y1, y2, x1, x2, interp_log = True):
+    """
+    Find the fractional difference between two arrays (y1, y2), evaluated
+    at (x1, x2), of the form (y1/y2 - 1).
+    
+    In the calculation, interpolation (logarithmic or linear) is used to 
+    evaluate the array y2 at x-axis values x1.
+
+    Parameters
+    ----------
+    y1 : Array-like
+        Array to find fractional difference of, evaluated at x1.
+    y2 : Array-like
+        Array to find fractional difference of, evaluated at x2.
+    x1 : Array-like
+        x-axis values that y1 is evaluated at.
+    x2 : Array-like
+        x-axis values that y2 is evaluated at.
+    interp_log : Boolean, optional
+        If True, use logarithmic interpolation to evaluate y1 at x2. The default is True.
+
+    Returns
+    -------
+    Array-like
+        Fractional difference between y1 and y2.
+
+    """
+    if interp_log:
+        return y1 / 10**np.interp(np.log10(x1), np.log10(x2), np.log10(y2)) - 1
+    else:
+        return np.interp(x1, x2, y2) / y1 - 1
+
+
 def LN(m, m_c, sigma):
     """
     Log-normal mass function (with characteristic mass m_c and standard deviation sigma), evaluated at m.
@@ -2806,10 +2839,17 @@ if "__main__" == __name__:
                 
         if i == 0:
             log_m_pbh_values, mf_values = np.genfromtxt(filepath + "psiData_Delta_k35.txt", unpack=True, skip_header=1)
+            m_pbh_values = np.exp(log_m_pbh_values)
+        elif i == 6:
+            log_m_pbh_values_data, mf_values_data = np.genfromtxt(filepath + "psiData_Lognormal_D-{:.1f}.txt".format(Deltas[i]), unpack=True, skip_header=1)
+            # For the Delta = 5 case, load the data from Fig. 5, since this covers a wider PBH mass range than that provided by Andrew Gow
+            m_pbh_values, mf_values_Fig5 = load_data("2009.03204/Delta_5.0_numeric.csv")
+            # Rescale the MF data from Fig. 5 (which is scaled by the maximum of the MF) so that its maximum matches the maximum from the data provided by Andrew Gow
+            mf_values = mf_values_Fig5 * max(mf_values_data) / max(mf_values_Fig5)
         else:
             log_m_pbh_values, mf_values = np.genfromtxt(filepath + "psiData_Lognormal_D-{:.1f}.txt".format(Deltas[i]), unpack=True, skip_header=1)
+            m_pbh_values = np.exp(log_m_pbh_values)        
         
-        m_pbh_values = np.exp(log_m_pbh_values)
         ax.plot(m_pbh_values, mf_values, color=colors[i], label="${:.1f}$".format(Deltas[i]))
         ax.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color=colors[i], linestyle="dotted")
  
@@ -2823,19 +2863,19 @@ if "__main__" == __name__:
             mc_LN = mp_LN * np.exp(sigmas_LN[i]**2)
 
             ax1.plot(m_pbh_values, LN(m_pbh_values, m_c=mc_LN, sigma=sigmas_LN[i]), color="r", dashes=[6, 2], label="LN")            
-            ax1.plot(m_pbh_values, SLN(m_pbh_values, m_c=np.exp(ln_mc_SL[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
+            ax1.plot(m_pbh_values, SLN(m_pbh_values, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
             ax1.plot(m_pbh_values, CC3(m_pbh_values, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
             ax1.set_xlabel(r"$m~[M_\odot]$")
             ax1.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
             ax1.set_title("$\Delta={:.1f}$".format(Deltas[i]))
-            ax1.set_xlim(1, 200)
+            ax1.set_xlim(min(m_pbh_values), max(m_pbh_values))
             ax1.set_ylim(1e-6, 1e-1)
             ax1.set_xscale("log")
             ax1.set_yscale("log")
             ax1.legend(fontsize="xx-small")
             ax1.tick_params(pad=7)
             fig1.tight_layout()
-    
+                
     ax.set_xlabel(r"$m~[M_\odot]$")
     ax.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
     ax.set_xscale("log")
@@ -2846,3 +2886,100 @@ if "__main__" == __name__:
     ax.legend(fontsize="xx-small", title="$\Delta$")
     fig.tight_layout()
 
+#%% Plot fractional difference between numerical MF and the fitting functions used, when considering the evolved forms of the numerical MF and fitting functions.
+
+def mf_numeric(m, m_p, Delta, params_CC3, custom_mp=True, normalise_to_CC3=True):
+    """
+    Estimate the numerical mass function shown in Fig. 5 of 2009.03204 evaluated
+    at an arbitrary mass m, with peak mass m_p, using linear interpolation.
+
+    Parameters
+    ----------
+    m : Array-like
+        PBH mass.
+    m_p : Float
+        Peak mass.
+    Delta : Float
+        Power spectrum peak width.
+    custom_mp : Boolean
+        If True, uses the input m_p for the peak mass and rescales the masses
+        at which the mass function is evaluated. Otherwise, use the masses
+        shown in Fig. 5 of 2009.03204.
+
+    Returns
+    -------
+    Array-like
+        Estimate for the numerical PBH mass function, evaluated at m.
+
+    """
+    
+    # Load data from numerical MFs shown in 2009.03204 provided by Andrew Gow.
+    if Delta < 0.1:
+        log_m_data, mf_data = np.genfromtxt("./Data/psiData/psiData_Delta_k35.txt", unpack=True, skip_header=1)
+    else:
+        log_m_data, mf_data = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
+    m_data = np.exp(log_m_data)
+    
+    if custom_mp:
+        # Find peak mass of the mass function extracted from Fig. 5 of 2009.03204,
+        # and scale the masses so that the peak mass corresponds to m_p.
+        mp_data = m_data[np.argmax(mf_data)]
+        m_scaled = m_data * m_p / mp_data
+ 
+        # Estimate normalisation factor for the MF
+        
+        # Match maximum value of the numerical MF to the maximum value of the CC3 MF.
+        if normalise_to_CC3:
+            psi_max_CC3 = CC3(m_p, m_p, *params_CC3)
+            normalisation_factor = psi_max_CC3 / max(mf_data)
+        else:
+            normalisation_factor = 1 / np.trapz(mf_data, m_scaled)
+        
+        return np.interp(m, m_scaled, mf_data, 0, 0) * normalisation_factor
+
+
+if "__main__" == __name__:
+    
+    # Peak mass values
+    mp_values = np.logspace(16, np.log10(5.05e17), 5)
+    
+    # Initial and evolved PBH masses
+    n_steps = 1000
+    m_delta = [1e14, 1e16]
+    m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
+    m_evolved_values = mass_evolved(m_init_values, t=t_0)
+    
+    i = 0
+    params_CC3 = [alphas_CC3[i], betas[i]]
+    
+    for m_p in mp_values:
+        fig, ax = plt.subplots(figsize=(6, 5))
+        fig1, ax1 = plt.subplots(figsize=(6, 5))
+        
+        mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], params_CC3)
+        mf_numeric_values_evolved = psi_evolved(mf_numeric_values_init, m_evolved_values, m_init_values)
+                    
+        mf_CC3_values_init = CC3(m_init_values, m_p, *params_CC3)
+        mf_CC3_values_evolved = psi_evolved(mf_CC3_values_init, m_evolved_values, m_init_values)
+    
+        ax.plot(m_init_values, mf_numeric_values_init, linestyle="dotted", color="k")
+        ax.plot(m_evolved_values, mf_numeric_values_evolved, color="k", label="Numeric")
+        ax.plot(m_init_values, mf_CC3_values_init, linestyle="dotted", color="g")
+        ax.plot(m_evolved_values, mf_CC3_values_evolved, color="g", label="CC3")
+        
+        ax1.plot(m_evolved_values, frac_diff(mf_CC3_values_evolved, mf_numeric_values_evolved, m_evolved_values, m_evolved_values))
+        
+        ax.legend(fontsize="xx-small")
+        ax.set_ylabel(r"$\psi(m)~[{\rm g}^{-1}]$")
+        ax1.set_ylabel(r"$\Delta \psi / \psi$")
+        
+        for a in [ax, ax1]:
+            a.set_xlabel(r"$m~[{\rm g}]$")
+            a.set_xscale("log")
+            a.set_yscale("log")
+            a.set_xlim(min(m_init_values[mf_numeric_values_init > 0]), max(m_init_values[mf_numeric_values_init > 0]))
+            a.set_title(r"$m_{\rm p} = " + " {:.2e}".format(m_p) + r" {\rm g}$")
+            a.tick_params(pad=7)
+        ax.set_ylim(mf_numeric_values_init[np.argmax(mf_numeric_values_init > 0)], 2 * max(mf_CC3_values_init))
+        fig.tight_layout()
+        fig1.tight_layout()
