@@ -1667,7 +1667,7 @@ if "__main__" == __name__:
         ax.set_ylim(ymin, ymax)
         
         ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
-        ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+        ax1.set_xlabel("$m_\mathrm{p}~[M_\odot]$", labelpad=14)
         ax1.tick_params("x")
         
         ax2 = ax.secondary_yaxis('right')
@@ -1742,7 +1742,7 @@ if "__main__" == __name__:
         ax.set_ylim(ymin, ymax)
         
         ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
-        ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+        ax1.set_xlabel("$m_\mathrm{p}~[M_\odot]$", labelpad=14)
         ax1.tick_params("x")
         
         ax2 = ax.secondary_yaxis('right')
