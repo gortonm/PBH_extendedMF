@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from extended_MF_checks import envelope, load_results_Isatis
-from preliminaries import load_data, m_max_SLN, LN, SLN, CC3, PL_MF, frac_diff
+from preliminaries import load_data, m_max_SLN, LN, SLN, CC3, frac_diff, constraint_Carr
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24, 'font.family':'serif'})
@@ -2645,46 +2645,64 @@ if "__main__" == __name__:
             
     fig, ax = plt.subplots(figsize=(7, 5))
     
-    # Plot delta-function MF constraint from Boudaud & Cirelli (2019)
-    prop_A = False
-    with_bkg_subtr = True
-    prop_B_lower = True
+    plot_BC19 = False
+    plot_KP23 = True
     
-    # Load delta-function MF constraint from Boudaud & Cirelli (2019)
-    m_delta_BC19_loaded, f_max_BC19_loaded = load_data_Voyager_BC19(Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
-    m_delta_BC19_extrapolated = 10**np.arange(11, np.log10(min(m_delta_BC19_loaded))+0.01, 0.1)
-    f_max_BC19_extrapolated = min(f_max_BC19_loaded) * np.power(m_delta_BC19_extrapolated / min(m_delta_BC19_loaded), exponent_PL_lower)
-    f_max_BC19 = np.concatenate((f_max_BC19_extrapolated, f_max_BC19_loaded))
-    m_delta_BC19 = np.concatenate((m_delta_BC19_extrapolated, m_delta_BC19_loaded))
+    if plot_BC19:
+        
+        comp_color = "r"
+        
+        # Plot delta-function MF constraint from Boudaud & Cirelli (2019)
+        prop_A = False
+        with_bkg_subtr = True
+        prop_B_lower = True
+        
+        # Load delta-function MF constraint from Boudaud & Cirelli (2019)
+        m_delta_loaded, f_max_loaded = load_data_Voyager_BC19(Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
     
+        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_loaded))+0.01, 0.1)
+        f_max_extrapolated = min(f_max_loaded) * np.power(m_delta_extrapolated / min(m_delta_loaded), exponent_PL_lower)
+        f_max = np.concatenate((f_max_extrapolated, f_max_loaded))
+        m_delta = np.concatenate((m_delta_extrapolated, m_delta_loaded))
+    
+    elif plot_KP23:
+        
+        comp_color = "orange"
+        
+        # Power-law exponent to use between 1e15g and 1e16g.
+        exponent_PL_upper = 2.0
+        # Power-law exponent to use between 1e11g and 1e15g.
+        exponent_PL_lower = 2.0
+        
+        # Load delta-function MF constraint from Boudaud & Cirelli (2019)
+        m_delta, f_max = load_data_KP23(Deltas=Deltas, Delta_index=0, mf=None, exponent_PL_lower=exponent_PL_lower)
+
     # Range of characteristic masses for obtaining constraints
     mc_Carr21 = 10**np.arange(14, 22.5, 0.1)
-    ax.plot(m_delta_BC19, f_max_BC19, color="k", label="Delta func.")
+    ax.plot(m_delta, f_max, color="k", label="Delta func.")
         
     # Values of sigma (parameter in log-normal distribution)
     sigmas = [sigmas_LN[-1], 2]
                             
-    f_PBH_BC19_evolved_sigma0 = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigmas[0]], evolved=True)
-    f_PBH_BC19_evolved_sigma1 = constraint_Carr(mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigmas[1]], evolved=True)
+    f_PBH_evolved_sigma0 = constraint_Carr(mc_Carr21, m_delta, f_max, LN, [sigmas[0]], evolved=True)
+    f_PBH_evolved_sigma1 = constraint_Carr(mc_Carr21, m_delta, f_max, LN, [sigmas[1]], evolved=True)
 
-    mp_Carr21 = mc_Carr21 * np.exp(-sigma**2)
-    ax.plot(mp_Carr21, f_PBH_BC19_evolved_sigma0, color="r", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
-    ax.plot(mp_Carr21, f_PBH_BC19_evolved_sigma1, color="r", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
-    ax.plot(mc_Carr21, f_PBH_BC19_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_c$")
-    ax.plot(mc_Carr21, f_PBH_BC19_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_c$")
+    ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
+    ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
+    ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_c$")
+    ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_c$")
 
-    for a in [ax, ax1]:
-        a.set_ylabel(r"$f_{\rm PBH}$")
-        a.set_ylim(1e-3, 1)
-        a.set_xscale("log")
-        a.set_yscale("log")
-        a.set_xlim(1e16, 5e20)    
+    ax.set_ylabel(r"$f_{\rm PBH}$")
+    ax.set_ylim(1e-3, 1)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e16, 5e20)    
    
-        x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
-        a.xaxis.set_major_locator(x_major)
-        x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
-        a.xaxis.set_minor_locator(x_minor)
-        a.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+    x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 10)
+    ax.xaxis.set_major_locator(x_major)
+    x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
+    ax.xaxis.set_minor_locator(x_minor)
+    ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
     ax.legend(fontsize="xx-small")
     ax.tick_params("x", pad=7, which="both")
