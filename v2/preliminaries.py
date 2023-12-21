@@ -2764,6 +2764,43 @@ if "__main__" == __name__:
     fig.tight_layout()
     fig.savefig("./Tests/Figures/EMF_constraints_work/fmax_fracdifff_from_m^2.png")
 
+#%% Plot the CC3 at small and large masses, compare to asymptotic fits at m << m_p and m >> m_p.
+
+if "__main__" == __name__:
+    
+    # Mass function parameter values, from 2009.03204.
+    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    for Delta_index in range(len(Deltas)):
+        
+        print(Delta_index)
+        
+        fig, ax = plt.subplots(figsize=(6,6))
+        m_p = 1e20
+        m_pbh_values = np.logspace(np.log10(m_p)-5, np.log10(m_p)+5, 1000)
+        
+        alpha = alphas_CC3[Delta_index]
+        beta = betas[Delta_index]
+        prefactor = (beta / m_p) * np.power(alpha/beta, (alpha+1)/beta) / np.exp(loggamma((alpha+1) / beta))
+        
+        CC3_actual = CC3(m_pbh_values, m_p, alpha, beta)
+        CC3_fit_lowmass = prefactor * np.power(m_pbh_values/m_p, alpha)
+        CC3_fit_highmass = prefactor * np.exp(-(alpha/beta)*np.power(m_pbh_values/m_p, beta))
+        
+        ax.plot(m_pbh_values[CC3_actual > 0], CC3_actual[CC3_actual > 0])
+        ax.plot(m_pbh_values, CC3_fit_lowmass, linestyle="dotted", label=r"$\propto (m / m_\mathrm{p})^{\alpha}$")
+        ax.plot(m_pbh_values, CC3_fit_highmass, linestyle="dotted", label=r"$\propto \exp \left(-\frac{\alpha}{\beta} \left(\frac{m}{m_\mathrm{p}}\right)^\beta\right)$")
+        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+        ax.set_ylim(CC3_actual[0], 10*max(CC3_actual))
+        ax.set_title("CC3, $\Delta={:.1f}$".format(Deltas[Delta_index]))
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("$m~[\mathrm{g}]$")
+        ax.set_ylabel("$\psi~[\mathrm{g}^{-1}]$")
+        ax.legend(fontsize="xx-small")
+        fig.tight_layout()
+
+
 #%% Plot the SLN at small masses, compare to (m/m_p)^|alpha|.
 
 if "__main__" == __name__:
@@ -2853,18 +2890,23 @@ if "__main__" == __name__:
         ax.plot(m_pbh_values, mf_values, color=colors[i], label="${:.1f}$".format(Deltas[i]))
         ax.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color=colors[i], linestyle="dotted")
  
-        if i in (0, 4, 5, 6):
+        if i in (0, 1, 2, 3, 4, 6):
             fig1, ax1 = plt.subplots(figsize=(6, 5.5))
+
             ax1.plot(m_pbh_values, mf_values, color="k", label="Numeric MF")
-            ax1.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color="k", linestyle="dotted")
+            #ax1.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color="k", linestyle="dotted")
             
             # Find m_c for the lognormal fit by finding the PBH mass where the numerical MF is maximal
             mp_LN = m_pbh_values[np.argmax(mf_values)]
             mc_LN = mp_LN * np.exp(sigmas_LN[i]**2)
+            
+            # Range of PBH mass values to show for the fitting functions
+            m_pbh_values_fits = np.logspace(np.log10(min(m_pbh_values))-2, np.log10(max(m_pbh_values))+2, 1000)
 
-            ax1.plot(m_pbh_values, LN(m_pbh_values, m_c=mc_LN, sigma=sigmas_LN[i]), color="r", dashes=[6, 2], label="LN")            
-            ax1.plot(m_pbh_values, SLN(m_pbh_values, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
-            ax1.plot(m_pbh_values, CC3(m_pbh_values, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
+            ax1.plot(m_pbh_values_fits, LN(m_pbh_values_fits, m_c=mc_LN, sigma=sigmas_LN[i]), color="r", dashes=[6, 2], label="LN")            
+            ax1.plot(m_pbh_values_fits, SLN(m_pbh_values_fits, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
+            ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
+                        
             ax1.set_xlabel(r"$m~[M_\odot]$")
             ax1.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
             ax1.set_title("$\Delta={:.1f}$".format(Deltas[i]))
@@ -2937,7 +2979,6 @@ def mf_numeric(m, m_p, Delta, params_CC3, custom_mp=True, normalise_to_CC3=True)
         
         return np.interp(m, m_scaled, mf_data, 0, 0) * normalisation_factor
 
-
 if "__main__" == __name__:
     
     # Peak mass values
@@ -2950,7 +2991,11 @@ if "__main__" == __name__:
     m_evolved_values = mass_evolved(m_init_values, t=t_0)
     
     i = 0
+    params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
     params_CC3 = [alphas_CC3[i], betas[i]]
+    
+    # Controls x-axis range for fractional difference plots, as the value of the numerical mass function (compared to the maximum of the numreical MF)
+    threshold = 1e-2
     
     for m_p in mp_values:
         fig, ax = plt.subplots(figsize=(6, 5))
@@ -2959,6 +3004,12 @@ if "__main__" == __name__:
         mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], params_CC3)
         mf_numeric_values_evolved = psi_evolved(mf_numeric_values_init, m_evolved_values, m_init_values)
                     
+        mf_LN_values_init = LN(m_init_values, m_p, sigmas_LN[i])
+        mf_LN_values_evolved = psi_evolved(mf_LN_values_init, m_evolved_values, m_init_values)
+        
+        mf_SLN_values_init = SLN(m_init_values, m_p, *params_SLN)
+        mf_SLN_values_evolved = psi_evolved(mf_SLN_values_init, m_evolved_values, m_init_values)
+
         mf_CC3_values_init = CC3(m_init_values, m_p, *params_CC3)
         mf_CC3_values_evolved = psi_evolved(mf_CC3_values_init, m_evolved_values, m_init_values)
     
@@ -2967,12 +3018,13 @@ if "__main__" == __name__:
         ax.plot(m_init_values, mf_CC3_values_init, linestyle="dotted", color="g")
         ax.plot(m_evolved_values, mf_CC3_values_evolved, color="g", label="CC3")
         
-        ax1.plot(m_evolved_values, frac_diff(mf_CC3_values_evolved, mf_numeric_values_evolved, m_evolved_values, m_evolved_values))
+        ax1.plot(m_evolved_values, (frac_diff(mf_LN_values_evolved, mf_numeric_values_evolved, m_evolved_values, m_evolved_values)), color="r", label="LN")
+        ax1.plot(m_evolved_values, (frac_diff(mf_SLN_values_evolved, mf_numeric_values_evolved, m_evolved_values, m_evolved_values)), color="b", label="SLN")
+        ax1.plot(m_evolved_values, (frac_diff(mf_CC3_values_evolved, mf_numeric_values_evolved, m_evolved_values, m_evolved_values)), color="g", label="CC3")
         
-        ax.legend(fontsize="xx-small")
         ax.set_ylabel(r"$\psi(m)~[{\rm g}^{-1}]$")
-        ax1.set_ylabel(r"$\Delta \psi / \psi$")
-        
+        ax1.set_ylabel(r"$|\psi_{\rm fit} / \psi_{\rm numeric} - 1|$")
+                
         for a in [ax, ax1]:
             a.set_xlabel(r"$m~[{\rm g}]$")
             a.set_xscale("log")
@@ -2980,6 +3032,22 @@ if "__main__" == __name__:
             a.set_xlim(min(m_init_values[mf_numeric_values_init > 0]), max(m_init_values[mf_numeric_values_init > 0]))
             a.set_title(r"$m_{\rm p} = " + " {:.2e}".format(m_p) + r" {\rm g}$")
             a.tick_params(pad=7)
+            a.legend(fontsize="xx-small")
+            
+            x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
+            a.yaxis.set_major_locator(x_major)
+            x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
+            a.yaxis.set_minor_locator(x_minor)
+            a.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+            
         ax.set_ylim(mf_numeric_values_init[np.argmax(mf_numeric_values_init > 0)], 2 * max(mf_CC3_values_init))
+        
+        # Find smallest and largeset masses for which psi / psi_max is above the threshold
+        mf_numeric_scaled = mf_numeric_values_evolved / max(mf_numeric_values_evolved)
+        m_min = m_evolved_values[np.argmax(mf_numeric_scaled > threshold)]
+        m_max = m_evolved_values[np.argmin(mf_numeric_scaled > threshold)]       
+        ax1.set_xlim(m_min, m_max)
+        ax1.set_ylim(1e-4, 1e3)
+        
         fig.tight_layout()
         fig1.tight_layout()
