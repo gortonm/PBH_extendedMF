@@ -90,26 +90,17 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
             mf_string = "SLN"
         elif mf==CC3:
             mf_string = "CC3"
-        elif mf==PL_MF:
-            mf_string = "PL"
 
             
         f_PBH_instrument = []
         
         for k in range(len(constraints_names_short)):
             # Load constraints for an evolved extended mass function obtained from each instrument
-            
-            if mf != PL_MF:
-                if approx:
-                    data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "_approx%s.txt" % evolved_string
-                else:
-                    data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_Delta={:.1f}".format(Deltas[Delta_index]) + "%s.txt" % evolved_string
-            
+                    
+            if approx:
+                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_approx%s.txt" % evolved_string
             else:
-                if approx:
-                    data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_approx%s.txt" % evolved_string
-                else:
-                    data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr%s.txt" % evolved_string
+                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr%s.txt" % evolved_string
             
             mc_values, f_PBH_k = np.genfromtxt(data_filename, delimiter="\t")
     
@@ -126,7 +117,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
 
             mp_GC = [m_max_SLN(m_c, *params, log_m_factor=3, n_steps=1000) for m_c in mc_values]
 
-        elif mf==CC3 or mf == PL_MF:
+        elif mf==CC3:
             mp_GC = mc_values
             
     return np.array(mp_GC), np.array(f_PBH_GC)
@@ -192,10 +183,6 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
 
     elif mf == CC3:
         data_filename = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
-        mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
-
-    elif mf == PL_MF:
-        data_filename = data_folder + "/PL_2302.04408_Carr_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
         mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
 
     return np.array(mp_KP23), np.array(f_PBH_KP23)
@@ -271,11 +258,7 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
     elif mf == CC3:
         data_filename = data_folder + "/CC3_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
         mp_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
- 
-    elif mf == PL_MF:
-        data_filename = data_folder + "/PL_1807.03075_Carr_" + prop_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower)
-        mp_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
- 
+        
     return np.array(mp_BC19), np.array(f_PBH_BC19)
 
     
@@ -315,9 +298,6 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
     elif mf == CC3:
         mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
  
-    elif mf == PL_MF:
-        mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/PL_HSC_Carr.txt", delimiter="\t")
-
     return np.array(mp_Subaru), np.array(f_PBH_Subaru)
 
 
@@ -372,9 +352,6 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=T
 
     elif mf == CC3:
         mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
-
-    elif mf == PL_MF:
-        mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/PL_2101.01370_Carr_%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
         
     return np.array(mp_GECCO), np.array(f_PBH_GECCO)
 
@@ -414,10 +391,7 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None):
 
     elif mf == CC3:
         mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t") 
-    
-    elif mf == PL_MF:
-        mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/PL_Sugiyama20_Carr.txt", delimiter="\t")        
-    
+        
     return np.array(mp_Sugiyama), np.array(f_PBH_Sugiyama)
 
     
@@ -445,8 +419,6 @@ def find_label(mf=None):
         label = "SLN"
     elif mf == CC3:
         label = "CC3"
-    elif mf == PL_MF:
-        label = "PL"
     return label
 
 
@@ -2645,8 +2617,12 @@ if "__main__" == __name__:
             
     fig, ax = plt.subplots(figsize=(7, 5))
     
-    plot_BC19 = False
-    plot_KP23 = True
+    plot_BC19 = True
+    plot_KP23 = False
+    
+    original = False
+    generic_mass = False
+    text_on_plot = True
     
     if plot_BC19:
         
@@ -2679,18 +2655,36 @@ if "__main__" == __name__:
 
     # Range of characteristic masses for obtaining constraints
     mc_Carr21 = 10**np.arange(14, 22.5, 0.1)
-    ax.plot(m_delta, f_max, color="k", label="Delta func.")
         
     # Values of sigma (parameter in log-normal distribution)
     sigmas = [sigmas_LN[-1], 2]
                             
     f_PBH_evolved_sigma0 = constraint_Carr(mc_Carr21, m_delta, f_max, LN, [sigmas[0]], evolved=True)
     f_PBH_evolved_sigma1 = constraint_Carr(mc_Carr21, m_delta, f_max, LN, [sigmas[1]], evolved=True)
-
-    ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
-    ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
-    ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_c$")
-    ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_c$")
+    if original:
+        ax.plot(m_delta, f_max, color="k", label="Delta func.")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_c$")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_c$")
+    elif generic_mass:
+        ax.plot(m_delta, f_max, color="k", label=r"Delta func. ($m_{\rm x}=m$)")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_{\rm p}$")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm x} = m_{\rm p}$")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_c$")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm x} = m_c$")
+    elif text_on_plot:
+        ax.plot(m_delta, f_max, color="k", label="Delta func.")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted")
+        
+        ax.text(2.5e16, 1e-2, "Delta-func.", color="k", rotation=80, fontsize="xx-small")
+        ax.text(2.5e17, 1.5e-3, "LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"against $m_{\rm p}$", color="r", rotation=70, fontsize="xx-small")
+        ax.text(2e18, 3e-2, "LN ($\sigma={:.1f}$), ".format(sigmas[1]) + r"against $m_{\rm p}$", color="r", rotation=70, fontsize="xx-small")
+        ax.text(1.3e19, 8e-3, "LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"against $m_{c}$", color="b", rotation=70, fontsize="xx-small")
+        ax.text(5e19, 5e-3, "LN ($\sigma={:.1f}$), ".format(sigmas[1]) + r"against $m_{c}$", color="b", rotation=70, fontsize="xx-small")
 
     ax.set_ylabel(r"$f_{\rm PBH}$")
     ax.set_ylim(1e-3, 1)
@@ -2703,12 +2697,15 @@ if "__main__" == __name__:
     x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 10)
     ax.xaxis.set_minor_locator(x_minor)
     ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-    ax.legend(fontsize="xx-small")
     ax.tick_params("x", pad=7, which="both")
     ax.set_ylabel(r"$f_{\rm PBH}$")
-    ax.set_xlabel(r"$m~[{\rm g}]$")
-    
+
+    if not text_on_plot:
+        ax.legend(fontsize="xx-small")
+    if not generic_mass:
+        ax.set_xlabel(r"$m~[{\rm g}]$")
+    elif generic_mass:
+        ax.set_xlabel(r"$m_{\rm x}~[{\rm g}]$")
     fig.tight_layout(pad=0.3)
 
 
