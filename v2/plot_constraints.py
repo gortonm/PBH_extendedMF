@@ -328,7 +328,6 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=T
         Constraint on f_PBH.
 
     """
-    
     if evolved:
         data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     else:
@@ -377,7 +376,6 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None):
         Constraint on f_PBH.
 
     """    
-
     if mf == None:
         mp_Sugiyama, f_PBH_Sugiyama = load_data("1905.06066/1905.06066_Fig8_finite+wave.csv")
 
@@ -1556,6 +1554,40 @@ if "__main__" == __name__:
                 fig3.tight_layout()
                 fig3.savefig("./Tests/Figures/Fracdiff_fits/WD_Delta={:.1f}.png".format(Deltas[i]))
 
+#%% Plot fractional difference between extended MF constraints from GECCO obtained with the NFW and Einasto profiles
+
+if "__main__" == __name__:
+        
+    for Delta_index in range(len(Deltas)):
+        fig, ax = plt.subplots(figsize=(6, 5))
+        fig1, ax1 = plt.subplots(figsize=(6, 5))
+        
+        colors = ["r", "b", "g"]
+        
+        print(Deltas[Delta_index])
+        
+        for i, mf in enumerate([LN, SLN, CC3]):
+            mp_NFW, f_PBH_NFW = load_data_GECCO(Deltas, Delta_index, mf=mf, NFW=True)
+            mp_Einasto, f_PBH_Einasto = load_data_GECCO(Deltas, Delta_index, mf=mf, NFW=False)
+
+            ax.plot(mp_Einasto, f_PBH_Einasto, color=colors[i])
+            ax.plot(mp_NFW, f_PBH_NFW, color=colors[i], linestyle="dashed")
+            ax1.plot(mp_NFW, frac_diff(f_PBH_NFW, f_PBH_Einasto, mp_NFW, mp_Einasto), color=colors[i])
+
+        ax.set_ylabel("$f_\mathrm{PBH}$")
+        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_ylim(1e-4, 1)
+        fig.tight_layout()
+            
+        ax1.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+        ax1.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
+        ax1.set_xlim(min(mp_NFW), max(mp_NFW[f_PBH_NFW < 1]))
+        ax1.set_ylim(1.5, 2)
+        ax1.set_xscale("log")
+        ax1.set_yscale("log")
+        fig1.tight_layout()
      
         
 #%% Existing constraints
@@ -1682,7 +1714,7 @@ if "__main__" == __name__:
             ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
            
         # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].        
-        NFW = True
+        NFW = False
         show_label = False
         
         # Set axis limits
@@ -2614,16 +2646,19 @@ if "__main__" == __name__:
     exponent_PL_lower = 2
                 
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
-            
-    fig, ax = plt.subplots(figsize=(7, 5))
-    
-    plot_BC19 = True
-    plot_KP23 = False
     
     original = False
-    generic_mass = False
-    text_on_plot = True
-    
+    generic_mass = True
+    text_on_plot = False
+
+    if generic_mass:
+        fig, ax = plt.subplots(figsize=(8, 5))
+    else:
+        fig, ax = plt.subplots(figsize=(7, 5))
+
+    plot_BC19 = True
+    plot_KP23 = False
+        
     if plot_BC19:
         
         comp_color = "r"
@@ -2668,7 +2703,7 @@ if "__main__" == __name__:
         ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_c$")
         ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_c$")
     elif generic_mass:
-        ax.plot(m_delta, f_max, color="k", label=r"Delta func. ($m_{\rm x}=m$)")
+        ax.plot(m_delta, f_max, color="k", label=r"Delta func., $m_{\rm x}=m$")
         ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_{\rm p}$")
         ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm x} = m_{\rm p}$")
         ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_c$")
