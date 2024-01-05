@@ -854,10 +854,10 @@ if "__main__" == __name__:
         #ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
         ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r", linestyle="dashed")
     
-        ax.text(1.5e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
+        ax.text(1.5e15, 0.3,"Electrons/\npositrons \n (Voyager 1)", fontsize="xx-small", color="r")    
         
         plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashdot")
-        ax.text(1.4e17, 0.004, "Photons \n (from $e^+ e^-$ annihilation)", fontsize="xx-small", color="orange")
+        ax.text(1.4e17, 0.004, "Soft gamma-rays \n (INTEGRAL/SPI)", fontsize="xx-small", color="orange")
     
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey")
         ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="tab:grey")
@@ -1660,7 +1660,7 @@ if "__main__" == __name__:
         ax.plot(0, 0, color="k", linestyle=linestyles[0], label="Delta func.")
         ax.plot(0, 0, color="k", linestyle=linestyles[1], label="LN")
         ax.plot(0, 0, color="k", linestyle=linestyles[2], label="SLN")
-        ax.plot(0, 0, color="k", linestyle=linestyles[3], label="CC3")
+        ax.plot(0, 0, color="k", linestyle=linestyles[3], label="GCC")
 
         ax.tick_params("x", pad=7)
         ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
@@ -1735,7 +1735,7 @@ if "__main__" == __name__:
         ax.plot(0, 0, color="k", linestyle=linestyles[0], label="Delta func.")
         ax.plot(0, 0, color="k", linestyle=linestyles[1], label="LN")
         ax.plot(0, 0, color="k", linestyle=linestyles[2], label="SLN")
-        ax.plot(0, 0, color="k", linestyle=linestyles[3], label="CC3")
+        ax.plot(0, 0, color="k", linestyle=linestyles[3], label="GCC")
 
         ax.tick_params("x", pad=7)
         ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
