@@ -209,7 +209,7 @@ def PL_MF(m_values, m_min, m_max, gamma=-1/2):
     return np.array(PL_MF_values)
 
 
-def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=True, normalise_to_SLN=False, mc_SLN=None, log_interp=False, extrapolate_lower=False):
+def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=False, normalise_to_SLN=False, mc_SLN=None, log_interp=False, extrapolate_lower=False):
     """
     Estimate the numerical mass function shown in Fig. 5 of 2009.03204 evaluated
     at an arbitrary mass m, with peak mass m_p, using linear interpolation.
@@ -225,14 +225,14 @@ def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=True
     custom_mp : Boolean
         If True, uses the input m_p for the peak mass and rescales the masses
         at which the mass function is evaluated. Otherwise, use the masses
-        shown in Fig. 5 of 2009.03204.
+        shown in Fig. 5 of 2009.03204. The default is True.
     params : Array-like, optional
     	Parameters of the PBH fitting function. Only required if 
         normalise_to_CC3 == True or normalise_to_SLN == True. The default is 
         None.
     normalise_to_CC3 : Boolean, optional
         If True, normalise the mass function so its maximum value matches the
-        maximum of the CC3 fit. The default is True. 
+        maximum of the CC3 fit. The default is False. 
     normalise_to_SLN : Boolean, optional
         If True, normalise the mass function so its maximum value matches the
         maximum of the SLN fit. The default is False.
@@ -291,6 +291,7 @@ def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=True
     else:
         # Estimate normalisation factor for the MF
         normalisation_factor = 1 / np.trapz(mf_data, m_data)
+        m_scaled = m_data
         
     mf_values = []
     m_lower = m[m < min(m_scaled)]
@@ -494,10 +495,10 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     
     """
     # If delta-function mass function constraints are only calculated for PBH masses greater than 1e18g, ignore the effect of evaporation
-    """
+    
     if min(m_delta) > 1e18:
         evolved = False
-    """
+    
     if evolved:
         # Find PBH masses at time t
         m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
@@ -515,6 +516,8 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
             # Interpolate the evolved mass function at the masses that the delta-function mass function constraints are evaluated at
             m_values_input_nozeros = m_values_input[psi_evolved_values > 0]
             psi_evolved_values_nozeros = psi_evolved_values[psi_evolved_values > 0]
+            if psi_initial == mf_numeric:
+                print("m_c = {:.2e} g".format(m_c))
 
             psi_evolved_interp = 10**np.interp(np.log10(m_delta), np.log10(m_values_input_nozeros), np.log10(psi_evolved_values_nozeros), left=-100, right=-100)
             
@@ -3044,15 +3047,15 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # Peak mass values
-    mp_values = np.logspace(16, np.log10(5.05e17), 5)
+    mp_values = np.logspace(14, np.log10(5.05e17), 5)
     
     # Initial and evolved PBH masses
     n_steps = 1000
-    m_delta = [1e14, 1e16]
+    m_delta = [1e12, 1e16]
     m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
     m_evolved_values = mass_evolved(m_init_values, t=t_0)
     
-    i = 3
+    i = 0
     params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
     params_CC3 = [alphas_CC3[i], betas[i]]
     
@@ -3063,7 +3066,7 @@ if "__main__" == __name__:
         fig, ax = plt.subplots(figsize=(6, 5))
         fig1, ax1 = plt.subplots(figsize=(6, 5))
         
-        mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], params=params_CC3)
+        mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], extrapolate_lower=True)
         mf_numeric_values_evolved = psi_evolved(mf_numeric_values_init, m_evolved_values, m_init_values)
                     
         mf_LN_values_init = LN(m_init_values, m_p, sigmas_LN[i])
