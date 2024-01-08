@@ -209,7 +209,7 @@ def PL_MF(m_values, m_min, m_max, gamma=-1/2):
     return np.array(PL_MF_values)
 
 
-def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=True, normalise_to_SLN=False, mc_SLN=None, log_interp=False):
+def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=True, normalise_to_SLN=False, mc_SLN=None, log_interp=False, extrapolate_lower=False):
     """
     Estimate the numerical mass function shown in Fig. 5 of 2009.03204 evaluated
     at an arbitrary mass m, with peak mass m_p, using linear interpolation.
@@ -242,6 +242,9 @@ def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=True
     log_interp : Boolean, optional
         If True, use logarithmic interpolation to evaluate the MF. If False,
         use linear interpolation. The default is False.
+    extrapolate_lower : Boolean, optional
+        If True, extrapolate the MF at smaller masses than given in the data
+        using the power-law tail m^{1/gamma} from critical collapse.
         
     Returns
     -------
@@ -275,7 +278,7 @@ def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=True
         if normalise_to_SLN:
             normalise_to_CC3 = False
         
-        # Match maximum value of the numerical MF to the maximum value of the CC3 MF.
+        # Match maximum value of the numerical MF to the maximum value of the SLN or CC3 MF.
         if normalise_to_CC3:
             psi_max_CC3 = CC3(m_p, m_p, *params)
             normalisation_factor = psi_max_CC3 / max(mf_data)
@@ -288,11 +291,32 @@ def mf_numeric(m, m_p, Delta, custom_mp=True, params=None, normalise_to_CC3=True
     else:
         # Estimate normalisation factor for the MF
         normalisation_factor = 1 / np.trapz(mf_data, m_data)
-
-    if log_interp == False:
-        return np.interp(m, m_scaled, mf_data, 0, 0) * normalisation_factor
+        
+    mf_values = []
+    m_lower = m[m < min(m_scaled)]
+    m_upper = m[m > max(m_scaled)]
+    
+    m_mid = []
+    for m_value in m:
+        if m_value <= max(m_scaled) and m_value >= min(m_scaled):
+            m_mid.append(m_value)
+    
+    gamma = 0.36
+    
+    if extrapolate_lower:
+        mf_values_lower = mf_data[0] * np.power(m_lower/min(m_scaled), 1/gamma)
+    
     else:
-        return 10**np.interp(np.log10(m), np.log10(m_scaled), np.log10(mf_data), -np.infty, -np.infty) * normalisation_factor
+        mf_values_lower = np.zeros(len(m_lower))
+    
+    if log_interp == False:
+        mf_values_mid = np.interp(m_mid, m_scaled, mf_data, 0, 0) * normalisation_factor
+    else:
+        mf_values_mid = 10**np.interp(np.log10(m_mid), np.log10(m_scaled), np.log10(mf_data), -np.infty, -np.infty) * normalisation_factor
+    
+    mf_values = np.concatenate((mf_values_lower, mf_values_mid, np.zeros(len(m_upper))))
+    
+    return mf_values
 
 
 def m_peak_LN(m_c, sigma):
@@ -3124,8 +3148,8 @@ if "__main__" == __name__:
         # Range of PBH mass values to show for the fitting functions
         m_pbh_values_fits = np.logspace(np.log10(min(m_pbh_values))-2, np.log10(max(m_pbh_values))+2, 500)
 
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], normalise_to_CC3 = False, log_interp=True), color="tab:orange", linestyle="dotted", label="Lin interp.")
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], normalise_to_CC3 = False, log_interp=True), linestyle="None", color="tab:orange", marker="+", label="Log interp.")
+        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], normalise_to_CC3 = False, log_interp=False, extrapolate_lower=True), color="tab:orange", linestyle="dotted", label="Lin interp.")
+        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], normalise_to_CC3 = False, log_interp=True, extrapolate_lower=True), linestyle="None", color="tab:orange", marker="+", label="Log interp.")
         ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]]), color="g", linestyle="dashed", label="Normalised to CC3 max (lin interp.)")
         ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], params=[sigmas_SLN[i], alphas_SLN[i]], normalise_to_SLN=True, mc_SLN=np.exp(ln_mc_SLN[i])), color="b", linestyle="dashdot", label="Normalised to SLN max (lin interp.)")
         ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], log_interp=True), linestyle="None", color="g", marker="x", label="Normalised to CC3 max (log interp.)")
