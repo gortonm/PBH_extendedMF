@@ -309,7 +309,8 @@ def mf_numeric(m, m_p, Delta, extrapolate_lower=False, custom_mp=True, params=No
     gamma = 0.36
     
     if extrapolate_lower:
-        mf_values_lower = mf_data[0] * np.power(m_lower/min(m_scaled), 1/gamma)
+        mf_values_lower = mf_data[0] * np.power(m_lower/min(m_scaled), 1/gamma) * normalisation_factor
+        #mf_values_lower = mf_data[0] * np.power(m_lower/max(m_lower), 1/gamma)
     
     else:
         mf_values_lower = np.zeros(len(m_lower))
@@ -3067,7 +3068,7 @@ if "__main__" == __name__:
         fig, ax = plt.subplots(figsize=(6, 5))
         fig1, ax1 = plt.subplots(figsize=(6, 5))
         
-        mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i])
+        mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], extrapolate_lower=True)
         mf_numeric_values_evolved = psi_evolved_normalised(mf_numeric_values_init, m_evolved_values, m_init_values)
         
         if m_p == 1e16:
