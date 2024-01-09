@@ -205,6 +205,14 @@ if "__main__" == __name__:
 evolved = True
 mc_subaru = 10**np.linspace(17, 30, 1000)
 
+# If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse
+
+extrapolate_numeric_lower = True
+if extrapolate_numeric_lower:
+    extrapolate_numeric = "extrap_lower"
+else:
+    extrapolate_numeric = ""
+
 # Constraints for monochromatic MF.
 m_subaru_delta, f_max_subaru_delta = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
@@ -217,29 +225,32 @@ for i in range(len(Deltas)):
     params_SLN = [sigmas_SLN[i], alphas_SL[i]]
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
-    #params_PL = [m_max_PL, gamma_PL]
+    # Numeric MF parameters are the function arguments Delta, extrapolate_lower, custom_mp, params, normalise_to_CC3, normalise_to_SLN, mc_SLN, log_interp
+    if Deltas[j] < 2:
+        params_numeric = [Deltas[i], extrapolate_numeric_lower]
+    else:
+        params_numeric = [Deltas[i], extrapolate_numeric_lower, True, params_SLN, False, True, np.exp(ln_mc_SLN[j])]
     
     f_pbh_LN = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, LN, params_LN, evolved)
     f_pbh_SLN = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, SLN, params_SLN, evolved)
     f_pbh_CC3 = constraint_Carr(mc_subaru, m_subaru_delta, f_max_subaru_delta, CC3, params_CC3, evolved)
-    #f_pbh_PL = constraint_Carr(mc_values, m_delta, f_max_delta, PL_MF, params_PL)
+    f_pbh_numeric = constraint_Carr(mc_values, m_delta_total, f_max_total, mf_numeric, params_numeric, evolved, t)
     
     if evolved:
         data_filename_SLN = "./Data-tests/SLN_HSC_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
         data_filename_CC3 = "./Data-tests/CC3_HSC_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
         data_filename_LN = "./Data-tests/LN_HSC_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
-        #data_filename_PL = "./Data-tests/PL_HSC_Carr.txt"
-
+        data_filename_numeric = "./Data-tests/numeric_%s" % extrapolate_numeric + "Sugiyama20_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
     else:
         data_filename_SLN = "./Data/SLN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
         data_filename_CC3 = "./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
         data_filename_LN = "./Data/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i])
-        #data_filename_PL = "./Data/PL_HSC_Carr.txt"
+        data_filename_numeric = "./Data-tests/numeric_%s" % extrapolate_numeric + "Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i])
    
     np.savetxt(data_filename_SLN, [mc_subaru, f_pbh_SLN], delimiter="\t")
     np.savetxt(data_filename_CC3, [mc_subaru, f_pbh_CC3], delimiter="\t")
     np.savetxt(data_filename_LN, [mc_subaru, f_pbh_LN], delimiter="\t")
-    #np.savetxt(data_filename_PL, [mc_subaru, f_pbh_PL], delimiter="\t")
+    np.savetxt(data_filename_numeric, [mp_values_numeric, f_pbh_numeric], delimiter="\t")
 
 
 #%% Calculate constraints for extended MFs from 2009.03204.
@@ -248,11 +259,16 @@ for i in range(len(Deltas)):
 evolved = True
 mc_values = 10**np.linspace(17, 29, 1000)
 
+# If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse
+
+extrapolate_numeric_lower = True
+if extrapolate_numeric_lower:
+    extrapolate_numeric = "extrap_lower"
+else:
+    extrapolate_numeric = ""
+
 # Constraints for deltachromatic MF.
 m_delta, f_max_delta = load_data("./1905.06066/1905.06066_Fig8_finite+wave.csv")
-
-# Maximum mass at which the power-law MF is defined
-m_max_PL = 100 * max(m_delta)   
 
 # Mass function parameter values, from 2009.03204.
 [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SL, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -263,27 +279,32 @@ for i in range(len(Deltas)):
     params_SLN = [sigmas_SLN[i], alphas_SL[i]]
     params_CC3 = [alphas_CC[i], betas[i]]
     params_LN = [sigmas_LN[i]]
-    #params_PL = [m_max_PL, gamma_PL]
-    
+    # Numeric MF parameters are the function arguments Delta, extrapolate_lower, custom_mp, params, normalise_to_CC3, normalise_to_SLN, mc_SLN, log_interp
+    if Deltas[j] < 2:
+        params_numeric = [Deltas[i], extrapolate_numeric_lower]
+    else:
+        params_numeric = [Deltas[i], extrapolate_numeric_lower, True, params_SLN, False, True, np.exp(ln_mc_SLN[j])]
+        
     f_pbh_LN = constraint_Carr(mc_values, m_delta, f_max_delta, LN, params_LN, evolved)
     f_pbh_SLN = constraint_Carr(mc_values, m_delta, f_max_delta, SLN, params_SLN, evolved)
     f_pbh_CC3 = constraint_Carr(mc_values, m_delta, f_max_delta, CC3, params_CC3, evolved)
-    #f_pbh_PL = constraint_Carr(mc_values, m_delta, f_max_delta, PL_MF, params_PL, evolved)
+    f_pbh_numeric = constraint_Carr(mc_values, m_delta_total, f_max_total, mf_numeric, params_numeric, evolved, t)
     
     if evolved:
         data_filename_SLN = "./Data-tests/SLN_Sugiyama20_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
         data_filename_CC3 = "./Data-tests/CC3_Sugiyama20_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
         data_filename_LN = "./Data-tests/LN_Sugiyama20_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
+        data_filename_numeric = "./Data-tests/numeric_%s" % extrapolate_numeric + "Sugiyama20_Carr_Delta={:.1f}_evolved.txt".format(Deltas[i])
     else:
         data_filename_SLN = "./Data/SLN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i])
         data_filename_CC3 = "./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i])
         data_filename_LN = "./Data/LN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i])
+        data_filename_numeric = "./Data-tests/numeric_%s" % extrapolate_numeric + "Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[i])
    
     np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
     np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
     np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")
-    #np.savetxt(data_filename_PL, [mc_values, f_pbh_PL], delimiter="\t")   
-
+    np.savetxt(data_filename_numeric, [mp_values_numeric, f_pbh_numeric], delimiter="\t")
 
 #%% Calculate constraints for extended MFs from 2009.03204.
 # Calculate how constraints are affected by including a power-law extrapolation below 9e21g
