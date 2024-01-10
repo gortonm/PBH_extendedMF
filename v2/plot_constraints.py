@@ -952,7 +952,9 @@ if "__main__" == __name__:
         plot_existing = True
         plot_prospective = False
         
-        mf = SLN
+        extrapolate_numeric_lower = False
+                
+        mf = mf_numeric
         Delta_index = 6
         
         if mf == LN:
@@ -964,35 +966,40 @@ if "__main__" == __name__:
         elif mf == CC3:
             params = [alphas_CC3[Delta_index], betas[Delta_index]]      
             mf_string = "CC3"
+        elif mf == mf_numeric:
+            mf_string = "numeric"
+            if extrapolate_numeric_lower:
+                mf_string += "_extrap_lower"
+
         
         fig, ax = plt.subplots(figsize=(8.5, 5.5))
         
         if plot_existing:
-            plotter_GC_Isatis(Deltas, Delta_index, ax, color="b", mf=mf, params=params)
-            ax.text(3e17, 0.6,"GC photons", fontsize="xx-small", color="b")
+            #plotter_GC_Isatis(Deltas, Delta_index, ax, color="b", mf=mf, params=params)
+            #ax.text(3e17, 0.6,"GC photons", fontsize="xx-small", color="b")
             
             #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=False, mf=mf)
-            mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=mf)
+            #mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=mf)
             #mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=mf, prop_B_lower=True)
 
             #ax.plot(mp_propA, f_PBH_propA, color="r")
-            ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r")
+            #ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r")
             #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r")
            
             #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=True, mf=mf)
-            mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf)
-            #mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf, prop_B_lower=True)
+            #mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf)
+            mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf, prop_B_lower=True)
             
             #ax.plot(mp_propA, f_PBH_propA, color="r", linestyle="dashed")
-            ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
-            #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r", linestyle="dashed")
+            #ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
+            ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r", linestyle="dashed")
         
             ax.text(1.3e15, 0.3,"Voyager 1", fontsize="xx-small", color="r")    
             
             plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashdot", mf=mf)
             ax.text(1.2e17, 0.002, "Photons \n (from $e^+/e^-$ annihilation)", fontsize="xx-small", color="orange")
         
-            plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey", mf=mf)
+            plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey", mf=mf, show_label=False)
             ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="tab:grey")
             
             # Calculate uncertainty in 511 keV line from the propagation model
@@ -1025,7 +1032,7 @@ if "__main__" == __name__:
                 mp_CMB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_CMB]
                 mp_511keV = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_511keV]
                 mp_Berteaud = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Berteaud]
-            elif mf == CC3:
+            elif mf == CC3 or mf == mf_numeric:
                 mp_CMB = mc_CMB
                 mp_511keV = mc_511keV
                 mp_Berteaud = mc_Berteaud
@@ -1103,18 +1110,18 @@ if "__main__" == __name__:
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
     plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = False
+    plot_KP23 = True
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
-    plot_BC19 = True
+    plot_BC19 = False
     # If True, plot unevolved MF constraint
     plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
     plot_fracdiff = False
     # If True, plot the fractional difference between the different fitting functions
-    plot_fracdiff_fits = True
+    plot_fracdiff_fits = False
     
     # Choose colors to match those from Fig. 5 of 2009.03204
-    colors = ['silver', 'tab:red', 'tab:blue', 'k', 'k']
+    colors = ['silver', 'tab:red', 'tab:blue', 'k', 'orange']
     
     # Parameters used for convergence tests in Galactic Centre constraints.
     cutoff = 1e-4
@@ -1134,7 +1141,7 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if Deltas[i] in [0]:
+        if Deltas[i] in [2, 5]:
                         
             fig, ax = plt.subplots(figsize=(9, 5))
             
@@ -1159,7 +1166,6 @@ if "__main__" == __name__:
                 plotter_GC_Isatis(Deltas, i, ax, mf=SLN, color=colors[2], params=[sigmas_SLN[i], alphas_SLN[i]], linestyle=(0, (5, 7)))
                 plotter_GC_Isatis(Deltas, i, ax, mf=CC3, color=colors[3], params=[alphas_CC3[i], betas[i]], linestyle="dashed")
     
-                
                 if plot_unevolved and plot_fracdiff:
                     fig1, ax1a = plt.subplots(figsize=(6,6))
                     
@@ -1226,7 +1232,8 @@ if "__main__" == __name__:
                 plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
                 plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
                 plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
-                
+                plotter_KP23(Deltas, i, ax, color=colors[4], mf=mf_numeric, linestyle="solid")
+               
                 
                 # If required, plot the fractional difference from the delta-function MF constraint
                 if plot_fracdiff:
@@ -1315,6 +1322,8 @@ if "__main__" == __name__:
                     plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
                     plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
                     plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
+                    plotter_BC19(Deltas, i, ax, color=colors[4], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
+                    plotter_BC19(Deltas, i, ax, color=colors[4], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved)
     
                 ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                 ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -1406,15 +1415,12 @@ if "__main__" == __name__:
                 fig2.tight_layout()
                 fig2.savefig("./Tests/Figures/Fracdiff_fits/Subaru_Delta={:.1f}.png".format(Deltas[i]))
  
-            if Deltas[i] < 5:
-                show_label_Subaru = False
-            else:
-                show_label_Subaru = True
             # Plot Subaru-HSC constraints        
-            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=show_label_Subaru)
-            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=(0, (5, 1)), show_label=show_label_Subaru)
-            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=show_label_Subaru)
-            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=show_label_Subaru)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=False)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=(0, (5, 1)), show_label=False)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=False)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=False)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[4], mf=mf_numeric, show_label=False)
     
             set_ticks_grid(ax)
             
