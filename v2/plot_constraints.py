@@ -13,7 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from extended_MF_checks import envelope, load_results_Isatis
-from preliminaries import load_data, m_max_SLN, LN, SLN, CC3, frac_diff, constraint_Carr
+from preliminaries import load_data, m_max_SLN, LN, SLN, CC3, mf_numeric, frac_diff, constraint_Carr
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24, 'font.family':'serif'})
@@ -39,7 +39,7 @@ plt.style.use('tableau-colorblind10')
 [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
 
-def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True, exponent_PL_lower=2, approx=False):
+def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True, exponent_PL_lower=2, approx=False, extrapolate_numeric_lower=False):
     """
     Load extended MF constraints from Galactic Centre photons.
 
@@ -59,6 +59,8 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
         Denotes the exponent of the power-law used to extrapolate the delta-function MF constraint. The default is 2.
     approx : Boolean, optional
         If True, load constraints obtained using f_max calculated from Isatis. Otherwise, load constraints calculated from the minimum constraint over each energy bin. The default is False.
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
 
     Returns
     -------
@@ -90,17 +92,22 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
             mf_string = "SLN"
         elif mf==CC3:
             mf_string = "CC3"
+        elif mf==mf_numeric:
+            if extrapolate_numeric_lower:
+                extrapolate_numeric = "extrap_lower"
+            else:
+                extrapolate_numeric = ""   
+            mf_string = "numeric_%s" % extrapolate_numeric
 
-            
         f_PBH_instrument = []
         
         for k in range(len(constraints_names_short)):
             # Load constraints for an evolved extended mass function obtained from each instrument
                     
             if approx:
-                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_approx%s.txt" % evolved_string
+                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr_approx%s" % evolved_string + "_Delta={:.1f}.txt".format(Deltas[Delta_index])
             else:
-                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr%s.txt" % evolved_string
+                data_filename = data_folder + "/%s_GC_%s" % (mf_string, constraints_names_short[k]) + "_Carr%s" % evolved_string + "_Delta={:.1f}.txt".format(Deltas[Delta_index])
             
             mc_values, f_PBH_k = np.genfromtxt(data_filename, delimiter="\t")
     
@@ -123,7 +130,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
     return np.array(mp_GC), np.array(f_PBH_GC)
 
     
-def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower=2):
+def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower=2, extrapolate_numeric_lower=False):
     """
     Load extended MF constraints from the delta-function MF constraints obtained by Korwar & Profumo (2023) [2302.04408].
 
@@ -139,6 +146,8 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
         If True, use the evolved form of the fitting function. The default is True.
     exponent_PL_lower : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-function MF constraint. The default is 2.
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
 
     Returns
     -------
@@ -185,10 +194,18 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
         data_filename = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
         mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
 
+    elif mf==mf_numeric:
+        if extrapolate_numeric_lower:
+            extrapolate_numeric = "extrap_lower"
+        else:
+            extrapolate_numeric = ""   
+        data_filename = data_folder + "/numeric_%s" % extrapolate_numeric  + "_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
+        mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
+
     return np.array(mp_KP23), np.array(f_PBH_KP23)
 
     
-def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None, evolved=True, exponent_PL_lower=2, prop_B_lower=False):
+def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None, evolved=True, exponent_PL_lower=2, prop_B_lower=False, extrapolate_numeric_lower=False):
     """
     Load extended MF constraints from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].
 
@@ -208,6 +225,8 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
         If True, use the evolved form of the fitting function. The default is True.
     exponent_PL_lower : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-function MF constraint. The default is 2.
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
 
     Returns
     -------
@@ -258,11 +277,19 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
     elif mf == CC3:
         data_filename = data_folder + "/CC3_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
         mp_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
+    
+    elif mf==mf_numeric:
+        if extrapolate_numeric_lower:
+            extrapolate_numeric = "extrap_lower"
+        else:
+            extrapolate_numeric = ""   
+        data_filename = data_folder + "/numeric_%s" % extrapolate_numeric  + "_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
+        mp_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
         
     return np.array(mp_BC19), np.array(f_PBH_BC19)
 
     
-def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
+def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None, extrapolate_numeric_lower=False):
     """
     Load extended MF constraints from the Subaru-HSC delta-function MF constraints obtained by Croon et al. (2020) [2007.12697].
 
@@ -274,6 +301,8 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
         Index of the array Delta corresponding to the desired value of Delta.
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
 
     Returns
     -------
@@ -297,11 +326,18 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None):
 
     elif mf == CC3:
         mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
- 
+
+    elif mf==mf_numeric:
+        if extrapolate_numeric_lower:
+            extrapolate_numeric = "extrap_lower"
+        else:
+            extrapolate_numeric = ""   
+        mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data-tests/numeric_%s" % extrapolate_numeric + "_HSC_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")    
+
     return np.array(mp_Subaru), np.array(f_PBH_Subaru)
 
 
-def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=True, NFW=True):
+def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, extrapolate_numeric_lower=False):
     """
     Load extended MF constraints from the prospective GECCO delta-function MF constraints from Coogan et al. (2023) [2101.10370].
 
@@ -319,6 +355,8 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=T
         Denotes the exponent of the power-law used to extrapolate the delta-function MF constraint. The default is 2.
     NFW : Boolean, optional
         If True, load constraints obtained using an NFW profile. If False, load constraints obtained using an Einasto profile.   
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
 
     Returns
     -------
@@ -351,11 +389,18 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=T
 
     elif mf == CC3:
         mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
+
+    elif mf == mf_numeric:
+        if extrapolate_numeric_lower:
+            extrapolate_numeric = "extrap_lower"
+        else:
+            extrapolate_numeric = ""   
+        mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/numeric_%s" % extrapolate_numeric  + "_2101.01370_Carr_Delta={:.1f}_".format(Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
         
     return np.array(mp_GECCO), np.array(f_PBH_GECCO)
 
 
-def load_data_Sugiyama(Deltas, Delta_index, mf=None):
+def load_data_Sugiyama(Deltas, Delta_index, mf=None, extrapolate_numeric_lower=False):
     """
     Load extended MF constraints from the prospective white dwarf microlensing delta-function MF constraints from Sugiyama et al. (2020) [1905.06066].
 
@@ -374,6 +419,8 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None):
         Peak masses.
     f_PBH_Subaru : Array-like
         Constraint on f_PBH.
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
 
     """    
     if mf == None:
@@ -389,7 +436,14 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None):
 
     elif mf == CC3:
         mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t") 
-        
+  
+    elif mf==mf_numeric:
+        if extrapolate_numeric_lower:
+            extrapolate_numeric = "extrap_lower"
+        else:
+            extrapolate_numeric = ""   
+        mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data-tests/numeric_%s" % extrapolate_numeric + "_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")            
+  
     return np.array(mp_Sugiyama), np.array(f_PBH_Sugiyama)
 
     
@@ -408,7 +462,6 @@ def find_label(mf=None):
         Label denoting the fitting function used.
 
     """
-    
     if mf == None:
         label="Delta func."
     elif mf == LN:
@@ -451,7 +504,7 @@ def set_ticks_grid(ax):
     ax.grid()
 
 
-def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=False, extrapolate_numeric_lower=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from Galactic Centre photons.    
 
@@ -473,6 +526,8 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
         If True, use the evolved form of the fitting function. The default is True.
     approx : Boolean, optional
         If True, plot constraints obtained using f_max calculated from Isatis. Otherwise, plot constraints calculated from the minimum constraint over each energy bin. The default is False.
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
@@ -487,14 +542,8 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
     None.
 
     """
-    
-    mp, f_PBH = load_data_GC_Isatis(Deltas, Delta_index, mf, params, evolved, exponent_PL_lower, approx)
-    """
-    if not evolved:
-        alpha=0.4
-    else:
-        alpha=1
-    """
+    mp, f_PBH = load_data_GC_Isatis(Deltas, Delta_index, mf, params, evolved, exponent_PL_lower, approx, extrapolate_numeric_lower)
+
     if show_label:
         label = find_label(mf)
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, marker=marker)
@@ -502,7 +551,7 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, prop_B_lower=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, extrapolate_numeric_lower=False, show_label=False, prop_B_lower=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].    
 
@@ -526,6 +575,10 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
         Denotes the exponent of the power-law used to extrapolate the delta-function MF. The default is 2.
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is True.
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
@@ -542,13 +595,8 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
     None.
 
     """
-    mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf, evolved, exponent_PL_lower, prop_B_lower)
-    """
-    if not evolved:
-        alpha=0.4
-    else:
-        alpha=1
-    """
+    mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf, evolved, exponent_PL_lower, prop_B_lower, extrapolate_numeric_lower)
+
     if show_label:
         label = find_label(mf)
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, marker=marker)
@@ -556,7 +604,7 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, alpha=1):
+def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, extrapolate_numeric_lower=False, exponent_PL_lower=2, evolved=True, alpha=1):
     """
     Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].
     Unlike plotter_BC19(), show the range of constraints that is possible due to uncertainties arising from the electron/positron propagation model.       
@@ -579,6 +627,8 @@ def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, 
         Denotes the exponent of the power-law used to extrapolate the delta-function MF. The default is 2.
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is True.
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
     alpha : Float, optional
         Transparency of the line. The default is 1 (zero transparency).
 
@@ -588,9 +638,9 @@ def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, 
 
     """
     
-    mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower)
-    mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower)
-    mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower, prop_B_lower=True)
+    mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower, extrapolate_numeric_lower=extrapolate_numeric_lower)
+    mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower, extrapolate_numeric_lower=extrapolate_numeric_lower)
+    mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=with_bkg_subtr, mf=mf, evolved=evolved, exponent_PL_lower=exponent_PL_lower, prop_B_lower=True, extrapolate_numeric_lower=extrapolate_numeric_lower)
     
     """
     ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color=color, linewidth=0, alpha=alpha)
@@ -600,7 +650,7 @@ def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, 
     ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=alpha)
    
 
-def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrapolate_numeric_lower=False, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the delta-function MF constraints obtained by Korwar & Profumo (2023) [2302.04408].    
 
@@ -616,6 +666,8 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, e
         Color to use for plotting.
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
     exponent_PL_lower : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-function MF. The default is 2.
     evolved : Boolean, optional
@@ -637,13 +689,8 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, e
 
     """    
     
-    mp, f_PBH = load_data_KP23(Deltas, Delta_index, mf, evolved, exponent_PL_lower)
-    """
-    if not evolved:
-        alpha=0.4
-    else:
-        alpha=1
-    """
+    mp, f_PBH = load_data_KP23(Deltas, Delta_index, mf, evolved, exponent_PL_lower, extrapolate_numeric_lower)
+
     if show_label:
         label = find_label(mf)
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, marker=marker)
@@ -651,7 +698,7 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, e
         ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
     
-def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, extrapolate_numeric_lower=False, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the Subaru-HSC delta-function MF constraints obtained by Croon et al. (2020) [2007.12697].    
 
@@ -667,12 +714,14 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=T
         Color to use for plotting.
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
-        Linestyle to use for pplotting. The default is "solid".
+        Linestyle to use for plotting. The default is "solid".
     linewidth : Float, optional
-        Line width to use for pplotting. The default is 1.
+        Line width to use for plotting. The default is 1.
     marker : String, optional
         Marker to use for plotting. The default is None.
     alpha : Float, optional
@@ -684,7 +733,7 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=T
 
     """    
     
-    mp_Subaru, f_PBH_Subaru = load_data_Subaru_Croon20(Deltas, Delta_index, mf)
+    mp_Subaru, f_PBH_Subaru = load_data_Subaru_Croon20(Deltas, Delta_index, mf, extrapolate_numeric_lower)
     
     if show_label:
         label = find_label(mf)
@@ -693,7 +742,7 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, show_label=T
         ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
         
         
-def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, extrapolate_numeric_lower=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the prospective GECCO delta-function MF constraints from Coogan et al. (2023) [2101.10370].    
 
@@ -715,6 +764,8 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
         If True, use the evolved form of the fitting function. The default is True.
     NFW : Boolean, optional
         If True, load constraints obtained using an NFW profile. If False, load constraints obtained using an Einasto profile.   
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
@@ -732,7 +783,7 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
 
     """    
     
-    mp_GECCO, f_PBH_GECCO = load_data_GECCO(Deltas, Delta_index, mf, exponent_PL_lower=exponent_PL_lower, evolved=evolved, NFW=NFW)
+    mp_GECCO, f_PBH_GECCO = load_data_GECCO(Deltas, Delta_index, mf, extrapolate_numeric_lower=extrapolate_numeric_lower, exponent_PL_lower=exponent_PL_lower, evolved=evolved, NFW=NFW)
     
     if show_label:
         label = find_label(mf)
@@ -741,7 +792,7 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
         ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
-def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, extrapolate_numeric_lower=False, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the prospective white dwarf microlensing delta-function MF constraints from Sugiyama et al. (2020) [1905.06066].
 
@@ -757,6 +808,8 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, l
         Color to use for plotting.
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
+    extrapolate_numeric_lower : Boolean, optional
+        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
@@ -774,7 +827,7 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, show_label=True, l
 
     """    
 
-    mp_Sugiyama, f_PBH_Sugiyama = load_data_Sugiyama(Deltas, Delta_index, mf)
+    mp_Sugiyama, f_PBH_Sugiyama = load_data_Sugiyama(Deltas, Delta_index, mf, extrapolate_numeric_lower)
     
     if show_label:
         label = find_label(mf)
@@ -827,7 +880,7 @@ if "__main__" == __name__:
     
     if plot_existing:
         plotter_GC_Isatis(Deltas, Delta_index, ax, color="b")
-        ax.text(5e16, 0.6,"GC photons", fontsize="xx-small", color="b")
+        ax.text(1.2e15, 5e-3,"  GC \n photons", fontsize="xx-small", color="b")
         
         #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=False, mf=None)
         mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=None)
@@ -854,10 +907,10 @@ if "__main__" == __name__:
         #ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
         ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r", linestyle="dashed")
     
-        ax.text(1.5e15, 0.3,"Electrons/\npositrons \n (Voyager 1)", fontsize="xx-small", color="r")    
+        ax.text(1.2e15, 0.15,"Electrons/\npositrons \n (Voyager 1)", fontsize="xx-small", color="r")    
         
         plotter_KP23(Deltas, Delta_index, ax, color="orange", linestyle="dashdot")
-        ax.text(1.4e17, 0.004, "Soft gamma-rays \n (INTEGRAL/SPI)", fontsize="xx-small", color="orange")
+        ax.text(4e16, 0.0001, "Soft gamma-rays \n (INTEGRAL/SPI)", fontsize="xx-small", color="orange")
     
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey")
         ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="tab:grey")
@@ -868,7 +921,7 @@ if "__main__" == __name__:
         """
     if plot_prospective:
         plotter_GECCO(Deltas, Delta_index, ax, color="#5F9ED1", linestyle="dotted")
-        ax.text(4e17, 0.1,"Future MeV \n gamma-rays", fontsize="xx-small", color="#5F9ED1")
+        ax.text(2e17, 0.005,"Future MeV \n gamma-rays", fontsize="xx-small", color="#5F9ED1")
     
         plotter_Sugiyama(Deltas, Delta_index, ax, color="k", linestyle="dotted")
         ax.text(1e21, 0.002,"WD microlensing", fontsize="xx-small", color="k")
@@ -878,7 +931,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xlabel("$m~[\mathrm{g}]$")
-    ax.set_ylim(1e-3, 1)
+    ax.set_ylim(1e-5, 1)
     ax.set_xlim(1e15, 1e24)
     
     ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
