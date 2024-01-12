@@ -209,10 +209,11 @@ def PL_MF(m_values, m_min, m_max, gamma=-1/2):
     return np.array(PL_MF_values)
 
 
-def mf_numeric(m, m_p, Delta, extrapolate_lower=False, custom_mp=True, params=None, normalise_to_CC3=False, normalise_to_SLN=False, mc_SLN=None, log_interp=True):
+def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, gamma=0.36, custom_mp=True, normalised=False, log_interp=True):
     """
-    Estimate the numerical mass function shown in Fig. 5 of 2009.03204 evaluated
-    at an arbitrary mass m, with peak mass m_p, using linear interpolation.
+    Estimate the numerical mass function shown in Fig. 5 of 2009.03204 
+    evaluated at an arbitrary mass m, with peak mass m_p, using linear 
+    interpolation.
 
     Parameters
     ----------
@@ -222,26 +223,23 @@ def mf_numeric(m, m_p, Delta, extrapolate_lower=False, custom_mp=True, params=No
         Peak mass.
     Delta : Float
         Power spectrum peak width.
-    extrapolate_lower : Boolean, optional
+    extrap_lower : Boolean, optional
         If True, extrapolate the MF at smaller masses than given in the data
-        using the power-law tail m^{1/gamma} from critical collapse.
+        using the power-law tail m^{1/gamma} from critical collapse. The 
+        default is False.
+    extrap_upper_const : Boolean, optional
+        If True, extrapolate the MF at larger masses than given in the data
+        as a constant. The default is False.
+    gamma : Float, optional
+        Inverse of the power-law exponent used when extrap_lower = True. 
+        The default is 0.36.
     custom_mp : Boolean
         If True, uses the input m_p for the peak mass and rescales the masses
         at which the mass function is evaluated. Otherwise, use the masses
         shown in Fig. 5 of 2009.03204. The default is True.
-    params : Array-like, optional
-    	Parameters of the PBH fitting function. Only required if 
-        normalise_to_CC3 == True or normalise_to_SLN == True. The default is 
-        None.
-    normalise_to_CC3 : Boolean, optional
-        If True, normalise the mass function so its maximum value matches the
-        maximum of the CC3 fit. The default is False. 
-    normalise_to_SLN : Boolean, optional
-        If True, normalise the mass function so its maximum value matches the
-        maximum of the SLN fit. The default is False.
-    mc_SLN : Float, optional
-    	Location parameter of the best-fit SLN MF. Only required if 
-        normalise_to_SLN == True. The default is None.
+    normalised : Boolean
+        If True, manually normalise the MF after performing any extrapolations.
+        The default is False.
     log_interp : Boolean, optional
         If True, use logarithmic interpolation to evaluate the MF. If False,
         use linear interpolation. The default is True.
@@ -253,20 +251,20 @@ def mf_numeric(m, m_p, Delta, extrapolate_lower=False, custom_mp=True, params=No
 
     """
     
-    # Load data from numerical MFs shown in 2009.03204 provided by Andrew Gow.
+    # Load data from numerical MFs provided by Andrew Gow.
     if Delta < 0.1:
         log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Delta_k35.txt", unpack=True, skip_header=1)
-        # Set the mass function to zero for masses where the data gives a negative value
-        mf_data = [max(0, mf_data_value) for mf_data_value in mf_data_loaded]
-        m_data = np.exp(log_m_data)
-    elif Delta < 2:
+        # Only include the range of masses for which the numerical MF data has non-zero positive values.
+        mf_data = mf_data_loaded[mf_data_loaded > 0]
+        m_data = np.exp(log_m_data[mf_data_loaded > 0])
+    elif Delta < 5:
         log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
-        # Set the mass function to zero for masses where the data gives a negative value
-        mf_data = [max(0, mf_data_value) for mf_data_value in mf_data_loaded]
-        m_data = np.exp(log_m_data)
+        # Only include the range of masses for which the numerical MF data has non-zero positive values.
+        mf_data = mf_data_loaded[mf_data_loaded > 0]
+        m_data = np.exp(log_m_data[mf_data_loaded > 0])
     else:
         log_m_data_tabulated, mf_data_tabulated = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
-        # For the Delta = 2 and Delta = 5 cases, load the data from Fig. 5, since this covers a wider PBH mass range than that provided by Andrew Gow
+        # For the Delta = 5 case, load the data from Fig. 5, since this covers a wider PBH mass range than that provided by Andrew Gow
         m_data, mf_data_Fig5 = load_data("2009.03204/Delta_{:.1f}_numeric.csv".format(Delta))
         # Rescale the MF data from Fig. 5 (which is scaled by the maximum of the MF) so that its maximum matches the maximum from the data provided by Andrew Gow
         mf_data = mf_data_Fig5 * max(mf_data_tabulated) / max(mf_data_Fig5)
@@ -276,25 +274,7 @@ def mf_numeric(m, m_p, Delta, extrapolate_lower=False, custom_mp=True, params=No
         # and scale the masses so that the peak mass corresponds to m_p.
         mp_data = m_data[np.argmax(mf_data)]
         m_scaled = m_data * m_p / mp_data
- 
-        # Estimate normalisation factor for the MF
-        
-        if normalise_to_SLN:
-            normalise_to_CC3 = False
-        
-        # Match maximum value of the numerical MF to the maximum value of the SLN or CC3 MF.
-        if normalise_to_CC3:
-            psi_max_CC3 = CC3(m_p, m_p, *params)
-            normalisation_factor = psi_max_CC3 / max(mf_data)
-        elif normalise_to_SLN:
-            psi_max_SLN = SLN(m_max_SLN(mc_SLN, *params), mc_SLN, *params)
-            normalisation_factor = psi_max_SLN / max(mf_data)
-        else:
-            normalisation_factor = 1 / np.trapz(mf_data, m_scaled)
-        
     else:
-        # Estimate normalisation factor for the MF
-        normalisation_factor = 1 / np.trapz(mf_data, m_data)
         m_scaled = m_data
         
     mf_values = []
@@ -305,23 +285,29 @@ def mf_numeric(m, m_p, Delta, extrapolate_lower=False, custom_mp=True, params=No
     for m_value in m:
         if m_value <= max(m_scaled) and m_value >= min(m_scaled):
             m_mid.append(m_value)
-
-    gamma = 0.36
     
-    if extrapolate_lower:
-        mf_values_lower = mf_data[0] * np.power(m_lower/min(m_scaled), 1/gamma) * normalisation_factor
-        #mf_values_lower = mf_data[0] * np.power(m_lower/max(m_lower), 1/gamma)
-    
+    if extrap_lower:
+        mf_values_lower = mf_data[0] * np.power(m_lower/min(m_scaled), 1/gamma)
     else:
         mf_values_lower = np.zeros(len(m_lower))
     
     if log_interp == False:
-        mf_values_mid = np.interp(m_mid, m_scaled, mf_data, 0, 0) * normalisation_factor
+        mf_values_mid = np.interp(m_mid, m_scaled, mf_data, 0, 0)
     else:
-        mf_values_mid = 10**np.interp(np.log10(m_mid), np.log10(m_scaled), np.log10(mf_data), -np.infty, -np.infty) * normalisation_factor
-    mf_values = np.concatenate((mf_values_lower, mf_values_mid, np.zeros(len(m_upper))))
-       
-    return mf_values
+        mf_values_mid = 10**np.interp(np.log10(m_mid), np.log10(m_scaled), np.log10(mf_data), -np.infty, -np.infty)
+               
+    if extrap_upper_const:
+        mf_values_upper = mf_data[-1] * np.ones(len(m_upper))
+    else:
+        mf_values_upper = np.zeros(len(m_upper))
+    
+    mf_values = np.concatenate((mf_values_lower, mf_values_mid, mf_values_upper))
+      
+    if not normalised:
+        return mf_values
+    else:
+        normalisation_factor = 1 / np.trapz(mf_values, m)
+        return mf_values * normalisation_factor
 
 
 def m_peak_LN(m_c, sigma):
@@ -488,9 +474,9 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     params : Array-like
     	Parameters of the PBH mass function.
     evolved : Boolean
-    	If True, calculate constraints using the evolved PBH mass function.
+    	If True, calculate constraints using the evolved PBH mass function. The default is True.
     t : Float
-    	Time (after PBH formation) at which to evaluate PBH masses.
+    	If evolved == True, the time (after PBH formation) at which to evaluate PBH mass function. The default is t_0 (the present age of the Universe).
         
     Returns
     -------
@@ -498,11 +484,6 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
         Constraints on f_PBH.
     
     """
-    # If delta-function mass function constraints are only calculated for PBH masses greater than 1e18g, ignore the effect of evaporation
-    
-    if min(m_delta) > 1e18:
-        evolved = False
-    
     if evolved:
         # Find PBH masses at time t
         m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
@@ -2972,7 +2953,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     fig.tight_layout()
     
-#%% Find the slope of the numerical MFs obtained by Andrew Gow at masses much smaller than the peak mass
+#%% Find the slope of the numerical MFs obtained by Andrew Gow at masses much smaller than the peak mass. Other tests of the numerical MF calculation and extrapolation.
 if "__main__" == __name__:
     # Load the data from the numerical MFs from Andrew Gow
     
@@ -2984,7 +2965,6 @@ if "__main__" == __name__:
     
     colormap = mpl.colormaps['rainbow'].resampled(7)
     colors = colormap(range(7))
-    print(colors)
     
     for i in range(len(Deltas)):
                 
@@ -3020,13 +3000,16 @@ if "__main__" == __name__:
             ax1.plot(m_pbh_values_fits, LN(m_pbh_values_fits, m_c=mc_LN, sigma=sigmas_LN[i]), color="r", dashes=[6, 2], label="LN")            
             ax1.plot(m_pbh_values_fits, SLN(m_pbh_values_fits, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
             ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]]), color="k", linestyle="None", marker="x", label="Numeric (using mf_numeric)")
-                       
+            # Plot the numerical MF obtained using mf_numeric(). Test the method when the booleans extrapolate_lower = extrapolate_upper_const = True
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], extrap_lower=True, extrap_upper_const=True), color="k", linestyle="dashed")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=True, extrap_upper_const=True), color="k", linestyle="dotted")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True), color="k", linestyle="dotted")
+                     
             ax1.set_xlabel(r"$m~[M_\odot]$")
             ax1.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
             ax1.set_title("$\Delta={:.1f}$".format(Deltas[i]))
-            ax1.set_xlim(min(m_pbh_values), max(m_pbh_values))
-            ax1.set_ylim(1e-6, 1e-1)
+            ax1.set_xlim(min(m_pbh_values)/5, 5*max(m_pbh_values))
+            ax1.set_ylim(max(1e-8, min(mf_values)/10), 1e-1)
             ax1.set_xscale("log")
             ax1.set_yscale("log")
             ax1.legend(fontsize="xx-small")
@@ -3048,8 +3031,9 @@ if "__main__" == __name__:
 if "__main__" == __name__:
     
     # Peak mass values
-    mp_values = np.logspace(16, np.log10(5.05e17), 5)[0:1]
+    #mp_values = np.logspace(16, np.log10(5.05e17), 5)[0:1]
     #mp_values = np.logspace(14, 15, 10)
+    mp_values = [1e17]    
     
     # Initial and evolved PBH masses
     n_steps = 1000
@@ -3057,7 +3041,7 @@ if "__main__" == __name__:
     m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
     m_evolved_values = mass_evolved(m_init_values, t=t_0)
     
-    i = 0
+    i = 6
     params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
     params_CC3 = [alphas_CC3[i], betas[i]]
     
@@ -3068,11 +3052,14 @@ if "__main__" == __name__:
         fig, ax = plt.subplots(figsize=(6, 5))
         fig1, ax1 = plt.subplots(figsize=(6, 5))
         
-        mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], extrapolate_lower=True)
+        mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], extrap_upper_const=True)
         mf_numeric_values_evolved = psi_evolved_normalised(mf_numeric_values_init, m_evolved_values, m_init_values)
-        
-        if m_p == 1e16:
-            print(max(mf_numeric_values_evolved))
+
+        mf_numeric_values_init_no_extrap = mf_numeric(m_init_values, m_p, Deltas[i])
+        mf_numeric_values_evolved_no_extrap = psi_evolved_normalised(mf_numeric_values_init_no_extrap, m_evolved_values, m_init_values)      
+
+        print(mf_numeric_values_evolved_no_extrap[1200:1300] / mf_numeric_values_evolved[1200:1300] - 1) 
+        print(max(mf_numeric_values_evolved_no_extrap) / max(mf_numeric_values_evolved) - 1) 
                             
         mf_LN_values_init = LN(m_init_values, m_p, sigmas_LN[i])
         mf_LN_values_evolved = psi_evolved(mf_LN_values_init, m_evolved_values, m_init_values)
