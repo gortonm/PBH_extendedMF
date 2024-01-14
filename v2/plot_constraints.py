@@ -928,6 +928,57 @@ if "__main__" == __name__:
 
 #%% Plot all delta-function MF constraints
 
+epsilon = 0.4
+m_star = 5.1e14
+
+def f_PBH_beta_prime(m_values, beta_prime):
+    """
+    Calcualte f_PBH from the initial PBH fraction beta_prime, using Eq. 57 of 2002.12778.
+
+    Parameters
+    ----------
+    m_values : Array-like
+        PBH masses, in grams.
+    beta_prime : Array-like / float
+        Scaled fraction of the energy density of the Universe in PBHs at their formation time (see Eq. 8 of 2002.12778), at each mass in m_values.
+
+    Returns
+    -------
+    Array-like
+        Value of f_PBH evaluated at each mass in m_values.
+
+    """
+    return 3.81e8 * beta_prime * np.power(m_values / 1.989e33, -1/2)
+ 
+
+def beta_prime_gamma_rays(m_values, epsilon=0.4):
+    """
+    Calculate values of beta prime allowed from extragalactic gamma-rays, using the simple power-law expressions in 2002.12778.
+
+    Parameters
+    ----------
+    m_values : Array-like
+        PBH masses, in grams.
+    epsilon : Float, optional
+        Parameter describing the power-law dependence of x-ray and gamma-ray spectra on photon energy. The default is 0.4.
+
+    Returns
+    -------
+    Array-like
+        Scaled fraction of the energy density of the Universe in PBHs at their formation time (see Eq. 8 of 2002.12778), at each mass in m_values.
+
+    """
+    beta_prime_values = []
+    
+    for m in m_values:
+        if m < m_star:
+            beta_prime_values.append(5e-28 * np.power(m/m_star, -5/2-2*epsilon))
+        else:
+            beta_prime_values.append(5e-26 * np.power(m/m_star, 7/2+epsilon))
+    
+    return np.array(beta_prime_values)
+    
+
 if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -939,46 +990,39 @@ if "__main__" == __name__:
     Delta_index = 0
     
     if plot_existing:
-        #plotter_GC_Isatis(Deltas, Delta_index, ax, color="b")
-        #ax.text(1.2e15, 5e-3,"  GC \n photons", fontsize="xx-small", color="b")
-        
-        #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=False, mf=None)
-        #mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=None)
-        #mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=False, mf=None, prop_B_lower=True)
-        """
-        ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="r", linewidth=0, alpha=1)
-        ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="r", linewidth=0, alpha=1)
-        ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color="r", linewidth=0, alpha=1)
-        """
-        #ax.plot(mp_propA, f_PBH_propA, color="r")
-        #ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r")
-        #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r")
-       
-        #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=True, mf=None)
-        mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=None)
+        plotter_GC_Isatis(Deltas, Delta_index, ax, color="b")
+        ax.text(1.2e15, 5e-3,"  GC \n photons", fontsize="xx-small", color="b")
+               
         mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=None, prop_B_lower=True)
-        """
-        ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_upper, f_PBH_propB_upper), color="r", alpha=0., linestyle="dashed")
-        ax.fill_between(mp_propA, f_PBH_propA, np.interp(mp_propA, mp_propB_lower, f_PBH_propB_lower), color="r", alpha=0, linestyle="dashed")
-        ax.fill_between(mp_propB_upper, f_PBH_propB_upper, np.interp(mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color="r", alpha=0., linestyle="dashed")
-        """
-        
-        #ax.plot(mp_propA, f_PBH_propA, color="r", linestyle="dashed")
-        #ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
         ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r")
-    
         ax.text(1.5e15, 0.1,"Electrons/\npositrons \n (Voyager 1)", fontsize="xx-small", color="r")    
         
+        m_D20_v2, fPBH_D20 = load_data("1912.01014/1912.01014_Fig2_a__0_newaxes_2.csv")
+        r_s = 20    # scale radius, in kpc
+        R_min = 1.5    # minimum positron propagation distance, in kpc
+        R_max = 3.5    # maximim positron propagation distance, in kpc
+        annihilation_fraction = 0.8     # fraction of positrons produced in Galactic centre which annihilate, when R = 3.5 kpc
+        fPBH_D20_weakest = fPBH_D20 * (((np.log(1 + (R_max / r_s)) - R_max / (R_max + r_s))) / (np.log(1 + (R_min / r_s)) - R_min / (R_min + r_s))) / annihilation_fraction
+        ax.plot(m_D20_v2, fPBH_D20_weakest, color="pink")
+        ax.plot(m_D20_v2, fPBH_D20, color="pink", linestyle="dashdot")
+        ax.text(1e15, 0.02, "511 keV line", fontsize="xx-small", color="pink")
+        
+        m_EXGB_Carr = 10**np.arange(np.log10(1e14), np.log10(1e17), 0.1)
+        fPBH_EXGB_Carr = f_PBH_beta_prime(m_EXGB_Carr, beta_prime_gamma_rays(m_EXGB_Carr))
+        ax.plot(m_EXGB_Carr, fPBH_EXGB_Carr, color="purple")
+        ax.text(3e16, 3e-5, "EXGB (Carr et al. 2021 fit)", fontsize="xx-small", color="purple")
+
+            
         plotter_KP23(Deltas, Delta_index, ax, color="orange")
         ax.text(4e16, 0.0001, "Soft gamma-rays \n (INTEGRAL/SPI)", fontsize="xx-small", color="orange")
     
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey")
         ax.text(2.5e22, 0.4,"Subaru-HSC", fontsize="xx-small", color="tab:grey")
-        """
+        
         m_delta_values_Berteaud, f_max_Berteaud = load_data("2202.07483/2202.07483_Fig3.csv")
         ax.plot(m_delta_values_Berteaud, f_max_Berteaud, linestyle="dashdot", color="brown")
-        ax.text(1e17, 0.02, "GC photons \n (template fit)", fontsize="xx-small", color="brown")
-        """
+        ax.text(4e17, 0.2, "GC photons \n (template fit)", fontsize="xx-small", color="brown")
+        
     if plot_prospective:
         plotter_GECCO(Deltas, Delta_index, ax, color="#5F9ED1", linestyle="dotted")
         ax.text(2e17, 0.005,"Future MeV \n gamma-rays", fontsize="xx-small", color="#5F9ED1")
@@ -1479,8 +1523,8 @@ if "__main__" == __name__:
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=(0, (5, 1)), show_label=False)
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=False)
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=False)
-            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[4], mf=mf_numeric, evolved=False, show_label=False)
-            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[4], mf=mf_numeric, evolved=False, show_label=False, extrap_numeric_upper=True, linestyle="None", marker="x")
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[4], mf=mf_numeric, evolved=True, show_label=False)
+            plotter_Subaru_Croon20(Deltas, i, ax, color=colors[4], mf=mf_numeric, evolved=True, show_label=False, extrap_numeric_upper=True, linestyle="None", marker="x")
               
             # Set axis limits
             if Deltas[i] < 5:
