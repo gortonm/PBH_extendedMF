@@ -209,7 +209,7 @@ def PL_MF(m_values, m_min, m_max, gamma=-1/2):
     return np.array(PL_MF_values)
 
 
-def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, gamma=0.36, custom_mp=True, normalised=False, log_interp=True):
+def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extrap_upper_PL=False, normalised=False, gamma=0.36, custom_mp=True, log_interp=True):
     """
     Estimate the numerical mass function shown in Fig. 5 of 2009.03204 
     evaluated at an arbitrary mass m, with peak mass m_p, using linear 
@@ -233,13 +233,13 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, gamm
     gamma : Float, optional
         Inverse of the power-law exponent used when extrap_lower = True. 
         The default is 0.36.
+    normalised : Boolean
+        If True, manually normalise the MF after performing any extrapolations.
+        The default is False.
     custom_mp : Boolean
         If True, uses the input m_p for the peak mass and rescales the masses
         at which the mass function is evaluated. Otherwise, use the masses
         shown in Fig. 5 of 2009.03204. The default is True.
-    normalised : Boolean
-        If True, manually normalise the MF after performing any extrapolations.
-        The default is False.
     log_interp : Boolean, optional
         If True, use logarithmic interpolation to evaluate the MF. If False,
         use linear interpolation. The default is True.
@@ -257,7 +257,7 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, gamm
         # Only include the range of masses for which the numerical MF data has non-zero positive values.
         mf_data = mf_data_loaded[mf_data_loaded > 0]
         m_data = np.exp(log_m_data[mf_data_loaded > 0])
-    elif Delta < 5:
+    elif Delta < 2:
         log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
         # Only include the range of masses for which the numerical MF data has non-zero positive values.
         mf_data = mf_data_loaded[mf_data_loaded > 0]
@@ -298,6 +298,9 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, gamm
                
     if extrap_upper_const:
         mf_values_upper = mf_data[-1] * np.ones(len(m_upper))
+    elif extrap_upper_PL:
+        dlogpsi_dlogm = (np.log10(mf_data[-1]) - np.log10(mf_data[-2])) / (np.log10(m_scaled[-1]) - np.log10(m_scaled[-2]))
+        mf_values_upper = np.power(10, np.log10(mf_data[-1]) + dlogpsi_dlogm * (np.log10(m_upper) - np.log10(m_scaled[-1])))
     else:
         mf_values_upper = np.zeros(len(m_upper))
     
@@ -3001,9 +3004,8 @@ if "__main__" == __name__:
             ax1.plot(m_pbh_values_fits, SLN(m_pbh_values_fits, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
             ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
             # Plot the numerical MF obtained using mf_numeric(). Test the method when the booleans extrapolate_lower = extrapolate_upper_const = True
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], extrap_lower=True, extrap_upper_const=True), color="k", linestyle="dashed")
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=True, extrap_upper_const=True), color="k", linestyle="dotted")
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True), color="k", linestyle="dotted")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True), color="k", linestyle="dotted")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True), color="k", linestyle="solid")
                      
             ax1.set_xlabel(r"$m~[M_\odot]$")
             ax1.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
@@ -3026,91 +3028,64 @@ if "__main__" == __name__:
     ax.legend(fontsize="xx-small", title="$\Delta$")
     fig.tight_layout()
 
-#%% Plot fractional difference between numerical MF and the fitting functions used, when considering the evolved forms of the numerical MF and fitting functions.
+#%% Plot and calculate fractional difference between the numerical MF using different extrapolations at masses larger than that for which data is available.
 
 if "__main__" == __name__:
     
     # Peak mass values
     #mp_values = np.logspace(16, np.log10(5.05e17), 5)[0:1]
     #mp_values = np.logspace(14, 15, 10)
-    mp_values = [1e17]    
+    mp_values = [1e17]    # Approximate minimum peak mass for which microlensing constraints apply
     
     # Initial and evolved PBH masses
     n_steps = 1000
+    # Range of masses to include for the delta-function MF constraint
     m_delta = [1e11, 3e17]
+    # Initial masses matching those used in constraint_Carr() when calculating constraints for unevolved MFs.
+    m_init_unevolved = np.logspace(np.log10(min(m_delta)), np.log10(max(m_delta)), n_steps)
+    # Initial masses matching those used in constraint_Carr() when calculating constraints for evolved MFs.
     m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
     m_evolved_values = mass_evolved(m_init_values, t=t_0)
     
-    i = 6
-    params_SLN = [sigmas_SLN[i], alphas_SLN[i]]
-    params_CC3 = [alphas_CC3[i], betas[i]]
-    
-    # Controls x-axis range for fractional difference plots, as the value of the numerical mass function (compared to the maximum of the numreical MF)
-    threshold = 1e-2
-    
-    for m_p in mp_values:
-        fig, ax = plt.subplots(figsize=(6, 5))
-        fig1, ax1 = plt.subplots(figsize=(6, 5))
+    for i in range(len(Deltas)):
         
-        mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], extrap_upper_const=True)
-        mf_numeric_values_evolved = psi_evolved_normalised(mf_numeric_values_init, m_evolved_values, m_init_values)
-
-        mf_numeric_values_init_no_extrap = mf_numeric(m_init_values, m_p, Deltas[i])
-        mf_numeric_values_evolved_no_extrap = psi_evolved_normalised(mf_numeric_values_init_no_extrap, m_evolved_values, m_init_values)      
-
-        print(mf_numeric_values_evolved_no_extrap[1200:1300] / mf_numeric_values_evolved[1200:1300] - 1) 
-        print(max(mf_numeric_values_evolved_no_extrap) / max(mf_numeric_values_evolved) - 1) 
-                            
-        mf_LN_values_init = LN(m_init_values, m_p, sigmas_LN[i])
-        mf_LN_values_evolved = psi_evolved(mf_LN_values_init, m_evolved_values, m_init_values)
+        print("\nDelta={:.1f}".format(Deltas[i]))
         
-        mf_SLN_values_init = SLN(m_init_values, m_p, *params_SLN)
-        mf_SLN_values_evolved = psi_evolved(mf_SLN_values_init, m_evolved_values, m_init_values)
-
-        mf_CC3_values_init = CC3(m_init_values, m_p, *params_CC3)
-        mf_CC3_values_evolved = psi_evolved(mf_CC3_values_init, m_evolved_values, m_init_values)
-    
-        ax.plot(m_init_values, mf_numeric_values_init, linestyle="dotted", color="k")
-        ax.plot(m_evolved_values, mf_numeric_values_evolved, color="k", label="Numeric")
-        ax.plot(m_init_values, mf_CC3_values_init, linestyle="dotted", color="g")
-        ax.plot(m_evolved_values, mf_CC3_values_evolved, color="g", label="CC3")
-        
-        ax1.plot(m_evolved_values, frac_diff(mf_LN_values_evolved, mf_numeric_values_evolved, m_evolved_values, m_evolved_values), color="r", label="LN")
-        ax1.plot(m_evolved_values, frac_diff(mf_SLN_values_evolved, mf_numeric_values_evolved, m_evolved_values, m_evolved_values), color="b", label="SLN")
-        ax1.plot(m_evolved_values, frac_diff(mf_CC3_values_evolved, mf_numeric_values_evolved, m_evolved_values, m_evolved_values), color="g", label="CC3")
-        
-        ax.set_ylabel(r"$\psi(m)~[{\rm g}^{-1}]$")
-        ax1.set_ylabel(r"$|\psi_{\rm fit} / \psi_{\rm numeric} - 1|$")
-                
-        for a in [ax, ax1]:
-            a.set_xlabel(r"$m~[{\rm g}]$")
-            a.set_xscale("log")
-            a.set_yscale("log")
-            a.set_xlim(min(m_init_values[mf_numeric_values_init > 0]), max(m_init_values[mf_numeric_values_init > 0]))
-            a.set_title(r"$m_{\rm p} = " + " {:.2e}".format(m_p) + r" {\rm g}$")
-            a.tick_params(pad=7)
-            a.legend(fontsize="xx-small")
+        for m_p in mp_values:
+            fig, ax = plt.subplots(figsize=(6, 5))
             
+            mf_numeric_values_unevolved = mf_numeric(m_init_unevolved, m_p, Deltas[i], extrap_upper_const=True, normalised=True)
+            mf_numeric_values_unevolved_no_extrap = mf_numeric(m_init_unevolved, m_p, Deltas[i], normalised=True)
+           
+            mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], extrap_upper_const=True, normalised=True)
+            mf_numeric_values_evolved = psi_evolved_normalised(mf_numeric_values_init, m_evolved_values, m_init_values)
+    
+            mf_numeric_values_init_no_extrap = mf_numeric(m_init_values, m_p, Deltas[i])
+            mf_numeric_values_evolved_no_extrap = psi_evolved_normalised(mf_numeric_values_init_no_extrap, m_evolved_values, m_init_values)      
+    
+            print("Fractional difference (initial MFs) = {:.1e}".format(max(mf_numeric_values_unevolved_no_extrap) / max(mf_numeric_values_unevolved) - 1))        
+            print("Fractional difference (evolved MFs) = {:.3e}".format(max(mf_numeric_values_evolved_no_extrap) / max(mf_numeric_values_evolved) - 1))
+        
+            ax.plot(m_init_values, mf_numeric_values_init, linestyle="dotted", color="k")
+            ax.plot(m_evolved_values, mf_numeric_values_evolved, color="k", label="Numeric (extrapolated to large $m$)")
+            ax.plot(mf_numeric_values_init_no_extrap, mf_numeric_values_evolved_no_extrap, linestyle="dotted", color="tab:grey")
+            ax.plot(m_evolved_values, mf_numeric_values_evolved_no_extrap, color="tab:grey", label="Numeric (no extrapolation)")
+            ax.set_ylabel(r"$\psi_{\rm N}(m)~[{\rm g}^{-1}]$")
+            ax.set_xlabel(r"$m~[{\rm g}]$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            ax.set_xlim(min(m_init_values[mf_numeric_values_init > 0]), max(m_init_values[mf_numeric_values_init > 0]))
+            ax.set_title(r"$m_{\rm p} = " + " {:.1e}".format(m_p) + r"~{\rm g}" + "~(\Delta={:.1f}$)".format(Deltas[i]))
+            ax.tick_params(pad=7)
+            ax.legend(fontsize="xx-small")
             x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
-            a.yaxis.set_major_locator(x_major)
+            ax.yaxis.set_major_locator(x_major)
             x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
-            a.yaxis.set_minor_locator(x_minor)
-            a.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-        
-        # Values of the initial numerical MF larger than zero.
-        mf_numeric_values_init_truncated = mf_numeric_values_init[mf_numeric_values_init > 0]
-        ax.set_ylim(min(mf_numeric_values_init_truncated), 2 * max(mf_CC3_values_init))
-        
-        # Find smallest and largeset masses for which psi / psi_max is above the threshold
-        mf_numeric_scaled = mf_numeric_values_evolved / max(mf_numeric_values_evolved)
-        m_min = m_evolved_values[np.argmax(mf_numeric_scaled > threshold)]
-        m_max = m_evolved_values[np.argmin(mf_numeric_scaled > threshold)]       
-        ax1.set_xlim(m_min, m_max)
-        ax1.set_ylim(1e-4, 1e3)
-        
-        fig.tight_layout()
-        fig1.tight_layout()
-
+            ax.yaxis.set_minor_locator(x_minor)
+            ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
+            fig.tight_layout()
+    
+    
 #%% Plot different ways of calculating the numerical MF, and the fractional difference from the 'true' value
 if "__main__" == __name__:
     
@@ -3143,8 +3118,8 @@ if "__main__" == __name__:
         # Range of PBH mass values to show for the fitting functions
         m_pbh_values_fits = np.logspace(np.log10(min(m_pbh_values))-2, np.log10(max(m_pbh_values))+2, 500)
 
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], log_interp=False, extrapolate_lower=True), color="tab:orange", linestyle="dotted", label="Lin interp.")
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], log_interp=True, extrapolate_lower=True), linestyle="None", color="tab:orange", marker="+", label="Log interp.")
+        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], log_interp=False, extrap_lower=True), color="tab:orange", linestyle="dotted", label="Lin interp.")
+        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], log_interp=True, extrap_lower=True), linestyle="None", color="tab:orange", marker="+", label="Log interp.")
         ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], normalise_to_CC3=True), color="g", linestyle="dashed", label="Normalised to CC3 max (lin interp.)")
         ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], params=[sigmas_SLN[i], alphas_SLN[i]], normalise_to_SLN=True, mc_SLN=np.exp(ln_mc_SLN[i])), color="b", linestyle="dashdot", label="Normalised to SLN max (lin interp.)")
         ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], normalise_to_CC3=True, log_interp=True), linestyle="None", color="g", marker="x", label="Normalised to CC3 max (log interp.)")
