@@ -303,7 +303,12 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
         mf_values_upper = np.power(10, np.log10(mf_data[-1]) + dlogpsi_dlogm * (np.log10(m_upper) - np.log10(m_scaled[-1])))
     else:
         mf_values_upper = np.zeros(len(m_upper))
-    
+    print("mf_values_lower")
+    print(mf_values_lower)
+    print("mf_values_mid")
+    print(mf_values_mid)
+    print("mf_values_upper")
+    print(mf_values_upper)
     mf_values = np.concatenate((mf_values_lower, mf_values_mid, mf_values_upper))
       
     if not normalised:
@@ -3060,15 +3065,15 @@ if "__main__" == __name__:
             mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], extrap_upper_const=True, normalised=True)
             mf_numeric_values_evolved = psi_evolved_normalised(mf_numeric_values_init, m_evolved_values, m_init_values)
     
-            mf_numeric_values_init_no_extrap = mf_numeric(m_init_values, m_p, Deltas[i])
+            mf_numeric_values_init_no_extrap = mf_numeric(m_init_values, m_p, Deltas[i], normalised=True)
             mf_numeric_values_evolved_no_extrap = psi_evolved_normalised(mf_numeric_values_init_no_extrap, m_evolved_values, m_init_values)      
     
             print("Fractional difference (initial MFs) = {:.1e}".format(max(mf_numeric_values_unevolved_no_extrap) / max(mf_numeric_values_unevolved) - 1))        
             print("Fractional difference (evolved MFs) = {:.3e}".format(max(mf_numeric_values_evolved_no_extrap) / max(mf_numeric_values_evolved) - 1))
         
-            ax.plot(m_init_values, mf_numeric_values_init, linestyle="dotted", color="k")
+            ax.plot(m_init_values, mf_numeric_values_init, linestyle="dotted", color="k", linewidth=3)
             ax.plot(m_evolved_values, mf_numeric_values_evolved, color="k", label="Numeric (extrapolated to large $m$)")
-            ax.plot(mf_numeric_values_init_no_extrap, mf_numeric_values_evolved_no_extrap, linestyle="dotted", color="tab:grey")
+            ax.plot(m_init_values, mf_numeric_values_init_no_extrap, linestyle="dotted", color="tab:grey", linewidth=3)
             ax.plot(m_evolved_values, mf_numeric_values_evolved_no_extrap, color="tab:grey", label="Numeric (no extrapolation)")
             ax.set_ylabel(r"$\psi_{\rm N}(m)~[{\rm g}^{-1}]$")
             ax.set_xlabel(r"$m~[{\rm g}]$")
