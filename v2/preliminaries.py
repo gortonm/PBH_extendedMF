@@ -230,12 +230,15 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
     extrap_upper_const : Boolean, optional
         If True, extrapolate the MF at larger masses than given in the data
         as a constant. The default is False.
-    gamma : Float, optional
-        Inverse of the power-law exponent used when extrap_lower = True. 
-        The default is 0.36.
+    extrap_upper_PL : Boolean, optional
+        If True, extrapolate the MF at larger masses than given in the data
+        using a power law. The default is False.
     normalised : Boolean
         If True, manually normalise the MF after performing any extrapolations.
         The default is False.
+    gamma : Float, optional
+        Inverse of the power-law exponent used when extrap_lower = True. 
+        The default is 0.36.
     custom_mp : Boolean
         If True, uses the input m_p for the peak mass and rescales the masses
         at which the mass function is evaluated. Otherwise, use the masses
@@ -280,8 +283,11 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
     mf_values = []
     m_lower = m[m < min(m_scaled)]
     m_upper = m[m > max(m_scaled)]
-    
     m_mid = []
+    
+    if normalised:
+        normalisation_factor = 1 / np.trapz(mf_data, m_data)
+    
     for m_value in m:
         if m_value <= max(m_scaled) and m_value >= min(m_scaled):
             m_mid.append(m_value)
@@ -303,18 +309,21 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
         mf_values_upper = np.power(10, np.log10(mf_data[-1]) + dlogpsi_dlogm * (np.log10(m_upper) - np.log10(m_scaled[-1])))
     else:
         mf_values_upper = np.zeros(len(m_upper))
+    """
     print("mf_values_lower")
     print(mf_values_lower)
     print("mf_values_mid")
     print(mf_values_mid)
     print("mf_values_upper")
     print(mf_values_upper)
+    """
     mf_values = np.concatenate((mf_values_lower, mf_values_mid, mf_values_upper))
       
     if not normalised:
         return mf_values
     else:
-        normalisation_factor = 1 / np.trapz(mf_values, m)
+        #normalisation_factor = 1 / np.trapz(mf_values, m)
+        #print("Normalisation factor = {:.2e} g^-1".format(normalisation_factor))
         return mf_values * normalisation_factor
 
 
@@ -3040,12 +3049,12 @@ if "__main__" == __name__:
     # Peak mass values
     #mp_values = np.logspace(16, np.log10(5.05e17), 5)[0:1]
     #mp_values = np.logspace(14, 15, 10)
-    mp_values = [1e17]    # Approximate minimum peak mass for which microlensing constraints apply
+    mp_values = [1e22]    # Approximate minimum peak mass for which microlensing constraints apply
     
     # Initial and evolved PBH masses
-    n_steps = 1000
+    n_steps = 324
     # Range of masses to include for the delta-function MF constraint
-    m_delta = [1e11, 3e17]
+    m_delta = [9.47e21, 5.38e28]
     # Initial masses matching those used in constraint_Carr() when calculating constraints for unevolved MFs.
     m_init_unevolved = np.logspace(np.log10(min(m_delta)), np.log10(max(m_delta)), n_steps)
     # Initial masses matching those used in constraint_Carr() when calculating constraints for evolved MFs.
@@ -3161,4 +3170,64 @@ if "__main__" == __name__:
 
         fig.tight_layout()
         fig1.tight_layout()
-                
+
+#%% Microlensing constraints with numeric MF: compare evolved to unevolved MF
+if "__main__" == __name__:
+    
+    m_delta_Subaru, f_max_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+    
+    # Peak mass, in grams
+    m_p = 1e22
+    
+    Delta = 0
+    
+    extrap_lower = False
+    extrap_upper_const = False
+    extrap_upper_PL = False
+    normalised = True
+    
+    # Parameters for the numeric MF
+    params_numeric = [Delta, extrap_lower, extrap_upper_const, extrap_upper_PL, normalised]
+    
+    f_pbh_Subaru_evolved = constraint_Carr([m_p], m_delta_Subaru, f_max_Subaru, mf_numeric, params_numeric, evolved=True)
+    f_pbh_Subaru_unevolved = constraint_Carr([m_p], m_delta_Subaru, f_max_Subaru, mf_numeric, params_numeric, evolved=False)
+    
+    print("Using constraint_Carr()")
+    print("f_PBH (evolved numeric MF) = {:.2e}".format(f_pbh_Subaru_evolved[0]))
+    print("f_PBH (unevolved numeric MF) = {:.2e}".format(f_pbh_Subaru_unevolved[0]))
+    
+    
+    # Calculate numeric MF constraint without calling constraint_Carr()
+    psi_initial_values = mf_numeric(m_delta_Subaru, m_p, Delta, normalised=normalised)
+    f_pbh_Subaru_unevolved = 1 / np.trapz(psi_initial_values / f_max_Subaru, m_delta_Subaru)
+    print("\nRecalculated")    
+    print("f_PBH (unevolved numeric MF) = {:.2e}".format(f_pbh_Subaru_unevolved))
+    
+    m_evolved = mass_evolved(m_delta_Subaru, t=t_0)
+    psi_evolved_values = psi_evolved(psi_initial_values, m_evolved, m_delta_Subaru)
+    f_pbh_Subaru_evolved = 1 / np.trapz(psi_evolved_values / f_max_Subaru, m_evolved)
+    print("f_PBH (evolved numeric MF) = {:.2e}".format(f_pbh_Subaru_evolved))
+    
+    psi_evolved_values_normalised = psi_evolved_normalised(psi_initial_values, m_evolved, m_delta_Subaru)
+    f_pbh_Subaru_evolved = 1 / np.trapz(psi_evolved_values_normalised / f_max_Subaru, m_evolved)
+    print("f_PBH (evolved numeric MF using psi_evolved_normalised()) = {:.2e}".format(f_pbh_Subaru_evolved))
+
+#%%
+    # Initial masses matching those used in constraint_Carr() when calculating constraints for evolved MFs.
+    n_steps = 1000
+    #m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_Subaru)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_Subaru))+4, n_steps))))
+    #m_init_values = np.sort(np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_Subaru))+4, n_steps))
+    #m_init_values = np.logspace(np.log10(min(m_delta_Subaru)), np.log10(max(m_delta_Subaru)+4), n_steps)
+    m_init_values = np.logspace(22, np.log10(max(m_delta_Subaru)+4), n_steps)
+    #m_init_values = np.logspace(21.98, np.log10(max(m_delta_Subaru)+4), n_steps)
+
+    psi_initial_values = mf_numeric(m_init_values, m_p, Delta, normalised=normalised)
+    print(psi_initial_values[0:50])
+    m_evolved = mass_evolved(m_init_values, t=t_0)
+    psi_evolved_values = psi_evolved(psi_initial_values, m_evolved, m_init_values)
+    #psi_evolved_values_interpolated = 10**np.interp(np.log10(m_delta_Subaru), np.log10(m_evolved), np.log10(psi_evolved_values), left=-100, right=-100)
+    psi_evolved_values_interpolated = 10**np.interp(np.log10(m_delta_Subaru), np.log10(m_evolved), np.log10(psi_evolved_values), left=-np.infty, right=-np.infty)   
+    print(len(psi_evolved_values_interpolated[psi_evolved_values_interpolated>0]))
+    f_pbh_Subaru_evolved = 1 / np.trapz(psi_evolved_values_interpolated / f_max_Subaru, m_delta_Subaru)
+
+    print("f_PBH (evolved numeric MF following constraint_Carr) = {:.2e}".format(f_pbh_Subaru_evolved))
