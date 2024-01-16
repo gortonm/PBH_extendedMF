@@ -286,7 +286,8 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
     m_mid = []
     
     if normalised:
-        normalisation_factor = 1 / np.trapz(mf_data, m_data)
+        normalisation_factor = 1 / np.trapz(mf_data, m_scaled)
+        print("Normalisation factor = {:.2e} g^-1".format(normalisation_factor))
     
     for m_value in m:
         if m_value <= max(m_scaled) and m_value >= min(m_scaled):
@@ -3196,11 +3197,10 @@ if "__main__" == __name__:
     print("f_PBH (evolved numeric MF) = {:.2e}".format(f_pbh_Subaru_evolved[0]))
     print("f_PBH (unevolved numeric MF) = {:.2e}".format(f_pbh_Subaru_unevolved[0]))
     
-    
+    print("\nRecalculated")    
     # Calculate numeric MF constraint without calling constraint_Carr()
     psi_initial_values = mf_numeric(m_delta_Subaru, m_p, Delta, normalised=normalised)
     f_pbh_Subaru_unevolved = 1 / np.trapz(psi_initial_values / f_max_Subaru, m_delta_Subaru)
-    print("\nRecalculated")    
     print("f_PBH (unevolved numeric MF) = {:.2e}".format(f_pbh_Subaru_unevolved))
     
     m_evolved = mass_evolved(m_delta_Subaru, t=t_0)
@@ -3215,16 +3215,16 @@ if "__main__" == __name__:
 #%%
     # Initial masses matching those used in constraint_Carr() when calculating constraints for evolved MFs.
     n_steps = 1000
-    #m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_Subaru)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_Subaru))+4, n_steps))))
+    m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_Subaru)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_Subaru))+4, n_steps))))
     #m_init_values = np.sort(np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_Subaru))+4, n_steps))
     #m_init_values = np.logspace(np.log10(min(m_delta_Subaru)), np.log10(max(m_delta_Subaru)+4), n_steps)
-    m_init_values = np.logspace(22, np.log10(max(m_delta_Subaru)+4), n_steps)
+    #m_init_values = np.logspace(22, np.log10(max(m_delta_Subaru)+4), n_steps)
     #m_init_values = np.logspace(21.98, np.log10(max(m_delta_Subaru)+4), n_steps)
 
     psi_initial_values = mf_numeric(m_init_values, m_p, Delta, normalised=normalised)
     print(psi_initial_values[0:50])
     m_evolved = mass_evolved(m_init_values, t=t_0)
-    psi_evolved_values = psi_evolved(psi_initial_values, m_evolved, m_init_values)
+    psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_evolved, m_init_values)
     #psi_evolved_values_interpolated = 10**np.interp(np.log10(m_delta_Subaru), np.log10(m_evolved), np.log10(psi_evolved_values), left=-100, right=-100)
     psi_evolved_values_interpolated = 10**np.interp(np.log10(m_delta_Subaru), np.log10(m_evolved), np.log10(psi_evolved_values), left=-np.infty, right=-np.infty)   
     print(len(psi_evolved_values_interpolated[psi_evolved_values_interpolated>0]))
