@@ -256,6 +256,8 @@ if "__main__" == __name__:
 
 if "__main__" == __name__:
     
+    from plot_constraints import load_data_KP23, set_ticks_grid
+    
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
@@ -265,13 +267,6 @@ if "__main__" == __name__:
     linestyles = ["solid", "dashed", "dashdot", "dotted"]
     
     for j in range(len(Deltas)):
-        
-        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
-        
-        ax0 = axes[0][0]
-        ax1 = axes[0][1]
-        ax2 = axes[1][0]
-        ax3 = axes[1][1]
         
         m_delta_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
                             
@@ -288,71 +283,127 @@ if "__main__" == __name__:
             extrapolate_numeric = "extrap_lower"
         else:
             extrapolate_numeric = ""
-            
-        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
-            
-            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
-            data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-
-            mc_KP23_LN_evolved, f_PBH_KP23_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
-            mc_KP23_SLN_evolved, f_PBH_KP23_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
-            mp_KP23_CC3_evolved, f_PBH_KP23_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
-            mp_KP23_numeric_evolved, f_PBH_KP23_numeric_evolved = np.genfromtxt(data_filename_numeric, delimiter="\t")
-            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_evolved]
-            mp_LN = mc_KP23_LN_evolved * np.exp(-sigmas_LN[j]**2)
                         
-            ax1.plot(mp_LN, f_PBH_KP23_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
-            ax2.plot(mp_SLN, f_PBH_KP23_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
-            ax3.plot(mp_KP23_CC3_evolved, f_PBH_KP23_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
-            ax3.plot(mp_KP23_numeric_evolved, f_PBH_KP23_numeric_evolved, linestyle=linestyles[k], color="k", marker="None")
+        # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
+        exponents_PL_lower = [0, 2, 3, 4]
+        
+        linestyles = ["dashed", "dashdot", "dotted"]
+                            
+        if Deltas[j] in ([5]):
+        
+            fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+            fig1, axes1 = plt.subplots(1, 3, figsize=(13, 5))
             
-            ax1.set_title("LN")
-            ax2.set_title("SLN")
-            ax3.set_title("CC3")
+            ax0 = axes[0][0]
+            ax1 = axes[0][1]
+            ax2 = axes[1][0]
+            ax3 = axes[1][1]
             
-            if k == 0:
-                """
-                mp_SLN_unevolved = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN_unevolved]
-                mp_LN_unevolved = mc_KP23_LN_unevolved * np.exp(-sigmas_LN[j]**2)
-                ax1.plot(mp_LN, f_PBH_KP23_LN_unevolved, color="r", linestyle="None", marker="x")
-                ax2.plot(mp_SLN_unevolved, f_PBH_KP23_SLN_unevolved, color="b", linestyle="None", marker="x")
-                ax3.plot(mp_KP23_CC3_unevolved, f_PBH_KP23_CC3_unevolved, color="g", linestyle="None", marker="x")
-                ax1.plot(0, 0, color="k", label="No constraint at $m < 10^{16}~\mathrm{g}$ [evolved MF]")
-                ax1.plot(0, 0, linestyle="None", marker="x", color="k", label="No constraint at $m < 10^{16}~\mathrm{g}$ [unevolved MF]")
-                """
-            else:
+            ax1a = axes1.flatten()[0]
+            ax2a = axes1.flatten()[1]
+            ax3a = axes1.flatten()[2]
+                             
+            exponent_PL_lower = 0
+            
+            mp_LN_q0, f_PBH_LN_q0 = load_data_KP23(Deltas, j, mf=LN, evolved=True, exponent_PL_lower=0)
+            mp_SLN_q0, f_PBH_SLN_q0 = load_data_KP23(Deltas, j, mf=SLN, evolved=True, exponent_PL_lower=0)
+            mp_CC3_q0, f_PBH_CC3_q0 = load_data_KP23(Deltas, j, mf=CC3, evolved=True, exponent_PL_lower=0)
+            
+            ax0.plot(m_delta_extrapolated_upper, f_max_extrapolated_upper, color="tab:grey", linestyle="solid")
+            ax0.plot(m_delta_extrapolated_lower, f_max_extrapolated_upper[0] * np.ones(len(m_delta_extrapolated_lower)), color="tab:grey", linestyle="solid", label="0")
+            ax1.plot(mp_LN_q0, f_PBH_LN_q0, linestyle="solid", color="r", marker="None", label="{:.0f}".format(exponent_PL_lower))
+            ax2.plot(mp_SLN_q0, f_PBH_SLN_q0, linestyle="solid", color="b", marker="None")
+            ax3.plot(mp_CC3_q0, f_PBH_CC3_q0, linestyle="solid", color="g", marker="None")
+         
+            for k, exponent_PL_lower in enumerate(exponents_PL_lower[1:]):
+                
+                mp_LN, f_PBH_LN = load_data_KP23(Deltas, j, mf=LN, evolved=True, exponent_PL_lower=exponent_PL_lower)
+                mp_SLN, f_PBH_SLN = load_data_KP23(Deltas, j, mf=SLN, evolved=True, exponent_PL_lower=exponent_PL_lower)
+                mp_CC3, f_PBH_CC3 = load_data_KP23(Deltas, j, mf=CC3, evolved=True, exponent_PL_lower=exponent_PL_lower)
+                            
+                ax1.plot(mp_LN, f_PBH_LN, linestyle=linestyles[k], color="r", marker="None")
+                ax2.plot(mp_SLN, f_PBH_SLN, linestyle=linestyles[k], color="b", marker="None")
+                ax3.plot(mp_CC3, f_PBH_CC3, linestyle=linestyles[k], color="g", marker="None")
+                
+                # Find the minimum mass at which f_PBH > 1 for each fitting function
+                if k == 0:
+                    mp_max_LN = min(mp_LN[f_PBH_LN > 1])
+                    mp_max_SLN = min(mp_LN[f_PBH_SLN > 1])
+                    mp_max_CC3 = min(mp_LN[f_PBH_CC3 > 1])
+           
+                ax1.set_title("LN")
+                ax2.set_title("SLN")
+                ax3.set_title("GCC")
+                
                 ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
                 f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
-                ax0.plot(m_delta_extrapolated_lower, f_max_extrapolated_lower, color=(0.5294, 0.3546, 0.7020), linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
-            
-        ax0.plot(np.concatenate((m_delta_extrapolated_upper, m_delta_values)), np.concatenate((f_max_extrapolated_upper, f_max)), color=(0.5294, 0.3546, 0.7020))
-        ax0.set_xlabel("$m$ [g]")
-        ax0.set_ylabel("$f_\mathrm{max}$")
-        ax0.set_xscale("log")
-        ax0.set_yscale("log")
-        ax0.set_xlim(min(m_delta_extrapolated_lower), 1e18)
-        ax0.set_ylim(min(f_max_extrapolated_lower), 1)
+                ax0.plot(m_delta_extrapolated_lower, f_max_extrapolated_lower, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
                 
-        for ax in [ax1, ax2, ax3]:
-            if Deltas[j] < 5:
-                ax.set_xlim(1e16, 1e18)
-            else:
-                ax.set_xlim(1e16, 2e18)
-               
-            ax.set_ylim(1e-6, 1)
-            ax.set_ylabel("$f_\mathrm{PBH}$")
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
+                # Plot fractional difference between constraints obtained with f_max = const. at masses below which f_max is publicly available, and those obtained with f_max \propto m^q (q corresponds to exponent_PL_lower in the code)
+                ax1a.plot(mp_LN_q0, np.abs(frac_diff(f_PBH_LN_q0, f_PBH_LN, mp_LN_q0, mp_LN)),linestyle=linestyles[k], color="r", label="{:.0f}".format(exponent_PL_lower))
+                ax2a.plot(mp_SLN_q0, np.abs(frac_diff(f_PBH_SLN_q0, f_PBH_SLN, mp_SLN_q0, mp_SLN)), linestyle=linestyles[k], color="b", label="{:.0f}".format(exponent_PL_lower))
+                ax3a.plot(mp_CC3_q0, np.abs(frac_diff(f_PBH_CC3_q0, f_PBH_CC3, mp_CC3_q0, mp_CC3)), linestyle=linestyles[k], color="g", label="{:.0f}".format(exponent_PL_lower))
+                
+                ax1a.set_title("LN")
+                ax2a.set_title("SLN")
+                ax3a.set_title("GCC")
+                
+            # Plot extended MF constraints from Korwar & Profumo (2023)
+            # plot_KP23(j, ax1, ax2, ax3)
+            
+            # Plot extended MF constraints from Galactic Centre photons calculated using Isatis
+            """
+            plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
+            plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
+            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, params=[alphas_CC3[j], betas[j]], linestyle="dotted")
+            """
+            ax0.plot(m_delta_values, f_max, color="tab:grey")
+            ax0.set_xlabel(r"$m~[{\rm g}]$")
+            ax0.set_ylabel("$f_\mathrm{max}$")
+            ax0.set_xscale("log")
+            ax0.set_yscale("log")
+            ax0.set_xlim(1e13, 1e17)
+            ax0.set_ylim(min(f_max_extrapolated_lower[m_delta_extrapolated_lower > 1e13]), 1)
+            
+            """
+            ax1a.set_xlim(1e16, mp_max_LN)
+            ax2a.set_xlim(1e16, mp_max_SLN)
+            ax3a.set_xlim(1e16, mp_max_CC3)
+            """
+            
+            for ax in [ax1, ax2, ax3]:
+                if Deltas[j] < 5:
+                    ax.set_xlim(1e16, 1e18)
+                else:
+                    ax.set_xlim(1e16, 2e18)
+                   
+                ax.set_ylim(1e-6, 1)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+                ax.tick_params("x", pad=7)
 
-        ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")        
-        ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n ($m < 10^{15}~\mathrm{g}$)")
-        fig.suptitle("[2302.04408], $\Delta={:.1f}$".format(Deltas[j]))
-        fig.tight_layout()
-
+            for axa in [ax1a, ax2a, ax3a]:
+                   
+                #axa.set_ylim(1e-3, 1e3)
+                axa.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
+                axa.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
+                axa.legend(fontsize="xx-small", title="$q$")        
+                axa.set_xscale("log")
+                axa.set_yscale("log")
+                axa.tick_params("x", pad=7)
+                set_ticks_grid(axa)
+                
+            ax0.tick_params("x", pad=7)
+            ax0.legend(fontsize="xx-small", title="$q$")        
+            ax1.legend(fontsize="xx-small", title="$q$")
+                        
+            for f in [fig, fig1]:
+                f.suptitle("Korwar \& Profumo (2023) [2302.04408], $\Delta={:.1f}$".format(Deltas[j]))
+                f.tight_layout()
+            fig1.tight_layout()
+                
 #%% Plot results obtained using different power-law exponents in f_max at low masses (Berteaud et al. (2022) [2202.07483])
 
 if "__main__" == __name__:
@@ -452,8 +503,6 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    mc_values = 10**np.arange(14, 20.5, 0.1)
-
     # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
     exponents_PL_lower = [0, 2, 3, 4]
     
@@ -620,9 +669,8 @@ if "__main__" == __name__:
             ax1.legend(fontsize="xx-small", title="$q$")
                         
             for f in [fig, fig1]:
-                fig.suptitle("Voyager 1 [1807.03075], $\Delta={:.1f}$".format(Deltas[j]) + " %s" % prop_string)
-                fig.tight_layout()
-            fig1.tight_layout()
+                f.suptitle("Voyager 1 [1807.03075], $\Delta={:.1f}$".format(Deltas[j]) + " %s" % prop_string)
+                f.tight_layout()
             
      
 #%% Plot results obtained using different power-law exponents in f_max at low masses (from 511 keV line [1912.01014]).
