@@ -276,23 +276,23 @@ if "__main__" == __name__:
         m_delta_extrapolated_upper = np.logspace(15, 16, 11)
         m_delta_extrapolated_lower = np.logspace(11, 15, 41)
         f_max_extrapolated_upper = min(f_max) * np.power(m_delta_extrapolated_upper / min(m_delta_values), exponent_PL_upper)
-        
+
         # If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse
         extrapolate_numeric_lower = True
         if extrapolate_numeric_lower:
             extrapolate_numeric = "extrap_lower"
         else:
             extrapolate_numeric = ""
-                        
+
         # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
         exponents_PL_lower = [0, 2, 3, 4]
         
         linestyles = ["dashed", "dashdot", "dotted"]
                             
-        if Deltas[j] in ([5]):
-        
+        if Deltas[j] in (0, 2, 5):
+
             fig, axes = plt.subplots(2, 2, figsize=(12, 12))
-            fig1, axes1 = plt.subplots(1, 3, figsize=(13, 5))
+            fig1, axes1 = plt.subplots(1, 3, figsize=(14, 5))
             
             ax0 = axes[0][0]
             ax1 = axes[0][1]
@@ -302,8 +302,6 @@ if "__main__" == __name__:
             ax1a = axes1.flatten()[0]
             ax2a = axes1.flatten()[1]
             ax3a = axes1.flatten()[2]
-                             
-            exponent_PL_lower = 0
             
             mp_LN_q0, f_PBH_LN_q0 = load_data_KP23(Deltas, j, mf=LN, evolved=True, exponent_PL_lower=0)
             mp_SLN_q0, f_PBH_SLN_q0 = load_data_KP23(Deltas, j, mf=SLN, evolved=True, exponent_PL_lower=0)
@@ -311,10 +309,11 @@ if "__main__" == __name__:
             
             ax0.plot(m_delta_extrapolated_upper, f_max_extrapolated_upper, color="tab:grey", linestyle="solid")
             ax0.plot(m_delta_extrapolated_lower, f_max_extrapolated_upper[0] * np.ones(len(m_delta_extrapolated_lower)), color="tab:grey", linestyle="solid", label="0")
-            ax1.plot(mp_LN_q0, f_PBH_LN_q0, linestyle="solid", color="r", marker="None", label="{:.0f}".format(exponent_PL_lower))
+            ax1.plot(0, 0, marker="None", linestyle="solid", color="k", label="{:.0f}".format(0))            
+            ax1.plot(mp_LN_q0, f_PBH_LN_q0, linestyle="solid", color="r", marker="None")
             ax2.plot(mp_SLN_q0, f_PBH_SLN_q0, linestyle="solid", color="b", marker="None")
             ax3.plot(mp_CC3_q0, f_PBH_CC3_q0, linestyle="solid", color="g", marker="None")
-         
+
             for k, exponent_PL_lower in enumerate(exponents_PL_lower[1:]):
                 
                 mp_LN, f_PBH_LN = load_data_KP23(Deltas, j, mf=LN, evolved=True, exponent_PL_lower=exponent_PL_lower)
@@ -328,8 +327,8 @@ if "__main__" == __name__:
                 # Find the minimum mass at which f_PBH > 1 for each fitting function
                 if k == 0:
                     mp_max_LN = min(mp_LN[f_PBH_LN > 1])
-                    mp_max_SLN = min(mp_LN[f_PBH_SLN > 1])
-                    mp_max_CC3 = min(mp_LN[f_PBH_CC3 > 1])
+                    mp_max_SLN = min(mp_SLN[f_PBH_SLN > 1])
+                    mp_max_CC3 = min(mp_CC3[f_PBH_CC3 > 1])
            
                 ax1.set_title("LN")
                 ax2.set_title("SLN")
@@ -365,11 +364,9 @@ if "__main__" == __name__:
             ax0.set_xlim(1e13, 1e17)
             ax0.set_ylim(min(f_max_extrapolated_lower[m_delta_extrapolated_lower > 1e13]), 1)
             
-            """
             ax1a.set_xlim(1e16, mp_max_LN)
             ax2a.set_xlim(1e16, mp_max_SLN)
             ax3a.set_xlim(1e16, mp_max_CC3)
-            """
             
             for ax in [ax1, ax2, ax3]:
                 if Deltas[j] < 5:
@@ -385,8 +382,6 @@ if "__main__" == __name__:
                 ax.tick_params("x", pad=7)
 
             for axa in [ax1a, ax2a, ax3a]:
-                   
-                #axa.set_ylim(1e-3, 1e3)
                 axa.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
                 axa.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
                 axa.legend(fontsize="xx-small", title="$q$")        
@@ -403,7 +398,8 @@ if "__main__" == __name__:
                 f.suptitle("Korwar \& Profumo (2023) [2302.04408], $\Delta={:.1f}$".format(Deltas[j]))
                 f.tight_layout()
             fig1.tight_layout()
-                
+
+
 #%% Plot results obtained using different power-law exponents in f_max at low masses (Berteaud et al. (2022) [2202.07483])
 
 if "__main__" == __name__:
@@ -553,10 +549,10 @@ if "__main__" == __name__:
     
     for j in range(len(Deltas)):
         
-        if Deltas[j] in ([5]):
+        if Deltas[j] in ([0, 2, 5]):
         
             fig, axes = plt.subplots(2, 2, figsize=(12, 12))
-            fig1, axes1 = plt.subplots(1, 3, figsize=(13, 5))
+            fig1, axes1 = plt.subplots(1, 3, figsize=(14, 5))
             
             ax0 = axes[0][0]
             ax1 = axes[0][1]
@@ -586,6 +582,7 @@ if "__main__" == __name__:
             ax1.plot(0, 0, marker="None", linestyle=linestyles[0], color="k", label="{:.0f}".format(exponent_PL_lower))
             f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle="solid", label="{:.0f}".format(exponent_PL_lower))
+            ax1.plot(0, 0, marker="None", linestyle="solid", color="k", label="{:.0f}".format(0))            
 
             for k, exponent_PL_lower in enumerate(exponents_PL_lower[1:]):
                 
@@ -600,8 +597,8 @@ if "__main__" == __name__:
                 # Find the minimum mass at which f_PBH > 1 for each fitting function
                 if k == 0:
                     mp_max_LN = min(mp_LN[f_PBH_LN > 1])
-                    mp_max_SLN = min(mp_LN[f_PBH_SLN > 1])
-                    mp_max_CC3 = min(mp_LN[f_PBH_CC3 > 1])
+                    mp_max_SLN = min(mp_SLN[f_PBH_SLN > 1])
+                    mp_max_CC3 = min(mp_CC3[f_PBH_CC3 > 1])
            
                 ax1.set_title("LN")
                 ax2.set_title("SLN")
@@ -655,15 +652,14 @@ if "__main__" == __name__:
                 ax.tick_params("x", pad=7)
 
             for axa in [ax1a, ax2a, ax3a]:
-                   
-                #axa.set_ylim(1e-3, 1e3)
                 axa.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
                 axa.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
                 axa.legend(fontsize="xx-small", title="$q$")        
                 axa.set_xscale("log")
                 axa.set_yscale("log")
                 axa.tick_params("x", pad=7)
-                
+                set_ticks_grid(axa)
+             
             ax0.tick_params("x", pad=7)
             ax0.legend(fontsize="xx-small", title="$q$")        
             ax1.legend(fontsize="xx-small", title="$q$")
