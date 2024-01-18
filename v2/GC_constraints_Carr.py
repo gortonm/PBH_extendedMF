@@ -61,10 +61,8 @@ if "__main__" == __name__:
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
     mc_values = np.logspace(14, 20, 121)
-    
-    # Maximum mass at which the power-law MF is defined
-    m_max_PL = 100 * max(m_delta_values_loaded)
-    
+    mp_values_numeric = np.logspace(16, 20, 81)
+        
     t = t_0
     
     if not evolved:
@@ -79,117 +77,130 @@ if "__main__" == __name__:
         # Power-law exponent to use
         m_delta_extrapolated = np.logspace(11, 13, 21)
         
-    # Power-law exponent to use for extrapolating the delta-function MF constraint below 1e13g
-    for exponent_PL_lower in [0, 2, 3, 4]:
-
-        if include_extrapolated:
-            data_folder = data_folder_base + "/PL_exp_{:.0f}/".format(exponent_PL_lower)
+    # If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse
+    for extrapolate_numeric_lower in [True, False]:
+        if extrapolate_numeric_lower:
+            extrapolate_numeric = "extrap_lower"
         else:
-            data_folder = data_folder_base
+            extrapolate_numeric = ""
 
-        for j in range(len(Deltas)):
-            params_LN = [sigmas_LN[j]]
-            params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
-            params_CC3 = [alphas_CC3[j], betas[j]]
-            #params_PL = [m_max_PL, gamma_PL]
-            
-            for i in range(len(constraints_names_short)):
-                
-                if not E500:
-                    f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
-                else:
-                    f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_E500_wide.txt" % constraints_names_short[i], unpack=True)
-               
-                if len(f_max_Isatis) == len(m_delta_values_loaded):
-                    print("Error: will not loop over the number of energy bins. f_max_Isatis needs to be transposed.")
-                    break
-                else:
-                    n_bins = len(f_max_Isatis)
-                
-                f_PBH_allbins_LN = []
-                f_PBH_allbins_SLN = []
-                f_PBH_allbins_CC3 = []
-                #f_PBH_allbins_PL = []
-               
-                if plot_extrapolated:
-                    fig, ax = plt.subplots(figsize=(7,7))
-            
-                for k in range(len(f_max_Isatis)):
-                                    
-                    # Set non-physical values of f_max (-1 or np.infty) to 1e100 from the f_max values calculated using Isatis
-                    f_max_allpositive = []
-            
-                    for f_max in f_max_Isatis[k]:
-                        if f_max == -1 or f_max == np.infty:
-                            f_max_allpositive.append(1e100)
-                        else:
-                            f_max_allpositive.append(f_max)
-                    
-                    # Extrapolate f_max at masses below 1e13g using a power-law
-                    if include_extrapolated:
-                        f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
-                        f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
-                        f_max_k = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
-                        m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
-                    else:
-                        f_max_k = f_max_allpositive
-                        m_delta_values = m_delta_values_loaded
-                
-                    # Plot the extrapolated power-law fit to f_max
-                    if plot_extrapolated:
-                        ax.plot(m_delta_extrapolated, f_max_extrapolated, linestyle="dashed")
-                        ax.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_loaded_truncated)
-                                    
-                    f_PBH_allbins_LN.append(constraint_Carr(mc_values, m_delta_values, f_max_k, LN, params_LN, evolved, t))
-                    f_PBH_allbins_SLN.append(constraint_Carr(mc_values, m_delta_values, f_max_k, SLN, params_SLN, evolved, t))
-                    f_PBH_allbins_CC3.append(constraint_Carr(mc_values, m_delta_values, f_max_k, CC3, params_CC3, evolved, t))
-                    #f_PBH_allbins_PL.append(constraint_Carr(mc_values, m_delta_values, f_max_k, PL_MF, params_LN, evolved, t))
-                   
-                if plot_extrapolated: 
-                    ax.set_xlim(1e11, 1e18)
-                    ax.set_ylim(10**(-14), 1)
-                    ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
-                    ax.set_ylabel("$f_\mathrm{PBH}$")
-                    ax.set_xscale("log")
-                    ax.set_yscale("log")
-                    ax.legend(fontsize="small")
-                    fig.tight_layout()
+        
+        # Power-law exponent to use for extrapolating the delta-function MF constraint below 1e13g
+        for exponent_PL_lower in [0, 2, 3, 4]:
     
-                if len(f_PBH_allbins_LN) != n_bins:
-                    print("Error: length of calculated constraint from each energy bin does not equal number of energy bins.")
-                    break
-                
-                f_PBH_i_LN = envelope(f_PBH_allbins_LN, save_argmin=True, fname=data_folder + "/argmin/LN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
-                f_PBH_i_SLN = envelope(f_PBH_allbins_SLN, save_argmin=True, fname=data_folder + "/argmin/SLN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
-                f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3, save_argmin=True, fname=data_folder + "/argmin/CC3_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
-                                
-                if evolved == False:
-                    if not E500:
-                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        #data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr_unevolved.txt"
-                    else:
-                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        #data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_E500_Carr_unevolved.txt"
+            if include_extrapolated:
+                data_folder = data_folder_base + "/PL_exp_{:.0f}/".format(exponent_PL_lower)
+            else:
+                data_folder = data_folder_base
+    
+            for j in range(len(Deltas)):
+                params_LN = [sigmas_LN[j]]
+                params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+                params_CC3 = [alphas_CC3[j], betas[j]]
+                # Numeric MF parameters are the function arguments Delta, extrapolate_lower, custom_mp, params, normalise_to_CC3, normalise_to_SLN, mc_SLN, log_interp
+                if Deltas[j] < 2:
+                    params_numeric = [Deltas[j], extrapolate_numeric_lower]
                 else:
+                    params_numeric = [Deltas[j], extrapolate_numeric_lower, True, params_SLN, False, True, np.exp(ln_mc_SLN[j])]
+                
+                for i in range(len(constraints_names_short)):
+                    
                     if not E500:
-                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        #data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_Carr.txt"
+                        f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
                     else:
-                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        #data_filename_PL = data_folder + "/PL_GC_%s" % constraints_names_short[i]  + "_E500_Carr.txt"
-
-                np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
-                np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
-                np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
-                #np.savetxt(data_filename_PL, [mc_values, f_PBH_i_CC3], delimiter="\t")
+                        f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_E500_wide.txt" % constraints_names_short[i], unpack=True)
+                   
+                    if len(f_max_Isatis) == len(m_delta_values_loaded):
+                        print("Error: will not loop over the number of energy bins. f_max_Isatis needs to be transposed.")
+                        break
+                    else:
+                        n_bins = len(f_max_Isatis)
+                    
+                    f_PBH_allbins_LN = []
+                    f_PBH_allbins_SLN = []
+                    f_PBH_allbins_CC3 = []
+                    f_PBH_allbins_numeric = []
+                   
+                    if plot_extrapolated:
+                        fig, ax = plt.subplots(figsize=(7,7))
+                
+                    for k in range(len(f_max_Isatis)):
+                                        
+                        # Set non-physical values of f_max (-1 or np.infty) to 1e100 from the f_max values calculated using Isatis
+                        f_max_allpositive = []
+                
+                        for f_max in f_max_Isatis[k]:
+                            if f_max == -1 or f_max == np.infty:
+                                f_max_allpositive.append(1e100)
+                            else:
+                                f_max_allpositive.append(f_max)
+                        
+                        # Extrapolate f_max at masses below 1e13g using a power-law
+                        if include_extrapolated:
+                            f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
+                            f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
+                            f_max_k = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
+                            m_delta_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
+                        else:
+                            f_max_k = f_max_allpositive
+                            m_delta_values = m_delta_values_loaded
+                    
+                        # Plot the extrapolated power-law fit to f_max
+                        if plot_extrapolated:
+                            ax.plot(m_delta_extrapolated, f_max_extrapolated, linestyle="dashed")
+                            ax.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_loaded_truncated)
+                                        
+                        f_PBH_allbins_LN.append(constraint_Carr(mc_values, m_delta_values, f_max_k, LN, params_LN, evolved, t))
+                        f_PBH_allbins_SLN.append(constraint_Carr(mc_values, m_delta_values, f_max_k, SLN, params_SLN, evolved, t))
+                        f_PBH_allbins_CC3.append(constraint_Carr(mc_values, m_delta_values, f_max_k, CC3, params_CC3, evolved, t))
+                        f_PBH_allbins_numeric.append(constraint_Carr(mp_values_numeric, m_delta_values, f_max_k, mf_numeric, params_numeric, evolved, t))
+                       
+                    if plot_extrapolated: 
+                        ax.set_xlim(1e11, 1e18)
+                        ax.set_ylim(10**(-14), 1)
+                        ax.set_xlabel("$M_\mathrm{PBH}~[\mathrm{g}]$")
+                        ax.set_ylabel("$f_\mathrm{PBH}$")
+                        ax.set_xscale("log")
+                        ax.set_yscale("log")
+                        ax.legend(fontsize="small")
+                        fig.tight_layout()
+        
+                    if len(f_PBH_allbins_LN) != n_bins:
+                        print("Error: length of calculated constraint from each energy bin does not equal number of energy bins.")
+                        break
+                    
+                    f_PBH_i_LN = envelope(f_PBH_allbins_LN, save_argmin=False, fname=data_folder + "/argmin/LN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
+                    f_PBH_i_SLN = envelope(f_PBH_allbins_SLN, save_argmin=False, fname=data_folder + "/argmin/SLN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
+                    f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3, save_argmin=False, fname=data_folder + "/argmin/CC3_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
+                    f_PBH_i_numeric = envelope(f_PBH_allbins_numeric)
+                                   
+                    if evolved == False:
+                        if not E500:
+                            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                            data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "_GC_%s" % constraints_names_short[i]  + "_Carr_unevolved.txt"
+                        else:
+                            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                            data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "_GC_%s" % constraints_names_short[i]  + "_E500_Carr_unevolved.txt"
+                    else:
+                        if not E500:
+                            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                            data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "_GC_%s" % constraints_names_short[i]  + "_Carr.txt"
+                        else:
+                            data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                            data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                            data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                            data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "_GC_%s" % constraints_names_short[i]  + "_E500_Carr.txt"
+    
+                    np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
+                    np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
+                    np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
+                    np.savetxt(data_filename_numeric, [mp_values_numeric, f_PBH_i_numeric], delimiter="\t")
 
 #%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
 
@@ -297,12 +308,12 @@ if "__main__" == __name__:
 #%% Constraints from 2302.04408 (MW diffuse SPI with NFW template).
 
 if "__main__" == __name__:
-    # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
-    include_extrapolated = True
-    # If True, use extrapolated delta-function MF constraints down to 1e15g (using a power law fit) to calculate extended MF constraint.
-    include_extrapolated_upper = False    
-    # If True, plot extrapolated delta-function MF constraints down to 1e11g.
-    plot_extrapolate = False
+    # If True, use extrapolate delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
+    include_extrap = False
+    # If True, use extrapolate delta-function MF constraints down to 1e15g (using a power law fit) to calculate extended MF constraint.
+    include_extrap_upper = False
+    # If True, use extrapolate delta-function MF constraints down to 1e11g (below 1e16g, using a single power law fit) to calculate extended MF constraint.   
+    include_extrap_from_1e16g = True
     # If True, use evolved mass function.
     evolved = True
     # If True, evaluate the evolved mass function at t=0.
@@ -316,97 +327,90 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     mc_values = np.logspace(14, 20, 120)
-    mp_values_numeric = np.logspace(16, 20, 81)
     
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     m_delta_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
     
-    # If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse
-    for extrapolate_numeric_lower in [True, False]:
-        if extrapolate_numeric_lower:
-            extrapolate_numeric = "extrap_lower"
+    # Power-law exponent to use between 1e11g and 1e15g.
+    for exponent_PL in [0, 2, 3, 4]:
+        
+        if not evolved:
+            data_folder = "./Data-tests/unevolved"
+        elif t_initial:
+            data_folder = "./Data-tests/t_initial"
+            t = 0
         else:
-            extrapolate_numeric = ""
+            data_folder = "./Data-tests"
 
-        # Power-law exponent to use between 1e11g and 1e15g.
-        for exponent_PL_lower in [0, 2, 3, 4]:
+        if include_extrap:
+        
+            # Power-law exponent to use between 1e15g and 1e16g.
+            exponent_PL_upper = 2.0
             
-            if not evolved:
-                data_folder = "./Data-tests/unevolved"
-            elif t_initial:
-                data_folder = "./Data-tests/t_initial"
-                t = 0
-            else:
-                data_folder = "./Data-tests"
-    
-            if include_extrapolated:
+            m_delta_extrap_upper = np.logspace(15, 16, 11)
+            m_delta_extrap_lower = np.logspace(11, 15, 41)
             
-                # Power-law exponent to use between 1e15g and 1e16g.
-                exponent_PL_upper = 2.0
+            f_max_extrap_upper = min(f_max) * np.power(m_delta_extrap_upper / min(m_delta_values), exponent_PL_upper)
+            f_max_extrap_lower = min(f_max_extrap_upper) * np.power(m_delta_extrap_lower / min(m_delta_extrap_upper), exponent_PL_lower)
+        
+            f_max_total = np.concatenate((f_max_extrap_lower, f_max_extrap_upper, f_max))
+            m_delta_total = np.concatenate((m_delta_extrap_lower, m_delta_extrap_upper, m_delta_values))
+        
+            data_folder += "/PL_exp_{:.0f}".format(exponent_PL_lower)
+        
+        elif include_extrap_upper:
+        
+            # Power-law exponent to use between 5e14g and 1e16g.
+            exponent_PL_upper = 2.0
+            
+            m_delta_extrap_upper = np.logspace(np.log10(5e14), 16, 11)
+            
+            f_max_extrap_upper = min(f_max) * np.power(m_delta_extrap_upper / min(m_delta_values), exponent_PL_upper)
+        
+            f_max_total = np.concatenate((f_max_extrap_upper, f_max))
+            m_delta_total = np.concatenate((m_delta_extrap_upper, m_delta_values))
+        
+            data_folder += "/upper_PL_exp_{:.0f}".format(exponent_PL_upper)
+        
+        elif include_extrap_from_1e16g:
+            # Power-law exponent to use between 1e15g and 1e16g.
+            m_delta_extrap = np.logspace(11, 16, 51)
+            f_max_extrap = min(f_max) * np.power(m_delta_extrap / min(m_delta_values), exponent_PL)
+        
+            f_max_total = np.concatenate((f_max_extrap, f_max))
+            m_delta_total = np.concatenate((m_delta_extrap, m_delta_values))
+        
+            data_folder += "/PL_exp_{:.0f}_from_1e16g".format(exponent_PL_lower)
+
+        
+        else:
+            f_max_total = f_max
+            m_delta_total = m_delta_values
+           
+        
+        for j in range(len(Deltas)):
+            
+            if include_extrap:
+                data_filename_LN = data_folder + "/LN_2302.04408_Delta={:.1f}_extrap_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                data_filename_SLN = data_folder + "/SLN_2302.04408_Delta={:.1f}_extrap_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                data_filename_CC3 = data_folder + "/CC3_2302.04408_Delta={:.1f}_extrap_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+        
+            else:          
+                data_filename_LN = data_folder + "/LN_2302.04408_Delta={:.1f}.txt".format(Deltas[j])
+                data_filename_SLN = data_folder + "/SLN_2302.04408_Delta={:.1f}.txt".format(Deltas[j])
+                data_filename_CC3 = data_folder + "/CC3_2302.04408_Delta={:.1f}.txt".format(Deltas[j])
                 
-                m_delta_extrapolated_upper = np.logspace(15, 16, 11)
-                m_delta_extrapolated_lower = np.logspace(11, 15, 41)
-                
-                f_max_extrapolated_upper = min(f_max) * np.power(m_delta_extrapolated_upper / min(m_delta_values), exponent_PL_upper)
-                f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+            params_LN = [sigmas_LN[j]]
+            params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+            params_CC3 = [alphas_CC3[j], betas[j]]
+                           
+            f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
+            f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
+            f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
             
-                f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max))
-                m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values))
-            
-                data_folder += "/PL_exp_{:.0f}".format(exponent_PL_lower)
-            
-            elif include_extrapolated_upper:
-            
-                # Power-law exponent to use between 5e14g and 1e16g.
-                exponent_PL_upper = 2.0
-                
-                m_delta_extrapolated_upper = np.logspace(np.log10(5e14), 16, 11)
-                
-                f_max_extrapolated_upper = min(f_max) * np.power(m_delta_extrapolated_upper / min(m_delta_values), exponent_PL_upper)
-            
-                f_max_total = np.concatenate((f_max_extrapolated_upper, f_max))
-                m_delta_total = np.concatenate((m_delta_extrapolated_upper, m_delta_values))
-            
-                data_folder += "/upper_PL_exp_{:.0f}".format(exponent_PL_upper)
-            
-            else:
-                f_max_total = f_max
-                m_delta_total = m_delta_values
-               
-            
-            for j in range(len(Deltas)):              
-                                
-                if include_extrapolated:                     
-                    data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                    data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                    data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                    data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "_2302.04408_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            
-                else:          
-                    data_filename_LN = data_folder + "/LN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_SLN = data_folder + "/SLN_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_CC3 = data_folder + "/CC3_2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "2302.04408_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    
-                params_LN = [sigmas_LN[j]]
-                params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
-                params_CC3 = [alphas_CC3[j], betas[j]]
-                
-                # Numeric MF parameters are the function arguments Delta, extrapolate_lower, custom_mp, params, normalise_to_CC3, normalise_to_SLN, mc_SLN, log_interp
-                if Deltas[j] < 2:
-                    params_numeric = [Deltas[j], extrapolate_numeric_lower]
-                else:
-                    params_numeric = [Deltas[j], extrapolate_numeric_lower, True, params_SLN, False, True, np.exp(ln_mc_SLN[j])]
-                   
-                f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
-                f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
-                f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
-                f_pbh_numeric = constraint_Carr(mp_values_numeric, m_delta_total, f_max_total, mf_numeric, params_numeric, evolved, t)
-                
-                np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
-                np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
-                np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
-                np.savetxt(data_filename_numeric, [mp_values_numeric, f_pbh_numeric], delimiter="\t")
+            np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
+            np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
+            np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
 
 
 #%% Constraints from 2202.07483 (SPI constraints using NFW template).
@@ -441,7 +445,6 @@ if "__main__" == __name__:
 
         # Power-law exponent to use between 1e11g and 1e15g.
         for exponent_PL_lower in [0, 2, 3, 4]:
-            print(exponent_PL_lower)
             if not evolved:
                 data_folder = "./Data-tests/unevolved"
             elif t_initial:
@@ -472,13 +475,13 @@ if "__main__" == __name__:
                     data_filename_LN = data_folder + "/LN_2202.07483_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
                     data_filename_SLN = data_folder + "/SLN_2202.07483_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
                     data_filename_CC3 = data_folder + "/CC3_2202.07483_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                    data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "2202.07483_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                    data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "2202.07483_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
        
                 else:          
                     data_filename_LN = data_folder + "/LN_2202.07483_Carr_Delta={:.1f}.txt".format(Deltas[j])
                     data_filename_SLN = data_folder + "/SLN_2202.07483_Carr_Delta={:.1f}.txt".format(Deltas[j])
                     data_filename_CC3 = data_folder + "/CC3_2202.07483_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "2202.07483_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                    data_filename_numeric = data_folder + "/numeric_%s" % extrapolate_numeric + "2202.07483_Carr_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
                    
                 params_LN = [sigmas_LN[j]]
                 params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
@@ -591,10 +594,7 @@ if "__main__" == __name__:
                         f_max_total = f_max
                         m_delta_total = m_delta_values
                         data_folder = data_folder_base
-                        
-                    # Maximum mass at which the power-law MF is defined
-                    m_max_PL = 100 * max(m_delta_total)   
-                    
+                                            
                     for j in range(len(Deltas)):                
                         if include_extrapolated:                     
                             data_filename_LN = data_folder + "/LN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
@@ -613,7 +613,7 @@ if "__main__" == __name__:
                         params_CC3 = [alphas_CC3[j], betas[j]]
                         
                         # Numeric MF parameters are the function arguments Delta, extrapolate_lower, custom_mp, params, normalise_to_CC3, normalise_to_SLN, mc_SLN, log_interp
-                        if Deltas[j] < 2:
+                        if Deltas[j] < 5:
                             params_numeric = [Deltas[j], extrapolate_numeric_lower]
                         else:
                             params_numeric = [Deltas[j], extrapolate_numeric_lower, True, params_SLN, False, True, np.exp(ln_mc_SLN[j])]
@@ -1040,7 +1040,8 @@ if "__main__" == __name__:
                     np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
                     np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
                     np.savetxt(data_filename_numeric, [mp_values_numeric, f_pbh_numeric], delimiter="\t")
-        
+
+"""
 #%% Constraints from 2302.04408 (MW diffuse SPI with NFW template).
 # Use for convergence tests with number of masses in preliminaries.py and range of masses included in power-law extrapolation of the delta-function MF constraint.
 # Consider the evolved MFs only, with PL extrapolation.
@@ -1167,4 +1168,4 @@ if "__main__" == __name__:
             np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
             np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
             np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
-
+"""
