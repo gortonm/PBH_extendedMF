@@ -143,7 +143,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
     return np.array(mp_GC), np.array(f_PBH_GC)
 
 
-def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower=2, extrap_numeric_lower=False, extrap_numeric_upper=False):
+def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL=2, extrap_numeric_lower=False, extrap_numeric_upper=False):
     """
     Load extended MF constraints from the delta-function MF constraints obtained by Korwar & Profumo (2023) [2302.04408].
 
@@ -159,7 +159,7 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is 
         True.
-    exponent_PL_lower : Float, optional
+    exponent_PL : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-
         function MF constraint. The default is 2.
     extrap_numeric_lower : Boolean, optional
@@ -180,10 +180,9 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
 
     # Path to extended MF constraints
     if evolved:
-        data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+        data_folder = "./Data-tests/PL_exp_{:.0f}_from_1e16g".format(exponent_PL)
     else:
-        data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(
-            exponent_PL_lower)
+        data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}_from_1e16g".format(exponent_PL)
 
     # Load data for the appropriate extended mass function (or delta-function MF):
     if mf == None:
@@ -207,24 +206,17 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
             (m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
 
     elif mf == LN:
-        data_filename = data_folder + \
-            "/LN_2302.04408_Delta={:.1f}_extrap_exp{:.0f}.txt".format(
-                Deltas[Delta_index], exponent_PL_lower)
+        data_filename = data_folder + "/LN_2302.04408_Delta={:.1f}.txt".format(Deltas[Delta_index])
         mc_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
         mp_KP23 = mc_KP23 * np.exp(-sigmas_LN[Delta_index]**2)
 
     elif mf == SLN:
-        data_filename = data_folder + \
-            "/SLN_2302.04408_Delta={:.1f}_extrap_exp{:.0f}.txt".format(
-                Deltas[Delta_index], exponent_PL_lower)
+        data_filename = data_folder + "/SLN_2302.04408_Delta={:.1f}.txt".format(Deltas[Delta_index])
         mc_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
-        mp_KP23 = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index],
-                             alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_KP23]
+        mp_KP23 = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_KP23]
 
     elif mf == CC3:
-        data_filename = data_folder + \
-            "/CC3_2302.04408_Delta={:.1f}_extrap_exp{:.0f}.txt".format(
-                Deltas[Delta_index], exponent_PL_lower)
+        data_filename = data_folder + "/CC3_2302.04408_Delta={:.1f}.txt".format(Deltas[Delta_index])
         mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
 
     elif mf == mf_numeric:
@@ -235,8 +227,8 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL_lower
         if extrap_numeric_upper:
             extrap_numeric = "extrap_upper_"
         data_filename = data_folder + "/numeric_%s" % extrap_numeric + \
-            "2302.04408_Delta={:.1f}_extrap_exp{:.0f}.txt".format(
-                Deltas[Delta_index], exponent_PL_lower)
+            "2302.04408_Delta={:.1f}.txt".format(
+                Deltas[Delta_index])
         mp_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
 
     return np.array(mp_KP23), np.array(f_PBH_KP23)
@@ -774,7 +766,7 @@ def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, 
         mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=alpha)
 
 
-def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=False, extrap_numeric_upper=False, exponent_PL_lower=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=False, extrap_numeric_upper=False, exponent_PL=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the delta-function MF constraints obtained by Korwar & Profumo (2023) [2302.04408].    
 
@@ -797,7 +789,7 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=F
     extrap_numeric_upper : Boolean, optional
         If True, extrapolate the MF at larger masses than given in the data
         as a constant. The default is False.
-    exponent_PL_lower : Float, optional
+    exponent_PL : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-
         function MF. The default is 2.
     evolved : Boolean, optional
@@ -822,7 +814,7 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=F
     """
 
     mp, f_PBH = load_data_KP23(Deltas, Delta_index, mf, evolved,
-                               exponent_PL_lower, extrap_numeric_lower, extrap_numeric_upper)
+                               exponent_PL, extrap_numeric_lower, extrap_numeric_upper)
 
     if show_label:
         label = find_label(mf)
@@ -1133,6 +1125,10 @@ if "__main__" == __name__:
                 linestyle="dashdot", color="brown")
         ax.text(4e17, 0.2, "GC photons \n (template fit)",
                 fontsize="xx-small", color="brown")
+        
+        m_delta_21cm, f_PBH_21cm = load_data("2108.13256/2108.13256_Fig4_21cm.csv")
+        ax.plot(m_delta_21cm, f_PBH_21cm, color="y")
+        ax.text(4e17, 0.04, "21 cm (EDGES)", fontsize="xx-small", color="y")
 
     if plot_prospective:
         plotter_GECCO(Deltas, Delta_index, ax,
@@ -1367,9 +1363,9 @@ if "__main__" == __name__:
     # If True, plot unevolved MF constraint
     plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
-    plot_fracdiff = False
+    plot_fracdiff = True
     # If True, plot the fractional difference between the different fitting functions
-    plot_fracdiff_fits = False
+    plot_fracdiff_fits = True
 
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'tab:red', 'tab:blue', 'k', 'orange']
@@ -1511,51 +1507,35 @@ if "__main__" == __name__:
                 ax.set_xscale("log")
                 ax.set_yscale("log")
 
-                plotter_KP23(
-                    Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
-                plotter_KP23(
-                    Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
-                plotter_KP23(
-                    Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
-                plotter_KP23(
-                    Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
-                plotter_KP23(
-                    Deltas, i, ax, color=colors[4], mf=mf_numeric, linestyle="solid", extrap_numeric_upper=False)
-                plotter_KP23(Deltas, i, ax, color=colors[4], mf=mf_numeric,
-                             linestyle="None", marker="x", extrap_numeric_upper=True)
+                plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2)
+                plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, linestyle=(0, (5, 1)))
+                plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)))
+                plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed")
+                #plotter_KP23(Deltas, i, ax, color=colors[4], mf=mf_numeric, linestyle="solid", extrap_numeric_upper=False)
+                #plotter_KP23(Deltas, i, ax, color=colors[4], mf=mf_numeric, linestyle="None", marker="x", extrap_numeric_upper=True)
 
                 # If required, plot the fractional difference from the delta-function MF constraint
                 if plot_fracdiff:
 
-                    mp_LN_evolved, f_PBH_LN_evolved = load_data_KP23(
-                        Deltas, i, mf=LN, evolved=True)
-                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_KP23(
-                        Deltas, i, mf=SLN, evolved=True)
-                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_KP23(
-                        Deltas, i, mf=CC3, evolved=True)
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_KP23(Deltas, i, mf=LN, evolved=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
 
-                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_KP23(
-                        Deltas, i, mf=LN, evolved=False)
-                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_KP23(
-                        Deltas, i, mf=SLN, evolved=False)
-                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_KP23(
-                        Deltas, i, mf=CC3, evolved=False)
+                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_KP23(Deltas, i, mf=LN, evolved=False)
+                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_KP23(Deltas, i, mf=SLN, evolved=False)
+                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_KP23(Deltas, i, mf=CC3, evolved=False)
 
                     fig1, ax1a = plt.subplots(figsize=(6, 6))
-                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(
-                        f_PBH_LN_evolved, f_PBH_LN_unevolved, mp_LN_evolved, mp_LN_unevolved)), label="LN", color="r")
-                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(
-                        f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
-                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(
-                        f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
+                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_LN_unevolved, mp_LN_evolved, mp_LN_unevolved)), label="LN", color="r")
+                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
+                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
 
                     ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
                     ax1a.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax1a.set_xscale("log")
                     ax1a.set_yscale("log")
                     ax1a.set_title("$\Delta={:.0f}$".format(Deltas[i]))
-                    ax1a.legend(title="Evolved/unevolved - 1",
-                                fontsize="x-small")
+                    ax1a.legend(title="Evolved/unevolved - 1", fontsize="x-small")
                     ax1a.set_xlim(xmin=1e16)
                     ax1a.set_ylim(ymax=1e2)
                     ax1a.grid()
@@ -1563,54 +1543,39 @@ if "__main__" == __name__:
 
                 if plot_fracdiff_fits:
                     fig2, ax2 = plt.subplots(figsize=(5, 5))
-                    mp_LN_evolved, f_PBH_LN_evolved = load_data_KP23(
-                        Deltas, i, mf=LN, evolved=True)
-                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_KP23(
-                        Deltas, i, mf=SLN, evolved=True)
-                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_KP23(
-                        Deltas, i, mf=CC3, evolved=True)
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_KP23(Deltas, i, mf=LN, evolved=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_KP23(Deltas, i, mf=SLN, evolved=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_KP23(Deltas, i, mf=CC3, evolved=True)
 
-                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved,
-                             mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
-                    ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved,
-                             mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
-                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved,
-                             mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
-                    ax2.set_ylabel(
-                        "$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved, mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
+                    ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
+                    ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
                     ax2.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax2.set_xscale("log")
                     ax2.set_yscale("log")
-                    ax2.set_title("$\Delta={:.1f}$ (KP '23)".format(
-                        Deltas[i]), fontsize="small")
+                    ax2.set_title("$\Delta={:.1f}$ (KP '23)".format(Deltas[i]), fontsize="small")
                     ax2.legend(fontsize="xx-small")
                     # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
-                    ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(
-                        mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
+                    ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
                     ax2.set_ylim(ymin=1e-2, ymax=1e2)
 
                     y_major = mpl.ticker.LogLocator(base=10.0, numticks=5)
                     ax2.yaxis.set_major_locator(y_major)
-                    y_minor = mpl.ticker.LogLocator(
-                        base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=5)
+                    y_minor = mpl.ticker.LogLocator(base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=5)
                     ax2.yaxis.set_minor_locator(y_minor)
                     ax2.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
                     ax2.grid()
                     fig2.tight_layout()
-                    fig2.savefig(
-                        "./Tests/Figures/Fracdiff_fits/KP23_Delta={:.1f}.png".format(Deltas[i]))
+                    fig2.savefig("./Tests/Figures/Fracdiff_fits/KP23_Delta={:.1f}.png".format(Deltas[i]))
 
                 # If required, plot constraints obtained with unevolved MF
                 if plot_unevolved:
-                    plotter_KP23(
-                        Deltas, i, ax, color=colors[0], linestyle="solid")
-                    plotter_KP23(
-                        Deltas, i, ax, color=colors[1], mf=LN, evolved=False)
-                    plotter_KP23(
-                        Deltas, i, ax, color=colors[2], mf=SLN, evolved=False)
-                    plotter_KP23(
-                        Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)
+                    plotter_KP23(Deltas, i, ax, color=colors[0], linestyle="solid")
+                    plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, evolved=False)
+                    plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, evolved=False)
+                    plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)
                     #plotter_KP23(Deltas, i, ax, color=colors[4], mf=mf_numeric, evolved=False, extrapolate_numeric_lower=extrapolate_numeric_lower)
 
                 ax.set_title("Soft gamma-rays")
@@ -1621,22 +1586,17 @@ if "__main__" == __name__:
                 with_bkg_subtr = True
                 prop_B_lower = True
 
-                plotter_BC19(Deltas, i, ax, color=colors[0], mf=None, prop_A=prop_A,
-                             with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle="solid")
+                plotter_BC19(Deltas, i, ax, color=colors[0], mf=None, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle="solid")
 
                 for evolved in [True]:
                     if evolved == False:
                         alpha = 0.4
                     else:
                         alpha = 1
-                    plotter_BC19(Deltas, i, ax, color=colors[1], mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr,
-                                 prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, linestyle=(0, (5, 1)))
-                    plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr,
-                                 prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, linestyle=(0, (5, 7)))
-                    plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr,
-                                 prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, linestyle="dashed")
-                    plotter_BC19(Deltas, i, ax, color=colors[4], mf=mf_numeric, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr,
-                                 prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, extrapolate_numeric_lower=True)
+                    plotter_BC19(Deltas, i, ax, color=colors[1], mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, linestyle=(0, (5, 1)))
+                    plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, linestyle=(0, (5, 7)))
+                    plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, linestyle="dashed")
+                    plotter_BC19(Deltas, i, ax, color=colors[4], mf=mf_numeric, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, extrapolate_numeric_lower=True)
                     #plotter_BC19(Deltas, i, ax, color=colors[4], mf=mf_numeric, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle="dotted", evolved=evolved, extrapolate_numeric_lower=False)
 
                 ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
@@ -1648,34 +1608,24 @@ if "__main__" == __name__:
                 # If required, plot the fractional difference from the delta-function MF constraint
                 if plot_fracdiff:
 
-                    mp_LN_evolved, f_PBH_LN_evolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True, extrapolate_numeric_lower=extrapolate_numeric_lower)
-                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True, extrapolate_numeric_lower=extrapolate_numeric_lower)
-                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True, extrapolate_numeric_lower=extrapolate_numeric_lower)
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_Voyager_BC19(Deltas, i, mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True, extrapolate_numeric_lower=extrapolate_numeric_lower)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Voyager_BC19(Deltas, i, mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True, extrapolate_numeric_lower=extrapolate_numeric_lower)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Voyager_BC19(Deltas, i, mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=True, extrapolate_numeric_lower=extrapolate_numeric_lower)
 
-                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False, extrapolate_numeric_lower=extrapolate_numeric_lower)
-                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False, extrapolate_numeric_lower=extrapolate_numeric_lower)
-                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False, extrapolate_numeric_lower=extrapolate_numeric_lower)
+                    mp_LN_unevolved, f_PBH_LN_unevolved = load_data_Voyager_BC19(Deltas, i, mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False, extrapolate_numeric_lower=extrapolate_numeric_lower)
+                    mp_SLN_unevolved, f_PBH_SLN_unevolved = load_data_Voyager_BC19(Deltas, i, mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False, extrapolate_numeric_lower=extrapolate_numeric_lower)
+                    mp_CC3_unevolved, f_PBH_CC3_unevolved = load_data_Voyager_BC19(Deltas, i, mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, evolved=False, extrapolate_numeric_lower=extrapolate_numeric_lower)
 
                     fig1, ax1a = plt.subplots(figsize=(6, 6))
-                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(
-                        f_PBH_LN_evolved, f_PBH_LN_unevolved, mp_LN_evolved, mp_LN_unevolved)), label="LN", color="r")
-                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(
-                        f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
-                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(
-                        f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
+                    ax1a.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_LN_unevolved, mp_LN_evolved, mp_LN_unevolved)), label="LN", color="r")
+                    ax1a.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_SLN_unevolved, mp_SLN_evolved, mp_SLN_unevolved)), label="SLN", color="b")
+                    ax1a.plot(mp_CC3_evolved, np.abs(frac_diff(f_PBH_CC3_evolved, f_PBH_CC3_unevolved, mp_CC3_evolved, mp_CC3_unevolved)), label="CC3", color="g")
                     ax1a.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
                     ax1a.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax1a.set_xscale("log")
                     ax1a.set_yscale("log")
                     ax1a.set_title("$\Delta={:.0f}$".format(Deltas[i]))
-                    ax1a.legend(title="Evolved/unevolved - 1",
-                                fontsize="x-small")
+                    ax1a.legend(title="Evolved/unevolved - 1", fontsize="x-small")
                     ax1a.set_xlim(xmin=1e16)
                     ax1a.set_ylim(ymax=1e2)
                     ax1a.grid()
@@ -1683,36 +1633,26 @@ if "__main__" == __name__:
 
                 if plot_fracdiff_fits:
                     fig2, ax2 = plt.subplots(figsize=(5, 5))
-                    mp_LN_evolved, f_PBH_LN_evolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=LN, evolved=True, prop_A=False, with_bkg_subtr=True)
-                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=SLN, evolved=True, prop_A=False, with_bkg_subtr=True)
-                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Voyager_BC19(
-                        Deltas, i, mf=CC3, evolved=True, prop_A=False, with_bkg_subtr=True)
+                    mp_LN_evolved, f_PBH_LN_evolved = load_data_Voyager_BC19(Deltas, i, mf=LN, evolved=True, prop_A=False, with_bkg_subtr=True)
+                    mp_SLN_evolved, f_PBH_SLN_evolved = load_data_Voyager_BC19(Deltas, i, mf=SLN, evolved=True, prop_A=False, with_bkg_subtr=True)
+                    mp_CC3_evolved, f_PBH_CC3_evolved = load_data_Voyager_BC19(Deltas, i, mf=CC3, evolved=True, prop_A=False, with_bkg_subtr=True)
 
-                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved,
-                             mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
-                    ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved,
-                             mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
-                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved,
-                             mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
-                    ax2.set_ylabel(
-                        "$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_LN_evolved, mp_SLN_evolved, mp_LN_evolved)), label="LN vs SLN", color="purple")
+                    ax2.plot(mp_LN_evolved, np.abs(frac_diff(f_PBH_LN_evolved, f_PBH_CC3_evolved, mp_LN_evolved, mp_CC3_evolved)), label="LN vs CC3", color="brown")
+                    ax2.plot(mp_SLN_evolved, np.abs(frac_diff(f_PBH_SLN_evolved, f_PBH_CC3_evolved, mp_SLN_evolved, mp_CC3_evolved)), label="SLN vs CC3", color="turquoise")
+                    ax2.set_ylabel("$|\Delta f_\mathrm{PBH} / f_\mathrm{PBH}|$")
                     ax2.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                     ax2.set_xscale("log")
                     ax2.set_yscale("log")
-                    ax2.set_title("$\Delta={:.1f}$ (Voyager 1)".format(
-                        Deltas[i]), fontsize="small")
+                    ax2.set_title("$\Delta={:.1f}$ (Voyager 1)".format(Deltas[i]), fontsize="small")
                     ax2.legend(fontsize="xx-small")
                     # Set upper x-axis limit to the maximum m_p where f_PBH = 1 is allowed for any of the fitting functions
-                    ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(
-                        mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
+                    ax2.set_xlim(xmin=1e16, xmax=max([min(mp_CC3_evolved[f_PBH_CC3_evolved > 1]), min(mp_SLN_evolved[f_PBH_SLN_evolved > 1]), min(mp_LN_evolved[f_PBH_LN_evolved > 1])]))
                     ax2.set_ylim(ymin=1e-2, ymax=1e2)
 
                     y_major = mpl.ticker.LogLocator(base=10.0, numticks=5)
                     ax2.yaxis.set_major_locator(y_major)
-                    y_minor = mpl.ticker.LogLocator(
-                        base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=5)
+                    y_minor = mpl.ticker.LogLocator(base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=5)
                     ax2.yaxis.set_minor_locator(y_minor)
                     ax2.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
@@ -1762,27 +1702,27 @@ if "__main__" == __name__:
                     "./Tests/Figures/Fracdiff_fits/Subaru_Delta={:.1f}.png".format(Deltas[i]))
 
             # Plot Subaru-HSC constraints
-            """
+            
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[0], linestyle="solid", linewidth=2, show_label=False)
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[1], mf=LN,  linestyle=(0, (5, 1)), show_label=False)
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[2], mf=SLN, linestyle=(0, (5, 7)), show_label=False)
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=False)
-            """
-            colors_normalised = ["tab:blue", "tab:orange"]
+            
+            colors_normalised = ["tab:orange", "tab:blue"]
             linestyles = ["solid", "dashdot"]
             norm_string = ["normalised", "unnormalised"]
             
-            for k, normalised in enumerate([True, False]):
-                #plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=True, show_label=False, linestyle=linestyles[k])
-                #ax.plot(0, 0, colors_normalised[k], linestyle=linestyles[k], label="Evolved, no extrap., %s" % norm_string[k])
-                plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=True, show_label=False, extrap_numeric_upper=True, linestyle="None", marker="x")
-                ax.plot(0, 0, colors_normalised[k], linestyle=None, marker="x", label="Evolved, PL extrap., %s" % norm_string[k])
+            for k, normalised in enumerate([True]):
+                plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=True, show_label=False, linestyle=linestyles[k])
+                ax.plot(0, 0, colors_normalised[k], linestyle=linestyles[k], label="Evolved, no extrap., %s" % norm_string[k])
+                #plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=True, show_label=False, extrap_numeric_upper=True, linestyle="None", marker="x")
+                #ax.plot(0, 0, colors_normalised[k], linestyle=None, marker="x", label="Evolved, PL extrap., %s" % norm_string[k])
                 
-                #plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=False, show_label=False, linestyle=linestyles[k], alpha=0.4)
-                #ax.plot(0, 0, colors_normalised[k], linestyle=linestyles[k], alpha=0.4, label="Unevolved, no extrap., %s" % norm_string[k])
+                plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=False, show_label=False, linestyle=linestyles[k], alpha=0.4)
+                ax.plot(0, 0, colors_normalised[k], linestyle=linestyles[k], alpha=0.4, label="Unevolved, no extrap., %s" % norm_string[k])
                 
-                plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=False, show_label=False, alpha=0.4, extrap_numeric_upper=True, linestyle="None", marker="x")
-                ax.plot(0, 0, colors_normalised[k], linestyle=None, marker="x", alpha=0.4, label="Unevolved, PL extrap., %s" % norm_string[k])
+                #plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=False, show_label=False, alpha=0.4, extrap_numeric_upper=True, linestyle="None", marker="x")
+                #ax.plot(0, 0, colors_normalised[k], linestyle=None, marker="x", alpha=0.4, label="Unevolved, PL extrap., %s" % norm_string[k])
                
             # Set axis limits
             if Deltas[i] < 5:
