@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from preliminaries import load_data, m_max_SLN, load_results_Isatis, envelope, LN, SLN, CC3, frac_diff
-from plot_constraints import plotter_GC_Isatis
+from plot_constraints import plotter_GC_Isatis, set_ticks_grid
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 20, 'font.family':'serif'})
@@ -256,42 +256,38 @@ if "__main__" == __name__:
 
 if "__main__" == __name__:
     
-    from plot_constraints import load_data_KP23, set_ticks_grid
+    from plot_constraints import load_data_KP23
+    
+    include_extrap = False
+    include_extrap_from_1e16g = True
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    # Array of power law exponents to use at masses below 1e15g
-    exponents_PL_lower = [0, 2, 3, 4]
+    # Array of power law exponents to use at masses below 1e16g (1e15g if include_extrap = True)
+    exponents_PL = [0, 2, 3]
     
-    linestyles = ["solid", "dashed", "dashdot", "dotted"]
-    
+    #linestyles = ["solid", "dashed", "dashdot", "dotted"]
+    linestyles = ["solid", "dashed", "dotted"]
+   
     for j in range(len(Deltas)):
         
         m_delta_values, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
                             
         # Power-law exponent to use between 1e15g and 1e16g (motivated by mass-dependence of the positron spectrum emitted over energy)
         exponent_PL_upper = 2.0
+        if include_extrap:
+            m_delta_extrap_upper = np.logspace(15, 16, 11)
+            m_delta_extrap_lower = np.logspace(11, 15, 41)
+            f_max_extrap_upper = min(f_max) * np.power(m_delta_extrap_upper / min(m_delta_values), exponent_PL_upper)
+        elif include_extrap_from_1e16g:
+            m_delta_extrap = np.logspace(11, 16, 51)            
         
-        m_delta_extrapolated_upper = np.logspace(15, 16, 11)
-        m_delta_extrapolated_lower = np.logspace(11, 15, 41)
-        f_max_extrapolated_upper = min(f_max) * np.power(m_delta_extrapolated_upper / min(m_delta_values), exponent_PL_upper)
-
-        # If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse
-        extrapolate_numeric_lower = True
-        if extrapolate_numeric_lower:
-            extrapolate_numeric = "extrap_lower"
-        else:
-            extrapolate_numeric = ""
-
-        # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
-        exponents_PL_lower = [0, 2, 3, 4]
-        
-        linestyles = ["dashed", "dashdot", "dotted"]
+        linestyles = ["dashed", "dotted"]
                             
         if Deltas[j] in (0, 2, 5):
 
-            fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+            fig, axes = plt.subplots(2, 2, figsize=(9, 9))
             fig1, axes1 = plt.subplots(1, 3, figsize=(14, 5))
             
             ax0 = axes[0][0]
@@ -303,22 +299,41 @@ if "__main__" == __name__:
             ax2a = axes1.flatten()[1]
             ax3a = axes1.flatten()[2]
             
-            mp_LN_q0, f_PBH_LN_q0 = load_data_KP23(Deltas, j, mf=LN, evolved=True, exponent_PL_lower=0)
-            mp_SLN_q0, f_PBH_SLN_q0 = load_data_KP23(Deltas, j, mf=SLN, evolved=True, exponent_PL_lower=0)
-            mp_CC3_q0, f_PBH_CC3_q0 = load_data_KP23(Deltas, j, mf=CC3, evolved=True, exponent_PL_lower=0)
+            mp_LN_q0, f_PBH_LN_q0 = load_data_KP23(Deltas, j, mf=LN, evolved=True, exponent_PL=0)
+            mp_SLN_q0, f_PBH_SLN_q0 = load_data_KP23(Deltas, j, mf=SLN, evolved=True, exponent_PL=0)
+            mp_CC3_q0, f_PBH_CC3_q0 = load_data_KP23(Deltas, j, mf=CC3, evolved=True, exponent_PL=0)
             
-            ax0.plot(m_delta_extrapolated_upper, f_max_extrapolated_upper, color="tab:grey", linestyle="solid")
-            ax0.plot(m_delta_extrapolated_lower, f_max_extrapolated_upper[0] * np.ones(len(m_delta_extrapolated_lower)), color="tab:grey", linestyle="solid", label="0")
+            ax0.plot(m_delta_values, f_max, color="tab:grey")
+            if include_extrap:
+                ax0.plot(m_delta_extrap_upper, f_max_extrap_upper, color="tab:grey", linestyle="solid")
+                ax0.plot(m_delta_extrap_lower, f_max_extrap_upper[0] * np.ones(len(m_delta_extrap_lower)), color="tab:grey", linestyle="solid", label="0")
+            elif include_extrap_from_1e16g:
+                ax0.plot(m_delta_extrap, f_max[0] * np.ones(len(m_delta_extrap)), color="tab:grey", linestyle="solid", label="0")
+
             ax1.plot(0, 0, marker="None", linestyle="solid", color="k", label="{:.0f}".format(0))            
             ax1.plot(mp_LN_q0, f_PBH_LN_q0, linestyle="solid", color="r", marker="None")
             ax2.plot(mp_SLN_q0, f_PBH_SLN_q0, linestyle="solid", color="b", marker="None")
             ax3.plot(mp_CC3_q0, f_PBH_CC3_q0, linestyle="solid", color="g", marker="None")
 
-            for k, exponent_PL_lower in enumerate(exponents_PL_lower[1:]):
+            for k, exponent_PL in enumerate(exponents_PL[1:]):
                 
-                mp_LN, f_PBH_LN = load_data_KP23(Deltas, j, mf=LN, evolved=True, exponent_PL_lower=exponent_PL_lower)
-                mp_SLN, f_PBH_SLN = load_data_KP23(Deltas, j, mf=SLN, evolved=True, exponent_PL_lower=exponent_PL_lower)
-                mp_CC3, f_PBH_CC3 = load_data_KP23(Deltas, j, mf=CC3, evolved=True, exponent_PL_lower=exponent_PL_lower)
+                if include_extrap:
+                    m_delta_extrap_lower = np.logspace(11, 15, 41)
+                    f_max_extrap_lower = min(f_max_extrap_upper) * np.power(m_delta_extrap_lower / min(m_delta_extrap_upper), exponent_PL)
+                    f_max_total = np.concatenate((f_max_extrap_lower, f_max_extrap_upper, f_max))
+                    m_delta_total = np.concatenate((m_delta_extrap_lower, m_delta_extrap_upper, m_delta_values))
+                                                
+                elif include_extrap_from_1e16g:
+                    # Power-law exponent to use between 1e11g and 1e16g.
+                    m_delta_extrap = np.logspace(11, 16, 51)
+                    f_max_extrap = min(f_max) * np.power(m_delta_extrap / min(m_delta_values), exponent_PL)
+                
+                    f_max_total = np.concatenate((f_max_extrap, f_max))
+                    m_delta_total = np.concatenate((m_delta_extrap, m_delta_values))
+     
+                mp_LN, f_PBH_LN = load_data_KP23(Deltas, j, mf=LN, evolved=True, exponent_PL=exponent_PL)
+                mp_SLN, f_PBH_SLN = load_data_KP23(Deltas, j, mf=SLN, evolved=True, exponent_PL=exponent_PL)
+                mp_CC3, f_PBH_CC3 = load_data_KP23(Deltas, j, mf=CC3, evolved=True, exponent_PL=exponent_PL)
                             
                 ax1.plot(mp_LN, f_PBH_LN, linestyle=linestyles[k], color="r", marker="None")
                 ax2.plot(mp_SLN, f_PBH_SLN, linestyle=linestyles[k], color="b", marker="None")
@@ -334,14 +349,18 @@ if "__main__" == __name__:
                 ax2.set_title("SLN")
                 ax3.set_title("GCC")
                 
-                ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
-                f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
-                ax0.plot(m_delta_extrapolated_lower, f_max_extrapolated_lower, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
-                
-                # Plot fractional difference between constraints obtained with f_max = const. at masses below which f_max is publicly available, and those obtained with f_max \propto m^q (q corresponds to exponent_PL_lower in the code)
-                ax1a.plot(mp_LN_q0, np.abs(frac_diff(f_PBH_LN_q0, f_PBH_LN, mp_LN_q0, mp_LN)),linestyle=linestyles[k], color="r", label="{:.0f}".format(exponent_PL_lower))
-                ax2a.plot(mp_SLN_q0, np.abs(frac_diff(f_PBH_SLN_q0, f_PBH_SLN, mp_SLN_q0, mp_SLN)), linestyle=linestyles[k], color="b", label="{:.0f}".format(exponent_PL_lower))
-                ax3a.plot(mp_CC3_q0, np.abs(frac_diff(f_PBH_CC3_q0, f_PBH_CC3, mp_CC3_q0, mp_CC3)), linestyle=linestyles[k], color="g", label="{:.0f}".format(exponent_PL_lower))
+                ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL))
+                if include_extrap:
+                    f_max_extrapolated_lower = min(f_max_extrap_upper) * np.power(m_delta_extrap_lower / min(m_delta_extrap_upper), exponent_PL)
+                    ax0.plot(m_delta_extrap_lower, f_max_extrap_lower, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL))
+                elif include_extrap_from_1e16g:
+                    f_max_extrap = min(f_max) * np.power(m_delta_extrap / min(m_delta_values), exponent_PL)
+                    ax0.plot(m_delta_extrap, f_max_extrap, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL))
+
+                # Plot fractional difference between constraints obtained with f_max = const. at masses below which f_max is publicly available, and those obtained with f_max \propto m^q (q corresponds to exponent_PL in the code)
+                ax1a.plot(mp_LN_q0, np.abs(frac_diff(f_PBH_LN_q0, f_PBH_LN, mp_LN_q0, mp_LN)),linestyle=linestyles[k], color="r", label="{:.0f}".format(exponent_PL))
+                ax2a.plot(mp_SLN_q0, np.abs(frac_diff(f_PBH_SLN_q0, f_PBH_SLN, mp_SLN_q0, mp_SLN)), linestyle=linestyles[k], color="b", label="{:.0f}".format(exponent_PL))
+                ax3a.plot(mp_CC3_q0, np.abs(frac_diff(f_PBH_CC3_q0, f_PBH_CC3, mp_CC3_q0, mp_CC3)), linestyle=linestyles[k], color="g", label="{:.0f}".format(exponent_PL))
                 
                 ax1a.set_title("LN")
                 ax2a.set_title("SLN")
@@ -356,14 +375,16 @@ if "__main__" == __name__:
             plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, params=[alphas_CC3[j], betas[j]], linestyle="dotted")
             """
-            ax0.plot(m_delta_values, f_max, color="tab:grey")
             ax0.set_xlabel(r"$m~[{\rm g}]$")
             ax0.set_ylabel("$f_\mathrm{max}$")
             ax0.set_xscale("log")
             ax0.set_yscale("log")
             ax0.set_xlim(1e13, 1e17)
-            ax0.set_ylim(min(f_max_extrapolated_lower[m_delta_extrapolated_lower > 1e13]), 1)
-            
+            if include_extrap:
+                ax0.set_ylim(min(f_max_extrapolated_lower[m_delta_extrap_lower > 1e13]), 1)
+            elif include_extrap_from_1e16g:
+                ax0.set_ylim(min(f_max_extrap[m_delta_extrap > 1e13]), 1)
+           
             ax1a.set_xlim(1e16, mp_max_LN)
             ax2a.set_xlim(1e16, mp_max_SLN)
             ax3a.set_xlim(1e16, mp_max_CC3)
@@ -500,10 +521,11 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
-    exponents_PL_lower = [0, 2, 3, 4]
+    exponents_PL_lower = [0, 2, 3]
     
-    linestyles = ["dashed", "dashdot", "dotted"]
-    
+    #linestyles = ["dashed", "dashdot", "dotted"]
+    linestyles = ["dashed", "dotted", "dotted"]
+   
     # Boolean determines which propagation model to load data from
     prop_A = False
     prop_B = not prop_A
@@ -551,7 +573,7 @@ if "__main__" == __name__:
         
         if Deltas[j] in ([0, 2, 5]):
         
-            fig, axes = plt.subplots(2, 2, figsize=(12, 12))
+            fig, axes = plt.subplots(2, 2, figsize=(9, 9))
             fig1, axes1 = plt.subplots(1, 3, figsize=(14, 5))
             
             ax0 = axes[0][0]
@@ -579,7 +601,6 @@ if "__main__" == __name__:
             ax2.set_title("SLN")
             ax3.set_title("GCC")
             
-            ax1.plot(0, 0, marker="None", linestyle=linestyles[0], color="k", label="{:.0f}".format(exponent_PL_lower))
             f_max_extrapolated = min(f_max) * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle="solid", label="{:.0f}".format(exponent_PL_lower))
             ax1.plot(0, 0, marker="None", linestyle="solid", color="k", label="{:.0f}".format(0))            
@@ -661,11 +682,12 @@ if "__main__" == __name__:
                 set_ticks_grid(axa)
              
             ax0.tick_params("x", pad=7)
-            ax0.legend(fontsize="xx-small", title="$q$")        
-            ax1.legend(fontsize="xx-small", title="$q$")
+            ax0.legend(fontsize="x-small", title="$q$")        
+            ax1.legend(fontsize="x-small", title="$q$")
                         
             for f in [fig, fig1]:
-                f.suptitle("Voyager 1 [1807.03075], $\Delta={:.1f}$".format(Deltas[j]) + " %s" % prop_string)
+                #f.suptitle("Voyager 1 [1807.03075], $\Delta={:.1f}$".format(Deltas[j]) + " %s" % prop_string)
+                f.suptitle("Voyager 1 [1807.03075], $\Delta={:.1f}$".format(Deltas[j]))
                 f.tight_layout()
             
      
@@ -784,7 +806,7 @@ if "__main__" == __name__:
         fig.suptitle("511 keV line [1912.01014], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
 
-#%% Plot results obtained using different power-law exponents in f_max at low masses (from CMB anisotropies [2108.13256]\e).
+#%% Plot results obtained using different power-law exponents in f_max at low masses (from CMB anisotropies [2108.13256]).
 
 if "__main__" == __name__:
     
