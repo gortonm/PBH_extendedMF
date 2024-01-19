@@ -68,7 +68,8 @@ def load_data(filename, directory="./Extracted_files/"):
     filename : String
         Name of file to load data from.
     directory : String
-        Directory in which the file is located. The default is "./../Extracted_files/".
+        Directory in which the file is located. The default is 
+        "./../Extracted_files/".
     Returns
     -------
     Array-like.
@@ -88,15 +89,16 @@ def frac_diff(y1, y2, x1, x2, interp_log = True):
     Parameters
     ----------
     y1 : Array-like
-        Array to find fractional difference of, evaluated at x1.
+        First array.
     y2 : Array-like
-        Array to find fractional difference of, evaluated at x2.
+        Second array. The length of y2 must be the same as the length of y1.
     x1 : Array-like
         x-axis values that y1 is evaluated at.
     x2 : Array-like
         x-axis values that y2 is evaluated at.
     interp_log : Boolean, optional
-        If True, use logarithmic interpolation to evaluate y1 at x2. The default is True.
+        If True, use logarithmic interpolation to evaluate y1 at x2. 
+        The default is True.
 
     Returns
     -------
@@ -112,7 +114,9 @@ def frac_diff(y1, y2, x1, x2, interp_log = True):
 
 def LN(m, m_c, sigma):
     """
-    Log-normal mass function (with characteristic mass m_c and standard deviation sigma), evaluated at m.
+    Log-normal mass function (with characteristic mass m_c and standard 
+    deviation sigma), evaluated at m.
+    
     Parameters
     ----------
     m : Array-like
@@ -131,7 +135,9 @@ def LN(m, m_c, sigma):
 
 def SLN(m, m_c, sigma, alpha):
     """
-    Skew-lognormal mass function (defined in 2009.03204 Eq. 8), with characteristic mass m_c and parameters sigma and alpha, evaluated at m.
+    Skew-lognormal mass function (defined in 2009.03204 Eq. 8), with 
+    characteristic mass m_c and parameters sigma and alpha, evaluated at m.
+    
     Parameters
     ----------
     m : Array-like
@@ -152,7 +158,9 @@ def SLN(m, m_c, sigma, alpha):
 
 def CC3(m, m_p, alpha, beta):
     """
-    Critical collapse 3 mass function (defined in 2009.03204 Eq. 9), with peak mass m_p and parameters alpha and beta, evaluated at m.
+    Critical collapse 3 mass function (defined in 2009.03204 Eq. 9), with peak 
+    mass m_p and parameters alpha and beta, evaluated at m.
+    
     Parameters
     ----------
     m : Array-like
@@ -175,7 +183,8 @@ def CC3(m, m_p, alpha, beta):
 
 def PL_MF(m_values, m_min, m_max, gamma=-1/2):
     """
-    Power-law mass function, defined in e.g. Eq. (3.1) of Bellomo et al. (2018) [1709.07467].
+    Power-law mass function, defined in e.g. Eq. (3.1) of Bellomo et al. (2018)
+    [1709.07467].
 
     Parameters
     ----------
@@ -186,7 +195,8 @@ def PL_MF(m_values, m_min, m_max, gamma=-1/2):
     m_max : Float
         Maximum mass at which the power-law mass function is defined.
     gamma : Float, optional
-        Power law exponent. The default is -1/2 (the value for PBHs formed during the radiation-dominated epoch).
+        Power law exponent. The default is -1/2 (the value for PBHs formed 
+        during the radiation-dominated epoch).
 
     Returns
     -------
@@ -357,9 +367,11 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
     alpha : Float
         Parameter controls the skewness (alpha=0 reduces to a lognormal).
     log_m_factor : Float, optional
-        Number of multiples of sigma (in log-space) of masses around m_c to consider when estimating the maximum. The default is 5.
+        Number of multiples of sigma (in log-space) of masses around m_c to 
+        consider when estimating the maximum. The default is 5.
     n_steps : Integer, optional
-        Number of masses to use for estimating the peak mass of the skew-lognormal mass function. The default is 100000.
+        Number of masses to use for estimating the peak mass of the skew-
+        lognormal mass function. The default is 100000.
     Returns
     -------
     Float
@@ -445,7 +457,8 @@ def psi_evolved(psi_formation, M_values, M_init_values):
     Returns
     -------
     Array-like
-        Evolved values of the PBH mass density distribution function (not normalised to unity).
+        Evolved values of the PBH mass density distribution function (not 
+        normalised to unity).
 
     """
     return psi_formation * (M_values / M_init_values)**3
@@ -469,7 +482,8 @@ def psi_evolved_normalised(psi_formation, M_values, M_init_values):
     Returns
     -------
     Array-like
-        Evolved values of the PBH mass density distribution function (normalised to unity).
+        Evolved values of the PBH mass density distribution function 
+        (normalised to unity).
 
     """
     return psi_evolved(psi_formation, M_values, M_init_values) / np.trapz(psi_evolved(psi_formation, M_values, M_init_values), M_values)
@@ -484,7 +498,8 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     mc_values : Array-like
     	Characteristic PBH masses (m_c for a (skew-)lognormal, m_p for CC3).
     m_delta : Array-like
-    	Masses at which constraints for a delta-function PBH mass function are evaluated.
+    	Masses at which constraints for a delta-function PBH mass function are 
+        evaluated.
     f_max : Array-like
     	Constraints obtained for a monochromatic mass function.
     psi_initial : Function
@@ -492,9 +507,11 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     params : Array-like
     	Parameters of the PBH mass function.
     evolved : Boolean
-    	If True, calculate constraints using the evolved PBH mass function. The default is True.
+    	If True, calculate constraints using the evolved PBH mass function. The 
+        default is True.
     t : Float
-    	If evolved == True, the time (after PBH formation) at which to evaluate PBH mass function. The default is t_0 (the present age of the Universe).
+    	If evolved == True, the time (after PBH formation) at which to evaluate 
+        PBH mass function. The default is t_0 (the present age of the Universe).
         
     Returns
     -------
@@ -525,7 +542,7 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
             integral = np.trapz(np.nan_to_num(integrand), m_delta)
             
         else:
-            integral = np.trapz(psi_initial(m_delta, m_c, *params) / f_max, m_delta)
+            integral = np.trapz((psi_initial(m_delta, m_c, *params) / f_max), m_delta)
             
         if integral == 0 or np.isnan(integral):
             f_pbh.append(10)
@@ -585,13 +602,21 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
     Parameters
     ----------
     mf_string : String, optional
-        The mass function to load constraints for. Acceptable inputs are "mono" (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and "CC3" (critical collapse 3), plus the value of the power spectrum width Delta. 
+        The mass function to load constraints for. Acceptable inputs are "mono" 
+        (monochromatic), "LN" (log-normal), "SLN" (skew-lognormal) and "CC3" 
+        (critical collapse 3), plus the value of the power spectrum width Delta. 
     modified : Boolean, optional
-        If True, use data from the modified version of Isatis. The modified version corrects a typo in the original version on line 1697 in Isatis.c which means that the highest-energy bin in the observational data set is not included. Otherwise, use the version of Isatis containing the typo. The default is True.
+        If True, use data from the modified version of Isatis. The modified 
+        version corrects a typo in the original version on line 1697 in 
+        Isatis.c which means that the highest-energy bin in the observational 
+        data set is not included. Otherwise, use the version of Isatis 
+        containing the typo. The default is True.
     test_mass_range : Boolean, optional
-        If True, use data obtained using the same PBH mass range for all Delta (1000 BHs evenly spaced in log space between 1e11-1e21g, if wide=False).
+        If True, use data obtained using the same PBH mass range for all Delta 
+        (1000 BHs evenly spaced in log space between 1e11-1e21g, if wide=False).
     wide : Boolean, optional
-        If True, use the 'wider' PBH mass range for all Delta (1000 BHs evenly spaced in log space between 1e11-1e22g).
+        If True, use the 'wider' PBH mass range for all Delta (1000 BHs evenly 
+        spaced in log space between 1e11-1e22g).
         
     Returns
     -------
@@ -3199,7 +3224,7 @@ if "__main__" == __name__:
     
     print("\nRecalculated")    
     # Calculate numeric MF constraint without calling constraint_Carr()
-    psi_initial_values = mf_numeric(m_delta_Subaru, m_p, Delta, normalised=normalised)
+    psi_initial_values = mf_numeric(m_delta_Subaru, m_p, Delta, normalised=normalised, extrap_upper_const=extrap_upper_const)
     f_pbh_Subaru_unevolved = 1 / np.trapz(psi_initial_values / f_max_Subaru, m_delta_Subaru)
     print("f_PBH (unevolved numeric MF) = {:.2e}".format(f_pbh_Subaru_unevolved))
     
@@ -3210,16 +3235,15 @@ if "__main__" == __name__:
     
     psi_evolved_values_normalised = psi_evolved_normalised(psi_initial_values, m_evolved, m_delta_Subaru)
     f_pbh_Subaru_evolved = 1 / np.trapz(psi_evolved_values_normalised / f_max_Subaru, m_evolved)
+    # This value is different from the others since the integral of the numeric
+    # MF over mass is only calculated for the range of masses where the 
+    # Subaru-HSC delta-function MF constraint is known
     print("f_PBH (evolved numeric MF using psi_evolved_normalised()) = {:.2e}".format(f_pbh_Subaru_evolved))
 
 #%%
     # Initial masses matching those used in constraint_Carr() when calculating constraints for evolved MFs.
     n_steps = 1000
     m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_Subaru)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_Subaru))+4, n_steps))))
-    #m_init_values = np.sort(np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_Subaru))+4, n_steps))
-    #m_init_values = np.logspace(np.log10(min(m_delta_Subaru)), np.log10(max(m_delta_Subaru)+4), n_steps)
-    #m_init_values = np.logspace(22, np.log10(max(m_delta_Subaru)+4), n_steps)
-    #m_init_values = np.logspace(21.98, np.log10(max(m_delta_Subaru)+4), n_steps)
 
     psi_initial_values = mf_numeric(m_init_values, m_p, Delta, normalised=normalised)
     print(psi_initial_values[0:50])
@@ -3231,3 +3255,75 @@ if "__main__" == __name__:
     f_pbh_Subaru_evolved = 1 / np.trapz(psi_evolved_values_interpolated / f_max_Subaru, m_delta_Subaru)
 
     print("f_PBH (evolved numeric MF following constraint_Carr) = {:.2e}".format(f_pbh_Subaru_evolved))
+
+#%% Convergence test for the normalisation factor of the numeric MF
+if "__main__" == __name__:
+    
+    filepath = "./Data/psiData/"
+    
+    for i in range(len(Deltas)):
+        
+        Delta = Deltas[i]
+        
+        # Load the data from the numerical MFs from Andrew Gow    
+        if Delta < 0.1:
+            log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Delta_k35.txt", unpack=True, skip_header=1)
+            # Only include the range of masses for which the numerical MF data has non-zero positive values.
+            mf_data = mf_data_loaded[mf_data_loaded > 0]
+            m_data = np.exp(log_m_data[mf_data_loaded > 0])
+        elif Delta < 2:
+            log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
+            # Only include the range of masses for which the numerical MF data has non-zero positive values.
+            mf_data = mf_data_loaded[mf_data_loaded > 0]
+            m_data = np.exp(log_m_data[mf_data_loaded > 0])
+        else:
+            log_m_data_tabulated, mf_data_tabulated = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
+            # For the Delta = 5 case, load the data from Fig. 5, since this covers a wider PBH mass range than that provided by Andrew Gow
+            m_data, mf_data_Fig5 = load_data("2009.03204/Delta_{:.1f}_numeric.csv".format(Delta))
+            # Rescale the MF data from Fig. 5 (which is scaled by the maximum of the MF) so that its maximum matches the maximum from the data provided by Andrew Gow
+            mf_data = mf_data_Fig5 * max(mf_data_tabulated) / max(mf_data_Fig5)        
+        
+        markers = ["x", "+", "1"]
+        n_values = np.arange(0, 10)
+        colors = ["tab:blue", "tab:orange", "k"]
+        
+        if i in ([0, 4, 5, 6]):
+            
+            fig, ax = plt.subplots(figsize=(6, 6))
+    
+            for j, n_steps in enumerate((100, 1000, 10000)):
+                       
+                normalisation_factors = []
+                log_m_range = []
+                
+                for n in n_values:
+                                
+                    m_pbh_extended_min = min(m_data) / np.power(10, n)
+                    m_pbh_extended_max = min(m_data) * np.power(10, n)
+                    
+                    m_data_lower = np.logspace(np.log10(m_pbh_extended_min), np.log10(min(m_data)), n_steps)
+                    m_data_upper = np.logspace(np.log10(max(m_data)), np.log10(m_pbh_extended_max), n_steps)
+                    
+                    m_data_total = np.concatenate((m_data_lower, m_data, m_data_upper))
+                    n_steps_true = len(m_data_total)
+                    
+                    mf_data = mf_numeric(m_data_total, m_p=max(m_data), custom_mp=False, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False)
+                    normalisation_factor = np.trapz(mf_data, m_data_total)
+                    normalisation_factors.append(normalisation_factor)
+                    log_m_range.append(np.log10(max(m_data_total)/min(m_data_total)))
+                """
+                fig1, ax1 = plt.subplots(figsize=(5,5))
+                ax1.plot(m_data_total, mf_data)
+                ax1.set_xscale("log")
+                ax1.set_yscale("log")
+                """
+                ax.plot(0, 0, marker=markers[j], label=len(m_data_total), color=colors[j], linestyle="None")
+                ax.plot(log_m_range, normalisation_factors / normalisation_factors[-1], marker=markers[j], color=colors[j], linestyle="None")
+                ax.legend(title="Number of steps", fontsize="x-small")
+                
+            ax.set_xlabel(r"$\log_{10}(m_{\rm max} / m_{\rm min})$")
+            #ax.set_ylabel(r"Normalisation factor (normalised)")
+            ax.set_ylabel(r"$\int {\rm d}m\psi(m)$" + " (normalised to most accurate)")
+            ax.set_yscale("log")
+            ax.set_title("$\Delta={:.1f}$".format(Deltas[i]))
+            fig.tight_layout()
