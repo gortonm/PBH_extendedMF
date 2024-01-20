@@ -268,13 +268,13 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
     if Delta < 0.1:
         log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Delta_k35.txt", unpack=True, skip_header=1)
         # Only include the range of masses for which the numerical MF data has non-zero positive values.
-        mf_data = mf_data_loaded[mf_data_loaded > 0]
-        m_data = np.exp(log_m_data[mf_data_loaded > 0])
+        mf_data = mf_data_loaded[mf_data_loaded >= 0]
+        m_data = np.exp(log_m_data[mf_data_loaded >= 0])
     elif Delta < 2:
         log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
         # Only include the range of masses for which the numerical MF data has non-zero positive values.
-        mf_data = mf_data_loaded[mf_data_loaded > 0]
-        m_data = np.exp(log_m_data[mf_data_loaded > 0])
+        mf_data = mf_data_loaded[mf_data_loaded >= 0]
+        m_data = np.exp(log_m_data[mf_data_loaded >= 0])
     else:
         log_m_data_tabulated, mf_data_tabulated = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
         # For the Delta = 5 case, load the data from Fig. 5, since this covers a wider PBH mass range than that provided by Andrew Gow
@@ -3269,34 +3269,35 @@ if "__main__" == __name__:
         if Delta < 0.1:
             log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Delta_k35.txt", unpack=True, skip_header=1)
             # Only include the range of masses for which the numerical MF data has non-zero positive values.
-            mf_data = mf_data_loaded[mf_data_loaded > 0]
-            m_data = np.exp(log_m_data[mf_data_loaded > 0])
+            mf_data = mf_data_loaded[mf_data_loaded >= 0]
+            m_data = np.exp(log_m_data[mf_data_loaded >= 0])
         elif Delta < 2:
             log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
             # Only include the range of masses for which the numerical MF data has non-zero positive values.
-            mf_data = mf_data_loaded[mf_data_loaded > 0]
-            m_data = np.exp(log_m_data[mf_data_loaded > 0])
+            mf_data = mf_data_loaded[mf_data_loaded >= 0]
+            m_data = np.exp(log_m_data[mf_data_loaded >= 0])
         else:
             log_m_data_tabulated, mf_data_tabulated = np.genfromtxt("./Data/psiData/psiData_Lognormal_D-{:.1f}.txt".format(Delta), unpack=True, skip_header=1)
             # For the Delta = 5 case, load the data from Fig. 5, since this covers a wider PBH mass range than that provided by Andrew Gow
             m_data, mf_data_Fig5 = load_data("2009.03204/Delta_{:.1f}_numeric.csv".format(Delta))
             # Rescale the MF data from Fig. 5 (which is scaled by the maximum of the MF) so that its maximum matches the maximum from the data provided by Andrew Gow
-            mf_data = mf_data_Fig5 * max(mf_data_tabulated) / max(mf_data_Fig5)        
+            mf_data = mf_data_Fig5 * max(mf_data_tabulated) / max(mf_data_Fig5)
         
         markers = ["x", "+", "1"]
         n_values = np.arange(0, 10)
         colors = ["tab:blue", "tab:orange", "k"]
         
-        if i in ([0, 4, 5, 6]):
+        if i in ([0]):
             
             fig, ax = plt.subplots(figsize=(6, 6))
     
-            for j, n_steps in enumerate((100, 1000, 10000)):
-                       
+            #for j, n_steps in enumerate((100, 1000, 10000)):
+            for j, n_steps in enumerate([100]):
+                      
                 normalisation_factors = []
                 log_m_range = []
                 
-                for n in n_values:
+                for n in n_values[0:1]:
                                 
                     m_pbh_extended_min = min(m_data) / np.power(10, n)
                     m_pbh_extended_max = min(m_data) * np.power(10, n)
@@ -3307,8 +3308,19 @@ if "__main__" == __name__:
                     m_data_total = np.concatenate((m_data_lower, m_data, m_data_upper))
                     n_steps_true = len(m_data_total)
                     
-                    mf_data = mf_numeric(m_data_total, m_p=max(m_data), custom_mp=False, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False)
-                    normalisation_factor = np.trapz(mf_data, m_data_total)
+                    mf_values = mf_numeric(m_data_total, m_p=max(m_data), custom_mp=False, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False)
+                    #normalisation_factor = np.trapz(mf_data, m_data_total)
+                    print("\n")
+                    print(len(mf_values[mf_values > 0]))
+                    print("len(mf_values[mf_values > 0]) = ", len(mf_values[mf_values > 0]))
+
+                    print(mf_values[mf_values > 0])
+                    print("len(mf_data[mf_data > 0]) = ", len(mf_data[mf_data > 0]))
+                    print(mf_data[mf_data > 0])
+                    
+                    print("np.trapz(mf_data, m_data) = {:.2e}".format(np.trapz(mf_data, m_data)))
+                    normalisation_factor = np.trapz(mf_values, m_data_total)
+                    print("np.trapz(mf_values, m_data_total) = {:.2e}".format(np.trapz(mf_values, m_data_total)))
                     normalisation_factors.append(normalisation_factor)
                     log_m_range.append(np.log10(max(m_data_total)/min(m_data_total)))
                 """
