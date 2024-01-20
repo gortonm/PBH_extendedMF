@@ -309,10 +309,10 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
         mf_values_lower = np.zeros(len(m_lower))
     
     if log_interp == False:
-        mf_values_mid = np.interp(m_mid, m_scaled, mf_data, 0, 0)
-    else:
         mf_values_mid = 10**np.interp(np.log10(m_mid), np.log10(m_scaled), np.log10(mf_data), -np.infty, -np.infty)
-               
+    else:
+        mf_values_mid = np.interp(m_mid, m_scaled, mf_data, 0, 0)
+              
     if extrap_upper_const:
         mf_values_upper = mf_data[-1] * np.ones(len(m_upper))
     elif extrap_upper_PL:
@@ -3284,7 +3284,7 @@ if "__main__" == __name__:
             mf_data = mf_data_Fig5 * max(mf_data_tabulated) / max(mf_data_Fig5)
         
         markers = ["x", "+", "1"]
-        n_values = np.arange(0, 10)
+        n_values = np.arange(1, 10)
         colors = ["tab:blue", "tab:orange", "k"]
         
         if i in ([0]):
@@ -3292,35 +3292,33 @@ if "__main__" == __name__:
             fig, ax = plt.subplots(figsize=(6, 6))
     
             #for j, n_steps in enumerate((100, 1000, 10000)):
-            for j, n_steps in enumerate([100]):
+            for j, n_steps in enumerate([2]):
                       
                 normalisation_factors = []
                 log_m_range = []
                 
                 for n in n_values[0:1]:
-                                
-                    m_pbh_extended_min = min(m_data) / np.power(10, n)
-                    m_pbh_extended_max = min(m_data) * np.power(10, n)
-                    
-                    m_data_lower = np.logspace(np.log10(m_pbh_extended_min), np.log10(min(m_data)), n_steps)
-                    m_data_upper = np.logspace(np.log10(max(m_data)), np.log10(m_pbh_extended_max), n_steps)
+
+                    m_data_lower = min(m_data) * np.logspace(-n, 0, n_steps)[:-1] # do not include maximum value to avoid duplicating the minimum value from m_data
+                    m_data_upper = max(m_data) * np.logspace(0, n, n_steps)[1:] # do not include minimum value to avoid duplicating the maximum value from m_data           
                     
                     m_data_total = np.concatenate((m_data_lower, m_data, m_data_upper))
                     n_steps_true = len(m_data_total)
                     
-                    mf_values = mf_numeric(m_data_total, m_p=max(m_data), custom_mp=False, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False)
-                    #normalisation_factor = np.trapz(mf_data, m_data_total)
+                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=False, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False, log_interp=False)
                     print("\n")
-                    print(len(mf_values[mf_values > 0]))
                     print("len(mf_values[mf_values > 0]) = ", len(mf_values[mf_values > 0]))
-
-                    print(mf_values[mf_values > 0])
                     print("len(mf_data[mf_data > 0]) = ", len(mf_data[mf_data > 0]))
-                    print(mf_data[mf_data > 0])
+ 
+                    print("mf_values = ", mf_values)
+                    print("mf_data = ", mf_data)
                     
-                    print("np.trapz(mf_data, m_data) = {:.2e}".format(np.trapz(mf_data, m_data)))
+                    print("m_data_total[mf_values>0]", m_data_total[mf_values>0])
+                    print("m_data[mf_data>0]", m_data[mf_data>0])
+
+                    print("np.trapz(mf_data, m_data) = {:.8e}".format(np.trapz(mf_data, m_data)))
                     normalisation_factor = np.trapz(mf_values, m_data_total)
-                    print("np.trapz(mf_values, m_data_total) = {:.2e}".format(np.trapz(mf_values, m_data_total)))
+                    print("np.trapz(mf_values, m_data_total) = {:.8e}".format(np.trapz(mf_values, m_data_total)))
                     normalisation_factors.append(normalisation_factor)
                     log_m_range.append(np.log10(max(m_data_total)/min(m_data_total)))
                 """
