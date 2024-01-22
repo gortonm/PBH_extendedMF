@@ -3016,8 +3016,6 @@ if "__main__" == __name__:
  
         if i in (0, 1, 2, 3, 4, 5, 6):
             fig1, ax1 = plt.subplots(figsize=(6, 5.5))
-
-            ax1.plot(m_pbh_values, mf_values, color="k", label="Numeric MF")
             #ax1.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color="k", linestyle="dotted")
             
             # Find m_c for the lognormal fit by finding the PBH mass where the numerical MF is maximal
@@ -3025,24 +3023,25 @@ if "__main__" == __name__:
             mc_LN = mp_LN * np.exp(sigmas_LN[i]**2)
             
             # Range of PBH mass values to show for the fitting functions
-            m_pbh_values_fits = np.logspace(np.log10(min(m_pbh_values))-2, np.log10(max(m_pbh_values))+2, 1000)
+            m_pbh_values_fits = np.logspace(np.log10(min(m_pbh_values))-2, np.log10(max(m_pbh_values))+3, 1000)
 
-            ax1.plot(m_pbh_values_fits, LN(m_pbh_values_fits, m_c=mc_LN, sigma=sigmas_LN[i]), color="r", dashes=[6, 2], label="LN")            
-            ax1.plot(m_pbh_values_fits, SLN(m_pbh_values_fits, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
-            ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
+            ax1.plot(m_pbh_values_fits, LN(m_pbh_values_fits, m_c=mc_LN, sigma=sigmas_LN[i]), color="tab:red", dashes=[6, 2], label="LN")            
+            ax1.plot(m_pbh_values_fits, SLN(m_pbh_values_fits, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="tab:blue", linestyle=(0, (5, 7)), label="SLN")
+            ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="k", linestyle="dashed", label="CC3")
             # Plot the numerical MF obtained using mf_numeric(). Test the method when the booleans extrapolate_lower = extrapolate_upper_const = True
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=1), color="k", linestyle="dotted")
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=2), color="k", linestyle="dashdot")
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True), color="k", linestyle="solid")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=1), color="tab:orange", linestyle="dashdot")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=2), color="tab:orange", linestyle="dotted")
+            ax1.plot(m_pbh_values, mf_values, color="tab:grey", label="Numeric MF (data)")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True), color="tab:orange", linestyle="solid", label="Numeric MF (calculated)")
                      
             ax1.set_xlabel(r"$m~[M_\odot]$")
             ax1.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
             ax1.set_title("$\Delta={:.1f}$".format(Deltas[i]))
-            ax1.set_xlim(min(m_pbh_values)/5, 5*max(m_pbh_values))
-            ax1.set_ylim(max(1e-8, min(mf_values)/10), 1e-1)
+            ax1.set_xlim(min(m_pbh_values)/5, 110*max(m_pbh_values))
+            ax1.set_ylim(max(1e-8, min(mf_values)/100), 1e-1)
             ax1.set_xscale("log")
             ax1.set_yscale("log")
-            ax1.legend(fontsize="xx-small")
+            ax1.legend(fontsize="11")
             ax1.tick_params(pad=7)
             fig1.tight_layout()
                 

@@ -1394,7 +1394,7 @@ if "__main__" == __name__:
 
         if Deltas[i] in (0, 0.5, 1, 2, 5):
 
-            fig, ax = plt.subplots(figsize=(6, 5))
+            fig, ax = plt.subplots(figsize=(7, 6))
 
             if plot_GC_Isatis:
 
@@ -1576,7 +1576,6 @@ if "__main__" == __name__:
                     plotter_KP23(Deltas, i, ax, color=colors[1], mf=LN, evolved=False)
                     plotter_KP23(Deltas, i, ax, color=colors[2], mf=SLN, evolved=False)
                     plotter_KP23(Deltas, i, ax, color=colors[3], mf=CC3, evolved=False)
-                    #plotter_KP23(Deltas, i, ax, color=colors[4], mf=mf_numeric, evolved=False, extrapolate_numeric_lower=extrapolate_numeric_lower)
 
                 ax.set_title("Soft gamma-rays")
 
@@ -1597,7 +1596,6 @@ if "__main__" == __name__:
                     plotter_BC19(Deltas, i, ax, color=colors[2], mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, linestyle=(0, (5, 7)))
                     plotter_BC19(Deltas, i, ax, color=colors[3], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, linestyle="dashed")
                     plotter_BC19(Deltas, i, ax, color=colors[4], mf=mf_numeric, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, alpha=alpha, evolved=evolved, extrapolate_numeric_lower=True)
-                    #plotter_BC19(Deltas, i, ax, color=colors[4], mf=mf_numeric, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle="dotted", evolved=evolved, extrapolate_numeric_lower=False)
 
                 ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
                 ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -1713,15 +1711,15 @@ if "__main__" == __name__:
             norm_string = ["normalised", "unnormalised"]
             
             normalised = True
-            evolved = False
+            evolved = True
             
-            plotter_Subaru_Croon20(Deltas, i, ax, "k", mf=mf_numeric, linestyle="solid", extrap_numeric_upper=False, normalised=normalised, show_label=False)
-            ax.plot(0, 0, "k", linestyle="solid", label="No extrapolation")
+            plotter_Subaru_Croon20(Deltas, i, ax, "tab:orange", mf=mf_numeric, linestyle="solid", extrap_numeric_upper=False, normalised=normalised, show_label=False)
+            ax.plot(0, 0, "tab:orange", linestyle="solid", label="Numeric (no extrap.)")
             
             for n in [1, 2]:
                 
-                plotter_Subaru_Croon20(Deltas, i, ax, "k", mf=mf_numeric, linestyle=linestyles[n-1], extrap_numeric_upper=True, normalised=normalised, n=n, show_label=False)
-                ax.plot(0, 0, "k", linestyle=linestyles[n-1], label="Extrapolated")
+                plotter_Subaru_Croon20(Deltas, i, ax, "tab:orange", mf=mf_numeric, linestyle=linestyles[n-1], extrap_numeric_upper=True, normalised=normalised, n=n, show_label=False)
+                ax.plot(0, 0, "tab:orange", linestyle=linestyles[n-1], label="Numeric (extrap. up to {:.0f}".format(10**n) + r" $m_{\rm max, \, data}$)")
                
             # Set axis limits
             if Deltas[i] < 5:
