@@ -219,7 +219,7 @@ def PL_MF(m_values, m_min, m_max, gamma=-1/2):
     return np.array(PL_MF_values)
 
 
-def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, normalised=False, n=1, gamma=0.36, custom_mp=True, log_interp=True):
+def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, normalised=True, n=1, gamma=0.36, custom_mp=True, log_interp=True):
     """
     Estimate the numerical mass function shown in Fig. 5 of 2009.03204 
     evaluated at an arbitrary mass m, with peak mass m_p, using linear 
@@ -242,7 +242,7 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, norm
         as a constant. The default is False.
     normalised : Boolean
         If True, manually normalise the MF after performing any extrapolations.
-        The default is False.
+        The default is True.
     n : Float, optional
         Number of orders of magnitude in the mass to extrapolate the numeric 
         MF to, above (below) the maximum (minimum) mass for which data is
@@ -3031,7 +3031,8 @@ if "__main__" == __name__:
             ax1.plot(m_pbh_values_fits, SLN(m_pbh_values_fits, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="b", linestyle=(0, (5, 7)), label="SLN")
             ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
             # Plot the numerical MF obtained using mf_numeric(). Test the method when the booleans extrapolate_lower = extrapolate_upper_const = True
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True), color="k", linestyle="dotted")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=1), color="k", linestyle="dotted")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=2), color="k", linestyle="dashdot")
             ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True), color="k", linestyle="solid")
                      
             ax1.set_xlabel(r"$m~[M_\odot]$")
@@ -3112,77 +3113,6 @@ if "__main__" == __name__:
             ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
             fig.tight_layout()
     
-    
-#%% Plot different ways of calculating the numerical MF, and the fractional difference from the 'true' value
-if "__main__" == __name__:
-    
-    filepath = "./Data/psiData/"
-
-    for i in range(len(Deltas)):
-        
-        # Load the data from the numerical MFs from Andrew Gow    
-        if i == 0:
-            log_m_pbh_values, mf_values = np.genfromtxt(filepath + "psiData_Delta_k35.txt", unpack=True, skip_header=1)
-            m_pbh_values = np.exp(log_m_pbh_values)
-        elif i >= 5:
-            log_m_pbh_values_data, mf_values_data = np.genfromtxt(filepath + "psiData_Lognormal_D-{:.1f}.txt".format(Deltas[i]), unpack=True, skip_header=1)
-            # For the Delta = 2 and Delta = 5 cases, load the data from Fig. 5, since this covers a wider PBH mass range than that provided by Andrew Gow
-            m_pbh_values, mf_values_Fig5 = load_data("2009.03204/Delta_{:.1f}_numeric.csv".format(Deltas[i]))
-            # Rescale the MF data from Fig. 5 (which is scaled by the maximum of the MF) so that its maximum matches the maximum from the data provided by Andrew Gow
-            mf_values = mf_values_Fig5 * max(mf_values_data) / max(mf_values_Fig5)
-        else:
-            log_m_pbh_values, mf_values = np.genfromtxt(filepath + "psiData_Lognormal_D-{:.1f}.txt".format(Deltas[i]), unpack=True, skip_header=1)
-            m_pbh_values = np.exp(log_m_pbh_values)        
-
-        fig, ax = plt.subplots(figsize=(6, 5.5))
-        fig1, ax1 = plt.subplots(figsize=(8, 7))
-        ax.plot(m_pbh_values, mf_values, color="k", label="Numeric MF")
-        
-        # Find m_c for the lognormal fit by finding the PBH mass where the numerical MF is maximal
-        mp_LN = m_pbh_values[np.argmax(mf_values)]
-        mc_LN = mp_LN * np.exp(sigmas_LN[i]**2)
-        
-        # Range of PBH mass values to show for the fitting functions
-        m_pbh_values_fits = np.logspace(np.log10(min(m_pbh_values))-2, np.log10(max(m_pbh_values))+2, 500)
-
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], log_interp=False, extrap_lower=True), color="tab:orange", linestyle="dotted", label="Lin interp.")
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], log_interp=True, extrap_lower=True), linestyle="None", color="tab:orange", marker="+", label="Log interp.")
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], normalise_to_CC3=True), color="g", linestyle="dashed", label="Normalised to CC3 max (lin interp.)")
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], params=[sigmas_SLN[i], alphas_SLN[i]], normalise_to_SLN=True, mc_SLN=np.exp(ln_mc_SLN[i])), color="b", linestyle="dashdot", label="Normalised to SLN max (lin interp.)")
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], normalise_to_CC3=True, log_interp=True), linestyle="None", color="g", marker="x", label="Normalised to CC3 max (log interp.)")
-        ax.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], params=[sigmas_SLN[i], alphas_SLN[i]], normalise_to_SLN=True, mc_SLN=np.exp(ln_mc_SLN[i]), log_interp=True), linestyle="None", color="b", marker="+", label="Normalised to SLN max (log interp.)")
-
-        ax1.plot(m_pbh_values, np.abs(frac_diff(mf_values, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], log_interp=False), m_pbh_values, m_pbh_values_fits)), color="tab:orange", linestyle="dotted", label="Lin interp.")
-        ax1.plot(m_pbh_values, np.abs(frac_diff(mf_values, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i]), m_pbh_values, m_pbh_values_fits)), linestyle="None", color="tab:orange", marker="+", label="Log interp.")
-        ax1.plot(m_pbh_values, np.abs(frac_diff(mf_values, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], log_interp=False, normalise_to_CC3=True), m_pbh_values, m_pbh_values_fits)), color="g", linestyle="dashed", label="Normalised to CC3 max (lin interp.)")
-        ax1.plot(m_pbh_values, np.abs(frac_diff(mf_values, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], params=[sigmas_SLN[i], alphas_SLN[i]], normalise_to_SLN=True, mc_SLN=np.exp(ln_mc_SLN[i]), log_interp=False), m_pbh_values, m_pbh_values_fits)), color="b", linestyle="dashdot", label="Normalised to SLN max (lin interp.)")
-        ax1.plot(m_pbh_values, np.abs(frac_diff(mf_values, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], normalise_to_CC3=True), m_pbh_values, m_pbh_values_fits)), linestyle="None", color="g", marker="x", label="Normalised to CC3 max (log interp.)")
-        ax1.plot(m_pbh_values, np.abs(frac_diff(mf_values, mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], params=[sigmas_SLN[i], alphas_SLN[i]], normalise_to_SLN=True, mc_SLN=np.exp(ln_mc_SLN[i])), m_pbh_values, m_pbh_values_fits)), linestyle="None", color="b", marker="+", label="Normalised to SLN max (log interp.)")
-        """
-        ax1.plot(m_pbh_values_fits, np.abs(frac_diff(mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], log_interp=False), mf_values, m_pbh_values_fits, m_pbh_values)), color="tab:orange", linestyle="dotted", label="Lin interp.")
-        ax1.plot(m_pbh_values_fits, np.abs(frac_diff(mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i]), mf_values, m_pbh_values_fits, m_pbh_values)), linestyle="None", color="tab:orange", marker="+", label="Log interp.")
-        ax1.plot(m_pbh_values_fits, np.abs(frac_diff(mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], normalise_to_CC3=True, log_interp=False), mf_values, m_pbh_values_fits, m_pbh_values)), color="g", linestyle="dashed", label="Normalised to CC3 max (lin interp.)")
-        ax1.plot(m_pbh_values_fits, np.abs(frac_diff(mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], params=[sigmas_SLN[i], alphas_SLN[i]], normalise_to_SLN=True, mc_SLN=np.exp(ln_mc_SLN[i]), log_interp=False), mf_values, m_pbh_values_fits, m_pbh_values)), color="b", linestyle="dashdot", label="Normalised to SLN max (lin interp.)")
-        ax1.plot(m_pbh_values_fits, np.abs(frac_diff(mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], params=[alphas_CC3[i], betas[i]], normalise_to_CC3=True), mf_values, m_pbh_values_fits, m_pbh_values)), linestyle="None", color="g", marker="x", label="Normalised to CC3 max (log interp.)")
-        ax1.plot(m_pbh_values_fits, np.abs(frac_diff(mf_numeric(m_pbh_values_fits, mp_SLN[i], Deltas[i], params=[sigmas_SLN[i], alphas_SLN[i]], normalise_to_SLN=True, mc_SLN=np.exp(ln_mc_SLN[i])), mf_values, m_pbh_values_fits, m_pbh_values)), linestyle="None", color="b", marker="+", label="Normalised to SLN max (log interp.)")
-        """
-        for a in [ax, ax1]:
-            a.set_xlabel(r"$m~[M_\odot]$")
-            a.set_title("$\Delta={:.1f}$".format(Deltas[i]))
-            a.set_xlim(min(m_pbh_values), max(m_pbh_values))
-            a.set_xscale("log")
-            a.set_yscale("log")
-            a.legend(fontsize="xx-small")
-            a.tick_params(pad=7)
-            
-        ax.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
-        ax.set_ylim(1e-6, 1e-1)
-
-        ax1.set_ylabel("$|\Delta \psi / \psi|$")
-        ax1.set_ylim(1e-4, 1)
-
-        fig.tight_layout()
-        fig1.tight_layout()
 
 #%% Microlensing constraints with numeric MF: compare evolved to unevolved MF
 if "__main__" == __name__:
@@ -3192,7 +3122,7 @@ if "__main__" == __name__:
     # Peak mass, in grams
     m_p = 1e22
     
-    Delta = 0
+    Delta = 5
     
     extrap_lower = False
     extrap_upper_const = False

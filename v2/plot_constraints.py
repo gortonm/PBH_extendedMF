@@ -198,7 +198,7 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, exponent_PL=2, ex
         f_max_extrapolated_upper = min(f_max_loaded) * np.power(
             m_delta_extrapolated_upper / min(m_delta_values_loaded), exponent_PL_upper)
         f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(
-            m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
+            m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL)
 
         f_PBH_KP23 = np.concatenate(
             (f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
@@ -337,7 +337,7 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
     return np.array(mp_BC19), np.array(f_PBH_BC19)
 
 
-def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None, evolved=True, extrap_numeric_lower=False, extrap_numeric_upper=False, normalised=False):
+def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None, evolved=False, extrap_numeric_lower=False, extrap_numeric_upper=False, n=1, normalised=True):
     """
     Load extended MF constraints from the Subaru-HSC delta-function MF constraints obtained by Croon et al. (2020) [2007.12697].
 
@@ -352,19 +352,17 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None, evolved=True, extrap_
         Fitting function to use. The default is None (delta-function).
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is 
-        True.
+        False.
     extrapolate_numeric_lower : Boolean, optional
         If True, extrapolate the numeric MF at small masses using a power-law 
         motivated by critical collapse. The default is False.
-    extrapolate_numeric_upper : Boolean, optional
-        If True, extrapolate the numeric MF at small masses using a power-law 
-        motivated by critical collapse. The default is False.
     extrap_numeric_upper : Boolean, optional
         If True, extrapolate the numeric MF at large masses with a constant 
         value. The default is False.
-    extrap_numeric_upper : Boolean, optional
-        If True, extrapolate the numeric MF at large masses with a constant 
-        value. The default is False.
+    n : Float, optional
+        Number of orders of magnitude in the mass to extrapolate the numeric 
+        MF to, above (below) the maximum (minimum) mass for which data is
+        availale. The default is 1.
     normalised : Boolean, optional
         If True, manually normalise the numerical MF whenever calling the 
         method mf_numeric() and calculating the constraint. The default is 
@@ -380,51 +378,48 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None, evolved=True, extrap_
     """
 
     if mf == None:
-        mp_Subaru, f_PBH_Subaru = load_data(
-            "2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+        mp_Subaru, f_PBH_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
     elif mf == LN:
         if evolved:
-            mc_Subaru, f_PBH_Subaru = np.genfromtxt(
-                "./Data-tests/LN_HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
+            mc_Subaru, f_PBH_Subaru = np.genfromtxt("./Data-tests/LN_HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
         else:
-            mc_Subaru, f_PBH_Subaru = np.genfromtxt(
-                "./Data-tests/LN_HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
+            mc_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/LN_HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
 
         mp_Subaru = mc_Subaru * np.exp(-sigmas_LN[Delta_index]**2)
 
     elif mf == SLN:
         if evolved:
-            mc_Subaru, f_PBH_Subaru = np.genfromtxt(
-                "./Data-tests/SLN_HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
+            mc_Subaru, f_PBH_Subaru = np.genfromtxt("./Data-tests/SLN_HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
         else:
-            mc_Subaru, f_PBH_Subaru = np.genfromtxt(
-                "./Data-tests/SLN_HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
-        mp_Subaru = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index],
-                               log_m_factor=3, n_steps=1000) for m_c in mc_Subaru]
+            mc_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/SLN_HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
+        mp_Subaru = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Subaru]
 
     elif mf == CC3:
         if evolved:
-            mp_Subaru, f_PBH_Subaru = np.genfromtxt(
-                "./Data-tests/CC3_HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
+            mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data-tests/CC3_HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
         else:
-            mp_Subaru, f_PBH_Subaru = np.genfromtxt(
-                "./Data-tests/CC3_HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
+            mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/CC3_HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
     elif mf == mf_numeric:
+        
+        print("evolved = ", evolved)
+        print("normalised = ", normalised)
+        print("n = ", n)
+        
         if extrap_numeric_lower:
-            extrap_numeric = "extrap_lower_"
+            extrap_numeric = "extrap_lower_n={:.0f}_".format(n)
         else:
             extrap_numeric = ""
         if extrap_numeric_upper:
-            extrap_numeric = "extrap_upper_"
+            extrap_numeric = "extrap_upper_n={:.0f}_".format(n)
         if normalised:
             extrap_numeric += "normalised_"
         if evolved:
-            mp_Subaru, f_PBH_Subaru = np.genfromtxt(
-                "./Data-tests/numeric_%s" % extrap_numeric + "HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
+            mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data-tests/numeric_%s" % extrap_numeric + "HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
         else:
-            mp_Subaru, f_PBH_Subaru = np.genfromtxt(
-                "./Data-tests/numeric_%s" % extrap_numeric + "HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
+            print("n = ", n)
+            print(extrap_numeric)
+            mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/numeric_%s" % extrap_numeric + "HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
     return np.array(mp_Subaru), np.array(f_PBH_Subaru)
 
 
@@ -610,7 +605,7 @@ def set_ticks_grid(ax):
     ax.grid()
 
 
-def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=True, approx=False, extrapolate_numeric_lower=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=False, approx=False, extrapolate_numeric_lower=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from Galactic Centre photons.    
 
@@ -629,7 +624,7 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
     exponent_PL_lower : Float, optional
         Denotes the exponent of the power-law used to extrapolate the delta-function MF. The default is 2.
     evolved : Boolean, optional
-        If True, use the evolved form of the fitting function. The default is True.
+        If True, use the evolved form of the fitting function. The default is False.
     approx : Boolean, optional
         If True, plot constraints obtained using f_max calculated from Isatis. Otherwise, plot constraints calculated from the minimum constraint over each energy bin. The default is False.
     extrapolate_numeric_lower : Boolean, optional
@@ -825,7 +820,7 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=F
                 linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, evolved=True, extrap_numeric_lower=False, extrap_numeric_upper=False, normalised=False, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, evolved=False, extrap_numeric_lower=False, extrap_numeric_upper=False, normalised=True, n=1, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the Subaru-HSC delta-function MF constraints obtained by Croon et al. (2020) [2007.12697].    
 
@@ -843,7 +838,8 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, evolved=True
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
     evolved : Boolean, optional
-        If True, use the evolved form of the fitting function. The default is True.
+        If True, use the evolved form of the fitting function. The default is 
+        False.
     extrap_numeric_lower : Boolean, optional
         If True, extrapolate the numeric MF at small masses using a power-law 
         motivated by critical collapse. The default is False.
@@ -853,7 +849,11 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, evolved=True
     normalised : Boolean, optional
         If True, manually normalise the numerical MF whenever calling the 
         method mf_numeric() and calculating the constraint. The default is 
-        False.
+        True.
+    n : Float, optional
+        Number of orders of magnitude in the mass to extrapolate the numeric 
+        MF to, above (below) the maximum (minimum) mass for which data is
+        availale. The default is 1.
     show_label : Boolean, optional
         If True, add a label denoting the fitting function used. The default is 
         False.
@@ -871,17 +871,17 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, evolved=True
     None.
 
     """
-
-    mp_Subaru, f_PBH_Subaru = load_data_Subaru_Croon20(
-        Deltas, Delta_index, mf, evolved, extrap_numeric_lower, extrap_numeric_upper, normalised)
+    
+    #print("evolved = ", evolved)
+    #print("normalised = ", normalised)
+    #print("n = ", n)
+    mp_Subaru, f_PBH_Subaru = load_data_Subaru_Croon20(Deltas, Delta_index, mf, evolved, extrap_numeric_lower, extrap_numeric_upper, n, normalised)
 
     if show_label:
         label = find_label(mf)
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth,
-                linestyle=linestyle, label=label, alpha=alpha, marker=marker)
+        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
     else:
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth,
-                linestyle=linestyle, alpha=alpha, marker=marker)
+        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
 def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, extrapolate_numeric_lower=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
@@ -1363,9 +1363,9 @@ if "__main__" == __name__:
     # If True, plot unevolved MF constraint
     plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
-    plot_fracdiff = True
+    plot_fracdiff = False
     # If True, plot the fractional difference between the different fitting functions
-    plot_fracdiff_fits = True
+    plot_fracdiff_fits = False
 
     # Choose colors to match those from Fig. 5 of 2009.03204
     colors = ['silver', 'tab:red', 'tab:blue', 'k', 'orange']
@@ -1709,20 +1709,19 @@ if "__main__" == __name__:
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=False)
             
             colors_normalised = ["tab:orange", "tab:blue"]
-            linestyles = ["solid", "dashdot"]
+            linestyles = ["dashdot", "dotted"]
             norm_string = ["normalised", "unnormalised"]
             
-            for k, normalised in enumerate([True]):
-                plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=True, show_label=False, linestyle=linestyles[k])
-                ax.plot(0, 0, colors_normalised[k], linestyle=linestyles[k], label="Evolved, no extrap., %s" % norm_string[k])
-                #plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=True, show_label=False, extrap_numeric_upper=True, linestyle="None", marker="x")
-                #ax.plot(0, 0, colors_normalised[k], linestyle=None, marker="x", label="Evolved, PL extrap., %s" % norm_string[k])
+            normalised = True
+            evolved = False
+            
+            plotter_Subaru_Croon20(Deltas, i, ax, "k", mf=mf_numeric, linestyle="solid", extrap_numeric_upper=False, normalised=normalised, show_label=False)
+            ax.plot(0, 0, "k", linestyle="solid", label="No extrapolation")
+            
+            for n in [1, 2]:
                 
-                plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=False, show_label=False, linestyle=linestyles[k], alpha=0.4)
-                ax.plot(0, 0, colors_normalised[k], linestyle=linestyles[k], alpha=0.4, label="Unevolved, no extrap., %s" % norm_string[k])
-                
-                #plotter_Subaru_Croon20(Deltas, i, ax, color=colors_normalised[k], mf=mf_numeric, normalised=normalised, evolved=False, show_label=False, alpha=0.4, extrap_numeric_upper=True, linestyle="None", marker="x")
-                #ax.plot(0, 0, colors_normalised[k], linestyle=None, marker="x", alpha=0.4, label="Unevolved, PL extrap., %s" % norm_string[k])
+                plotter_Subaru_Croon20(Deltas, i, ax, "k", mf=mf_numeric, linestyle=linestyles[n-1], extrap_numeric_upper=True, normalised=normalised, n=n, show_label=False)
+                ax.plot(0, 0, "k", linestyle=linestyles[n-1], label="Extrapolated")
                
             # Set axis limits
             if Deltas[i] < 5:
