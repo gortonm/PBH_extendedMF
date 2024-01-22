@@ -3287,17 +3287,18 @@ if "__main__" == __name__:
         n_values = np.arange(1, 10)
         colors = ["tab:blue", "tab:orange", "k"]
         
-        if i in ([0]):
+        if i in ([6]):
             
             fig, ax = plt.subplots(figsize=(6, 6))
     
             #for j, n_steps in enumerate((100, 1000, 10000)):
-            for j, n_steps in enumerate([2]):
+            for j, n_steps in enumerate([10]):
                       
                 normalisation_factors = []
                 log_m_range = []
                 
-                for n in n_values[0:1]:
+                # n = number of powers of ten in the mass to extrapolate the mass function to outside the range in which data is available
+                for n in n_values[0:2]:
 
                     m_data_lower = min(m_data) * np.logspace(-n, 0, n_steps)[:-1] # do not include maximum value to avoid duplicating the minimum value from m_data
                     m_data_upper = max(m_data) * np.logspace(0, n, n_steps)[1:] # do not include minimum value to avoid duplicating the maximum value from m_data           
@@ -3305,19 +3306,26 @@ if "__main__" == __name__:
                     m_data_total = np.concatenate((m_data_lower, m_data, m_data_upper))
                     n_steps_true = len(m_data_total)
                     
-                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=False, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False, log_interp=False)
+                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=True, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False, log_interp=False)
                     print("\n")
                     print("len(mf_values[mf_values > 0]) = ", len(mf_values[mf_values > 0]))
                     print("len(mf_data[mf_data > 0]) = ", len(mf_data[mf_data > 0]))
+                    #print(mf_values[mf_values>0] - mf_data[mf_data>0])
  
-                    print("mf_values = ", mf_values)
-                    print("mf_data = ", mf_data)
+                    #print("mf_values = ", mf_values)
+                    #print("mf_data = ", mf_data)
                     
-                    print("m_data_total[mf_values>0]", m_data_total[mf_values>0])
-                    print("m_data[mf_data>0]", m_data[mf_data>0])
+                    #print("m_data_total[mf_values>0]", m_data_total[mf_values>0])
+                    #print("m_data[mf_data>0]", m_data[mf_data>0])
+                    #print(m_data_total[mf_values>0] - m_data[mf_data>0])
 
                     print("np.trapz(mf_data, m_data) = {:.8e}".format(np.trapz(mf_data, m_data)))
+                    print("np.trapz(mf_data[mf_data > 0], m_data[mf_data > 0]) = {:.8e}".format(np.trapz(mf_data[mf_data > 0], m_data[mf_data > 0])))
+                    print("np.trapz(mf_values[mf_values > 0], m_data[mf_data > 0]) = {:.8e}".format(np.trapz(mf_values[mf_values > 0], m_data[mf_data > 0])))
+
                     normalisation_factor = np.trapz(mf_values, m_data_total)
+                    print("np.trapz(mf_data[mf_data > 0], m_data_total[mf_values > 0]) = {:.8e}".format(np.trapz(mf_data[mf_data > 0], m_data_total[mf_values > 0])))
+                    print("np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0]) = {:.8e}".format(np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0])))
                     print("np.trapz(mf_values, m_data_total) = {:.8e}".format(np.trapz(mf_values, m_data_total)))
                     normalisation_factors.append(normalisation_factor)
                     log_m_range.append(np.log10(max(m_data_total)/min(m_data_total)))
@@ -3337,3 +3345,21 @@ if "__main__" == __name__:
             ax.set_yscale("log")
             ax.set_title("$\Delta={:.1f}$".format(Deltas[i]))
             fig.tight_layout()
+            
+    #%% Illustrate issue of using trapezoidal rule to integrate non-continuous functions
+    
+    x_values = np.arange(0, 10)
+    y_values = np.concatenate((np.zeros(3), np.ones(4), np.zeros(3)))
+    print(np.trapz(y_values, x_values))
+    print(np.trapz(y_values[y_values > 0], x_values[y_values > 0]))
+    
+    x_values_2 = [0, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9]
+    y_values_2 = np.concatenate((np.zeros(4), np.ones(4), np.zeros(4)))
+
+    print(np.trapz(y_values_2, x_values_2))
+
+    plt.plot(x_values_2, y_values_2)
+    plt.plot(x_values, y_values)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.tight_layout()
