@@ -3284,10 +3284,10 @@ if "__main__" == __name__:
             mf_data = mf_data_Fig5 * max(mf_data_tabulated) / max(mf_data_Fig5)
         
         markers = ["x", "+", "1"]
-        n_values = np.arange(1, 10)
+        n_values = np.arange(0, 5, 0.25)
         colors = ["tab:blue", "tab:orange", "k"]
         
-        if i in ([0, 5, 6]):
+        if i in range(len(Deltas)):
             
             fig, ax = plt.subplots(figsize=(6, 6))
     
@@ -3302,10 +3302,10 @@ if "__main__" == __name__:
 
                     m_data_lower = min(m_data) * np.logspace(-n, 0, n_steps)
                     m_data_upper = max(m_data) * np.logspace(0, n, n_steps)
-                    m_data_total = np.concatenate((m_data_lower, m_data, m_data_upper))
+                    m_data_total = np.concatenate((m_data, m_data_upper))
                     n_steps_true = len(m_data_total)
                     
-                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=True, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False)
+                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=True, Delta=Deltas[i], normalised=False, extrap_upper_const=True, extrap_upper_PL=False)
 
                     normalisation_factors.append(np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0]))
                     log_m_range.append(np.log10(max(m_data_total)/min(m_data_total)))
