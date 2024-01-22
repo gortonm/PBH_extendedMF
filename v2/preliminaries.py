@@ -219,7 +219,7 @@ def PL_MF(m_values, m_min, m_max, gamma=-1/2):
     return np.array(PL_MF_values)
 
 
-def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extrap_upper_PL=False, normalised=False, gamma=0.36, custom_mp=True, log_interp=True):
+def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, normalised=False, n=1, gamma=0.36, custom_mp=True, log_interp=True):
     """
     Estimate the numerical mass function shown in Fig. 5 of 2009.03204 
     evaluated at an arbitrary mass m, with peak mass m_p, using linear 
@@ -240,12 +240,13 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
     extrap_upper_const : Boolean, optional
         If True, extrapolate the MF at larger masses than given in the data
         as a constant. The default is False.
-    extrap_upper_PL : Boolean, optional
-        If True, extrapolate the MF at larger masses than given in the data
-        using a power law. The default is False.
     normalised : Boolean
         If True, manually normalise the MF after performing any extrapolations.
         The default is False.
+    n : Float, optional
+        Number of orders of magnitude in the mass to extrapolate the numeric 
+        MF to, above (below) the maximum (minimum) mass for which data is
+        availale. The default is 1.
     gamma : Float, optional
         Inverse of the power-law exponent used when extrap_lower = True. 
         The default is 0.36.
@@ -263,7 +264,6 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
         Estimate for the numerical PBH mass function, evaluated at m.
 
     """
-    
     # Load data from numerical MFs provided by Andrew Gow.
     if Delta < 0.1:
         log_m_data, mf_data_loaded = np.genfromtxt("./Data/psiData/psiData_Delta_k35.txt", unpack=True, skip_header=1)
@@ -286,56 +286,42 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, extr
         # Find peak mass of the mass function extracted from Fig. 5 of 2009.03204,
         # and scale the masses so that the peak mass corresponds to m_p.
         mp_data = m_data[np.argmax(mf_data)]
-        m_scaled = m_data * m_p / mp_data
+        m_data_scaled = m_data * m_p / mp_data
     else:
-        m_scaled = m_data
+        m_data_scaled = m_data
         
-    mf_values = []
-    m_lower = m[m < min(m_scaled)]
-    m_upper = m[m > max(m_scaled)]
-    m_mid = []
-    
-    if normalised:
-        normalisation_factor = 1 / np.trapz(mf_data, m_scaled)
-        print("Normalisation factor = {:.2e} g^-1".format(normalisation_factor))
-    
-    for m_value in m:
-        if m_value <= max(m_scaled) and m_value >= min(m_scaled):
-            m_mid.append(m_value)
-    
+    # Number of masses at which to extrapolate the numeric MF at for masses above (below) the maximum (minimum) mass for which data on the numeric MF is availale
+    n_steps = 100
+    # Find the total range of masses at which to evaluate the numeric MF (to calculate the normalisation)
+    m_lower = min(m_data_scaled) * np.logspace(-n, 0, n_steps)
+    m_upper = max(m_data_scaled) * np.logspace(0, n, n_steps)
+    m_total = np.concatenate((m_lower, m_data_scaled, m_upper))
+        
+    # Extrapolate the numeric MF to masses below and above that where data is available, if required
     if extrap_lower:
-        mf_values_lower = mf_data[0] * np.power(m_lower/min(m_scaled), 1/gamma)
+        mf_values_lower = mf_data[0] * np.power(m_lower/min(m_data_scaled), 1/gamma)
     else:
         mf_values_lower = np.zeros(len(m_lower))
-    
-    if log_interp == False:
-        mf_values_mid = 10**np.interp(np.log10(m_mid), np.log10(m_scaled), np.log10(mf_data), -np.infty, -np.infty)
-    else:
-        mf_values_mid = np.interp(m_mid, m_scaled, mf_data, 0, 0)
-              
+        
     if extrap_upper_const:
         mf_values_upper = mf_data[-1] * np.ones(len(m_upper))
-    elif extrap_upper_PL:
-        dlogpsi_dlogm = (np.log10(mf_data[-1]) - np.log10(mf_data[-2])) / (np.log10(m_scaled[-1]) - np.log10(m_scaled[-2]))
-        mf_values_upper = np.power(10, np.log10(mf_data[-1]) + dlogpsi_dlogm * (np.log10(m_upper) - np.log10(m_scaled[-1])))
     else:
         mf_values_upper = np.zeros(len(m_upper))
-    """
-    print("mf_values_lower")
-    print(mf_values_lower)
-    print("mf_values_mid")
-    print(mf_values_mid)
-    print("mf_values_upper")
-    print(mf_values_upper)
-    """
-    mf_values = np.concatenate((mf_values_lower, mf_values_mid, mf_values_upper))
+    
+    # Calculate integral of the numeric MF over all masses, after performing extrapolation
+    mf_values_total = np.concatenate((mf_values_lower, mf_data, mf_values_upper))
+    normalisation_factor = 1/np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0])
+
+    # Interpolate the mass function at the masses required
+    if log_interp == False:
+        mf_values_interp = 10**np.interp(np.log10(m), np.log10(m_total), np.log10(mf_values_total), -np.infty, -np.infty)
+    else:
+        mf_values_interp = np.interp(m, m_total, mf_values_total, 0, 0)
       
     if not normalised:
-        return mf_values
+        return mf_values_interp
     else:
-        #normalisation_factor = 1 / np.trapz(mf_values, m)
-        #print("Normalisation factor = {:.2e} g^-1".format(normalisation_factor))
-        return mf_values * normalisation_factor
+        return mf_values_interp * normalisation_factor
 
 
 def m_peak_LN(m_c, sigma):
