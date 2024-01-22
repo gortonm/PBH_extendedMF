@@ -3287,54 +3287,29 @@ if "__main__" == __name__:
         n_values = np.arange(1, 10)
         colors = ["tab:blue", "tab:orange", "k"]
         
-        if i in ([6]):
+        if i in ([0, 5, 6]):
             
             fig, ax = plt.subplots(figsize=(6, 6))
     
-            #for j, n_steps in enumerate((100, 1000, 10000)):
-            for j, n_steps in enumerate([10]):
+            for j, n_steps in enumerate((100, 1000, 10000)):
+            #for j, n_steps in enumerate([10]):
                       
                 normalisation_factors = []
                 log_m_range = []
                 
                 # n = number of powers of ten in the mass to extrapolate the mass function to outside the range in which data is available
-                for n in n_values[0:2]:
+                for n in n_values:
 
-                    m_data_lower = min(m_data) * np.logspace(-n, 0, n_steps)[:-1] # do not include maximum value to avoid duplicating the minimum value from m_data
-                    m_data_upper = max(m_data) * np.logspace(0, n, n_steps)[1:] # do not include minimum value to avoid duplicating the maximum value from m_data           
-                    
+                    m_data_lower = min(m_data) * np.logspace(-n, 0, n_steps)
+                    m_data_upper = max(m_data) * np.logspace(0, n, n_steps)
                     m_data_total = np.concatenate((m_data_lower, m_data, m_data_upper))
                     n_steps_true = len(m_data_total)
                     
-                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=True, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False, log_interp=False)
-                    print("\n")
-                    print("len(mf_values[mf_values > 0]) = ", len(mf_values[mf_values > 0]))
-                    print("len(mf_data[mf_data > 0]) = ", len(mf_data[mf_data > 0]))
-                    #print(mf_values[mf_values>0] - mf_data[mf_data>0])
- 
-                    #print("mf_values = ", mf_values)
-                    #print("mf_data = ", mf_data)
-                    
-                    #print("m_data_total[mf_values>0]", m_data_total[mf_values>0])
-                    #print("m_data[mf_data>0]", m_data[mf_data>0])
-                    #print(m_data_total[mf_values>0] - m_data[mf_data>0])
+                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=True, Delta=Deltas[i], normalised=False, extrap_upper_const=False, extrap_upper_PL=False)
 
-                    print("np.trapz(mf_data, m_data) = {:.8e}".format(np.trapz(mf_data, m_data)))
-                    print("np.trapz(mf_data[mf_data > 0], m_data[mf_data > 0]) = {:.8e}".format(np.trapz(mf_data[mf_data > 0], m_data[mf_data > 0])))
-                    print("np.trapz(mf_values[mf_values > 0], m_data[mf_data > 0]) = {:.8e}".format(np.trapz(mf_values[mf_values > 0], m_data[mf_data > 0])))
-
-                    normalisation_factor = np.trapz(mf_values, m_data_total)
-                    print("np.trapz(mf_data[mf_data > 0], m_data_total[mf_values > 0]) = {:.8e}".format(np.trapz(mf_data[mf_data > 0], m_data_total[mf_values > 0])))
-                    print("np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0]) = {:.8e}".format(np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0])))
-                    print("np.trapz(mf_values, m_data_total) = {:.8e}".format(np.trapz(mf_values, m_data_total)))
-                    normalisation_factors.append(normalisation_factor)
+                    normalisation_factors.append(np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0]))
                     log_m_range.append(np.log10(max(m_data_total)/min(m_data_total)))
-                """
-                fig1, ax1 = plt.subplots(figsize=(5,5))
-                ax1.plot(m_data_total, mf_data)
-                ax1.set_xscale("log")
-                ax1.set_yscale("log")
-                """
+
                 ax.plot(0, 0, marker=markers[j], label=len(m_data_total), color=colors[j], linestyle="None")
                 ax.plot(log_m_range, normalisation_factors / normalisation_factors[-1], marker=markers[j], color=colors[j], linestyle="None")
                 ax.legend(title="Number of steps", fontsize="x-small")
