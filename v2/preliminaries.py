@@ -310,7 +310,8 @@ def mf_numeric(m, m_p, Delta, extrap_lower=False, extrap_upper_const=False, norm
     
     # Calculate integral of the numeric MF over all masses, after performing extrapolation
     mf_values_total = np.concatenate((mf_values_lower, mf_data, mf_values_upper))
-    normalisation_factor = 1/np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0])
+    
+    normalisation_factor = 1/np.trapz(mf_values_total[mf_values_total>0], m_total[mf_values_total>0])
 
     # Interpolate the mass function at the masses required
     if log_interp == False:
@@ -3288,10 +3289,10 @@ if "__main__" == __name__:
 
                     m_data_lower = min(m_data) * np.logspace(-n, 0, n_steps)
                     m_data_upper = max(m_data) * np.logspace(0, n, n_steps)
-                    m_data_total = np.concatenate((m_data, m_data_upper))
+                    m_data_total = np.concatenate((m_data_lower, m_data, m_data_upper))
                     n_steps_true = len(m_data_total)
                     
-                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=True, Delta=Deltas[i], normalised=False, extrap_upper_const=True, extrap_upper_PL=False)
+                    mf_values = mf_numeric(m_data_total, m_p=m_data[mf_data / max(mf_data) >= 1], custom_mp=True, Delta=Deltas[i], normalised=False, extrap_upper_const=True, n=n)
 
                     normalisation_factors.append(np.trapz(mf_values[mf_values>0], m_data_total[mf_values>0]))
                     log_m_range.append(np.log10(max(m_data_total)/min(m_data_total)))
