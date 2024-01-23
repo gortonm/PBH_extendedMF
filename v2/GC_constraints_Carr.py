@@ -1089,7 +1089,7 @@ if "__main__" == __name__:
             # Load mass function parameters.
             [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
             
-            mc_values = np.logspace(14, 20, 120)
+            mc_values = np.logspace(16, 22, 121)
             
             # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
             m_delta_values, f_max = load_data("2107.02190/2107.02190_upper_bound.csv")

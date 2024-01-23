@@ -776,11 +776,12 @@ if "__main__" == __name__:
         
         # Plot extended MF constraints from Korwar & Profumo (2023)
         plot_KP23(j, ax1, ax2, ax3)
-        # Plot extended MF constraints from Galactic Centre photons calculated using Isatis         
+        # Plot extended MF constraints from Galactic Centre photons calculated using Isatis
+        """
         plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
-        
+        """
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
@@ -871,11 +872,12 @@ if "__main__" == __name__:
         
         # Plot extended MF constraints from Korwar & Profumo (2023)
         plot_KP23(j, ax1, ax2, ax3)
-        # Plot extended MF constraints from Galactic Centre photons calculated using Isatis         
+        # Plot extended MF constraints from Galactic Centre photons calculated using Isatis     
+        """
         plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
-            
+        """  
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
@@ -948,14 +950,12 @@ if "__main__" == __name__:
             mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
             mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
             mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
-            mp_numeric_evolved, f_PBH_numeric_evolved = np.genfromtxt(data_filename_numeric, delimiter="\t")
             mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
             mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
             
             ax1.plot(mp_LN, f_PBH_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
             ax2.plot(mp_SLN, f_PBH_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
             ax3.plot(mp_CC3_evolved, f_PBH_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
-            ax3.plot(mp_numeric_evolved, f_PBH_numeric_evolved, linestyle=linestyles[k], color="k", marker="None")
            
             ax1.set_title("LN")
             ax2.set_title("SLN")
@@ -967,11 +967,12 @@ if "__main__" == __name__:
         
         # Plot extended MF constraints from Korwar & Profumo (2023)
         plot_KP23(j, ax1, ax2, ax3)
-        # Plot extended MF constraints from Galactic Centre photons calculated using Isatis         
+        # Plot extended MF constraints from Galactic Centre photons calculated using Isatis  
+        """
         plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
-            
+        """    
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
@@ -984,7 +985,7 @@ if "__main__" == __name__:
             if Deltas[j] < 5:
                 ax.set_xlim(1e16, 1e18)
             else:
-                ax.set_xlim(1e16, 7e18)
+                ax.set_xlim(1e16, 2e19)
                
             ax.set_ylim(1e-6, 1)
             ax.set_ylabel("$f_\mathrm{PBH}$")
@@ -1208,11 +1209,12 @@ if "__main__" == __name__:
                 print("\n data_filename_LN [in plot_constraints_tests.py]")
                 print(data_filename_LN)
                 
-            # Plot extended MF constraints from Galactic Centre photons calculated using Isatis  [sanity check]   
+            # Plot extended MF constraints from Galactic Centre photons calculated using Isatis  [sanity check]
+            """
             plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted", approx=True, linewidth=2)
             plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted", approx=True, linewidth=2)
             plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted", approx=True, linewidth=2)
-                        
+            """            
             ax1.set_title("LN")
             ax2.set_title("SLN")
             ax3.set_title("CC3")
@@ -1349,11 +1351,12 @@ if "__main__" == __name__:
             
             # Plot extended MF constraints from Korwar & Profumo (2023)
             plot_KP23(j, ax1, ax2, ax3)
-            # Plot extended MF constraints from Galactic Centre photons calculated using Isatis         
+            # Plot extended MF constraints from Galactic Centre photons calculated using Isatis
+            """
             plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
-            
+            """
             ax0.set_xlim(1e11, 3e17)
             ax0.set_ylim(10**(-15), 1)
             ax0.set_xlabel("m$~[\mathrm{g}]$")
