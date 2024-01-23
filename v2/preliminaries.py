@@ -3015,7 +3015,7 @@ if "__main__" == __name__:
         ax.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color=colors[i], linestyle="dotted")
  
         if i in (0, 1, 2, 3, 4, 5, 6):
-            fig1, ax1 = plt.subplots(figsize=(6, 5.5))
+            fig1, ax1 = plt.subplots(figsize=(6.5, 5.5))
             #ax1.plot(m_pbh_values, mf_values[0] * np.power(m_pbh_values/m_pbh_values[0], PL_exp), color="k", linestyle="dotted")
             
             # Find m_c for the lognormal fit by finding the PBH mass where the numerical MF is maximal
@@ -3029,8 +3029,8 @@ if "__main__" == __name__:
             ax1.plot(m_pbh_values_fits, SLN(m_pbh_values_fits, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="tab:blue", linestyle=(0, (5, 7)), label="SLN")
             ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="k", linestyle="dashed", label="CC3")
             # Plot the numerical MF obtained using mf_numeric(). Test the method when the booleans extrapolate_lower = extrapolate_upper_const = True
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=1), color="tab:orange", linestyle="dashdot")
-            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=2), color="tab:orange", linestyle="dotted")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=1), color="tab:orange", linestyle="dotted")
+            ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=2), color="tab:orange", linestyle="dashdot")
             ax1.plot(m_pbh_values, mf_values, color="tab:grey", label="Numeric MF (data)")
             ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True), color="tab:orange", linestyle="solid", label="Numeric MF (calculated)")
                      
@@ -3038,7 +3038,7 @@ if "__main__" == __name__:
             ax1.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
             ax1.set_title("$\Delta={:.1f}$".format(Deltas[i]))
             ax1.set_xlim(min(m_pbh_values)/5, 110*max(m_pbh_values))
-            ax1.set_ylim(max(1e-8, min(mf_values)/100), 1e-1)
+            ax1.set_ylim(max(1e-8, min(mf_values)/100), 0.05)
             ax1.set_xscale("log")
             ax1.set_yscale("log")
             ax1.legend(fontsize="11")
@@ -3054,6 +3054,66 @@ if "__main__" == __name__:
     ax.tick_params(pad=7)
     ax.legend(fontsize="xx-small", title="$\Delta$")
     fig.tight_layout()
+    
+#%% Find the slope of the numerical MFs obtained by Andrew Gow at masses much smaller than the peak mass. Other tests of the numerical MF calculation and extrapolation.
+if "__main__" == __name__:
+    # Load the data from the numerical MFs from Andrew Gow
+    
+    filepath = "./Data/psiData/"
+    fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+    
+    gamma = 0.36
+    PL_exp = 1/gamma
+    
+    colormap = mpl.colormaps['rainbow'].resampled(7)
+    colors = colormap(range(7))
+    
+    subplots_index = 0
+    
+    for i in range(len(Deltas)):
+        
+        if i in (0, 3, 4, 5):
+            ax1 = axes.flatten()[subplots_index]
+            
+            if i == 0:
+                log_m_pbh_values, mf_values = np.genfromtxt(filepath + "psiData_Delta_k35.txt", unpack=True, skip_header=1)
+                m_pbh_values = np.exp(log_m_pbh_values)
+            elif i >= 5:
+                log_m_pbh_values_data, mf_values_data = np.genfromtxt(filepath + "psiData_Lognormal_D-{:.1f}.txt".format(Deltas[i]), unpack=True, skip_header=1)
+                # For the Delta = 2 and Delta = 5 cases, load the data from Fig. 5, since this covers a wider PBH mass range than that provided by Andrew Gow
+                m_pbh_values, mf_values_Fig5 = load_data("2009.03204/Delta_{:.1f}_numeric.csv".format(Deltas[i]))
+                # Rescale the MF data from Fig. 5 (which is scaled by the maximum of the MF) so that its maximum matches the maximum from the data provided by Andrew Gow
+                mf_values = mf_values_Fig5 * max(mf_values_data) / max(mf_values_Fig5)
+            else:
+                log_m_pbh_values, mf_values = np.genfromtxt(filepath + "psiData_Lognormal_D-{:.1f}.txt".format(Deltas[i]), unpack=True, skip_header=1)
+                m_pbh_values = np.exp(log_m_pbh_values)        
+            
+            # Find m_c for the lognormal fit by finding the PBH mass where the numerical MF is maximal
+            mp_LN = m_pbh_values[np.argmax(mf_values)]
+            mc_LN = mp_LN * np.exp(sigmas_LN[i]**2)
+            
+            # Range of PBH mass values to show for the fitting functions
+            m_pbh_values_fits = np.logspace(np.log10(min(m_pbh_values))-2, np.log10(max(m_pbh_values))+3, 1000)
+            
+            # Plot the numerical MF obtained using mf_numeric(). Test the method when the booleans extrapolate_lower = extrapolate_upper_const = True
+            ax1.plot(m_pbh_values, mf_values, color="k", label="Numeric MF")
+            ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="limegreen", linestyle="dashed", label=r"GCC (best-fit $\alpha, \,\beta$)")
+            ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=1/0.36, beta=betas[i]), color="limegreen", linestyle="dotted", label=r"GCC ($\alpha=1/\gamma$, best-fit $\beta$)")
+                     
+            ax1.set_xlabel(r"$m~[M_\odot]$")
+            ax1.set_ylabel("$\psi(m)~[M_\odot^{-1}]$")
+            ax1.set_title("$\Delta={:.1f}$".format(Deltas[i]))
+            ax1.set_xlim(min(m_pbh_values), max(m_pbh_values))
+            ax1.set_ylim(max(1e-8, min(mf_values)/10), 2*max(mf_values))
+            ax1.set_xscale("log")
+            ax1.set_yscale("log")
+            if i == 0:
+                ax1.legend(fontsize="xx-small")
+            ax1.tick_params(pad=7)
+            subplots_index += 1            
+
+    fig.tight_layout(pad=0.3)                
+
 
 #%% Plot and calculate fractional difference between the numerical MF using different extrapolations at masses larger than that for which data is available.
 
@@ -3119,17 +3179,17 @@ if "__main__" == __name__:
     m_delta_Subaru, f_max_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
     
     # Peak mass, in grams
-    m_p = 1e22
+    m_p = 1e23
     
     Delta = 5
     
     extrap_lower = False
-    extrap_upper_const = False
-    extrap_upper_PL = False
+    extrap_upper_const = True
     normalised = True
+    n = 1
     
     # Parameters for the numeric MF
-    params_numeric = [Delta, extrap_lower, extrap_upper_const, extrap_upper_PL, normalised]
+    params_numeric = [Delta, extrap_lower, extrap_upper_const, normalised, n]
     
     f_pbh_Subaru_evolved = constraint_Carr([m_p], m_delta_Subaru, f_max_Subaru, mf_numeric, params_numeric, evolved=True)
     f_pbh_Subaru_unevolved = constraint_Carr([m_p], m_delta_Subaru, f_max_Subaru, mf_numeric, params_numeric, evolved=False)
@@ -3140,7 +3200,7 @@ if "__main__" == __name__:
     
     print("\nRecalculated")    
     # Calculate numeric MF constraint without calling constraint_Carr()
-    psi_initial_values = mf_numeric(m_delta_Subaru, m_p, Delta, normalised=normalised, extrap_upper_const=extrap_upper_const)
+    psi_initial_values = mf_numeric(m_delta_Subaru, m_p, Delta, normalised=normalised, extrap_upper_const=extrap_upper_const, n=n)
     f_pbh_Subaru_unevolved = 1 / np.trapz(psi_initial_values / f_max_Subaru, m_delta_Subaru)
     print("f_PBH (unevolved numeric MF) = {:.2e}".format(f_pbh_Subaru_unevolved))
     
@@ -3156,12 +3216,11 @@ if "__main__" == __name__:
     # Subaru-HSC delta-function MF constraint is known
     print("f_PBH (evolved numeric MF using psi_evolved_normalised()) = {:.2e}".format(f_pbh_Subaru_evolved))
 
-#%%
     # Initial masses matching those used in constraint_Carr() when calculating constraints for evolved MFs.
     n_steps = 1000
     m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_Subaru)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_Subaru))+4, n_steps))))
 
-    psi_initial_values = mf_numeric(m_init_values, m_p, Delta, normalised=normalised)
+    psi_initial_values = mf_numeric(m_init_values, m_p, Delta, normalised=normalised, extrap_upper_const=extrap_upper_const, n=n)
     print(psi_initial_values[0:50])
     m_evolved = mass_evolved(m_init_values, t=t_0)
     psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_evolved, m_init_values)
@@ -3171,6 +3230,72 @@ if "__main__" == __name__:
     f_pbh_Subaru_evolved = 1 / np.trapz(psi_evolved_values_interpolated / f_max_Subaru, m_delta_Subaru)
 
     print("f_PBH (evolved numeric MF following constraint_Carr) = {:.2e}".format(f_pbh_Subaru_evolved))
+
+#%% Voyager-1 constraints with numeric MF: compare evolved to unevolved MF
+if "__main__" == __name__:
+    
+    m_delta_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_bkg_lower.csv")
+    
+    m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_loaded))+0.01, 0.1)
+    f_max_extrapolated = min(f_max_loaded) * np.power(m_delta_extrapolated / min(m_delta_loaded), 2)
+
+    f_max = np.concatenate((f_max_extrapolated, f_max_loaded))
+    m_delta = np.concatenate((m_delta_extrapolated, m_delta_loaded))
+
+    
+    # Peak mass, in grams
+    m_p = 1e18
+    
+    Delta = 5
+    
+    extrap_lower = False
+    extrap_upper_const = True
+    normalised = True
+    n = 2
+    
+    # Parameters for the numeric MF
+    params_numeric = [Delta, extrap_lower, extrap_upper_const, normalised, n]
+    
+    f_pbh_evolved = constraint_Carr([m_p], m_delta, f_max, mf_numeric, params_numeric, evolved=True)
+    f_pbh_unevolved = constraint_Carr([m_p], m_delta, f_max, mf_numeric, params_numeric, evolved=False)
+    
+    print("Using constraint_Carr()")
+    print("f_PBH (evolved numeric MF) = {:.2e}".format(f_pbh_evolved[0]))
+    print("f_PBH (unevolved numeric MF) = {:.2e}".format(f_pbh_unevolved[0]))
+    
+    print("\nRecalculated")    
+    # Calculate numeric MF constraint without calling constraint_Carr()
+    psi_initial_values = mf_numeric(m_delta, m_p, Delta, normalised=normalised, extrap_upper_const=extrap_upper_const, n=n)
+    f_pbh_unevolved = 1 / np.trapz(psi_initial_values / f_max, m_delta)
+    print("f_PBH (unevolved numeric MF) = {:.2e}".format(f_pbh_unevolved))
+    
+    m_evolved = mass_evolved(m_delta, t=t_0)
+    psi_evolved_values = psi_evolved(psi_initial_values, m_evolved, m_delta)
+    f_pbh_evolved = 1 / np.trapz(psi_evolved_values / f_max, m_evolved)
+    print("f_PBH (evolved numeric MF) = {:.2e}".format(f_pbh_evolved))
+    
+    psi_evolved_values_normalised = psi_evolved_normalised(psi_initial_values, m_evolved, m_delta)
+    f_pbh_evolved = 1 / np.trapz(psi_evolved_values_normalised / f_max, m_evolved)
+    # This value is different from the others since the integral of the numeric
+    # MF over mass is only calculated for the range of masses where the 
+    # delta-function MF constraint is known
+    print("f_PBH (evolved numeric MF using psi_evolved_normalised()) = {:.2e}".format(f_pbh_evolved))
+
+    # Initial masses matching those used in constraint_Carr() when calculating constraints for evolved MFs.
+    n_steps = 1000
+    m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
+
+    psi_initial_values = mf_numeric(m_init_values, m_p, Delta, normalised=normalised, extrap_upper_const=extrap_upper_const, n=n)
+    print(psi_initial_values[0:50])
+    m_evolved = mass_evolved(m_init_values, t=t_0)
+    psi_evolved_values = psi_evolved_normalised(psi_initial_values, m_evolved, m_init_values)
+    #psi_evolved_values_interpolated = 10**np.interp(np.log10(m_delta), np.log10(m_evolved), np.log10(psi_evolved_values), left=-100, right=-100)
+    psi_evolved_values_interpolated = 10**np.interp(np.log10(m_delta), np.log10(m_evolved), np.log10(psi_evolved_values), left=-np.infty, right=-np.infty)   
+    print(len(psi_evolved_values_interpolated[psi_evolved_values_interpolated>0]))
+    f_pbh_evolved = 1 / np.trapz(psi_evolved_values_interpolated / f_max, m_delta)
+
+    print("f_PBH (evolved numeric MF following constraint_Carr) = {:.2e}".format(f_pbh_evolved))
+
 
 #%% Convergence test for the normalisation factor of the numeric MF
 if "__main__" == __name__:
