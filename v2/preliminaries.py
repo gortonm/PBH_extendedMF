@@ -2983,7 +2983,9 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     fig.tight_layout()
     
+    
 #%% Find the slope of the numerical MFs obtained by Andrew Gow at masses much smaller than the peak mass. Other tests of the numerical MF calculation and extrapolation.
+
 if "__main__" == __name__:
     # Load the data from the numerical MFs from Andrew Gow
     
@@ -3027,11 +3029,11 @@ if "__main__" == __name__:
 
             ax1.plot(m_pbh_values_fits, LN(m_pbh_values_fits, m_c=mc_LN, sigma=sigmas_LN[i]), color="tab:red", dashes=[6, 2], label="LN")            
             ax1.plot(m_pbh_values_fits, SLN(m_pbh_values_fits, m_c=np.exp(ln_mc_SLN[i]), sigma=sigmas_SLN[i], alpha=alphas_SLN[i]), color="tab:blue", linestyle=(0, (5, 7)), label="SLN")
-            ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="k", linestyle="dashed", label="CC3")
+            ax1.plot(m_pbh_values_fits, CC3(m_pbh_values_fits, m_p=mp_CC3[i], alpha=alphas_CC3[i], beta=betas[i]), color="g", linestyle="dashed", label="CC3")
             # Plot the numerical MF obtained using mf_numeric(). Test the method when the booleans extrapolate_lower = extrapolate_upper_const = True
             ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=1), color="tab:orange", linestyle="dotted")
             ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True, extrap_lower=False, extrap_upper_const=True, n=2), color="tab:orange", linestyle="dashdot")
-            ax1.plot(m_pbh_values, mf_values, color="tab:grey", label="Numeric MF (data)")
+            ax1.plot(m_pbh_values, mf_values, color="k", label="Numeric MF (data)")
             ax1.plot(m_pbh_values_fits, mf_numeric(m_pbh_values_fits, mp_CC3[i], Deltas[i], normalised=True), color="tab:orange", linestyle="solid", label="Numeric MF (calculated)")
                      
             ax1.set_xlabel(r"$m~[M_\odot]$")
@@ -3055,7 +3057,9 @@ if "__main__" == __name__:
     ax.legend(fontsize="xx-small", title="$\Delta$")
     fig.tight_layout()
     
-#%% Find the slope of the numerical MFs obtained by Andrew Gow at masses much smaller than the peak mass. Other tests of the numerical MF calculation and extrapolation.
+    
+#%% Compare numeric MF, GCC MF, and GCC MF with alpha=1/gamma.
+
 if "__main__" == __name__:
     # Load the data from the numerical MFs from Andrew Gow
     
@@ -3114,64 +3118,6 @@ if "__main__" == __name__:
 
     fig.tight_layout(pad=0.3)                
 
-
-#%% Plot and calculate fractional difference between the numerical MF using different extrapolations at masses larger than that for which data is available.
-
-if "__main__" == __name__:
-    
-    # Peak mass values
-    #mp_values = np.logspace(16, np.log10(5.05e17), 5)[0:1]
-    #mp_values = np.logspace(14, 15, 10)
-    mp_values = [1e22]    # Approximate minimum peak mass for which microlensing constraints apply
-    
-    # Initial and evolved PBH masses
-    n_steps = 324
-    # Range of masses to include for the delta-function MF constraint
-    m_delta = [9.47e21, 5.38e28]
-    # Initial masses matching those used in constraint_Carr() when calculating constraints for unevolved MFs.
-    m_init_unevolved = np.logspace(np.log10(min(m_delta)), np.log10(max(m_delta)), n_steps)
-    # Initial masses matching those used in constraint_Carr() when calculating constraints for evolved MFs.
-    m_init_values = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta))+4, n_steps))))
-    m_evolved_values = mass_evolved(m_init_values, t=t_0)
-    
-    for i in range(len(Deltas)):
-        
-        print("\nDelta={:.1f}".format(Deltas[i]))
-        
-        for m_p in mp_values:
-            fig, ax = plt.subplots(figsize=(6, 5))
-            
-            mf_numeric_values_unevolved = mf_numeric(m_init_unevolved, m_p, Deltas[i], extrap_upper_const=True, normalised=True)
-            mf_numeric_values_unevolved_no_extrap = mf_numeric(m_init_unevolved, m_p, Deltas[i], normalised=True)
-           
-            mf_numeric_values_init = mf_numeric(m_init_values, m_p, Deltas[i], extrap_upper_const=True, normalised=True)
-            mf_numeric_values_evolved = psi_evolved_normalised(mf_numeric_values_init, m_evolved_values, m_init_values)
-    
-            mf_numeric_values_init_no_extrap = mf_numeric(m_init_values, m_p, Deltas[i], normalised=True)
-            mf_numeric_values_evolved_no_extrap = psi_evolved_normalised(mf_numeric_values_init_no_extrap, m_evolved_values, m_init_values)      
-    
-            print("Fractional difference (initial MFs) = {:.1e}".format(max(mf_numeric_values_unevolved_no_extrap) / max(mf_numeric_values_unevolved) - 1))        
-            print("Fractional difference (evolved MFs) = {:.3e}".format(max(mf_numeric_values_evolved_no_extrap) / max(mf_numeric_values_evolved) - 1))
-        
-            ax.plot(m_init_values, mf_numeric_values_init, linestyle="dotted", color="k", linewidth=3)
-            ax.plot(m_evolved_values, mf_numeric_values_evolved, color="k", label="Numeric (extrapolated to large $m$)")
-            ax.plot(m_init_values, mf_numeric_values_init_no_extrap, linestyle="dotted", color="tab:grey", linewidth=3)
-            ax.plot(m_evolved_values, mf_numeric_values_evolved_no_extrap, color="tab:grey", label="Numeric (no extrapolation)")
-            ax.set_ylabel(r"$\psi_{\rm N}(m)~[{\rm g}^{-1}]$")
-            ax.set_xlabel(r"$m~[{\rm g}]$")
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-            ax.set_xlim(min(m_init_values[mf_numeric_values_init > 0]), max(m_init_values[mf_numeric_values_init > 0]))
-            ax.set_title(r"$m_{\rm p} = " + " {:.1e}".format(m_p) + r"~{\rm g}" + "~(\Delta={:.1f}$)".format(Deltas[i]))
-            ax.tick_params(pad=7)
-            ax.legend(fontsize="xx-small")
-            x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
-            ax.yaxis.set_major_locator(x_major)
-            x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
-            ax.yaxis.set_minor_locator(x_minor)
-            ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-            fig.tight_layout()
-    
 
 #%% Microlensing constraints with numeric MF: compare evolved to unevolved MF
 if "__main__" == __name__:
