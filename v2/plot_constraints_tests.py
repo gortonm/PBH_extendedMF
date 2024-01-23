@@ -379,11 +379,11 @@ if "__main__" == __name__:
             ax0.set_ylabel("$f_\mathrm{max}$")
             ax0.set_xscale("log")
             ax0.set_yscale("log")
-            ax0.set_xlim(1e13, 1e17)
+            ax0.set_xlim(1e14, 1e17)
             if include_extrap:
-                ax0.set_ylim(min(f_max_extrapolated_lower[m_delta_extrap_lower > 1e13]), 1)
+                ax0.set_ylim(min(f_max_extrapolated_lower[m_delta_extrap_lower > 1e14]), 1)
             elif include_extrap_from_1e16g:
-                ax0.set_ylim(min(f_max_extrap[m_delta_extrap > 1e13]), 1)
+                ax0.set_ylim(min(f_max_extrap[m_delta_extrap > 1e14]), 1)
            
             ax1a.set_xlim(1e16, mp_max_LN)
             ax2a.set_xlim(1e16, mp_max_SLN)
@@ -652,8 +652,8 @@ if "__main__" == __name__:
             ax0.set_ylabel("$f_\mathrm{max}$")
             ax0.set_xscale("log")
             ax0.set_yscale("log")
-            ax0.set_xlim(1e13, 1e17)
-            ax0.set_ylim(min(f_max_extrapolated[m_delta_extrapolated > 1e13]), 1)
+            ax0.set_xlim(1e14, 1e17)
+            ax0.set_ylim(min(f_max_extrapolated[m_delta_extrapolated > 1e14]), 1)
             
             ax1a.set_xlim(1e16, mp_max_LN)
             ax2a.set_xlim(1e16, mp_max_SLN)
@@ -900,6 +900,103 @@ if "__main__" == __name__:
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
         fig.suptitle("CMB anisotropies [2108.13256], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
+        
+        
+
+        
+#%% Plot results obtained using different power-law exponents in f_max at low masses (from 21cm line [2107.02190]).
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
+    exponents_PL_lower = [0, 2, 3, 4]
+    
+    linestyles = ["solid", "dashed", "dashdot", "dotted"]
+    
+    # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
+    m_delta_values, f_max = load_data("2107.02190/2107.02190_upper_bound.csv")
+    
+    # Boolean determines whether to use evolved mass function (evaluated at the present-day).
+    evolved = True
+    
+    for j in range(len(Deltas)):
+        
+        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
+        
+        ax0 = axes[0][0]
+        ax1 = axes[0][1]
+        ax2 = axes[1][0]
+        ax3 = axes[1][1]
+                
+        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_values))+0.01, 0.1)
+                
+        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
+            
+            if evolved:
+                data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+            else:
+                data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+            
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+            data_filename_LN = data_folder + "/LN_2107.02190_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2107.02190_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2107.02190_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            
+            mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+            mp_numeric_evolved, f_PBH_numeric_evolved = np.genfromtxt(data_filename_numeric, delimiter="\t")
+            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
+            mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
+            
+            ax1.plot(mp_LN, f_PBH_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
+            ax2.plot(mp_SLN, f_PBH_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
+            ax3.plot(mp_CC3_evolved, f_PBH_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
+            ax3.plot(mp_numeric_evolved, f_PBH_numeric_evolved, linestyle=linestyles[k], color="k", marker="None")
+           
+            ax1.set_title("LN")
+            ax2.set_title("SLN")
+            ax3.set_title("CC3")
+            
+            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
+            f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
+            ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
+        
+        # Plot extended MF constraints from Korwar & Profumo (2023)
+        plot_KP23(j, ax1, ax2, ax3)
+        # Plot extended MF constraints from Galactic Centre photons calculated using Isatis         
+        plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
+        plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
+        plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
+            
+        ax0.plot(m_delta_values, f_max, color="tab:grey")
+        ax0.set_xlabel("$m$ [g]")
+        ax0.set_ylabel("$f_\mathrm{max}$")
+        ax0.set_xscale("log")
+        ax0.set_yscale("log")
+        ax0.set_xlim(min(m_delta_extrapolated), 1e18)
+        ax0.set_ylim(min(f_max), 1)
+        
+        for ax in [ax1, ax2, ax3]:
+            if Deltas[j] < 5:
+                ax.set_xlim(1e16, 1e18)
+            else:
+                ax.set_xlim(1e16, 7e18)
+               
+            ax.set_ylim(1e-6, 1)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+
+        ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
+        ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
+        fig.suptitle("21cm line [2107.02190], $\Delta={:.1f}$".format(Deltas[j]))
+        fig.tight_layout()
+        
 
 #%% Plot Galactic Centre photon constraints for an extended mass function, with the delta-function MF constraints obtained using Isatis.
 # Compare to the approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin, for the unevolved mass function and the 'evolved' mass function evaluated at the initial time t=0.
