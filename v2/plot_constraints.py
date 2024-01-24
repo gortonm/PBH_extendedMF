@@ -9,7 +9,6 @@ Created on Wed Mar 29 16:39:43 2023
 # Script plots results obtained for the extended PBH mass functions given by
 # the fitting functions in 2009.03204.
 
-from preliminaries import constraint_Carr, LN
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -37,8 +36,7 @@ mpl.rcParams['legend.edgecolor'] = 'lightgrey'
 plt.style.use('tableau-colorblind10')
 
 # Load mass function parameters
-[Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC,
-    betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+[Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
 
 def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True, exponent_PL_lower=2, approx=False, extrapolate_numeric_lower=False):
@@ -48,21 +46,28 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
     Parameters
     ----------
     Deltas : Array-like
-        Array of power-spectrum widths, which correspond to a given fitting function.
+        Array of power-spectrum widths, which correspond to a given fitting 
+        function.
     Delta_index : Integer
         Index of the array Delta corresponding to the desired value of Delta.
     mf : Function, optional
         Fitting function to use. The default is None (delta-function).
     params : Array-like, optional
-        Parameters of the mass function. Not required for a delta function, required for extended MFs.
+        Parameters of the mass function. Not required for a delta function, 
+        required for extended MFs.
     evolved : Boolean, optional
-        If True, use the evolved form of the fitting function. The default is True.
+        If True, use the evolved form of the fitting function. The default is 
+        True.
     exponent_PL_lower : Float, optional
-        Denotes the exponent of the power-law used to extrapolate the delta-function MF constraint. The default is 2.
+        Denotes the exponent of the power-law used to extrapolate the delta-
+        function MF constraint. The default is 2.
     approx : Boolean, optional
-        If True, load constraints obtained using f_max calculated from Isatis. Otherwise, load constraints calculated from the minimum constraint over each energy bin. The default is False.
+        If True, load constraints obtained using f_max calculated from Isatis. 
+        Otherwise, load constraints calculated from the minimum constraint over 
+        each energy bin. The default is False.
     extrapolate_numeric_lower : Boolean, optional
-        If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
+        If True, extrapolate the numeric MF at small masses using a power-law 
+        motivated by critical collapse. The default is False.
 
     Returns
     -------
@@ -80,17 +85,14 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
         mp_GC = np.logspace(11, 21, 1000)
 
     else:
-        constraints_names_short = [
-            "COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
+        constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
 
         if evolved:
             evolved_string = ""
-            data_folder = "./Data-tests/PL_exp_{:.0f}".format(
-                exponent_PL_lower)
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
         else:
             evolved_string = "_unevolved"
-            data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(
-                exponent_PL_lower)
+            data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
 
         if mf == LN:
             mf_string = "LN"
@@ -133,9 +135,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
             mp_GC = mc_values * np.exp(-sigma_LN**2)
 
         elif mf == SLN:
-
-            mp_GC = [m_max_SLN(m_c, *params, log_m_factor=3,
-                               n_steps=1000) for m_c in mc_values]
+            mp_GC = [m_max_SLN(m_c, *params, log_m_factor=3, n_steps=1000) for m_c in mc_values]
 
         elif mf == CC3:
             mp_GC = mc_values
@@ -286,8 +286,7 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
     if evolved:
         data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
     else:
-        data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(
-            exponent_PL_lower)
+        data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
 
     if prop_A:
         prop_string = "prop_A"
@@ -309,8 +308,7 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
             prop_string += "_upper"
 
     if mf == None:
-        mp_BC19, f_PBH_BC19 = load_data(
-            "1807.03075/1807.03075_" + prop_string + ".csv")
+        mp_BC19, f_PBH_BC19 = load_data("1807.03075/1807.03075_" + prop_string + ".csv")
 
     elif mf == LN:
         data_filename = data_folder + "/LN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
@@ -405,11 +403,7 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None, evolved=False, extrap
         else:
             mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/CC3_HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
     elif mf == mf_numeric:
-        
-        print("evolved = ", evolved)
-        print("normalised = ", normalised)
-        print("n = ", n)
-        
+                
         if extrap_numeric_lower:
             extrap_numeric = "extrap_lower_n={:.0f}_".format(n)
         else:
@@ -421,8 +415,6 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None, evolved=False, extrap
         if evolved:
             mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data-tests/numeric_%s" % extrap_numeric + "HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
         else:
-            print("n = ", n)
-            print(extrap_numeric)
             mp_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/numeric_%s" % extrap_numeric + "HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
     return np.array(mp_Subaru), np.array(f_PBH_Subaru)
 
@@ -486,14 +478,6 @@ def load_data_GECCO(Deltas, Delta_index, mf=None, exponent_PL_lower=2, evolved=T
         mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/CC3_2101.01370_Carr_Delta={:.1f}_".format(
             Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
 
-    elif mf == mf_numeric:
-        if extrapolate_numeric_lower:
-            extrapolate_numeric = "extrap_lower"
-        else:
-            extrapolate_numeric = ""
-        mp_GECCO, f_PBH_GECCO = np.genfromtxt(data_folder + "/numeric_%s" % extrapolate_numeric + "_2101.01370_Carr_Delta={:.1f}_".format(
-            Deltas[Delta_index]) + "%s" % density_string + "_extrapolated_exp{:.0f}.txt".format(exponent_PL_lower))
-
     return np.array(mp_GECCO), np.array(f_PBH_GECCO)
 
 
@@ -521,59 +505,20 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None, extrapolate_numeric_lower=F
 
     """
     if mf == None:
-        mp_Sugiyama, f_PBH_Sugiyama = load_data(
-            "1905.06066/1905.06066_Fig8_finite+wave.csv")
+        mp_Sugiyama, f_PBH_Sugiyama = load_data("1905.06066/1905.06066_Fig8_finite+wave.csv")
 
     elif mf == LN:
-        mc_Sugiyama, f_PBH_Sugiyama = np.genfromtxt(
-            "./Data/LN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
+        mc_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/LN_Sugiyama20_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
         mp_Sugiyama = mc_Sugiyama * np.exp(-sigmas_LN[Delta_index]**2)
 
     elif mf == SLN:
-        mc_Sugiyama, f_PBH_Sugiyama = np.genfromtxt(
-            "./Data/SLN_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
-        mp_Sugiyama = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index],
-                                 log_m_factor=3, n_steps=1000) for m_c in mc_Sugiyama]
+        mc_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/SLN_Sugiyama20_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
+        mp_Sugiyama = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Sugiyama]
 
     elif mf == CC3:
-        mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt(
-            "./Data/CC3_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
-
-    elif mf == mf_numeric:
-        if extrapolate_numeric_lower:
-            extrapolate_numeric = "extrap_lower"
-        else:
-            extrapolate_numeric = ""
-        mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt(
-            "./Data-tests/numeric_%s" % extrapolate_numeric + "_Sugiyama20_Carr_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
+        mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/CC3_Sugiyama20_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
 
     return np.array(mp_Sugiyama), np.array(f_PBH_Sugiyama)
-
-
-def find_label(mf=None):
-    """
-    Generate a label for the fitting function that a constraint is calculated from.
-
-    Parameters
-    ----------
-    mf : Function.
-        Fitting function to use. The default is None (delta-function).
-
-    Returns
-    -------
-    label : String
-        Label denoting the fitting function used.
-
-    """
-    if mf == None:
-        label = "Delta func."
-    elif mf == LN:
-        label = "LN"
-    elif mf == SLN:
-        label = "SLN"
-    elif mf == CC3:
-        label = "CC3"
-    return label
 
 
 def set_ticks_grid(ax):
@@ -594,22 +539,20 @@ def set_ticks_grid(ax):
 
     x_major = mpl.ticker.LogLocator(base=10.0, numticks=5)
     ax.xaxis.set_major_locator(x_major)
-    x_minor = mpl.ticker.LogLocator(
-        base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=5)
+    x_minor = mpl.ticker.LogLocator(base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=5)
     ax.xaxis.set_minor_locator(x_minor)
     ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
     y_major = mpl.ticker.LogLocator(base=10.0, numticks=10)
     ax.yaxis.set_major_locator(y_major)
-    y_minor = mpl.ticker.LogLocator(
-        base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=10)
+    y_minor = mpl.ticker.LogLocator(base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=10)
     ax.yaxis.set_minor_locator(y_minor)
     ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
 
     ax.grid()
 
 
-def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=False, approx=False, extrapolate_numeric_lower=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, exponent_PL_lower=2, evolved=False, approx=False, extrapolate_numeric_lower=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from Galactic Centre photons.    
 
@@ -633,8 +576,6 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
         If True, plot constraints obtained using f_max calculated from Isatis. Otherwise, plot constraints calculated from the minimum constraint over each energy bin. The default is False.
     extrapolate_numeric_lower : Boolean, optional
         If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
-    show_label : Boolean, optional
-        If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
         Linestyle to use for plotting. The default is "solid".
     linewidth : Float, optional
@@ -647,19 +588,12 @@ def plotter_GC_Isatis(Deltas, Delta_index, ax, color, mf=None, params=None, expo
     None.
 
     """
-    mp, f_PBH = load_data_GC_Isatis(
-        Deltas, Delta_index, mf, params, evolved, exponent_PL_lower, approx, extrapolate_numeric_lower)
-
-    if show_label:
-        label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle,
-                linewidth=linewidth, label=label, alpha=alpha, marker=marker)
-    else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle,
-                linewidth=linewidth, alpha=alpha, marker=marker)
+    
+    mp, f_PBH = load_data_GC_Isatis(Deltas, Delta_index, mf, params, evolved, exponent_PL_lower, approx, extrapolate_numeric_lower)
+    ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
-def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, extrap_numeric_lower=False, extrap_numeric_upper=False, n=1, normalised=True, show_label=False, prop_B_lower=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None, exponent_PL_lower=2, evolved=True, extrap_numeric_lower=False, extrap_numeric_upper=False, n=1, normalised=True, prop_B_lower=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from from the Voyager 1 delta-function MF constraints obtained by Boudaud & Cirelli (2019) [1807.03075].    
 
@@ -697,8 +631,6 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
         If True, manually normalise the numerical MF whenever calling the 
         method mf_numeric() and calculating the constraint. The default is 
         False.
-    show_label : Boolean, optional
-        If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
         Linestyle to use for plotting. The default is "solid".
     linewidth : Float, optional
@@ -714,12 +646,7 @@ def plotter_BC19(Deltas, Delta_index, ax, color, prop_A, with_bkg_subtr, mf=None
 
     """
     mp, f_PBH = load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf, evolved, exponent_PL_lower, prop_B_lower, extrap_numeric_lower, extrap_numeric_upper, normalised, n)
-
-    if show_label:
-        label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, label=label, alpha=alpha, marker=marker)
-    else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
+    ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
 def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, extrapolate_numeric_lower=False, exponent_PL_lower=2, evolved=True, alpha=1):
@@ -772,7 +699,7 @@ def plotter_BC19_range(Deltas, Delta_index, ax, color, with_bkg_subtr, mf=None, 
         mp_propB_upper, mp_propB_lower, f_PBH_propB_lower), color=color, linewidth=0, alpha=alpha)
 
 
-def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=False, extrap_numeric_upper=False, exponent_PL=2, evolved=True, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
+def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=False, extrap_numeric_upper=False, exponent_PL=2, evolved=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
     """
     Plot extended MF constraints from the delta-function MF constraints obtained by Korwar & Profumo (2023) [2302.04408].    
 
@@ -801,9 +728,6 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=F
     evolved : Boolean, optional
         If True, use the evolved form of the fitting function. The default is 
         True.
-    show_label : Boolean, optional
-        If True, add a label denoting the fitting function used. The default is 
-        False.
     linestyle : String, optional
         Linestyle to use for plotting. The default is "solid".
     linewidth : Float, optional
@@ -819,16 +743,8 @@ def plotter_KP23(Deltas, Delta_index, ax, color, mf=None, extrap_numeric_lower=F
 
     """
 
-    mp, f_PBH = load_data_KP23(Deltas, Delta_index, mf, evolved,
-                               exponent_PL, extrap_numeric_lower, extrap_numeric_upper)
-
-    if show_label:
-        label = find_label(mf)
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle,
-                linewidth=linewidth, label=label, alpha=alpha, marker=marker)
-    else:
-        ax.plot(mp, f_PBH, color=color, linestyle=linestyle,
-                linewidth=linewidth, alpha=alpha, marker=marker)
+    mp, f_PBH = load_data_KP23(Deltas, Delta_index, mf, evolved, exponent_PL, extrap_numeric_lower, extrap_numeric_upper)
+    ax.plot(mp, f_PBH, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha, marker=marker)
 
 
 def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, evolved=False, extrap_numeric_lower=False, extrap_numeric_upper=False, normalised=True, n=1, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
@@ -865,9 +781,6 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, evolved=Fals
         Number of orders of magnitude in the mass to extrapolate the numeric 
         MF to, above (below) the maximum (minimum) mass for which data is
         availale. The default is 1.
-    show_label : Boolean, optional
-        If True, add a label denoting the fitting function used. The default is 
-        False.
     linestyle : String, optional
         Linestyle to use for plotting. The default is "solid".
     linewidth : Float, optional
@@ -883,16 +796,8 @@ def plotter_Subaru_Croon20(Deltas, Delta_index, ax, color, mf=None, evolved=Fals
 
     """
     
-    #print("evolved = ", evolved)
-    #print("normalised = ", normalised)
-    #print("n = ", n)
     mp_Subaru, f_PBH_Subaru = load_data_Subaru_Croon20(Deltas, Delta_index, mf, evolved, extrap_numeric_lower, extrap_numeric_upper, n, normalised)
-
-    if show_label:
-        label = find_label(mf)
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, label=label, alpha=alpha, marker=marker)
-    else:
-        ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
+    ax.plot(mp_Subaru, f_PBH_Subaru, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
 def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, evolved=True, NFW=True, extrapolate_numeric_lower=False, show_label=False, linestyle="solid", linewidth=1, marker=None, alpha=1):
@@ -919,8 +824,6 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
         If True, load constraints obtained using an NFW profile. If False, load constraints obtained using an Einasto profile.   
     extrapolate_numeric_lower : Boolean, optional
         If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
-    show_label : Boolean, optional
-        If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
         Linestyle to use for plotting. The default is "solid".
     linewidth : Float, optional
@@ -936,16 +839,8 @@ def plotter_GECCO(Deltas, Delta_index, ax, color, mf=None, exponent_PL_lower=2, 
 
     """
 
-    mp_GECCO, f_PBH_GECCO = load_data_GECCO(
-        Deltas, Delta_index, mf, extrapolate_numeric_lower=extrapolate_numeric_lower, exponent_PL_lower=exponent_PL_lower, evolved=evolved, NFW=NFW)
-
-    if show_label:
-        label = find_label(mf)
-        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth,
-                linestyle=linestyle, label=label, alpha=alpha, marker=marker)
-    else:
-        ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth,
-                linestyle=linestyle, alpha=alpha, marker=marker)
+    mp_GECCO, f_PBH_GECCO = load_data_GECCO(Deltas, Delta_index, mf, extrapolate_numeric_lower=extrapolate_numeric_lower, exponent_PL_lower=exponent_PL_lower, evolved=evolved, NFW=NFW)
+    ax.plot(mp_GECCO, f_PBH_GECCO, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
 def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, extrapolate_numeric_lower=False, show_label=True, linestyle="solid", linewidth=1, marker=None, alpha=1):
@@ -966,8 +861,6 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, extrapolate_numeri
         Fitting function to use. The default is None (delta-function).
     extrapolate_numeric_lower : Boolean, optional
         If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse. The default is False.
-    show_label : Boolean, optional
-        If True, add a label denoting the fitting function used. The default is False.
     linestyle : String, optional
         Linestyle to use for plotting. The default is "solid".
     linewidth : Float, optional
@@ -982,17 +875,9 @@ def plotter_Sugiyama(Deltas, Delta_index, ax, color, mf=None, extrapolate_numeri
     None.
 
     """
-
-    mp_Sugiyama, f_PBH_Sugiyama = load_data_Sugiyama(
-        Deltas, Delta_index, mf, extrapolate_numeric_lower)
-
-    if show_label:
-        label = find_label(mf)
-        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth,
-                linestyle=linestyle, label=label, alpha=alpha, marker=marker)
-    else:
-        ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth,
-                linestyle=linestyle, alpha=alpha, marker=marker)
+    
+    mp_Sugiyama, f_PBH_Sugiyama = load_data_Sugiyama(Deltas, Delta_index, mf, extrapolate_numeric_lower)
+    ax.plot(mp_Sugiyama, f_PBH_Sugiyama, color=color, linewidth=linewidth, linestyle=linestyle, alpha=alpha, marker=marker)
 
 
 def Solmass_to_g(m):
@@ -1167,6 +1052,7 @@ if "__main__" == __name__:
     ax2.set_yticklabels([])
 
     fig.tight_layout(pad=0.1)
+
 
 # %% Plot all extended MF constraints
 
@@ -1392,12 +1278,10 @@ if "__main__" == __name__:
         energies_string = "E{:.0f}".format(np.log10(E_number))
 
     # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
-        betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     # Load Subaru-HSC delta-fubhnction MF constraint
-    m_delta_Subaru, f_PBH_delta_Subaru = load_data(
-        "2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+    m_delta_Subaru, f_PBH_delta_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
 
     extrapolate_numeric_lower = False
 
@@ -1611,7 +1495,7 @@ if "__main__" == __name__:
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
-                ax.set_title("Voyager 1")
+                #ax.set_title("Voyager 1")
 
                 # If required, plot the fractional difference from the delta-function MF constraint
                 if plot_fracdiff:
@@ -1717,21 +1601,22 @@ if "__main__" == __name__:
             plotter_Subaru_Croon20(Deltas, i, ax, color=colors[3], mf=CC3, linestyle="dashed", show_label=False)
             
             colors_normalised = ["tab:orange", "tab:blue"]
-            linestyles = ["dashdot", "dotted"]
+            linestyles = ["dotted", "dashdot"]
             norm_string = ["normalised", "unnormalised"]
             
             normalised = True
             evolved = True
 
             plotter_BC19(Deltas, i, ax, "tab:orange", mf=mf_numeric, linestyle="solid", extrap_numeric_upper=False, normalised=normalised, prop_A=False, with_bkg_subtr=True)               
-            plotter_Subaru_Croon20(Deltas, i, ax, "tab:orange", mf=mf_numeric, linestyle="solid", extrap_numeric_upper=False, normalised=normalised, show_label=False)
+            plotter_Subaru_Croon20(Deltas, i, ax, "tab:orange", mf=mf_numeric, linestyle="solid", extrap_numeric_upper=False, normalised=normalised, show_label=False, evolved=False)
             ax.plot(0, 0, "tab:orange", linestyle="solid", label="Numeric (no extrap.)")
             
             for n in [1, 2]:
                 plotter_BC19(Deltas, i, ax, "tab:orange", mf=mf_numeric, linestyle=linestyles[n-1], extrap_numeric_upper=True, normalised=normalised, n=n, prop_A=False, with_bkg_subtr=True)               
-                plotter_Subaru_Croon20(Deltas, i, ax, "tab:orange", mf=mf_numeric, linestyle=linestyles[n-1], extrap_numeric_upper=True, normalised=normalised, n=n, show_label=False)
+                plotter_Subaru_Croon20(Deltas, i, ax, "tab:orange", mf=mf_numeric, linestyle=linestyles[n-1], extrap_numeric_upper=True, normalised=normalised, n=n, show_label=False, evolved=False)
                 ax.plot(0, 0, "tab:orange", linestyle=linestyles[n-1], label="Numeric (extrap. up to {:.0f}".format(10**n) + r" $m_{\rm max, \, data}$)")
-              
+                #ax.plot(0, 0, "tab:orange", linestyle=linestyles[n], label="Numeric (extrap.)")
+             
             # Set axis limits
             if Deltas[i] < 5:
                 xmin_evap, xmax_evap = 1e16, 2.5e17
@@ -1757,15 +1642,14 @@ if "__main__" == __name__:
             ax.tick_params("x", pad=7)
             ax.set_xlim(xmin_evap, 1e24)
             ax.set_ylim(ymin, ymax)
-            """
+            
             ax.plot(0, 0, color=colors[0], label="Delta func.")
             ax.plot(0, 0, color=colors[1], linestyle=(0, (5, 1)), label="LN")
             ax.plot(0, 0, color=colors[2], linestyle=(0, (5, 7)), label="SLN")
             ax.plot(0, 0, color=colors[3], linestyle="dashed", label="GCC")
-            ax.plot(0, 0, color=colors[4], label="Numeric")
-            #ax.plot(0, 0, color=colors[4], linestyle="dotted", label="Numeric \n (extrapolated)")
-            """
-            ax.legend(fontsize="11", title="$\Delta={:.1f}$".format(Deltas[i]))
+            
+            ax.set_title("$\Delta={:.1f}$".format(Deltas[i]))
+            ax.legend(fontsize="11")
             fig.tight_layout()
 
             if plot_GC_Isatis:
