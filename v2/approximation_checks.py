@@ -168,12 +168,21 @@ if "__main__" == __name__:
     integral_primary = []
     integral_secondary = []
     
+    # Maximum electron energy to include in integration (in GeV)
+    E_max = 5
+    
     for i in range(len(m_pbh_values)):
         energies_primary, spectrum_primary = read_blackhawk_spectra(file_path_BlackHawk_data + "GC_mono_{:.0f}/".format(i+1) + "instantaneous_primary_spectra.txt", col=7)
         energies_tot, spectrum_tot = read_blackhawk_spectra(file_path_BlackHawk_data + "GC_mono_{:.0f}/".format(i+1) + "instantaneous_secondary_spectra.txt", col=2)
-                
-        integral_primary.append(np.trapz(spectrum_primary, energies_primary) / 2)
-        integral_secondary.append(np.trapz(spectrum_tot, energies_tot) / 2)
+        
+        energies_primary_truncated = energies_primary[energies_primary <= E_max]
+        spectrum_primary_truncated = spectrum_primary[energies_primary <= E_max]
+        
+        energies_tot_truncated = energies_tot[energies_tot <= E_max]
+        spectrum_tot_truncated = spectrum_tot[energies_tot <= E_max]
+        
+        integral_primary.append(np.trapz(spectrum_primary_truncated, energies_primary_truncated) / 2)
+        integral_secondary.append(np.trapz(spectrum_tot_truncated, energies_tot_truncated) / 2)
     
     fit_inv_m = integral_primary[400] * np.power(m_pbh_values/m_pbh_values[400], -1)
     fit_m_square_low_m = integral_primary[400] * np.power(m_pbh_values/m_pbh_values[400], -2)
@@ -188,7 +197,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.legend(fontsize="small")
-    ax.set_title("Hazma secondary spectrum \n (Integration range $511~\mathrm{keV} \leq E \leq 5~\mathrm{GeV}$)", fontsize="small")
+    ax.set_title("Hazma secondary spectrum \n (Integration range $511~\mathrm{keV} \leq E \leq $%s$~\mathrm{GeV}$)" % E_max, fontsize="small")
     ax.set_xlim(2e13, 1e17)
     ax.set_ylim(1e18, 1e24)
     fig.tight_layout()
@@ -344,8 +353,6 @@ if "__main__" == __name__:
     fig.tight_layout()
 
 
-
-    
 #%% Plot the photon spectrum for different PBH masses
 
 if "__main__" == __name__:
