@@ -17,7 +17,7 @@ import os
 # extended mass functions, using the method from 1705.05567.
 
 # Specify the plot style
-mpl.rcParams.update({'font.size': 16,'font.family':'serif'})
+mpl.rcParams.update({'font.size': 20,'font.family':'serif'})
 mpl.rcParams['xtick.major.size'] = 7
 mpl.rcParams['xtick.major.width'] = 1
 mpl.rcParams['xtick.minor.size'] = 3
@@ -121,8 +121,8 @@ if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(6.5, 5))
     ax.plot(m_pbh_values, integral_secondary, color=colors[0], label="Total")
     ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[0], label="Primary emission only")
-    ax.plot(m_pbh_values, fit_inv_m, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit")
-    ax.plot(m_pbh_values, fit_m_square, color=colors[1], linestyle="dotted", label="$m^{-2}$ fit")
+    ax.plot(m_pbh_values, fit_inv_m, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit", linewidth=2)
+    ax.plot(m_pbh_values, fit_m_square, color=colors[1], linestyle="dotted", label="$m^{-2}$ fit", linewidth=2)
     ax.set_xlabel("$m~[\mathrm{g}]$")
     ax.set_ylabel("$\mathrm{d} N_\gamma/\mathrm{d}t~[\mathrm{s}^{-1}]$")
     ax.set_xscale("log")
@@ -179,16 +179,16 @@ if "__main__" == __name__:
     fit_m_square_low_m = integral_primary[400] * np.power(m_pbh_values/m_pbh_values[400], -2)
    
     fig, ax = plt.subplots(figsize=(6.5, 5))
-    ax.plot(m_pbh_values, integral_secondary, color=colors[0], label="Total")
-    ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[0], label="Primary emission only")
-    ax.plot(m_pbh_values, fit_inv_m, color=colors[1], linestyle="dotted", label="$m^{-1}$ fit")
-    ax.plot(m_pbh_values, fit_m_square_low_m, color=colors[2], linestyle="dotted", label="$m^{-2}$ fit")
+    ax.plot(m_pbh_values, integral_secondary, color=colors[1], label="Total")
+    ax.plot(m_pbh_values, integral_primary, linestyle="dashed", color=colors[1], label="Primary emission only")
+    ax.plot(m_pbh_values, fit_inv_m, color=colors[0], linestyle="dotted", label="$m^{-1}$ fit", linewidth=2)
+    ax.plot(m_pbh_values, fit_m_square_low_m, color=colors[2], linestyle="dotted", label="$m^{-2}$ fit", linewidth=2)
     ax.set_xlabel("$m~[\mathrm{g}]$")
     ax.set_ylabel("$\mathrm{d} N_e/\mathrm{d}t~[\mathrm{s}^{-1}]$")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.legend(fontsize="small")
-    ax.set_title("Secondary spectrum calcualted using Hazma \n (Integration range $511~\mathrm{keV} \leq E \leq 5~\mathrm{GeV}$)", fontsize="small")
+    ax.set_title("Hazma secondary spectrum \n (Integration range $511~\mathrm{keV} \leq E \leq 5~\mathrm{GeV}$)", fontsize="small")
     ax.set_xlim(2e13, 1e17)
     ax.set_ylim(1e18, 1e24)
     fig.tight_layout()
@@ -252,7 +252,7 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     ax.set_xlim(1e11, 1e15)
     ax.set_ylim(1e20, 1e28)
-    ax.set_title("Secondary spectrum calcualted using PYTHIA \n (Integration range $511~\mathrm{keV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
+    ax.set_title("PYTHIA secondary spectrum \n (Integration range $511~\mathrm{keV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
     fig.tight_layout()
 
     
@@ -280,7 +280,7 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     ax.set_xlim(1e11, 1e15)
     ax.set_ylim(1e18, 1e29)
-    ax.set_title("Secondary spectrum calcualted using PYTHIA \n (Integration range $511~\mathrm{keV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
+    ax.set_title("PYTHIA secondary spectrum \n (Integration range $511~\mathrm{keV} \leq E \leq 10^5~\mathrm{GeV}$)", fontsize="small")
     fig.tight_layout()
 
 
