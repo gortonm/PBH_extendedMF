@@ -1254,9 +1254,9 @@ if "__main__" == __name__:
     # If True, plot the evaporation constraints used by Isatis (from COMPTEL, INTEGRAL, EGRET and Fermi-LAT)
     plot_GC_Isatis = False
     # If True, plot the evaporation constraints shown in Korwar & Profumo (2023) [2302.04408]
-    plot_KP23 = False
+    plot_KP23 = True
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
-    plot_BC19 = True
+    plot_BC19 = False
     # If True, plot unevolved MF constraint
     plot_unevolved = False
     # If True, plot the fractional difference between evolved and unevolved MF results
@@ -2938,8 +2938,7 @@ def beta_prime_gamma_rays(m_values, epsilon=0.4):
 if "__main__" == __name__:
 
     m_pbh_values = 10**np.arange(np.log10(m_min), np.log10(m_max), 0.1)
-    f_max_values = f_PBH_beta_prime(
-        m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
+    f_max_values = f_PBH_beta_prime(m_pbh_values, beta_prime_gamma_rays(m_pbh_values))
     mc_values = np.logspace(15, 22, 70)
 
     sigma = 2
@@ -2947,31 +2946,41 @@ if "__main__" == __name__:
     fig, ax = plt.subplots(figsize=(8, 7))
     ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
 
-    f_PBH_values = constraint_Carr(
-        mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
-    f_PBH_values_evolved = constraint_Carr(
-        mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=True)
+    f_PBH_values = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=False)
+    f_PBH_values_evolved = constraint_Carr(mc_values, m_pbh_values, f_max_values, LN, [sigma], evolved=True)
 
-    m_delta_values_loaded, f_max_loaded = load_data(
-        "./2002.12778/Carr+21_mono_RH.csv")
-    mc_LN_values_loaded, f_PBH_loaded = load_data(
-        "./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    
+    mc_values_microlensing = np.logspace(20, 30, 101)
 
-    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded,
-            color="tab:grey", label="Delta func.")
-    ax.plot(m_pbh_values, f_max_values, color="k",
-            label="Delta func. [repr.]", linestyle="dashed")
-    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded,
-            color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
-    ax.plot(mc_values, f_PBH_values, color="tab:green",
-            label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
-    ax.plot(mc_values, f_PBH_values_evolved, color="tab:green",
-            label="LN ($\sigma={:.1f}$) \n [repr., evolved]".format(sigma), linestyle="dashed", alpha=0.5)
+    m_delta_values_SP19, f_max_SP19 = load_data("1910.01285/Subaru-HSC_1910.01285.csv")
+    m_delta_values_Croonetal20, f_max_Croonetal20 = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+    f_PBH_values_SP19 = constraint_Carr(mc_values_microlensing, m_delta_values_SP19, f_max_SP19, LN, [sigma], evolved=False)
+    f_PBH_values_Croonetal20 = constraint_Carr(mc_values_microlensing, m_delta_values_Croonetal20, f_max_Croonetal20, LN, [sigma], evolved=False)
 
+    m_delta_values_Fig20, f_max_Fig20 = load_data("2002.12778/Subaru-HSC_2002.12778_mono.csv")
+    ax.plot(m_delta_values_Fig20 * 1.989e33, f_max_Fig20, color="tab:grey")
+
+    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded,color="tab:grey", label="Delta func.")
+    ax.plot(m_pbh_values, f_max_values, color="k", label="Delta func. [repr.]", linestyle="dashed")
+    ax.plot(m_delta_values_Croonetal20, f_max_Croonetal20, color="skyblue", linestyle="dashed", label="Delta func., Croon+20")
+    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="lime", label="LN ($\sigma={:.1f}$)".format(sigma))
+    ax.plot(mc_values, f_PBH_values, color="tab:green", label="LN ($\sigma={:.1f}$) [repr.]".format(sigma), linestyle="dashed")
+    ax.plot(m_delta_values_SP19, f_max_SP19, color="k", linestyle="dashed")
+    #ax.plot(mc_values, f_PBH_values_evolved, color="tab:green", label="LN ($\sigma={:.1f}$) \n [repr., evolved]".format(sigma), linestyle="dashed", alpha=0.5)
+
+    # Microlensing constraints from Smyth & Profumo (2019) and Croon et al. (2020)   
+    mc_values_Fig20, f_PBH_Fig20 = load_data("2002.12778/Subaru-HSC_2002.12778_LN.csv")    
+    ax.plot(mc_values_Fig20 * 1.989e33, f_PBH_Fig20, color="lime")
+
+    ax.plot(mc_values_microlensing, f_PBH_values_SP19, color="tab:green", linestyle="dashed")
+    ax.plot(mc_values_microlensing, f_PBH_values_Croonetal20, color="deepskyblue", linestyle="dashed", label="LN ($\sigma={:.1f}$), Croon+20".format(sigma))   
+   
     ax.set_ylabel("$f_\mathrm{PBH}$")
     ax.set_xlabel("$m_c~[\mathrm{g}]$")
     ax1.set_xlabel("$m_c~[M_\odot]$", labelpad=14)
-    ax.legend(title="$\sigma$", fontsize="x-small")
+    ax.legend(title="$\sigma$", fontsize="xx-small")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlim(1e-18*1.989e33, 5*1.989e33)
