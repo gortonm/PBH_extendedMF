@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from preliminaries import load_data, m_max_SLN, load_results_Isatis, envelope, LN, SLN, CC3, frac_diff
-from plot_constraints import plotter_GC_Isatis, plotter_KP23, set_ticks_grid
+from plot_constraints import plotter_GC_Isatis, plotter_KP23, plotter_BC19, set_ticks_grid
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 20, 'font.family':'serif'})
@@ -60,7 +60,7 @@ if "__main__" == __name__:
         mp_Subaru_CC3, f_PBH_Carr_CC3 = np.genfromtxt("./Data-old/CC3_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         mc_Carr_LN, f_PBH_Carr_LN = np.genfromtxt("./Data-old/LN_HSC_Carr_Delta={:.1f}.txt".format(Deltas[i]), delimiter="\t")
         
-        fig.suptitle("Using 511 keV line constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$".format(Deltas[i]))
+        fig.suptitle("Using soft gamma-ray constraints (Korwar \& Profumo 2023), $\Delta={:.1f}$".format(Deltas[i]))
         
         
         # Delta-function MF constraints
@@ -198,10 +198,10 @@ if "__main__" == __name__:
             ax.plot(mc_values_old, f_PBHs_GC_old[j], color=colors_evap[j])
         
         if plot_CC3:
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_xlabel(r"$m_{\rm p} \, [{\rm g}]$")
         else:
-            ax.set_xlabel("$m_c~[\mathrm{g}]$")
-        ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xlabel(r"$m_{\rm c} \, [{\rm g}]$")
+        ax.set_ylabel(r"$f_{\rm PBH}$")
         ax.set_title("$\Delta={:.1f}$".format(Deltas[i]) + ", %s" % mf_string_new)
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -215,8 +215,8 @@ if "__main__" == __name__:
     
     from plot_constraints import load_data_KP23
     
-    include_extrap = True
-    include_extrap_from_1e16g = False
+    include_extrap = False
+    include_extrap_from_1e16g = True
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
@@ -329,11 +329,11 @@ if "__main__" == __name__:
             plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
             
             # Plot extended MF constraints from Galactic Centre photons calculated using Isatis
-            """
+            
             plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, params=[alphas_CC3[j], betas[j]], linestyle="dotted")
-            """
+            
             ax0.set_xlabel(r"$m \, [{\rm g}]$")
             ax0.set_ylabel("$f_{\rm max}$")
             ax0.set_xscale("log")
@@ -355,14 +355,14 @@ if "__main__" == __name__:
                     ax.set_xlim(1e16, 2e18)
                    
                 ax.set_ylim(1e-6, 1)
-                ax.set_ylabel("$f_{\rm PBH}$")
+                ax.set_ylabel(r"$f_{\rm PBH}$")
                 ax.set_xlabel(r"$m_{\rm p} \, [{\rm g}]$")
                 ax.set_xscale("log")
                 ax.set_yscale("log")
                 ax.tick_params("x", pad=7)
 
             for axa in [ax1a, ax2a, ax3a]:
-                axa.set_ylabel("$\Delta f_{\rm PBH} / f_{\rm PBH}$")
+                axa.set_ylabel(r"$\Delta f_{\rm PBH} / f_{\rm PBH}$")
                 axa.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
                 axa.legend(fontsize="xx-small", title="$q$")        
                 axa.set_xscale("log")
@@ -600,11 +600,11 @@ if "__main__" == __name__:
             plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
             
             # Plot extended MF constraints from Galactic Centre photons calculated using Isatis
-            """
+            
             plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, params=[alphas_CC3[j], betas[j]], linestyle="dotted")
-            """
+            
             ax0.plot(m_delta_values, f_max, color="tab:grey")
             ax0.set_xlabel(r"$m~[{\rm g}]$")
             ax0.set_ylabel("$f_\mathrm{max}$")
@@ -729,11 +729,11 @@ if "__main__" == __name__:
         plotter_KP23(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dashed")
         plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
         # Plot extended MF constraints from Galactic Centre photons calculated using Isatis
-        """
+        
         plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
-        """
+        
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
@@ -824,11 +824,11 @@ if "__main__" == __name__:
         plotter_KP23(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dashed")
         plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
         # Plot extended MF constraints from Galactic Centre photons calculated using Isatis     
-        """
+        
         plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
-        """  
+          
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
@@ -875,7 +875,7 @@ if "__main__" == __name__:
     
     for j in range(len(Deltas)):
         
-        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
+        fig, axes = plt.subplots(2, 2, figsize=(10, 10))
         
         ax0 = axes[0][0]
         ax1 = axes[0][1]
@@ -918,12 +918,16 @@ if "__main__" == __name__:
         plotter_KP23(Deltas, j, ax1, color="tab:grey", mf=LN, linestyle="dashed")
         plotter_KP23(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dashed")
         plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
+        
+        plotter_BC19(Deltas, j, ax1, color="tab:grey", mf=LN, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+        plotter_BC19(Deltas, j, ax2, color="tab:grey", mf=SLN, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+        plotter_BC19(Deltas, j, ax3, color="tab:grey", mf=CC3, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+
         # Plot extended MF constraints from Galactic Centre photons calculated using Isatis  
-        """
         plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
         plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
-        """    
+            
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
         ax0.set_ylabel("$f_\mathrm{max}$")
@@ -948,8 +952,108 @@ if "__main__" == __name__:
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
         fig.suptitle("21cm line [2107.02190], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
-        
 
+
+#%% Plot results obtained using different power-law exponents in f_max at low masses (from 21cm line [2107.02190]).
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
+    exponents_PL_lower = [0, -2, -4]
+    
+    linestyles = ["solid", "dashed", "dotted"]
+    
+    # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
+    m_delta_values, f_max = load_data("2108.13256/2108.13256_Fig4_21cm.csv")
+    
+    # Boolean determines whether to use evolved mass function (evaluated at the present-day).
+    evolved = True
+    
+    for j in range(len(Deltas)):
+        
+        fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+        
+        ax0 = axes[0][0]
+        ax1 = axes[0][1]
+        ax2 = axes[1][0]
+        ax3 = axes[1][1]
+                
+        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_values))+0.01, 0.1)
+                
+        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
+            
+            if evolved:
+                data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+            else:
+                data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+            
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+            data_filename_LN = data_folder + "/LN_2108.13256_21cm_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2108.13256_21cm_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2108.13256_21cm_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            
+            mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j], log_m_factor=3, n_steps=1000) for m_c in mc_SLN_evolved]
+            mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
+            
+            ax1.plot(mp_LN, f_PBH_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
+            ax2.plot(mp_SLN, f_PBH_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
+            ax3.plot(mp_CC3_evolved, f_PBH_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
+           
+            ax1.set_title("LN")
+            ax2.set_title("SLN")
+            ax3.set_title("CC3")
+            
+            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
+            f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
+            ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
+        
+        # Plot extended MF constraints from Korwar & Profumo (2023)
+        plotter_KP23(Deltas, j, ax1, color="tab:grey", mf=LN, linestyle="dashed")
+        plotter_KP23(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dashed")
+        plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
+        
+        plotter_BC19(Deltas, j, ax1, color="tab:grey", mf=LN, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+        plotter_BC19(Deltas, j, ax2, color="tab:grey", mf=SLN, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+        plotter_BC19(Deltas, j, ax3, color="tab:grey", mf=CC3, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+
+        # Plot extended MF constraints from Galactic Centre photons calculated using Isatis  
+        
+        plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
+        plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
+        plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
+            
+        ax0.plot(m_delta_values, f_max, color="tab:grey")
+        ax0.set_xlabel("$m$ [g]")
+        ax0.set_ylabel("$f_\mathrm{max}$")
+        ax0.set_xscale("log")
+        ax0.set_yscale("log")
+        ax0.set_xlim(min(m_delta_extrapolated), 1e18)
+        ax0.set_ylim(min(f_max)/100, 1)
+        
+        for ax in [ax1, ax2, ax3]:
+            if Deltas[j] < 5:
+                ax.set_xlim(1e16, 1e18)
+            else:
+                ax.set_xlim(1e16, 2e19)
+               
+            ax.set_ylim(1e-6, 1)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+
+        ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
+        ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
+        fig.suptitle("21cm line [2108.13256], $\Delta={:.1f}$".format(Deltas[j]))
+        fig.tight_layout()
+
+        
 #%% Plot Galactic Centre photon constraints for an extended mass function, with the delta-function MF constraints obtained using Isatis.
 # Compare to the approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin, for the unevolved mass function and the 'evolved' mass function evaluated at the initial time t=0.
 
@@ -1070,7 +1174,7 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    approx = False
+    approx = True
 
     mc_values = np.logspace(14, 20, 121)
 
@@ -1167,12 +1271,10 @@ if "__main__" == __name__:
             plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
             
             # Plot extended MF constraints from Galactic Centre photons calculated using Isatis  [sanity check]
-            """
-            plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted", approx=True, linewidth=2)
-            plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted", approx=True, linewidth=2)
-            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted", approx=True, linewidth=2)
-            """            
-
+            plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted", approx=approx, linewidth=2)
+            plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted", approx=approx, linewidth=2)
+            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted", approx=approx, linewidth=2)
+            
             ax0.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))            
             ax1.plot(0, 0, style_markers[k], color="k", label="{:.0f}".format(exponent_PL_lower))
                 
@@ -1305,11 +1407,11 @@ if "__main__" == __name__:
             plotter_KP23(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dashed")
             plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
             # Plot extended MF constraints from Galactic Centre photons calculated using Isatis
-            """
+            
             plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
             plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
-            """
+            
             ax0.set_xlim(1e11, 3e17)
             ax0.set_ylim(10**(-15), 1)
             ax0.set_xlabel("m$~[\mathrm{g}]$")
