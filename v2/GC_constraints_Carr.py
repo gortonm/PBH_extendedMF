@@ -42,7 +42,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # If True, use the evolved mass function.
-    evolved = False
+    evolved = True
     # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
@@ -56,7 +56,7 @@ if "__main__" == __name__:
     # If True, use BlackHawk spectra calculated at 500 energies
     E500 = False
     
-    m_delta_values_loaded = np.logspace(11, 22, 1000)
+    m_delta_values_loaded = np.logspace(11, 21, 1000)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
