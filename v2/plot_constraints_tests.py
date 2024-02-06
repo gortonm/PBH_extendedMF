@@ -181,7 +181,7 @@ if "__main__" == __name__:
         mf_string_old = "CC"
         mf_string_new = "CC3"
 
-    for i in range(len(Deltas)):
+    for i in range(len(Deltas[0:1])):
         fig, ax = plt.subplots(figsize=(6,6))
         
         mc_values_old = np.logspace(14, 19, 100)          
@@ -483,7 +483,7 @@ if "__main__" == __name__:
     linestyles = ["dashed", "dotted", "dotted"]
    
     # Boolean determines which propagation model to load data from
-    prop_A = True
+    prop_A = False
     prop_B = not prop_A
     
     with_bkg_subtr = True
@@ -1174,7 +1174,8 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    approx = True
+    approx = False
+    evolved = False
 
     mc_values = np.logspace(14, 20, 121)
 
@@ -1182,8 +1183,14 @@ if "__main__" == __name__:
     exponents_PL_lower = [0, 2, 4]
     
     style_markers = ["--", "+", "x"]
+    
+    loading_string = ""
+    if approx:
+        loading_string += "_approx"
+    if not evolved:
+        loading_string += "_unevolved" 
         
-    for j in range(len(Deltas)):
+    for j in range(len(Deltas[0:1])):
         
         fig, axes = plt.subplots(2, 2, figsize=(13, 13))
         
@@ -1200,8 +1207,11 @@ if "__main__" == __name__:
         m_delta_extrapolated = np.logspace(11, 13, 21)
         
         for k, exponent_PL_lower in enumerate(exponents_PL_lower):
-            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
-            
+            if evolved:
+                data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
+            else:
+                data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+           
             f_PBH_instrument_LN = []
             f_PBH_instrument_SLN = []
             f_PBH_instrument_CC3 = []
@@ -1225,18 +1235,18 @@ if "__main__" == __name__:
 
                 ax0.plot(m_delta_extrapolated, f_max_extrapolated, style_markers[k], color=colors_evap[i])
                 ax0.plot(m_delta_values_loaded[m_delta_values_loaded > 1e13], f_max_loaded_truncated, color=colors_evap[i])
-                
+                                
                 if approx:
                     # Load constraints for an evolved extended mass function obtained from each instrument
-                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}".format(Deltas[j]) + "%s.txt" % loading_string
+                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}".format(Deltas[j]) + "%s.txt" % loading_string
+                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}".format(Deltas[j]) + "%s.txt" % loading_string
                 
                 else:
                     # Load constraints for an evolved extended mass function obtained from each instrument
-                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}".format(Deltas[j]) + "%s.txt" % loading_string
+                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}".format(Deltas[j]) + "%s.txt" % loading_string
+                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}".format(Deltas[j]) + "%s.txt" % loading_string
 
                 mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
                 mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
