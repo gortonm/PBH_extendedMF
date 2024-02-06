@@ -41,9 +41,9 @@ if "__main__" == __name__:
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    # If True, use the evolved mass function.
+    # Boolean determines whether to useFalse evolved mass function.
     evolved = True
-    # If True, evaluate the evolved mass function at t=0.
+    # Boolean determines whether to evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
         evolved = True
@@ -53,15 +53,11 @@ if "__main__" == __name__:
     # If True, plot extrapolated delta-function MF constraints down to 1e11g.
     plot_extrapolated = False
     
-    # If True, use BlackHawk spectra calculated at 500 energies
-    E500 = False
-    
-    m_delta_values_loaded = np.logspace(11, 21, 1000)
+    m_delta_values_loaded = np.logspace(11, 22, 1000)
     colors_evap = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
     constraints_names_short = ["COMPTEL_1107.0200", "EGRET_9811211", "Fermi-LAT_1101.1381", "INTEGRAL_1107.0200"]
     
     mc_values = np.logspace(14, 20, 121)
-    mp_values_numeric = np.logspace(16, 20, 81)
         
     t = t_0
     
@@ -76,10 +72,9 @@ if "__main__" == __name__:
     if include_extrapolated:
         # Power-law exponent to use
         m_delta_extrapolated = np.logspace(11, 13, 21)
-
+        
     # Power-law exponent to use for extrapolating the delta-function MF constraint below 1e13g
     for exponent_PL_lower in [0, 2, 3, 4]:
-
         if include_extrapolated:
             data_folder = data_folder_base + "/PL_exp_{:.0f}/".format(exponent_PL_lower)
         else:
@@ -92,11 +87,8 @@ if "__main__" == __name__:
             
             for i in range(len(constraints_names_short)):
                 
-                if not E500:
-                    f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
-                else:
-                    f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_E500_wide.txt" % constraints_names_short[i], unpack=True)
-               
+                f_max_Isatis = np.genfromtxt("./Data/fPBH_GC_full_all_bins_%s_monochromatic_wide.txt" % constraints_names_short[i], unpack=True)
+                
                 if len(f_max_Isatis) == len(m_delta_values_loaded):
                     print("Error: will not loop over the number of energy bins. f_max_Isatis needs to be transposed.")
                     break
@@ -153,34 +145,23 @@ if "__main__" == __name__:
                 if len(f_PBH_allbins_LN) != n_bins:
                     print("Error: length of calculated constraint from each energy bin does not equal number of energy bins.")
                     break
-                
-                f_PBH_i_LN = envelope(f_PBH_allbins_LN, save_argmin=False, fname=data_folder + "/argmin/LN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
-                f_PBH_i_SLN = envelope(f_PBH_allbins_SLN, save_argmin=False, fname=data_folder + "/argmin/SLN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
-                f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3, save_argmin=False, fname=data_folder + "/argmin/CC3_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j]))
-                               
+                            
+                f_PBH_i_LN = envelope(f_PBH_allbins_LN)
+                f_PBH_i_SLN = envelope(f_PBH_allbins_SLN)
+                f_PBH_i_CC3 = envelope(f_PBH_allbins_CC3)
+                      
                 if evolved == False:
-                    if not E500:
-                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                    else:
-                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
                 else:
-                    if not E500:
-                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                    else:
-                        data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
-                        data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_E500_Carr_Delta={:.1f}.txt".format(Deltas[j])
-
+                    data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                    data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+                    data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+        
                 np.savetxt(data_filename_LN, [mc_values, f_PBH_i_LN], delimiter="\t")
                 np.savetxt(data_filename_SLN, [mc_values, f_PBH_i_SLN], delimiter="\t")
                 np.savetxt(data_filename_CC3, [mc_values, f_PBH_i_CC3], delimiter="\t")
-
 
 #%% Galactic Centre photon constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
 
@@ -190,7 +171,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # If True, use evolved mass function.
-    evolved = True
+    evolved = False
     # If True, evaluate the evolved mass function at t=0.
     t_initial = False
     if t_initial:
@@ -221,7 +202,7 @@ if "__main__" == __name__:
         
     if include_extrapolated:
         # Power-law exponent to use
-        exponent_PL_lower = 2.0
+        exponent_PL_lower = 3.0
         m_delta_extrapolated = np.logspace(11, 13, 21)
         data_folder += "/PL_exp_{:.0f}/".format(exponent_PL_lower)
         
@@ -1098,7 +1079,7 @@ if "__main__" == __name__:
                     np.savetxt(data_filename_numeric, [mp_values_numeric, f_pbh_numeric], delimiter="\t")
 
 
-#%% 21-cm line constraints from Mittal et al. (2022) [2112.06778]
+#%% 21-cm line constraints from Mittal et al. (2022) [2107.02190]
 if "__main__" == __name__:
     # If True, use extrapolated delta-function MF constraints down to 1e11g (using a power law fit) to calculate extended MF constraint.
     include_extrapolated = True
