@@ -12,6 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from scipy.special import erf, loggamma
+import os
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 24, 'font.family':'serif'})
@@ -60,7 +61,7 @@ if "__main__" == __name__:
     # Check file loads correctly
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    
+  
 #%% Functions
 
 def load_data(filename, directory="./Extracted_files/"):
@@ -647,8 +648,6 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
             constraints_names.append(temp2)
 
     return constraints_names, f_PBH_Isatis
-
-
 #%% Test of the methods SLN and CC3 by comparing to Fig. 5 of 2009.03204.
 
 if "__main__" == __name__:
@@ -929,8 +928,118 @@ if "__main__" == __name__:
 
             fig1.set_tight_layout(True)
             fig2.set_tight_layout(True)
+           
             
-                        
+#%% Reproduce Fig. 1 of Mosbech & Picker (2022), using different forms of alpha_eff.
+
+if "__main__" == __name__:
+    
+    def alpha_eff(tau, M_0):
+        """
+        Calculate alpha_eff from BlackHawk output files.
+
+        Parameters
+        ----------
+        tau : Array-like
+            PBH lifetimes, in seconds.
+        M_0 : Array-like
+            Initial PBH masses, in grams.
+
+        Returns
+        -------
+        Array-like
+            Values of alpha_eff.
+
+        """
+        return (1/3) * (t_Pl/tau) * (M_0 / m_Pl)**3
+    
+    m_pbh_values_formation_BlackHawk = np.logspace(np.log10(4e14), 16, 50)   # Range of formation masses for which the lifetime is calculated using BlackHawk (primary particle energy range from 1e-6 to 1e5 GeV)
+    m_pbh_values_formation_wide = np.logspace(8, 18, 100)    # Test range of initial masses
+    pbh_lifetimes = []
+    M0_min_BH, M0_max_BH = min(m_pbh_values_formation_BlackHawk), max(m_pbh_values_formation_BlackHawk)
+    
+    # Find PBH lifetimes corresponding to PBH formation masses in m_pbh_values_formation_BlackHawk
+    for j in range(len(m_pbh_values_formation_BlackHawk)):
+        
+        destination_folder = "mass_evolution_v2" + "_{:.0f}".format(j+1)
+        filename = os.path.expanduser('~') + "/Downloads/version_finale/results/" + destination_folder + "/life_evolutions.txt"
+        data = np.genfromtxt(filename, delimiter="    ", skip_header=4, unpack=True, dtype='str')
+        times = data[0]
+        tau = float(times[-1])
+        pbh_lifetimes.append(tau)   # add the last time value at which BlackHawk calculates the PBH mass, corresponding to the PBH lifetime (when estimated PBH mass ~= Planck mass [see paragraph after Eq. 43b in manual, line 490 of evolution.c])
+    
+    # Values of alpha_eff calculated directly using BlackHawk
+    alpha_eff_values_BlackHawk = alpha_eff(np.array(pbh_lifetimes), m_pbh_values_formation_BlackHawk)
+    # Values of alpha_eff extracted from Fig. 1 of Mosbech & Picker (2022)
+    alpha_eff_extracted_values = alpha_eff_extracted(m_pbh_values_formation_wide)
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(m_pbh_values_formation_BlackHawk, alpha_eff_values_BlackHawk, label="Calculated using BlackHawk")
+    ax.plot(m_pbh_values_formation_wide, alpha_eff_extracted_values, linestyle="None", marker="x", label="Extracted (Fig. 1 MP '22)")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel(r"Formation mass $M_{\rm i} \, [{\rm g}$]")
+    ax.set_ylabel(r"$\alpha_{\rm eff}$")
+    ax.legend(fontsize="xx-small")
+    fig.tight_layout()
+    
+  
+ #%% Reproduce Fig. 2 of Mosbech & Picker (2022)
+
+if "__main__" == __name__:
+    
+    m_pbh_values_formation = np.logspace(11, 17, 500)
+    # Initial PBH mass values includes values close to the initial mass of a PBH with lifetime equal to the age of the Universe,
+    # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
+    #m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 17, 500)))
+    m_pbh_values_formation_to_evolve = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 17, 500)))
+    m_pbh_values_evolved = mass_evolved(m_pbh_values_formation_to_evolve, t_0)
+    m_pbh_t_init = mass_evolved(m_pbh_values_formation_to_evolve, 0)
+
+    m_c = 1e15
+    
+    for sigma in [0.1, 0.5, 1, 1.5]:
+        
+        if sigma < 1:
+           m_extracted_evolved, phi_extracted_evolved = load_data("2203.05743/2203.05743_Fig2_sigma0p{:.0f}.csv".format(10*sigma))
+        else:
+           m_extracted_evolved, phi_extracted_evolved = load_data("2203.05743/2203.05743_Fig2_sigma1p{:.0f}.csv".format(10*(sigma-1)))
+
+        
+        phi_initial = LN(m_pbh_values_formation, m_c, sigma)
+        phi_initial_to_evolve = LN(m_pbh_values_formation_to_evolve, m_c, sigma)
+                
+        phi_present = psi_evolved(phi_initial_to_evolve, m_pbh_values_evolved, m_pbh_values_formation_to_evolve) / (m_pbh_values_evolved / m_pbh_values_formation_to_evolve)
+        # test that the "evolved" mass function at t=0 matches the initial mass function.
+        phi_test = psi_evolved(phi_initial_to_evolve, m_pbh_t_init, m_pbh_values_formation_to_evolve) / (m_pbh_t_init / m_pbh_values_formation_to_evolve)
+
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.plot(m_pbh_values_formation, phi_initial, label="$t=0$")
+        ax.plot(m_pbh_values_evolved, phi_present, label="$t=t_0$", marker="x")
+        ax.plot(m_pbh_values_formation_to_evolve, phi_test, label="$t=0$ (test)")
+        ax.plot(m_extracted_evolved, phi_extracted_evolved, linestyle="None", marker="+", label="$t=t_0$ (extracted)")
+
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\phi(M)~[\mathrm{g}]^{-1}$")
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.legend(title="$\sigma={:.1f}$".format(sigma), fontsize="xx-small")
+        ax.set_xlim(1e11, max(m_pbh_values_formation))
+        ax.set_ylim(1e-21, 1e-12)
+        fig.tight_layout()
+
+        fig, ax = plt.subplots(figsize=(6, 6))
+        phi_extracted_evolved_interp = 10**np.interp(np.log10(m_pbh_values_evolved), np.log10(m_extracted_evolved), np.log10(phi_extracted_evolved))
+        ratio = phi_present/phi_extracted_evolved_interp
+        ax.plot(m_pbh_values_evolved, ratio-1, marker="x", linestyle="None")
+        ax.set_xlabel("$M~[\mathrm{g}]$")
+        ax.set_ylabel("$\phi(M, t)$ (reproduction / extracted - 1)")
+        ax.set_xscale("log")
+        ax.set_title("$\sigma={:.1f}$".format(sigma))
+        ax.set_xlim(min(m_extracted_evolved), max(m_extracted_evolved))
+        ax.set_ylim(-0.2, 0.2)
+        fig.tight_layout()
+
+                       
 #%% Plot the mass function for Delta = 0, 2 and 5, showing the evovled and unevolved MFs for a peak mass m_p = 1e16g. Plots show different fitting functions for the same Delta.
 if "__main__" == __name__:
     
