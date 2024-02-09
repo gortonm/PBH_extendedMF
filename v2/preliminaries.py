@@ -5,6 +5,9 @@ Created on Fri Mar  3 15:25:33 2023
 @author: ppxmg2
 """
 
+# Script with methods underpinning the rest of the code
+# Includes tests and checks
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -539,7 +542,7 @@ def constraint_Carr(mc_values, m_delta, f_max, psi_initial, params, evolved=True
     return f_pbh
 
 
-def envelope(constraints, save_argmin=False, fname=None):
+def envelope(constraints):
     """
     Calculate the tightest constraint at a given mass, from a set of 
     constraints.
@@ -549,12 +552,6 @@ def envelope(constraints, save_argmin=False, fname=None):
     constraints : Array-like
         Constraints on PBH abundance. All should have the same length and be
         evaluated at the same PBH mass.
-    save_argmin : Boolean, optional
-        If True, save the index of the constraint that places the tightest
-        constraint. The default is False.
-    fname : String, optional
-        Name of file containing index of constraint that places tightest 
-        constraint. Not needed if save == False. The default is None.
 
     Returns
     -------
@@ -563,8 +560,7 @@ def envelope(constraints, save_argmin=False, fname=None):
 
     """
     tightest = np.ones(len(constraints[0]))
-    tightest_arg = np.ones(len(constraints[0]))
-    
+
     for i in range(len(constraints[0])):
 
         constraints_values = []
@@ -574,11 +570,8 @@ def envelope(constraints, save_argmin=False, fname=None):
                 constraints_values.append(1e100)
             else:
                 constraints_values.append(abs(constraints[j][i]))
-        tightest_arg[i] = np.argmax(constraints_values)
-        tightest[i] = min(constraints_values)
 
-    if save_argmin:
-        np.savetxt(fname, tightest_arg)
+        tightest[i] = min(constraints_values)
 
     return tightest
 
@@ -656,7 +649,7 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
     return constraints_names, f_PBH_Isatis
 
 
-#%% Compare SLN and CC3 MF to Fig. 5 of 2009.03204.
+#%% Test of the methods SLN and CC3 by comparing to Fig. 5 of 2009.03204.
 
 if "__main__" == __name__:
     
@@ -700,15 +693,7 @@ if "__main__" == __name__:
         
         m_max_SLN_val = m_max_SLN(np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], n_steps=10000)
         print("M_max (SLN) = {:.1f} M_\odot".format(m_max_SLN_val))
-        
-        if Delta_index == 1:
-            psi_SLN_max = max(SLN(m_pbh_values, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]))
-            print(psi_SLN[10])
-            print(psi_SLN_max)
-
-        else:
-            psi_SLN_max = max(SLN(m_pbh_values, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]))
-
+        psi_SLN_max = max(SLN(m_pbh_values, np.exp(ln_mc_SLN[Delta_index]), sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]))
         psi_CC3_max = max(CC3(m_pbh_values, mp_CC3[Delta_index], alpha=alphas_CC3[Delta_index], beta=betas[Delta_index]))
         
         
@@ -720,7 +705,7 @@ if "__main__" == __name__:
         ax.plot(m_pbh_values, psi_SLN / psi_SLN_max, color="b", label="SLN", linewidth=2)
         
         if Delta_index == 6:
-            ax.plot(m_pbh_values, 0.98 * psi_CC3 / psi_CC3_max, color="tab:green", label="CC3", linewidth=2)
+            ax.plot(m_pbh_values, psi_CC3 / psi_CC3_max, color="tab:green", label="CC3", linewidth=2)
         else:
             ax.plot(m_pbh_values, psi_CC3 / psi_CC3_max, color="tab:green", label="CC3", linewidth=2)
 
@@ -735,7 +720,8 @@ if "__main__" == __name__:
         plt.tight_layout()
         plt.show()
 
-#%% Compare peak mass of the skew lognormal with different mass ranges and numbers of masses tested, to the values from Table II of 2009.03204.
+
+#%% Test of m_max_SLN. Compare peak mass of the skew lognormal calculated with different mass ranges and numbers of masses tested.
 
 if "__main__" == __name__:
     
@@ -769,7 +755,7 @@ if "__main__" == __name__:
         
         # Calculate the most precise estimate for the peak mass
         mp_best_estimate = m_max_SLN(m_c, sigma, alpha, log_m_factor=max(n_sigmas_range), n_steps=int(max(n_steps_range)))
-        print("Best estimate = {:.4e}".format(mp_best_estimate))
+        print("\nBest estimate = {:.4e}".format(mp_best_estimate))
         
         stop_loop = False
         
@@ -780,9 +766,9 @@ if "__main__" == __name__:
                 # Estimated peak mass of the SLN mass function.
                 m_max_SLN_est = m_max_SLN(m_c, sigma, alpha, log_m_factor=n_sigma, n_steps=int(n_steps))
                 print("Estimate = {:.4e}".format(m_max_SLN_est))
-                frac_diff = abs((m_max_SLN_est - mp_best_estimate) / mp_best_estimate)
+                frac_diff_val = abs((m_max_SLN_est - mp_best_estimate) / mp_best_estimate)
                 
-                if frac_diff < precision:
+                if frac_diff_val < precision:
                     
                     n_steps_min[i] = n_steps
                     n_sigma_min[i] = n_sigma
@@ -797,11 +783,11 @@ if "__main__" == __name__:
             if stop_loop:
                 break
 
-        print("Delta = {:.1f}".format(Deltas[i]))
+        print("\nDelta = {:.1f}".format(Deltas[i]))
         print("n_steps_min = {:.2e}".format(n_steps_min[i]))
         print("n_sigmas_min = {:.0f}".format(n_sigma_min[i]))
         
-#%% Check m_max_SLN(), by comparing results to Table II of 2009.03204, accounting for the uncertainty in parameters due to the limited precision given.
+#%% Test of m_max_SLN(). Compare peak mass to Table II of 2009.03204, accounting for the uncertainty in parameters due to the limited precision given.
 
 if "__main__" == __name__:
     
@@ -816,11 +802,13 @@ if "__main__" == __name__:
         print("\nDelta = {:.1f}".format(Deltas[i]))
         
         # Account for uncertainty due to the limited precision of values given in Table II of 2009.03204.
-        for ln_mc in [ln_mc_SLN[i]-0.005,  ln_mc_SLN[i], ln_mc_SLN[i]+0.005]:
+        for ln_mc in np.linspace(ln_mc_SLN[i]-0.005, ln_mc_SLN[i]+0.005, 10):
             
-            for alpha in [alphas_SLN[i]-0.005, alphas_SLN[i], alphas_SLN[i]+0.005]:
+            for alpha in np.linspace(alphas_SLN[i]-0.005, alphas_SLN[i]+0.005, 5):
                 
-                for sigma in [sigmas_SLN[i]-0.005, sigmas_SLN[i], sigmas_SLN[i]+0.005]:
+                for sigma in np.linspace(sigmas_SLN[i]-0.005, sigmas_SLN[i]+0.005, 5):
+                    
+                    #print((m_max_SLN_est - mp_SL[i]))
                     
                     # Estimated peak mass of the SLN mass function.
                     m_max_SLN_est = m_max_SLN(np.exp(ln_mc), sigma, alpha, log_m_factor=n_sigma_min[i], n_steps=int(n_steps_min[i]))
@@ -831,8 +819,8 @@ if "__main__" == __name__:
                         print("Success")
                         
                         # Calculate and print fractional difference
-                        frac_diff = abs((m_max_SLN_est - mp_SL[i]) / mp_SL[i])
-                        print("Fractional difference = {:.2e}".format(frac_diff))
+                        frac_diff_val = abs((m_max_SLN_est - mp_SL[i]) / mp_SL[i])
+                        print("Fractional difference = {:.2e}".format(frac_diff_val))
                         
 #%% Plot the CC3 mass function, and compare to the limits at small and large (m / m_p) [m_p = peak mass]
 
@@ -874,7 +862,7 @@ if "__main__" == __name__:
         fig.tight_layout()
                         
                         
-#%% Plot the mass function for Delta = 5.0, showing the mass range relevant for the Subaru-HSC microlensing constraints.
+#%% Plot the fitting functions for Delta = 5.0, showing the behaviour deep into the high-mass tail.
 if "__main__" == __name__:
     
     # Load mass function parameters.
@@ -923,12 +911,10 @@ if "__main__" == __name__:
             ax2.plot(m_pbh_values, mf_CC3, color="g", label="CC3", linestyle="dashed")
             
             for ax in [ax1, ax2]:
-                # Show smallest PBH mass constrained by microlensing.
                 ax.set_xscale("log")
                 ax.set_yscale("log")
                 ax.grid()
                 ax.legend(fontsize="small")
-                #ax.vlines(m_x, ymin=0, ymax=1, color="k", linestyle="dotted")
                 ax.set_xlabel("$m~[\mathrm{g}]$")
                 ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
                 ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
@@ -944,56 +930,8 @@ if "__main__" == __name__:
             fig1.set_tight_layout(True)
             fig2.set_tight_layout(True)
             
-            
-#%% Plot the mass function for Delta = 5.0, showing the mass range relevant for the Korwar & Profumo (2023) constraints.
-    if "__main__" == __name__:
-        
-        # Load mass function parameters.
-        [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-        
-        for i in range(len(Deltas)):
-            
-            if i == 6:
-               
-                m_pbh_values_init = np.logspace(14, 21, 100)
-                fig, ax = plt.subplots(figsize=(6, 6))
-                
-                # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
-                mc_SLN = 1.02e19
-                m_p = 1.5e18
-                mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
-                
-                mp_SLN_est = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
-                print("m_p (CC3) = {:.2e}".format(m_p))
-                print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
-    
-                mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
-                mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-                mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
-                
-                m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
-                mf_LN_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
-                mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
-                mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
-    
-                ax.plot(m_pbh_values_evolved, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])            
-                ax.plot(m_pbh_values_evolved, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
-                ax.plot(m_pbh_values_evolved, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
-                
-                # Show smallest PBH mass constrained by microlensing.
-                ax.set_xscale("log")
-                ax.set_yscale("log")
-                ax.legend(fontsize="small")
-                ax.set_xlabel("$m~[\mathrm{g}]$")
-                ax.set_xlim(min(m_pbh_values_evolved), max(m_pbh_values_evolved))
-                ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
-                ax.set_ylabel("$\psi_\mathrm{N}$~\mathrm{[g^{-1}]}$")
-    
-                fig.tight_layout()
-            
-            
-#%% Plot the mass function for Delta = 0 and 5, showing the mass range relevant for the Galactic Centre photon constraints from Isatis (1e14g)
- 
+                        
+#%% Plot the mass function for Delta = 0, 2 and 5, showing the evovled and unevolved MFs for a peak mass m_p = 1e16g. Plots show different fitting functions for the same Delta.
 if "__main__" == __name__:
     
     # Load mass function parameters.
@@ -1001,64 +939,18 @@ if "__main__" == __name__:
     
     for i in range(len(Deltas)):
         
-        if i == 0 or i == 6:
-           
-            m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
-            fig, ax = plt.subplots(figsize=(6, 6))
-            
-            # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
-            mc_SLN = 1.53e14
-            m_p = 1e14
-            mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
-            
-            mp_SLN_est = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
-            print("m_p (CC3) = {:.2e}".format(m_p))
-            print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
-
-            mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
-            mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-            mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
-            
-            m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
-            mf_LN_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
-            mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
-            mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
-
-            ax.plot(m_pbh_values_evolved, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])            
-            ax.plot(m_pbh_values_evolved, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
-            ax.plot(m_pbh_values_evolved, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
-            
-            # Show smallest PBH mass constrained by microlensing.
-            ax.set_xscale("log")
-            ax.set_yscale("log")
-            ax.legend(fontsize="small")
-            ax.set_xlabel("$m~[\mathrm{g}]$")
-            ax.set_xlim(min(m_pbh_values_evolved), max(m_pbh_values_evolved))
-            ax.set_ylim(1e-30, 1e-10)
-            ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
-            ax.set_ylabel("$\psi_\mathrm{N}$~\mathrm{[g^{-1}]}$")
-
-            fig.tight_layout()
-
-
-#%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant for the Galactic Centre photon constraints from Isatis (1e16g)
-
-if "__main__" == __name__:
-    
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
-    for i in range(len(Deltas)):
-        
-        if i == 0:
+        if i in (0, 5, 6):
            
             m_pbh_values_init = np.sort(np.concatenate((np.logspace(np.log10(m_star)-5, np.log10(m_star), 100), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(15, 21, 100))))
             fig, ax = plt.subplots(figsize=(6, 6))
             
-            # Choose peak masses corresponding roughly to the maximum mass at which f_PBH < 1 for the CC3 and LN MFs in KP '23
-            #mc_SLN = 6.8e16   # for Delta = 5
-            #mc_SLN = 3.24e16    # for Delta = 2
-            mc_SLN = 1.53e16   # for Delta = 0
+            if Deltas[i] == 5:
+                mc_SLN = 6.8e16
+            elif Deltas[i] == 2:
+                mc_SLN = 3.24e16
+            elif Deltas[i] == 0:
+                mc_SLN = 1.53e16
+                
             m_p = 1e16
             mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
             
@@ -1091,23 +983,23 @@ if "__main__" == __name__:
             ax.legend(fontsize="small")
             ax.set_xlabel("$m~[\mathrm{g}]$")
             ax.set_xlim(1e13, 1e18)
-            ax.set_ylim(1e-23, 1e-17)
+            ax.set_ylim(1e-23, 5e-16)
             ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
             ax.set_ylabel("$\psi_\mathrm{N}$")
 
             fig.tight_layout()
             
 
-#%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant for the Galactic Centre photon constraints from Isatis (1e16g)
+#%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant for the Galactic Centre photon constraints from Isatis (1e16g). Plots show the same fitting functions for different Delta.
  
 if "__main__" == __name__:
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, has_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
-    plot_LN = True
+    plot_LN = False
     plot_SLN = False
-    plot_CC3 = False
+    plot_CC3 = True
     
     if plot_LN:
         colors = ["grey", "lime", "lime", "lime", "lime", "tab:red", "pink"]
@@ -1232,7 +1124,7 @@ if "__main__" == __name__:
     fig1.tight_layout()
     
     
-#%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant for the Galactic Centre photon constraints from Isatis (1e16g) - ratio plots.
+#%% Plot the mass function for Delta = 0, 2 and 5, showing the ratio of the evolved and unevolved MFs.
  
 if "__main__" == __name__:
     
@@ -1240,9 +1132,8 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     plot_LN = False
-    plot_SLN = False
-    plot_CC3 = True
-    
+    plot_SLN = True
+    plot_CC3 = False
     
     if plot_LN:
         colors = ["grey", "lime", "lime", "lime", "lime", "tab:red", "pink"]
@@ -1332,7 +1223,7 @@ if "__main__" == __name__:
     fig2.tight_layout()
 
 
-#%% Plot the mass function for Delta = 0, 2 and 5, showing the mass range relevant for the prospective microlensing constraints (m ~ 1e22g)
+#%% Plot the evolved mass function for Delta = 0, 2 and 5, showing the mass range relevant for the prospective microlensing constraints (m ~ 1e22g)
  
 if "__main__" == __name__:
     
@@ -1353,7 +1244,7 @@ if "__main__" == __name__:
     """
     
     # for Delta = 2
-    """
+    
     i=5
     
     # gives m_p = 1e20g
@@ -1367,31 +1258,34 @@ if "__main__" == __name__:
     # gives m_p = 1e25g
     #mc_SLN = 2.46e23*np.exp(ln_mc_SLN[i])
     #m_p = 2.465e23*mp_CC3[i]
-    """
     
-     
+    
+    
     #for Delta = 5
     i=6
     
     # gives m_p = 1e16g
-    mc_SLN = 3.1e14*np.exp(ln_mc_SLN[i])
-    m_p = 2.9e14*mp_CC3[i]
+    #mc_SLN = 3.1e14*np.exp(ln_mc_SLN[i])
+    #m_p = 2.9e14*mp_CC3[i]
  
     # gives m_p = 1e18g
-    mc_SLN = 3.1e16*np.exp(ln_mc_SLN[i])
-    m_p = 2.9e16*mp_CC3[i]   
+    #mc_SLN = 3.1e16*np.exp(ln_mc_SLN[i])
+    #m_p = 2.9e16*mp_CC3[i]   
     
+    # gives m_p = 1e19g
     #mc_SLN = 3.1e17*np.exp(ln_mc_SLN[i])
     #m_p = 2.9e17*mp_CC3[i]
 
-    #mc_SLN = 3.1e18*np.exp(ln_mc_SLN[i])
-    #m_p = 2.9e18*mp_CC3[i]
-    
+    # gives m_p = 1e22g
+    mc_SLN = 3.1e20*np.exp(ln_mc_SLN[i])
+    m_p = 2.9e20*mp_CC3[i]
+ 
+    # gives m_p = 2e25g
     #mc_SLN = 5.6e23*np.exp(ln_mc_SLN[i])
     #m_p = 5.25e23*mp_CC3[i]
     
            
-    m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(np.log10(m_p)-3, np.log10(m_p)+3, 100))))
+    m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(np.log10(m_p)-7, np.log10(m_p)+7, 1000))))
     fig, ax = plt.subplots(figsize=(6, 6))
     mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
     
@@ -1417,10 +1311,10 @@ if "__main__" == __name__:
     ax.set_yscale("log")
     ax.legend(fontsize="small")
     ax.set_xlabel("$m~[\mathrm{g}]$")
-    ax.set_xlim(1e13, 1e18)
-    ax.set_ylim(1e-23, 1e-17)
+    ax.set_xlim(1e14, 1e23)
+    ax.set_ylim(1e-27, 1e-19)
     ax.set_title("$\Delta={:.1f},~m_p={:.1e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
-    ax.set_ylabel("$\psi_\mathrm{N}$~\mathrm{[g^{-1}]}$")
+    ax.set_ylabel("$\psi_\mathrm{N}~\mathrm{[g^{-1}]}$")
 
     fig.tight_layout()
 
@@ -1481,18 +1375,18 @@ def extract_GC_Isatis(j, k, exponent_PL_lower=2, include_extrapolated=True):
 
 if "__main__" == __name__:
     
-    plot_KP23 = True
+    plot_KP23 = False
     plot_GC_Isatis = False
-    plot_BC19 = False
+    plot_BC19 = True
     plot_Subaru = False
     plot_Sugiyama19 = False
-    Delta = 0
+    Delta = 5
     
     # Load mass function parameters.
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Peak mass, in grams
-    m_p = 5e16
+    m_p = 5e17
     
     # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
     if Delta == 0:
@@ -1959,7 +1853,8 @@ if "__main__" == __name__:
     
     #m_min = 6.35e14
     m_max = 1e25
-    m_min = 1.13e15   # Initial PBH mass that has lost more than 10% of its mass over its lifetime
+    #m_min = 1.13e15   # Initial PBH mass that has lost more than 10% of its mass over its lifetime
+    m_min = 1e16
     #m_max = 7.33e16
     #m_min = 5e14
     #m_max = 2e22
@@ -1970,6 +1865,7 @@ if "__main__" == __name__:
     integral_upper = np.trapz(mf_CC3_evolved[m_pbh_values<m_max_CC3] / f_max[m_pbh_values<m_max_CC3], m_pbh_values[m_pbh_values<m_max_CC3])
     integral_total = np.trapz(mf_CC3_evolved / f_max, m_pbh_values)
     print("\n Evolved MFs")
+    print("Integral (M < {:.1e}g) = {:.3f} [CC3]".format(m_min_CC3, integral_lower))
     print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, m_max_CC3, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [CC3] = {:.2e}".format(1 / integral_total))
@@ -1979,6 +1875,7 @@ if "__main__" == __name__:
     integral_upper = np.trapz(mf_SLN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
     integral_total = np.trapz(mf_SLN_evolved / f_max, m_pbh_values)
     print("\n Evolved MFs")
+    print("Integral (M < {:.1e}g) = {:.3f} [SLN]".format(m_min, integral_lower))
     print("Integral (M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [SLN] = {:.2e}".format(1 / integral_total))
@@ -1988,6 +1885,7 @@ if "__main__" == __name__:
     integral_upper = np.trapz(mf_LN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
     integral_total = np.trapz(mf_LN_evolved / f_max, m_pbh_values)
     print("\n Evolved MFs")
+    print("Integral (M < {:.1e}g) = {:.3f} [LN]".format(m_min, integral_lower))
     print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
@@ -2031,499 +1929,12 @@ if "__main__" == __name__:
     print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
-    print("constraint_Carr result [LN] = {:.2e}".format(constraint_Carr([m_p*np.exp(sigmas_LN[i]**2)], m_pbh_values, f_max, LN, [sigmas_LN[i]], evolved=False)[0]))
-
-#%% Version for approximate GC photon constraints
-
-def extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower=2):
-    """
-    Load delta-function MF constraint on f_PBH from Galactic Centre photons.
-
-    Parameters
-    ----------
-    j : Integer
-        Index for which instrument to load data from (0 for COMPTEL, 1 for EGRET, 2 for Fermi-LAT, 3 for INTEGRAL).
-    f_max_Isatis : Array-like
-        Array containing constraints on the delta-function MF obtained by Isatis.
-    exponent_PL_lower : Float
-        Power-law exponent to use between 1e11g and 1e13g.
-
-    Returns
-    -------
-    f_max : Array-like
-        Values of the delta-function mass function constraint.
-    m_pbh_values : Array-like
-        PBH masses the delta-function mass function constraint is evaluated at, in grams.
-
-    """
-    
-    m_delta_values_loaded = np.logspace(11, 21, 1000)            
-    m_delta_extrapolated = np.logspace(11, 13, 21)
-    
-    # Set non-physical values of f_max (-1) to 1e100 from the f_max values calculated using Isatis
-    f_max_allpositive = []
-
-    for f_max_value in f_max_Isatis[j]:
-        if f_max_value == -1:
-            f_max_allpositive.append(1e100)
-        else:
-            f_max_allpositive.append(f_max_value)
-            
-    # Extrapolate f_max at masses below 1e13g using a power-law
-    f_max_loaded_truncated = np.array(f_max_allpositive)[m_delta_values_loaded > 1e13]
-    f_max_extrapolated = f_max_loaded_truncated[0] * np.power(m_delta_extrapolated / 1e13, exponent_PL_lower)
-    f_max = np.concatenate((f_max_extrapolated, f_max_loaded_truncated))
-    
-    m_pbh_values = np.concatenate((m_delta_extrapolated, m_delta_values_loaded[m_delta_values_loaded > 1e13]))
-    
-    return f_max, m_pbh_values
-
-if "__main__" == __name__:
-    
-    Delta = 5
-    
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
-    # Constraints for monochromatic MF
-                
-    # Power-law exponent to use between 1e11g and 1e13g.
-    exponent_PL_lower = 2
-    
-    # Constraints from Galactic Centre photons from Isatis (see Auffinger (2022) [2201.01265])
-    
-    # Select which instrument places the tightest constraint, for the evolved MF constraints (depends on Delta and the peak mass). Values are for a peak mass m_p = 1e16g
-    # 0 for COMPTEL, 1 for EGRET, 2 for Fermi-LAT, 3 for INTEGRAL
-    # Note: the defaults here apply to the evolved MF constraints and a peak mass m_p = 1e16g, and do not depend on the fitting function at m_p = 1e16g 
-    if Delta == 0:
-        j = 0
-    elif Delta == 2:
-        j = 1
-    elif Delta == 5:
-        j = 1
-    
-    constraints_names, f_max_Isatis = load_results_Isatis(modified=True)
-    colours_GC_fit = ["tab:orange", "tab:green", "tab:red", "tab:blue"]
-    
-    f_max, m_pbh_values = extract_GC_Isatis(j, f_max_Isatis, exponent_PL_lower)
-    # For the unevolved MF constraints, j=2 when m_p = 1e16g
-    f_max_FermiLAT, m_pbh_values_FermiLAT = extract_GC_Isatis(2, f_max_Isatis, exponent_PL_lower)
-        
-    # Peak mass, in grams
-    m_p = 1e16
-    
-    # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
-    if Delta == 0:
-        i = 0
-        mc_SLN = 1.53 * m_p   # for Delta = 0
-    elif Delta == 2:
-        i = 5
-        mc_SLN = 3.24 * m_p   # for Delta = 2
-    elif Delta == 5:
-        i = 6
-        mc_SLN = 6.8 * m_p   # for Delta = 5
-            
-    
-    mp_SLN = m_max_SLN(mc_SLN, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
-    mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
-    print("m_p (CC3) = {:.2e}".format(m_p))
-    print("m_p (SLN) = {:.2e}".format(mp_SLN))
-     
-    m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(np.log10(m_p)-3, np.log10(m_p)+3, 100))))
-    n_steps = 1000
-    #m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_pbh_values)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_pbh_values))+4, n_steps))))
-    
-    mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
-    mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-    mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
-    
-    m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
-    mf_LN_evolved = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)))
-    mf_SLN_evolved = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)))
-    mf_CC3_evolved = 10**np.interp(np.log10(m_pbh_values), np.log10(m_pbh_values_evolved), np.log10(psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)))
-
-    # Unevolved MF, evaluated at the masses the delta-function MF constraint is evaluated at
-    if Delta == 5:
-        mf_LN_unevolved = LN(m_pbh_values_FermiLAT, mc_LN, sigma=sigmas_LN[i])
-        mf_SLN_unevolved = SLN(m_pbh_values_FermiLAT, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-        mf_CC3_unevolved = CC3(m_pbh_values_FermiLAT, m_p, alpha=alphas_CC3[i], beta=betas[i])
-
-    else:
-        mf_LN_unevolved = LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i])
-        mf_SLN_unevolved = SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-        mf_CC3_unevolved = CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i])
-        
-    fig, ax = plt.subplots(figsize=(6, 6))
-
-    ymin, ymax = 1e-26, 2.5e-23
-    xmin, xmax = 9e21, 1e25
-
-    ax.plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
-    ax.plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
-    ax.plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
-    
-    if Delta == 5:
-        ax.plot(m_pbh_values_FermiLAT, mf_SLN_unevolved / f_max_FermiLAT, color="b", linestyle="dotted")
-        ax.plot(m_pbh_values_FermiLAT, mf_CC3_unevolved / f_max_FermiLAT, color="g", linestyle="dotted")
-        ax.plot(m_pbh_values_FermiLAT, mf_LN_unevolved / f_max_FermiLAT, color="r", linestyle="dotted")
-
-    else:
-        ax.plot(m_pbh_values, mf_SLN_unevolved / f_max, color="b", linestyle="dotted")
-        ax.plot(m_pbh_values, mf_CC3_unevolved / f_max, color="g", linestyle="dotted")
-        ax.plot(m_pbh_values, mf_LN_unevolved / f_max, color="r", linestyle="dotted")
-           
-    ax.grid()
-    ax.legend(fontsize="small")
-    ax.set_xlabel("$m~[\mathrm{g}]$")
-
-    ax.set_xlim(0, 5e15)
-    
-    if Delta == 0:
-        ax.set_xlim(0, 2e16)
-       
-    if Delta == 2:
-        ax.set_ylim(0, 5e-12)
-
-    elif Delta == 5:
-        ax.set_ylim(0, 1e-11)
-        
-    ax.set_title("GC Isatis constraints, $\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="x-small")
-    ax.set_ylabel("$\psi_\mathrm{N} / f_\mathrm{max}~[\mathrm{g}^{-1}]$")
-    
-    fig.set_tight_layout(True)    
-    
-    # Plot psi_N, f_max and the integrand in the same figure window
-    fig, axes = plt.subplots(3, 1, figsize=(5, 14))
-    
-    psinorm_fit = mf_CC3_evolved[0] * np.power(m_pbh_values/m_pbh_values[0], 3)
-    
-    for ax in axes.flatten():
-        ax.grid('on', linestyle='--')
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-    axes[0].plot(m_pbh_values, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
-    axes[0].plot(m_pbh_values, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
-    axes[0].plot(m_pbh_values, mf_LN_evolved, color="r", label="LN", dashes=[6, 2])
-    axes[0].plot(m_pbh_values, mf_SLN_unevolved, color="b", linestyle="dotted", alpha=0.5)
-    axes[0].plot(m_pbh_values, mf_CC3_unevolved, color="g", linestyle="dotted", alpha=0.5)
-    axes[0].plot(m_pbh_values, mf_LN_unevolved, color="r", linestyle="dotted", alpha=0.5)
-    axes[0].plot(m_pbh_values, psinorm_fit, linestyle="dotted", color="k", label="$m^3$ fit")
-            
-    if m_p > 1e17:
-        axes[0].set_ylim(1e-24, 3e-21)
-    else:
-        axes[0].set_ylim(1e-23, 1e-15)
-    axes[0].set_xscale("log")
-    axes[0].set_yscale("log")
-    axes[0].set_ylabel("$\psi_\mathrm{N}~[\mathrm{g}^{-1}]$")
-                   
-    axes[1].plot(m_pbh_values, 1 / f_max, color=colours_GC_fit[j])
-    if Delta == 5:
-        axes[1].plot(m_pbh_values, 1 / f_max_FermiLAT, color="tab:red", linestyle="dotted", alpha=0.5)
-
-    axes[2].set_ylim(1e-13, 1e-11)
-    exponent_fit = 2.8
-    fmax_fit = f_max[90] * np.power(m_pbh_values/m_pbh_values[90], 2.8)
-    axes[1].plot(m_pbh_values, 1 / fmax_fit, color="k", linestyle="dotted", label="$m^{-2.8}$ fit")
-        
-    axes[1].legend(fontsize="xx-small")
-    axes[1].set_ylim(1, 1e14)
-    
-    if Delta == 0:
-        axes[2].set_ylim(1e-14, 2e-12)        
-        
-    elif Delta == 5:
-        axes[2].set_ylim(1e-14, 1e-8)        
-                    
-    if m_p > 1e17:
-        if Delta == 5:
-            axes[1].set_ylim(1, 1e9)
-            axes[2].set_ylim(1e-20, 1e-14)
-
-        elif Delta == 2:
-            axes[0].set_ylim(1e-27, 1e-22)
-            axes[1].set_ylim(1, 1e9)
-            axes[2].set_ylim(1e-25, 1e-20)
-        
-
-    axes[1].set_ylabel("$1/f_\mathrm{max}$")
-    axes[1].set_xscale("log")
-    axes[1].set_yscale("log")
-
-    axes[2].plot(m_pbh_values, mf_SLN_evolved / f_max, color="b", label="SLN", linestyle=(0, (5, 7)))
-    axes[2].plot(m_pbh_values, mf_CC3_evolved / f_max, color="g", label="CC3", linestyle="dashed")
-    axes[2].plot(m_pbh_values, mf_LN_evolved / f_max, color="r", label="LN", dashes=[6, 2])
-    
-    if Delta == 5:
-        axes[2].plot(m_pbh_values_FermiLAT, mf_SLN_unevolved / f_max_FermiLAT, color="b", linestyle="dotted")
-        axes[2].plot(m_pbh_values_FermiLAT, mf_CC3_unevolved / f_max_FermiLAT, color="g", linestyle="dotted")
-        axes[2].plot(m_pbh_values_FermiLAT, mf_LN_unevolved / f_max_FermiLAT, color="r", linestyle="dotted")
-
-    else:
-        axes[2].plot(m_pbh_values, mf_SLN_unevolved / f_max, color="b", linestyle="dotted")
-        axes[2].plot(m_pbh_values, mf_CC3_unevolved / f_max, color="g", linestyle="dotted")
-        axes[2].plot(m_pbh_values, mf_LN_unevolved / f_max, color="r", linestyle="dotted")
-    
-    axes[2].set_ylabel("$\psi_\mathrm{N} / f_\mathrm{max}~[\mathrm{g}^{-1}]$")
-    axes[2].set_xlabel("$m~[\mathrm{g}]$")
-    
-    fig.suptitle("GC photon constraints, $\Delta={:.0f}$".format(Delta))
-
-    axes[0].legend(fontsize="xx-small")
-    axes[0].set_yscale("log")
-    axes[1].set_yscale("log")
-    axes[2].set_yscale("linear")
-
-    for ax in axes:
-        
-        ax.set_xlim(1e13, 1e16)
-        
-        if m_p > 1e18:
-            ax.set_xlim(5e14, 1e18)
-
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.grid('on')
-        
-        # set x-axis and y-axis ticks
-        # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
-        
-        x_major = mpl.ticker.LogLocator(base = 10.0, numticks = 5)
-        ax.xaxis.set_major_locator(x_major)
-        x_minor = mpl.ticker.LogLocator(base = 10.0, subs = np.arange(1.0, 10.0) * 0.1, numticks = 5)
-        ax.xaxis.set_minor_locator(x_minor)
-        ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-
-    fig.tight_layout()
-    
-    # Calculate the contribution to the integral in Eq. 12 of Carr et al. (2017) [1705.05567] (inverse of f_PBH), from different mass ranges.
-
-    # Minimum and maximum masses for which the evolved CC3 MF for Delta = 2 is larger than the evolved Delta = 5 MF, for a peak mass M_p = 1e16g
-    #m_min_CC3 = 1.13e15
-    
-    #m_min = 6.35e14
-    m_max = 1e25
-    m_min = 1.13e15   # Initial PBH mass that has lost more than 10% of its mass over its lifetime
-    #m_max = 7.33e16
-    #m_min = 5e14
-    #m_max = 2e22
-    m_min_CC3 = m_min
-    m_max_CC3 = m_max
-        
-    integral_lower = np.trapz(mf_CC3_evolved[m_pbh_values<m_min_CC3] / f_max[m_pbh_values<m_min_CC3], m_pbh_values[m_pbh_values<m_min_CC3])
-    integral_upper = np.trapz(mf_CC3_evolved[m_pbh_values<m_max_CC3] / f_max[m_pbh_values<m_max_CC3], m_pbh_values[m_pbh_values<m_max_CC3])
-    integral_total = np.trapz(mf_CC3_evolved / f_max, m_pbh_values)
-    print("\n Evolved MFs")
-    print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, integral_lower / integral_total))
-    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, m_max_CC3, (integral_upper - integral_lower) / integral_total))
-    print("1 / total integral [CC3] = {:.2e}".format(1 / integral_total))
-    print("constraint_Carr result [CC3] = {:.2e}".format(constraint_Carr([m_p], m_pbh_values, f_max, CC3, [alphas_CC3[i], betas[i]], evolved=True)[0]))
-
-    integral_lower = np.trapz(mf_SLN_evolved[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
-    integral_upper = np.trapz(mf_SLN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
-    integral_total = np.trapz(mf_SLN_evolved / f_max, m_pbh_values)
-    print("\n Evolved MFs")
-    print("Integral (M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, integral_lower / integral_total))
-    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
-
-    integral_lower = np.trapz(mf_LN_evolved[m_pbh_values<m_min] / f_max[m_pbh_values<m_min], m_pbh_values[m_pbh_values<m_min])
-    integral_upper = np.trapz(mf_LN_evolved[m_pbh_values<m_max] / f_max[m_pbh_values<m_max], m_pbh_values[m_pbh_values<m_max])
-    integral_total = np.trapz(mf_LN_evolved / f_max, m_pbh_values)
-    print("\n Evolved MFs")
-    print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
-    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max, (integral_upper - integral_lower) / integral_total))
-    print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
-    print("constraint_Carr result [LN] = {:.2e}".format(constraint_Carr([m_p*np.exp(sigmas_LN[i]**2)], m_pbh_values, f_max, LN, [sigmas_LN[i]], evolved=True)[0]))
-    
-    # For initial MFs, restrict the mass range to that loaded from the data itself
-        
-    f_max = f_max_FermiLAT
-    m_pbh_values = m_pbh_values_FermiLAT
-    
-    m_pbh_values_lower = m_pbh_values[m_pbh_values<m_min]
-    m_pbh_values_upper = m_pbh_values[m_pbh_values<m_max]
-    integral_lower = np.trapz(CC3(m_pbh_values_lower, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max[m_pbh_values<m_min_CC3], m_pbh_values_lower)
-    integral_upper = np.trapz(CC3(m_pbh_values_upper, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max[m_pbh_values<m_max_CC3], m_pbh_values_upper)
-    integral_total = np.trapz(CC3(m_pbh_values, m_p, alpha=alphas_CC3[i], beta=betas[i]) / f_max, m_pbh_values)
-    print("\n init MFs")
-    print("Integral (M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, integral_lower / integral_total))
-    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [CC3] = {:.3f}".format(m_min_CC3, m_max_CC3, (integral_upper - integral_lower) / integral_total))
-    print("1 / total integral [CC3] = {:.2e}".format(1 / integral_total))
-    print("constraint_Carr result [CC3] = {:.2e}".format(constraint_Carr([m_p], m_pbh_values, f_max, CC3, [alphas_CC3[i], betas[i]], evolved=False)[0]))
-    
-    m_pbh_values_lower = m_pbh_values[m_pbh_values<m_min]
-    m_pbh_values_upper = m_pbh_values[m_pbh_values<m_max]
-    integral_lower = np.trapz(SLN(m_pbh_values_lower, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max[m_pbh_values<m_min], m_pbh_values_lower)
-    integral_upper = np.trapz(SLN(m_pbh_values_upper, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max[m_pbh_values<m_max], m_pbh_values_upper)
-    integral_total = np.trapz(SLN(m_pbh_values, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i]) / f_max, m_pbh_values)
-    print("\n init MFs")
-    print("Integral (M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, integral_lower / integral_total))
-    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [SLN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
-    print("1 / total integral [SLN] = {:.2e}".format(1 / integral_total))
-  
-    integral_lower = np.trapz(LN(m_pbh_values_lower, mc_LN, sigma=sigmas_LN[i]) / f_max[m_pbh_values<m_min], m_pbh_values_lower)
-    integral_upper = np.trapz(LN(m_pbh_values_upper, mc_LN, sigma=sigmas_LN[i]) / f_max[m_pbh_values<m_max], m_pbh_values_upper)
-    integral_total = np.trapz(LN(m_pbh_values, mc_LN, sigma=sigmas_LN[i]) / f_max, m_pbh_values)
-    print("\n init MFs")
-    print("Integral (M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, integral_lower / integral_total))
-    print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
-    print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
-    print("constraint_Carr result [LN] = {:.2e}".format(constraint_Carr([m_p*np.exp(sigmas_LN[i]**2)], m_pbh_values, f_max, LN, [sigmas_LN[i]], evolved=False)[0]))
-
-    #%% Plot the mass functions, for different Delta and peak masses
-     
-    if "__main__" == __name__:
-        
-        # Load mass function parameters.
-        [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-        
-        
-        # Constraints for monochromatic MF
-        
-        # Subaru-HSC microlensing constraint
-        #m_pbh_values, f_max = load_data("./2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
-        
-        # Prospective white dwarf microlensing constraint
-        #m_pbh_values, f_max = load_data("./1905.06066/1905.06066_Fig8_finite+wave.csv")
-         
-        # Korwar & Profumo (2023) 511 keV line constraints
-        m_pbh_values, f_max = load_data("./2302.04408/2302.04408_MW_diffuse_SPI.csv")
-             
-        fig, ax = plt.subplots(figsize=(6, 6))
-        
-        # Choose factors so that peak masses of the CC3 and SLN MF match
-        # closely, at 1e20g (consider this range since constraints plots)
-        # indicate the constraints from the SLN and CC3 MFs are quite
-        # different at this peak mass.
-        
-        
-        # for Delta = 0
-        i=0
-        
-        # gives m_p = 1e16g    
-        #mc_SLN = 2.45e14*np.exp(ln_mc_SLN[i])
-        #m_p = 2.45e14*mp_CC3[i]
-        
-        # gives m_p = 1e18g
-        mc_SLN = 2.45e16*np.exp(ln_mc_SLN[i])
-        m_p = 2.45e16*mp_CC3[i]
-        
-        # gives m_p = 1e22g
-        #mc_SLN = 2.45e20*np.exp(ln_mc_SLN[i])
-        #m_p = 2.45e20*mp_CC3[i]
-        
-        # gives m_p = 1e25g
-        #mc_SLN = 2.45e23*np.exp(ln_mc_SLN[i])
-        #m_p = 2.45e23*mp_CC3[i]
-        
-        
-        # for Delta = 2
-        """
-        i=5
-        
-        # gives m_p = 1e16g
-        #mc_SLN = 2.46e14*np.exp(ln_mc_SLN[i])
-        #m_p = 2.465e14*mp_CC3[i]
-
-        # gives m_p = 1e18g
-        #mc_SLN = 2.46e16*np.exp(ln_mc_SLN[i])
-        #m_p = 2.465e16*mp_CC3[i]
-        
-        # gives m_p = 1e20g
-        #mc_SLN = 2.46e18*np.exp(ln_mc_SLN[i])
-        #m_p = 2.465e18*mp_CC3[i]
-
-        # gives m_p = 1e22g
-        #mc_SLN = 2.46e20*np.exp(ln_mc_SLN[i])
-        #m_p = 2.465e20*mp_CC3[i]
-        
-        # gives m_p = 1e25g
-        mc_SLN = 2.46e23*np.exp(ln_mc_SLN[i])
-        m_p = 2.465e23*mp_CC3[i]
-        """
-        
-        """ 
-        #for Delta = 5
-        i=6
-        
-        mc_SLN = 3.1e17*np.exp(ln_mc_SLN[i])
-        m_p = 2.9e17*mp_CC3[i]
-
-        #mc_SLN = 3.1e18*np.exp(ln_mc_SLN[i])
-        #m_p = 2.9e18*mp_CC3[i]
-        
-        #mc_SLN = 5.6e23*np.exp(ln_mc_SLN[i])
-        #m_p = 5.25e23*mp_CC3[i]
-        """
-        
-        mc_LN = m_p * np.exp(+sigmas_LN[i]**2)
-        mp_SLN_est = m_max_SLN(m_c, sigmas_SLN[i], alpha=alphas_SLN[i], log_m_factor=4, n_steps=1000)
-        print("m_p (CC3) = {:.2e}".format(m_p))
-        print("m_p (SLN) = {:.2e}".format(mp_SLN_est))
-     
-        m_pbh_values_init = np.sort(np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7),  np.logspace(np.log10(m_p)-3, np.log10(m_p)+3, 100))))
-    
-        mf_LN_init = LN(m_pbh_values_init, mc_LN, sigma=sigmas_LN[i])
-        mf_SLN_init = SLN(m_pbh_values_init, mc_SLN, sigma=sigmas_SLN[i], alpha=alphas_SLN[i])
-        mf_CC3_init = CC3(m_pbh_values_init, m_p, alpha=alphas_CC3[i], beta=betas[i])
-        
-        m_pbh_values_evolved = mass_evolved(m_pbh_values_init, t_0)
-        mf_LN_evolved = psi_evolved_normalised(mf_LN_init, m_pbh_values_evolved, m_pbh_values_init)
-        mf_SLN_evolved = psi_evolved_normalised(mf_SLN_init, m_pbh_values_evolved, m_pbh_values_init)
-        mf_CC3_evolved = psi_evolved_normalised(mf_CC3_init, m_pbh_values_evolved, m_pbh_values_init)
-        
-        ax.plot(m_pbh_values, mf_SLN_evolved, color="b", label="SLN", linestyle=(0, (5, 7)))
-        ax.plot(m_pbh_values, mf_CC3_evolved, color="g", label="CC3", linestyle="dashed")
-        # Show smallest PBH mass constrained by microlensing.
-        #ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.grid()
-        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-        ax.set_xlabel("$m~[\mathrm{g}]$")
-        ax.set_title("$\Delta={:.1f},~m_p={:.0e}$".format(Deltas[i], m_p) + "$~\mathrm{g}$", fontsize="small")
-
-        ax.set_ylabel("$\psi_\mathrm{N}$~\mathrm{[g^{-1}]}$")        
-        fig.set_tight_layout(True)
-    
-        
-#%% Proportion of values in the energy range constrained by the instruments shown in Fig. 2 of 2201.01265 above 5 GeV (which Hazma cannot calculate secondary spectra for
-    
-if "__main__" == __name__:
-    E_min, E_max = 1e-6, 105.874
-    E_number = 10000000
-    energies = np.logspace(np.log10(E_min), np.log10(E_max), E_number)
-    print(len(energies[energies < 5]) / len(energies))
-    
-    
-#%% Find characteristic mass for which the minimum mass to include in a calculation is smaller than 5e14g, when emission of photons with E < 5 GeV becomes significant.
-
-if "__main__" == __name__:
-    
-    m_sig = 5e14  # PBH mass below which emission of photons becomes significant.
-    cutoff_values = [1e-4]
-    
-    for cutoff in cutoff_values:
-        print("\nCutoff = {:.0e}".format(cutoff))
-        
-        scaled_masses_filename = "MF_scaled_mass_ranges_c={:.0f}.txt".format(-np.log10(cutoff))
-        [Deltas, m_lower_LN, m_upper_LN, m_lower_SLN, m_upper_SLN, m_lower_CC3, m_upper_CC3] = np.genfromtxt(scaled_masses_filename, delimiter="\t\t ", skip_header=2, unpack=True)
-        
-        for i in range(len(Deltas)):
-            print("\nDelta = {:.1f}".format(Deltas[i]))
-            mc_sig_LN = m_sig / m_lower_LN[i]
-            mc_sig_SLN = m_sig / m_lower_SLN[i]
-            mc_sig_CC3 = m_sig / m_lower_CC3[i]
-            print("SLN: mc_sig = {:.1e}g".format(mc_sig_SLN))
-            print("CC3: mp_sig = {:.1e}g".format(mc_sig_CC3))
-            print("LN: mc_sig = {:.1e}g".format(mc_sig_LN))
-
-    
+    print("constraint_Carr result [LN] = {:.2e}".format(constraint_Carr([m_p*np.exp(sigmas_LN[i]**2)], m_pbh_values, f_max, LN, [sigmas_LN[i]], evolved=False)[0]))       
 #%% Find characteristic mass for which the minimum mass to include in a calculation is larger than 1e21g, the maximum mass for which I have calculated using isatis_reproduction.py.
 
 if "__main__" == __name__:
     
-    m_sig = 1e21  # PBH mass above which results have not been calculated using isatis_reproduction.py
+    m_sig = 1e22  # PBH mass above which results have not been calculated using isatis_reproduction.py
     cutoff_values = [1e-4]
     
     for cutoff in cutoff_values:
@@ -2540,14 +1951,12 @@ if "__main__" == __name__:
             print("CC3: mp_sig = {:.1e}g".format(mc_sig_CC3))
             
             
-#%% Plot evolved mass functions
-if "__main__" == __name__:
-    # Initial PBH mass values includes values close to the initial mass of a PBH with lifetime equal to the age of the Universe,
-    # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
-    #m_pbh_values_formation = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 20, 500)))
-    
+#%% Test evolved MF calculation methods
+if "__main__" == __name__:   
     # Maximum mass that the Korwar & Profumo (2023) delta-function MF constraint is calculated at
     m_delta_max_KP23 = 3e17
+    # Initial PBH mass values includes values close to the initial mass of a PBH with lifetime equal to the age of the Universe,
+    # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
     m_pbh_values_formation = np.concatenate((np.logspace(np.log10(m_star) - 3, np.log10(m_star)), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(m_delta_max_KP23)+4, 1000)))
     m_pbh_values_evolved = mass_evolved(m_pbh_values_formation, t_0)
     m_pbh_values_evolved_t_zero = mass_evolved(m_pbh_values_formation, 0)
@@ -2556,8 +1965,8 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
     plot_LN = False
-    plot_SLN = False
-    plot_CC3 = True
+    plot_SLN = True
+    plot_CC3 = False
 
     for i in range(len(Deltas)):      
 
@@ -2626,306 +2035,6 @@ if "__main__" == __name__:
         ax.set_ylim(5e-6, 1)
         ax.legend(fontsize="x-small")
         fig.tight_layout()
-
-#%% Find the integration limits used in the KP '23 extended MF constraints calculations:
-if "__main__" == __name__:
-    
-    from scipy.special import erfinv
-        
-    n_steps = 1000
-    # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
-    m_delta_loaded, f_max = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
-    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
-    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
-    m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_loaded))
-    
-    # Find PBH masses at time t
-    t = t_0
-    m_init_values_input = np.sort(np.concatenate((np.logspace(np.log10(min(m_delta_total)), np.log10(m_star), n_steps), np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), np.log10(max(m_delta_total))+4, n_steps))))
-    m_values_input = mass_evolved(m_init_values_input, t)
-    
-    print("Integration limits:")
-    print("Lower limit = {:.2e} g".format(min(m_values_input)))
-    print("Lower limit (>0) = {:.2e} g".format(min(m_values_input[m_values_input>0])))
-    print("Upper limit = {:.2e} g".format(max(m_values_input)))
-    
-    # Fractional accuracy to which the result must agree with the calculation with integration limits (0, infty) 
-    threshold = 0.99
-    # Maximum value of the argument allowed by the error function for the true answer to agree to within the threshold of the answer with integration limits (0, infty)
-    max_value = erfinv(threshold)
-    
-    for i in range(len(Deltas)):
-    
-        print("\nConstraints on m_p for simplified problem (Delta={:.1f}):".format(Deltas[i]))
-        print("m_p <= {:.2e}g".format(min(m_values_input[m_values_input>0]) * np.exp(max_value*np.sqrt(2)*sigmas_LN[i]) * np.exp(sigmas_LN[i]**2)))
-        print("m_p >= {:.2e}g".format(max(m_values_input) * np.exp(-max_value*np.sqrt(2)*sigmas_LN[i]) * np.exp(sigmas_LN[i]**2)))
-
-   
-#%% Calculate the constraint in the simplified problem using GC_constraint_Carr, and compare to f_max evaluated at that peak mass. Plot results. 
- 
-if "__main__" == __name__:
-    m_delta_loaded, f_max_loaded = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
-    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
-    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
-    m_delta_total = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_loaded))
-    
-    # Simplified estimate
-    f_max_simplified = min(f_max_loaded) * np.power(m_delta_total / min(m_delta_loaded), 2)
-    
-    # Full calculation
-    exponent_PL_upper = 2
-    exponent_PL_lower = 2
-    f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_loaded), exponent_PL_upper)
-    f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
-    f_max_total = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
-            
-    # If True, use LN MF
-    use_LN = True
-    use_CC3 = not use_LN
-                                
-    if use_LN:
-        
-        mp_values = np.logspace(14.5, 17, 25)
-        psi_initial = LN
-        
-        for i in range(len(Deltas)):
-                    
-            frac_diff_approx_both = []
-            frac_diff_approx_fmax = []
-            frac_diff_approx_LN = []
-            frac_diff_full = []
-            
-            for m_p in mp_values:
-                f_PBH_simplified = f_max_loaded[0] * np.power(m_p / m_delta_loaded[0], 2)   # Find value of the simplified constraint
-
-                params = [sigmas_LN[i]]
-                mc_values = [m_p*np.exp(sigmas_LN[i]**2)]
-                
-                f_PBH_approx_both = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=False)
-                f_PBH_approx_fmax = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=True)
-                f_PBH_approx_LN = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=False)
-                f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
-                
-                frac_diff_approx_both.append(f_PBH_approx_both[0] / f_PBH_simplified - 1)
-                frac_diff_approx_fmax.append(f_PBH_approx_fmax[0] / f_PBH_simplified - 1)
-                frac_diff_approx_LN.append(f_PBH_approx_LN[0] / f_PBH_simplified - 1)
-                frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
-            
-            fig, ax = plt.subplots(figsize=(9,6))
-            ax.plot(mp_values, frac_diff_full, marker="x", linestyle="None", label="$f_\mathrm{max}$ from KP '23, evolved $\psi_\mathrm{N}$", color="k")
-            ax.plot(mp_values, frac_diff_approx_fmax, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
-            ax.plot(mp_values, frac_diff_approx_LN, marker="x", linestyle="None", label="$f_\mathrm{max}$ from KP '23, unevolved $\psi_\mathrm{N}$", color="tab:red")
-            #ax.plot(mp_values, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, unevolved $\psi_\mathrm{N}$", color="tab:red")
-            ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
-            ax.set_ylim(-0.2, 0.2)
-            ax.set_xlim(min(mp_values), max(mp_values))
-            ax.grid()
-            ax.set_xscale("log")
-            ax.set_title("LN MF, $\Delta={:.0f}$".format(Deltas[i]))
-            fig.tight_layout()
-            fig.savefig("Frac_diff_fPBH_LN_Delta={:.1f}.png".format(Deltas[i]))
-        
-        
-        m_p = 1e15
-        f_PBH_simplified = f_max_loaded[0] * np.power(m_p / m_delta_loaded[0], 2)   # Find value of the simplified constraint
-    
-        frac_diff_approx_both = []
-        frac_diff_approx_fmax = []
-        frac_diff_approx_LN = []
-        frac_diff_full = []
-    
-        for i in range(len(Deltas)):
-                           
-            psi_initial = LN
-            params=[sigmas_LN[i]]
-            mc_values = [m_p * np.exp(sigmas_LN[i]**2)]
-            
-            #f_PBH_approx_both = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=False)
-            f_PBH_approx_fmax = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=True)
-            f_PBH_approx_LN = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=False)
-            f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
-            
-            #frac_diff_approx_both.append(f_PBH_approx_both[0] / f_PBH_simplified - 1)
-            frac_diff_approx_fmax.append(f_PBH_approx_fmax[0] / f_PBH_simplified - 1)
-            frac_diff_approx_LN.append(f_PBH_approx_LN[0] / f_PBH_simplified - 1)
-            frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
-            
-        fig, ax = plt.subplots(figsize=(9,6))   
-        ax.plot(Deltas, frac_diff_full, marker="x", markersize=10, linestyle="None", label="f_\mathrm{max}$ from KP '23, evolved $\psi_\mathrm{N}$", color="k")
-        ax.plot(Deltas, frac_diff_approx_fmax, marker="+", markersize=10, linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
-        ax.plot(Deltas, frac_diff_approx_LN, marker="x", linestyle="None", label="Full $f_\mathrm{max}$, unevolved $\psi_\mathrm{N}$", color="tab:red")
-        #ax.plot(Deltas, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, LN $\psi_\mathrm{N}$", color="tab:red")
-        ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
-        ax.set_xlabel("$\Delta$")
-        ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
-        ax.set_ylim(-0.2, 1)
-        ax.grid()
-        ax.set_title("$m_p$ = {:.1e} g".format(m_p))
-        fig.tight_layout()
-        
-    elif use_CC3:
-        
-        mp_values = np.logspace(15, 17, 20)
-        psi_initial = CC3
-        
-        for i in [4,5,6]:
-                    
-            frac_diff_approx_both = []
-            frac_diff_approx_fmax = []
-            frac_diff_approx_LN = []
-            frac_diff_full = []
-            
-            for m_p in mp_values:
-                f_PBH_simplified = f_max_loaded[0] * np.power(m_p / m_delta_loaded[0], 2)   # Find value of the simplified constraint
-
-                params = [alphas_CC3[i], betas[i]]
-                mc_values = [m_p]
-                
-                f_PBH_approx_both = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=False)
-                f_PBH_approx_fmax = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=True)
-                f_PBH_approx_LN = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=False)
-                f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
-                
-                frac_diff_approx_both.append(f_PBH_approx_both[0] / f_PBH_simplified - 1)
-                frac_diff_approx_fmax.append(f_PBH_approx_fmax[0] / f_PBH_simplified - 1)
-                frac_diff_approx_LN.append(f_PBH_approx_LN[0] / f_PBH_simplified - 1)
-                frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
-            
-            fig, ax = plt.subplots(figsize=(9,6))
-            ax.plot(mp_values, frac_diff_full, marker="x", linestyle="None", label="Full calculation", color="k")
-            ax.plot(mp_values, frac_diff_approx_fmax, marker="+", linestyle="None", label="f_\mathrm{max}$ from KP '23, evolved $\psi_\mathrm{N}$", color="k")
-            ax.plot(mp_values, frac_diff_approx_LN, marker="x", linestyle="None", label="$f_\mathrm{max}$ from KP '23, CC3 $\psi_\mathrm{N}$", color="tab:green")
-            #ax.plot(mp_values, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, CC3 $\psi_\mathrm{N}$", color="tab:green")
-            ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
-            ax.set_xlabel("$m_p~[\mathrm{g}]$")
-            ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
-            ax.set_ylim(-0.1, 0.2)
-            ax.set_xlim(min(mp_values), max(mp_values))
-            ax.grid()
-            ax.set_xscale("log")
-            ax.set_title("CC3 MF, $\Delta={:.0f}$".format(Deltas[i]))
-            fig.tight_layout()
-         
-        m_p = 1e17
-        f_PBH_simplified = f_max_loaded[0] * np.power(m_p / m_delta_loaded[0], 2)   # Find value of the simplified constraint
-    
-        frac_diff_approx_both = []
-        frac_diff_approx_fmax = []
-        frac_diff_approx_LN = []
-        frac_diff_full = []
-    
-        for i in range(len(Deltas)):
-                           
-            psi_initial = CC3
-            params = [alphas_CC3[i], betas[i]]
-            mc_values = [m_p]
-            
-            f_PBH_approx_both = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=False)
-            f_PBH_approx_fmax = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_simplified, psi_initial=psi_initial, params=params, evolved=True)
-            f_PBH_approx_LN = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=False)
-            f_PBH_full = constraint_Carr(mc_values, m_delta=m_delta_total, f_max=f_max_total, psi_initial=psi_initial, params=params, evolved=True)
-            
-            frac_diff_approx_both.append(f_PBH_approx_both[0] / f_PBH_simplified - 1)
-            frac_diff_approx_fmax.append(f_PBH_approx_fmax[0] / f_PBH_simplified - 1)
-            frac_diff_approx_LN.append(f_PBH_approx_LN[0] / f_PBH_simplified - 1)
-            frac_diff_full.append(f_PBH_full[0] / f_PBH_simplified - 1)
-            
-        fig, ax = plt.subplots(figsize=(9,6))   
-        ax.plot(Deltas, frac_diff_full, marker="x", markersize=10, linestyle="None", label="f_\mathrm{max}$ from KP '23, evolved $\psi_\mathrm{N}$", color="k")
-        ax.plot(Deltas, frac_diff_approx_fmax, marker="+", markersize=10, linestyle="None", label="$f_\mathrm{max} \propto m^2$, evolved $\psi_\mathrm{N}$", color="k")
-        ax.plot(Deltas, frac_diff_approx_LN, marker="x", linestyle="None", label="$f_\mathrm{max}$ from KP '23, CC3 $\psi_\mathrm{N}$", color="tab:green")
-        ax.plot(Deltas, frac_diff_approx_both, marker="+", linestyle="None", label="$f_\mathrm{max} \propto m^2$, CC3 $\psi_\mathrm{N}$", color="tab:green")
-        ax.legend(title="Frac. diff. from $f_\mathrm{max}(m_p)$", fontsize="x-small")
-        ax.set_xlabel("$\Delta$")
-        ax.set_ylabel("$\Delta f_\mathrm{PBH} / f_\mathrm{PBH}$")
-        ax.set_ylim(-0.2, 1)
-        ax.grid()
-        ax.set_title("$m_p$ = {:.1e} g".format(m_p))
-        fig.tight_layout()
-
-#%% Plot fractional difference between the delta-function MF constraint and a power-law in m^2.
-
-if "__main__" == __name__:
-        
-    fig, ax = plt.subplots(figsize=(7,7))
-    
-    # Korwar & Profumo (2023) 511 keV line constraints
-    m_delta_values_loaded, f_max_loaded = load_data("./2302.04408/2302.04408_MW_diffuse_SPI.csv")
-    # Power-law exponent to use between 1e15g and 1e16g.
-    exponent_PL_upper = 2.0
-    # Power-law exponent to use between 1e11g and 1e15g.
-    exponent_PL_lower = 2.0
-    
-    m_delta_extrapolated_upper = np.logspace(15, 16, 11)
-    m_delta_extrapolated_lower = np.logspace(11, 15, 41)
-    
-    f_max_extrapolated_upper = min(f_max_loaded) * np.power(m_delta_extrapolated_upper / min(m_delta_values_loaded), exponent_PL_upper)
-    f_max_extrapolated_lower = min(f_max_extrapolated_upper) * np.power(m_delta_extrapolated_lower / min(m_delta_extrapolated_upper), exponent_PL_lower)
-
-    m_pbh_values_upper = np.concatenate((m_delta_extrapolated_upper, m_delta_values_loaded))
-    f_max_upper = np.concatenate((f_max_extrapolated_upper, f_max_loaded))
-    
-    f_max = np.concatenate((f_max_extrapolated_lower, f_max_extrapolated_upper, f_max_loaded))
-    m_pbh_values = np.concatenate((m_delta_extrapolated_lower, m_delta_extrapolated_upper, m_delta_values_loaded))
-    
-    # set x-axis and y-axis ticks
-    # see https://stackoverflow.com/questions/30887920/how-to-show-minor-tick-labels-on-log-scale-with-matplotlib
-    
-    y_major = mpl.ticker.LinearLocator(numticks = 11)
-    ax.yaxis.set_major_locator(y_major)
-    y_minor = mpl.ticker.LinearLocator(numticks = 11)
-    ax.yaxis.set_minor_locator(y_minor)
-    ax.yaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-    
-    ax.plot(m_pbh_values, f_max / (min(f_max_loaded) * np.power(m_pbh_values / min(m_delta_values_loaded), exponent_PL_upper)) - 1, color=(0.5294, 0.3546, 0.7020))
-    ax.set_ylabel("$f_\mathrm{max} / (km^2) - 1$")
-    ax.set_xlabel("$m~[\mathrm{g}]$")
-    ax.set_xlim(1e16, 1e17)
-    ax.set_ylim(0, 1)
-    ax.grid()
-    fig.tight_layout()
-    fig.savefig("./Tests/Figures/EMF_constraints_work/fmax_fracdifff_from_m^2.png")
-
-#%% Plot the CC3 at small and large masses, compare to asymptotic fits at m << m_p and m >> m_p.
-
-if "__main__" == __name__:
-    
-    # Mass function parameter values, from 2009.03204.
-    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-
-    for Delta_index in range(len(Deltas)):
-        
-        print(Delta_index)
-        
-        fig, ax = plt.subplots(figsize=(6,6))
-        m_p = 1e16
-        m_pbh_values = np.logspace(np.log10(m_p)-5, np.log10(m_p)+5, 1000)
-        
-        alpha = alphas_CC3[Delta_index]
-        beta = betas[Delta_index]
-        prefactor = (beta / m_p) * np.power(alpha/beta, (alpha+1)/beta) / np.exp(loggamma((alpha+1) / beta))
-        
-        CC3_actual = CC3(m_pbh_values, m_p, alpha, beta)
-        CC3_fit_lowmass = prefactor * np.power(m_pbh_values/m_p, alpha)
-        CC3_fit_highmass = prefactor * np.exp(-(alpha/beta)*np.power(m_pbh_values/m_p, beta))
-        
-        ax.plot(m_pbh_values[CC3_actual > 0], CC3_actual[CC3_actual > 0])
-        ax.plot(m_pbh_values, CC3_fit_lowmass, linestyle="dotted", label=r"$\propto (m / m_\mathrm{p})^{\alpha}$")
-        ax.plot(m_pbh_values, CC3_fit_highmass, linestyle="dotted", label=r"$\propto \exp \left(-\frac{\alpha}{\beta} \left(\frac{m}{m_\mathrm{p}}\right)^\beta\right)$")
-        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-        ax.set_ylim(CC3_actual[0], 10*max(CC3_actual))
-        ax.set_title("CC3, $\Delta={:.1f}$".format(Deltas[Delta_index]))
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_xlabel("$m~[\mathrm{g}]$")
-        ax.set_ylabel("$\psi~[\mathrm{g}^{-1}]$")
-        ax.legend(fontsize="xx-small")
-        fig.tight_layout()
-
-
 #%% Plot the SLN at small masses, compare to (m/m_p)^|alpha|.
 
 if "__main__" == __name__:
@@ -3325,3 +2434,4 @@ if "__main__" == __name__:
     plt.xlabel("x")
     plt.ylabel("y")
     plt.tight_layout()
+    
