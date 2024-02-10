@@ -1189,23 +1189,24 @@ if "__main__" == __name__:
             
             data_folder = "./Data-tests/PL_exp_{:.0f}/log_m_min={:.0f}/log_n_steps={:.0f}".format(exponent_PL_lower, log_m_min, np.log10(n_steps))
 
-                                    
-        for j in range(len(Deltas)):                
-            data_filename_LN = data_folder + "/LN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_SLN = data_folder + "/SLN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-            data_filename_CC3 = data_folder + "/CC3_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                      
-            params_LN = [sigmas_LN[j]]
-            params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
-            params_CC3 = [alphas_CC3[j], betas[j]]
-            
-            f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t, n_steps)
-            f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t, n_steps)
-            f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t, n_steps)
-      
-            np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
-            np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
-            np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
+            for j in range(len(Deltas)):
+                
+                if Deltas[j] == 5:
+                    data_filename_LN = data_folder + "/LN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                    data_filename_SLN = data_folder + "/SLN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                    data_filename_CC3 = data_folder + "/CC3_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                              
+                    params_LN = [sigmas_LN[j]]
+                    params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+                    params_CC3 = [alphas_CC3[j], betas[j]]
+                    
+                    f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t, n_steps)
+                    f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t, n_steps)
+                    f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t, n_steps)
+              
+                    np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
+                    np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
+                    np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
      
                
 #%% Constraints from COMPTEL, INTEGRAL, EGRET and Fermi-LAT. Approximate results obtained by using f_max as the constraint from each instrument, rather than the minimum over each energy bin.
