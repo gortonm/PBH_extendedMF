@@ -244,23 +244,22 @@ if "__main__" == __name__:
     for i in range(len(Deltas)):
         fig, ax = plt.subplots(figsize=(6,6))
         
-        mc_values_old = np.logspace(14, 19, 100)          
-        fname_base = "CC_D={:.1f}_test_range_wide".format(Deltas[i])    # compare to old constraints obtained using the same PBH mass range and number of masses as those from before June 2023
-        constraints_names, f_PBHs_GC_old = load_results_Isatis(mf_string=fname_base, modified=True)
-
+        fname_base = mf_string_old + "_D={:.1f}".format(Deltas[i])    # compare to old constraints obtained using the same PBH mass range and number of masses as those from before June 2023
+        if plot_LN:
+            constraints_names, f_PBHs_GC_old = load_results_Isatis(mf_string=fname_base, modified=True, test_mass_range=True, wide=False)
+        else:
+            constraints_names, f_PBHs_GC_old = load_results_Isatis(mf_string=fname_base, modified=True, test_mass_range=True, wide=True)
+           
         for j in range(len(constraints_names_short)):
             
             data_filename = data_folder + "/%s_GC_%s" % (mf_string_new, constraints_names_short[j]) + "_Delta={:.1f}_unevolved.txt".format(Deltas[i])
 
             mc_new, f_PBH_new = np.genfromtxt(data_filename)
- 
+            
             ax.plot(mc_new, f_PBH_new, color=colors_evap[j], linestyle="None", marker="x", alpha=0.5)
             ax.plot(mc_values_old, f_PBHs_GC_old[j], color=colors_evap[j])
         
-        if plot_CC3:
-            ax.set_xlabel(r"$m_{\rm p} \, [{\rm g}]$")
-        else:
-            ax.set_xlabel(r"$m_{\rm c} \, [{\rm g}]$")
+        ax.set_xlabel(r"$m_{\rm c} \, [{\rm g}]$")
         ax.set_ylabel(r"$f_{\rm PBH}$")
         ax.set_title("$\Delta={:.1f}$".format(Deltas[i]) + ", %s" % mf_string_new)
         ax.set_xscale("log")
@@ -1820,7 +1819,7 @@ if "__main__" == __name__:
         fig.tight_layout()
         
         
-#%% Plot constraints from 2302.04408 (MW diffuse SPI with NFW template).
+#%% Plot constraints (from Voyager-1 electron / positron detections [1807.03075])
 # Convergence test with number of masses in preliminaries.py and range of masses included in power-law extrapolation of the delta-function MF constraint.
 # Consider the evolved MFs only, with PL extrapolation.
 
@@ -1830,8 +1829,8 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     plot_LN = False
-    plot_SLN = True
-    plot_CC3 = False
+    plot_SLN = False
+    plot_CC3 = True
     
     mc_values = np.logspace(14, 20, 120)
         
@@ -1847,52 +1846,54 @@ if "__main__" == __name__:
 
     for j in range(len(Deltas)):
         
-        fig, ax = plt.subplots(figsize=(6, 6))
-        ax1 = ax.twinx()
-
-        for k, log_m_min in enumerate(log_m_min_values):
-            
-            ax.plot(0, 0, markers[k], color="k", label="{:.0e}g".format(10**log_m_min))
-                     
-            for l, n_steps in enumerate(n_steps_values):
+        if Deltas[j] == 5:
+        
+            fig, ax = plt.subplots(figsize=(7, 7))
+            ax1 = ax.twinx()
+    
+            for k, log_m_min in enumerate(log_m_min_values):
                 
-                if k == 0:
-                    ax1.plot(0, 0, color=colors[l], label="{:.0f}".format(n_steps))                   
-                
-                data_folder = "./Data-tests/PL_exp_{:.0f}/log_m_min={:.0f}/log_n_steps={:.0f}".format(exponent_PL_lower, log_m_min, np.log10(n_steps))
-                                            
-                if plot_CC3:
-                    data_filename_CC3 = data_folder + "/CC3_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                    mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
-                    ax.plot(mp_CC3_evolved, f_PBH_CC3_evolved, markers[k], color=colors[l])
+                ax.plot(0, 0, markers[k], color="k", label="{:.0e}g".format(10**log_m_min))
+                         
+                for l, n_steps in enumerate(n_steps_values):
                     
-                elif plot_LN:
-                    data_filename_LN = data_folder + "/LN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                    mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
-                    mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
-                    ax.plot(mp_LN, f_PBH_LN_evolved, markers[k], color=colors[l])
+                    if k == 0:
+                        ax1.plot(0, 0, color=colors[l], label="{:.0f}".format(n_steps))                   
                     
-                elif plot_SLN:
-                    data_filename_SLN = data_folder + "/SLN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
-                    mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
-                    mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j]) for m_c in mc_SLN_evolved]
-                    ax.plot(mp_SLN, f_PBH_SLN_evolved, markers[k], color=colors[l])
-      
-        if Deltas[j] < 5:
-            ax.set_xlim(1e16, 1e18)
-        else:
-            ax.set_xlim(1e16, 2e18)
-        ax.set_ylim(1e-6, 1)
-
-        ax.legend(fontsize="x-small", title="Min mass in $f_\mathrm{max}$")
-        ax1.legend(fontsize="x-small", title="Number of steps")
-        ax1.set_yticks([])
-        ax.set_ylabel("$f_\mathrm{PBH}$")
-        ax.set_xlabel("$m_p~[\mathrm{g}]$")
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        fig.suptitle("Voyager 1 convergence test ($\Delta={:.1f}$)".format(Deltas[j]))
-        fig.tight_layout()
+                    data_folder = "./Data-tests/PL_exp_{:.0f}/log_m_min={:.0f}/log_n_steps={:.0f}".format(exponent_PL_lower, log_m_min, np.log10(n_steps))
+                                                
+                    if plot_CC3:
+                        data_filename_CC3 = data_folder + "/CC3_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                        mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                        ax.plot(mp_CC3_evolved, f_PBH_CC3_evolved, markers[k], color=colors[l])
+                        
+                    elif plot_LN:
+                        data_filename_LN = data_folder + "/LN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                        mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+                        mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
+                        ax.plot(mp_LN, f_PBH_LN_evolved, markers[k], color=colors[l])
+                        
+                    elif plot_SLN:
+                        data_filename_SLN = data_folder + "/SLN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+                        mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                        mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j]) for m_c in mc_SLN_evolved]
+                        ax.plot(mp_SLN, f_PBH_SLN_evolved, markers[k], color=colors[l])
+          
+            if Deltas[j] < 5:
+                ax.set_xlim(1e16, 2e18)
+            else:
+                ax.set_xlim(1e16, 4e18)
+            ax.set_ylim(1e-6, 1)
+    
+            ax.legend(fontsize="xx-small", title="Min mass in $f_\mathrm{max}$")
+            ax1.legend(fontsize="xx-small", title="Number of steps")
+            ax1.set_yticks([])
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+            fig.suptitle("Voyager 1 convergence test ($\Delta={:.1f}$)".format(Deltas[j]))
+            fig.tight_layout()
 
 
 #%% Tests of the results obtained using different power-law exponents in f_max at masses M < 1e15g (Galactic Centre photon constraints)
@@ -2245,6 +2246,115 @@ if "__main__" == __name__:
     fig1.tight_layout()
    
     
+#%% Compare extragalactic gamma-ray background (with background subtraction) from 2112.15463.
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
+    exponents_PL_lower = [0, -2]
+    
+    # Boolean determines whether to use evolved mass function (evaluated at the present-day).        
+    for j in range(len(Deltas)):
+        
+        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
+        
+        ax0 = axes[0][0]
+        ax1 = axes[0][1]
+        ax2 = axes[1][0]
+        ax3 = axes[1][1]
+                
+        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_values))+0.01, 0.1)
+
+        
+        for Kimura in [True, False]:
+    
+            # Load delta function MF constraints calculated using different background models. 
+            if Kimura:
+                m_delta_values, f_max = load_data("2112.15463/2112.15463_bkg_subtr_Roth+Kimura.csv")
+                bkg_string = "Roth_Kimura"
+                markers = ["-", "--"]
+    
+            else:
+                m_delta_values, f_max = load_data("2112.15463/2112.15463_bkg_subtr_Roth+Inoue.csv")
+                bkg_string = "Roth_Inoue"
+                markers = ["x", "+"]
+    
+            for k, exponent_PL_lower in enumerate(exponents_PL_lower):
+                
+                for evolved in [True, False]:
+                
+                    if evolved:
+                        data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+    
+                    else:
+                        data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+    
+                    data_filename_LN = data_folder + "/LN_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                    data_filename_SLN = data_folder + "/SLN_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                    data_filename_CC3 = data_folder + "/CC3_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+        
+                    mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+                    mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                    mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                    mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j]) for m_c in mc_SLN_evolved]
+                    mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
+                    
+                    if evolved:               
+                        ax1.plot(mp_LN, f_PBH_LN_evolved, markers[k], color="r")
+                        ax2.plot(mp_SLN, f_PBH_SLN_evolved, markers[k], color="b")
+                        ax3.plot(mp_CC3_evolved, f_PBH_CC3_evolved, markers[k], color="g")
+                    else:               
+                        ax1.plot(mp_LN, f_PBH_LN_evolved, markers[k], color="r", alpha=0.4)
+                        ax2.plot(mp_SLN, f_PBH_SLN_evolved, markers[k], color="b", alpha=0.4)
+                        ax3.plot(mp_CC3_evolved, f_PBH_CC3_evolved, markers[k], color="g", alpha=0.4)
+                
+                    ax1.set_title("LN")
+                    ax2.set_title("SLN")
+                    ax3.set_title("CC3")
+                    
+                    f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
+                    if evolved:
+                        ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
+                        ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
+                    else:
+                        ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], alpha=0.4)
+            
+            # Plot extended MF constraints from Korwar & Profumo (2023)
+            plotter_KP23(Deltas, j, ax1, color="tab:grey", mf=LN, linestyle="dashed")
+            plotter_KP23(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dashed")
+            plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
+            
+            plotter_BC19(Deltas, j, ax1, color="tab:grey", mf=LN, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+            plotter_BC19(Deltas, j, ax2, color="tab:grey", mf=SLN, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+            plotter_BC19(Deltas, j, ax3, color="tab:grey", mf=CC3, with_bkg_subtr=True, prop_A=False, prop_B_lower=True, linestyle="dashdot")
+              
+            ax0.plot(m_delta_values, f_max, color="tab:grey")
+            ax0.set_xlabel("$m$ [g]")
+            ax0.set_ylabel("$f_\mathrm{max}$")
+            ax0.set_xscale("log")
+            ax0.set_yscale("log")
+            ax0.set_xlim(min(m_delta_extrapolated), 1e18)
+            ax0.set_ylim(min(f_max), 1)
+            
+            for ax in [ax1, ax2, ax3]:
+                if Deltas[j] < 5:
+                    ax.set_xlim(1e16, 1e18)
+                else:
+                    ax.set_xlim(1e16, 7e18)
+                   
+                ax.set_ylim(1e-6, 1)
+                ax.set_ylabel("$f_\mathrm{PBH}$")
+                ax.set_xlabel("$m_p~[\mathrm{g}]$")
+                ax.set_xscale("log")
+                ax.set_yscale("log")
+    
+            ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
+            ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
+            fig.suptitle("Extragalactic gamma-ray background [2112.15463], $\Delta={:.1f}$".format(Deltas[j]))
+            fig.tight_layout()
 
 
 #%% Compare microlensing constraints obtained with an evolved MF and without

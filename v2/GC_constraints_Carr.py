@@ -789,6 +789,76 @@ if "__main__" == __name__:
             fig.tight_layout()
 
 
+#%% Extragalactic gamma-ray background (with background subtraction) from 2112.15463.
+
+if "__main__" == __name__:
+            
+        include_extrapolated = True
+        t = t_0
+    
+        # Load mass function parameters.
+        [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+        
+        mc_values = np.logspace(14, 20, 120)
+        
+        for Kimura in [True, False]:
+            # Load delta function MF constraints calculated using different background models, to use the method from 1705.05567. 
+            if Kimura:
+                m_delta_values, f_max = load_data("2112.15463/2112.15463_bkg_subtr_Roth+Kimura.csv")
+                bkg_string = "Roth_Kimura"
+            else:
+                m_delta_values, f_max = load_data("2112.15463/2112.15463_bkg_subtr_Roth+Inoue.csv")
+                bkg_string = "Roth_Inoue"
+                    
+            for evolved in [True, False]:
+                
+                for exponent_PL_lower in [-2, 0]:
+                    
+                    if not evolved:
+                        data_folder = "./Data-tests/unevolved"
+                    else:
+                        data_folder = "./Data-tests"
+
+                           
+                    if include_extrapolated:
+                            
+                        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_values))+0.01, 0.1)
+                        f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
+                    
+                        f_max_total = np.concatenate((f_max_extrapolated, f_max))
+                        m_delta_total = np.concatenate((m_delta_extrapolated, m_delta_values))
+                    
+                        data_folder += "/PL_exp_{:.0f}".format(exponent_PL_lower)
+                
+                    else:
+                        f_max_total = f_max
+                        m_delta_total = m_delta_values
+                    
+                    for j in range(len(Deltas)):               
+                        
+                        if include_extrapolated:                     
+                            data_filename_LN = data_folder + "/LN_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                            data_filename_SLN = data_folder + "/SLN_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                            data_filename_CC3 = data_folder + "/CC3_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                
+                        else:          
+                            data_filename_LN = data_folder + "/LN_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                            data_filename_SLN = data_folder + "/SLN_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                            data_filename_CC3 = data_folder + "/CC3_2112.15463_Delta={:.1f}".format(Deltas[j]) + "_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                          
+                        params_LN = [sigmas_LN[j]]
+                        params_SLN = [sigmas_SLN[j], alphas_SLN[j]]
+                        params_CC3 = [alphas_CC3[j], betas[j]]
+                            
+                        f_pbh_LN = constraint_Carr(mc_values, m_delta_total, f_max_total, LN, params_LN, evolved, t)
+                        f_pbh_SLN = constraint_Carr(mc_values, m_delta_total, f_max_total, SLN, params_SLN, evolved, t)
+                        f_pbh_CC3 = constraint_Carr(mc_values, m_delta_total, f_max_total, CC3, params_CC3, evolved, t)
+                        
+                        np.savetxt(data_filename_LN, [mc_values, f_pbh_LN], delimiter="\t")                          
+                        np.savetxt(data_filename_SLN, [mc_values, f_pbh_SLN], delimiter="\t")
+                        np.savetxt(data_filename_CC3, [mc_values, f_pbh_CC3], delimiter="\t")
+        
+
 #%% Constraints from 2108.13256 (CMB anisotropies).
 
 if "__main__" == __name__:
