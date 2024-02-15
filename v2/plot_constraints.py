@@ -38,6 +38,7 @@ plt.style.use('tableau-colorblind10')
 # Load mass function parameters
 [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
+#%% Functions
 
 def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True, exponent_PL_lower=2, approx=False, extrapolate_numeric_lower=False):
     """
@@ -128,7 +129,7 @@ def load_data_GC_Isatis(Deltas, Delta_index, mf=None, params=None, evolved=True,
             mp_GC = mc_values * np.exp(-sigma_LN**2)
 
         elif mf == SLN:
-            mp_GC = [m_max_SLN(m_c, *params, log_m_factor=3, n_steps=1000) for m_c in mc_values]
+            mp_GC = [m_max_SLN(m_c, *params) for m_c in mc_values]
 
         elif mf == CC3:
             mp_GC = mc_values
@@ -206,7 +207,7 @@ def load_data_KP23(Deltas, Delta_index, mf=None, evolved=True, extrap_lower=True
     elif mf == SLN:
         data_filename = data_folder + "/SLN_2302.04408_Delta={:.1f}.txt".format(Deltas[Delta_index])
         mc_KP23, f_PBH_KP23 = np.genfromtxt(data_filename, delimiter="\t")
-        mp_KP23 = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_KP23]
+        mp_KP23 = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]) for m_c in mc_KP23]
 
     elif mf == CC3:
         data_filename = data_folder + "/CC3_2302.04408_Delta={:.1f}.txt".format(Deltas[Delta_index])
@@ -305,17 +306,17 @@ def load_data_Voyager_BC19(Deltas, Delta_index, prop_A, with_bkg_subtr, mf=None,
         mp_BC19, f_PBH_BC19 = load_data("1807.03075/1807.03075_" + prop_string + ".csv")
 
     elif mf == LN:
-        data_filename = data_folder + "/LN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
+        data_filename = data_folder + "/LN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
         mc_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
         mp_BC19 = mc_BC19 * np.exp(-sigmas_LN[Delta_index]**2)
 
     elif mf == SLN:
-        data_filename = data_folder + "/SLN_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
+        data_filename = data_folder + "/SLN_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
         mc_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
-        mp_BC19 = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_BC19]
+        mp_BC19 = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]) for m_c in mc_BC19]
 
     elif mf == CC3:
-        data_filename = data_folder + "/CC3_1807.03075_Carr_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
+        data_filename = data_folder + "/CC3_1807.03075_" + prop_string + "_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[Delta_index], exponent_PL_lower)
         mp_BC19, f_PBH_BC19 = np.genfromtxt(data_filename, delimiter="\t")
 
     elif mf == mf_numeric:
@@ -390,7 +391,7 @@ def load_data_Subaru_Croon20(Deltas, Delta_index, mf=None, evolved=False, extrap
             mc_Subaru, f_PBH_Subaru = np.genfromtxt("./Data-tests/SLN_HSC_Delta={:.1f}_evolved.txt".format(Deltas[Delta_index]), delimiter="\t")
         else:
             mc_Subaru, f_PBH_Subaru = np.genfromtxt("./Data/SLN_HSC_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
-        mp_Subaru = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Subaru]
+        mp_Subaru = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]) for m_c in mc_Subaru]
 
     elif mf == CC3:
         if evolved:
@@ -516,7 +517,7 @@ def load_data_Sugiyama(Deltas, Delta_index, mf=None, extrapolate_numeric_lower=F
 
     elif mf == SLN:
         mc_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/SLN_Sugiyama20_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
-        mp_Sugiyama = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_Sugiyama]
+        mp_Sugiyama = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]) for m_c in mc_Sugiyama]
 
     elif mf == CC3:
         mp_Sugiyama, f_PBH_Sugiyama = np.genfromtxt("./Data/CC3_Sugiyama20_Delta={:.1f}.txt".format(Deltas[Delta_index]), delimiter="\t")
@@ -1019,15 +1020,22 @@ if "__main__" == __name__:
     Delta_index = 0
 
     if plot_existing:
-        
+        """
         plotter_GC_Isatis(Deltas, Delta_index, ax, color="magenta")
         ax.text(1.5e15, 1e-4, "  GC photons \n (Isatis)", fontsize="xx-small", color="magenta")
+        """
+        mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=True, mf=None)
+        ax.plot(mp_propA, f_PBH_propA, color="r")
+        #mp_propB, f_PBH_propB = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
+        #ax.plot(mp_propB, f_PBH_propB, color="r", linestyle="dashdot")
         
-        mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=None, prop_B_lower=True)
-        ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r")
+        plotter_BC19(Deltas[Delta_index], Delta_index, ax, color="r", prop_A=True, with_bkg_subtr=True, mf=None)
+        plotter_BC19(Deltas[Delta_index], Delta_index, ax, color="r", prop_A=True, with_bkg_subtr=True, mf=None, linestyle="dashdot")
+
         ax.text(1.5e15, 0.1, "Electrons/\npositrons \n (Voyager 1)", fontsize="xx-small", color="r")
         #ax.text(7e15, 0.1, "Electrons/\npositrons \n (Voyager 1)", fontsize="xx-small", color="r")
         
+        """
         m_D20_v2, fPBH_D20 = load_data("1912.01014/1912.01014_Fig2_a__0_newaxes_2.csv")
         r_s = 20    # scale radius, in kpc
         R_min = 1.5    # minimum positron propagation distance, in kpc
@@ -1038,20 +1046,20 @@ if "__main__" == __name__:
         #ax.plot(m_D20_v2, fPBH_D20_weakest, color="pink")
         ax.plot(m_D20_v2, fPBH_D20, color="darkturquoise")
         ax.text(1.2e15, 5e-3, "511 keV line \n (Dasgupta et al.)", fontsize="xx-small", color="darkturquoise")
-        
-        
+        """
+        """
         m_EXGB_Carr = 10**np.arange(np.log10(1e14), np.log10(1e17), 0.1)
         fPBH_EXGB_Carr = f_PBH_beta_prime(m_EXGB_Carr, beta_prime_gamma_rays(m_EXGB_Carr))
-        #ax.plot(m_EXGB_Carr, fPBH_EXGB_Carr, color="purple")
-        #ax.text(1.2e15, 8e-5, "Extragalactic \n photons \n (using Carr \n et al. \n 2021 fit)", fontsize="xx-small", color="purple")
-        
+        ax.plot(m_EXGB_Carr, fPBH_EXGB_Carr, color="purple")
+        ax.text(1.2e15, 8e-5, "Extragalactic \n photons \n (using Carr \n et al. \n 2021 fit)", fontsize="xx-small", color="purple")
+        """
         plotter_KP23(Deltas, Delta_index, ax, color="orange", extrap_lower=False)
         #ax.text(4e16, 0.0001, "Soft gamma rays \n (INTEGRAL/SPI) \n (Korwar \& Profumo)", fontsize="xx-small", color="orange")
-        ax.text(4e16, 0.0001, "Soft gamma rays \n (INTEGRAL/SPI)", fontsize="xx-small", color="orange")
+        ax.text(7e16, 0.0001, "Soft gamma rays \n (INTEGRAL/SPI)", fontsize="xx-small", color="orange")
 
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color="tab:grey")
         ax.text(2.5e22, 0.4, "Subaru-HSC",fontsize="xx-small", color="tab:grey")
-        
+        """
         m_delta_values_Berteaud, f_max_Berteaud = load_data("2202.07483/2202.07483_Fig3.csv")
         ax.plot(m_delta_values_Berteaud, f_max_Berteaud, color="b")
         ax.text(2e17, 0.1, "Soft gamma rays \n (INTEGRAL/SPI) \n (Berteaud et al.)",fontsize="xx-small", color="b")
@@ -1059,14 +1067,27 @@ if "__main__" == __name__:
         m_delta_21cm, f_PBH_21cm = load_data("2107.02190/2107.02190_upper_bound.csv")
         ax.plot(m_delta_21cm, f_PBH_21cm, color="lime")
         ax.text(5e16, 3e-5, "21 cm \n (Mittal et al.)", fontsize="xx-small", color="lime")
-
+        """
+        
+        m_delta_CZL22_Kimura, f_max_CZL22_Kimura = load_data("2112.15463/2112.15463_bkg_subtr_Roth+Kimura.csv")
+        m_delta_values_CZL22_Inoue, f_max_CZL22_Inoue = load_data("2112.15463/2112.15463_bkg_subtr_Roth+Inoue.csv")
+        ax.plot(m_delta_CZL22_Kimura, f_max_CZL22_Kimura, color="purple", linestyle="dashdot")        
+        ax.plot(m_delta_values_CZL22_Inoue, f_max_CZL22_Inoue, color="purple", linestyle="None", marker="x")
+        ax.text(3e17, 5e-2, "EXGB (CZL (2022))", color="purple", fontsize="xx-small")
+        
     if plot_prospective:
-        plotter_GECCO(Deltas, Delta_index, ax,color="#5F9ED1", linestyle="dotted")
-        ax.text(2e17, 0.005, "Future MeV \n gamma rays",fontsize="xx-small", color="#5F9ED1")
+        plotter_GECCO(Deltas, Delta_index, ax,color="#5F9ED1", linestyle="dotted", NFW=True)
+        #ax.text(2e17, 0.005, "Future MeV \n gamma rays",fontsize="xx-small", color="#5F9ED1")
+        ax.text(3e17, 0.005, "Future MeV \n gamma rays",fontsize="xx-small", color="#5F9ED1")
 
         plotter_Sugiyama(Deltas, Delta_index, ax, color="k", linestyle="dotted")
         ax.text(1e21, 0.002, "WD microlensing", fontsize="xx-small", color="k")
-
+        
+        """
+        m_delta_Keith22, f_max_Keith22 = load_data("2204.05337/2204.05337_Fig5_gamma_1.csv")
+        ax.plot(m_delta_Keith22, f_max_Keith22, color="g", linestyle="dotted")
+        ax.text(5e17, 0.005, "e-ASTROGAM",fontsize="xx-small", color="g")
+        """
     ax.tick_params("x", pad=7)
     ax.set_yscale("log")
     ax.set_xscale("log")
@@ -1093,12 +1114,12 @@ if "__main__" == __name__:
             betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
 
         plot_existing = True
-        plot_prospective = False
+        plot_prospective = True
 
         extrapolate_numeric_lower = False
 
-        mf = mf_numeric
-        Delta_index = 0
+        mf = SLN
+        Delta_index = 6
 
         if mf == LN:
             params = [sigmas_LN[Delta_index]]
@@ -1128,13 +1149,13 @@ if "__main__" == __name__:
             #ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r")
             #ax.plot(mp_propB_lower, f_PBH_propB_lower, color="r")
 
-            #mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=True, mf=mf)
+            mp_propA, f_PBH_propA = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=True, with_bkg_subtr=True, mf=mf)
             #mp_propB_upper, f_PBH_propB_upper = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf)
-            mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf, prop_B_lower=True)
+            #mp_propB_lower, f_PBH_propB_lower = load_data_Voyager_BC19(Deltas, Delta_index, prop_A=False, with_bkg_subtr=True, mf=mf, prop_B_lower=True)
 
-            #ax.plot(mp_propA, f_PBH_propA, color="r", linestyle="dashed")
+            ax.plot(mp_propA, f_PBH_propA, color="r", linestyle="dashed")
             #ax.plot(mp_propB_upper, f_PBH_propB_upper, color="r", linestyle="dashed")
-            ax.plot(mp_propB_lower, f_PBH_propB_lower,color="r", linestyle="dashed")
+            #ax.plot(mp_propB_lower, f_PBH_propB_lower,color="r", linestyle="dashed")
 
             ax.text(1.3e15, 0.3, "Voyager 1", fontsize="xx-small", color="r")
 
@@ -1171,12 +1192,9 @@ if "__main__" == __name__:
                 mp_511keV = mc_511keV * np.exp(-sigmas_LN[Delta_index]**2)
                 mp_Berteaud = mc_Berteaud * np.exp(-sigmas_LN[Delta_index]**2)
             elif mf == SLN:
-                mp_CMB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index],
-                                    alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_CMB]
-                mp_511keV = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index],
-                                       log_m_factor=3, n_steps=1000) for m_c in mc_511keV]
-                mp_Berteaud = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index],
-                                         log_m_factor=3, n_steps=1000) for m_c in mc_Berteaud]
+                mp_CMB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index],alpha=alphas_SLN[Delta_index]) for m_c in mc_CMB]
+                mp_511keV = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]) for m_c in mc_511keV]
+                mp_Berteaud = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]) for m_c in mc_Berteaud]
             elif mf == CC3 or mf == mf_numeric:
                 mp_CMB = mc_CMB
                 mp_511keV = mc_511keV
@@ -1224,7 +1242,7 @@ if "__main__" == __name__:
                 mp_EXGB = mc_EXGB * np.exp(-sigmas_LN[Delta_index]**2)
             elif mf == SLN:
                 mp_EXGB = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index],
-                                     alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_EXGB]
+                                     alpha=alphas_SLN[Delta_index]) for m_c in mc_EXGB]
             elif mf == CC3:
                 mp_EXGB = mc_EXGB
 
@@ -1276,7 +1294,7 @@ if "__main__" == __name__:
     # If True, plot the evaporation constraints from Boudaud & Cirelli (2019) [1807.03075]
     plot_BC19 = True
     # If True, plot unevolved MF constraint
-    plot_unevolved = False
+    plot_unevolved = True
     # If True, plot the fractional difference between evolved and unevolved MF results
     plot_fracdiff = False
     # If True, plot the fractional difference between the different fitting functions
@@ -1500,7 +1518,7 @@ if "__main__" == __name__:
 
                 plotter_BC19(Deltas, i, ax, color=colors[0], mf=None, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle="solid")
 
-                for evolved in [True]:
+                for evolved in [True, False]:
                     if evolved == False:
                         alpha = 0.4
                     else:
@@ -1759,7 +1777,7 @@ if "__main__" == __name__:
         ax.set_xscale("log")
         ax.set_yscale("log")
 
-        NFW = False
+        NFW = True
 
         # If True, plot unevolved MF constraint
         plot_unevolved = True
@@ -2022,6 +2040,50 @@ if "__main__" == __name__:
         plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[2], linewidth=linewidth)
         plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[3], linewidth=linewidth)
 
+        for Kimura in [True]:
+    
+            # Load delta function MF constraints calculated using different background models. 
+            if Kimura:
+                m_delta_values, f_max = load_data("2112.15463/2112.15463_bkg_subtr_Roth+Kimura.csv")
+                bkg_string = "Roth_Kimura"
+                markers = ["-", "--"]
+    
+            else:
+                m_delta_values, f_max = load_data("2112.15463/2112.15463_bkg_subtr_Roth+Inoue.csv")
+                bkg_string = "Roth_Inoue"
+                markers = ["x", "+"]
+    
+            exponent_PL_lower = 0
+                
+            for evolved in [False]:
+            
+                if evolved:
+                    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+
+                else:
+                    #data_folder = "./Data-tests/unevolved/PL_exp_{:.0f}".format(exponent_PL_lower)
+                    data_folder = "./Data-tests/unevolved"
+
+                """
+                data_filename_LN = data_folder + "/LN_2112.15463_Delta={:.1f}".format(Deltas[Delta_index]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                data_filename_SLN = data_folder + "/SLN_2112.15463_Delta={:.1f}".format(Deltas[Delta_index]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                data_filename_CC3 = data_folder + "/CC3_2112.15463_Delta={:.1f}".format(Deltas[Delta_index]) + "_extrapolated_%s_" % bkg_string + "exp{:.0f}.txt".format(exponent_PL_lower)
+                """
+                data_filename_LN = data_folder + "/LN_2112.15463_Delta={:.1f}".format(Deltas[Delta_index]) + "_%s" % bkg_string + ".txt"
+                data_filename_SLN = data_folder + "/SLN_2112.15463_Delta={:.1f}".format(Deltas[Delta_index]) + "_%s" % bkg_string + ".txt"
+                data_filename_CC3 = data_folder + "/CC3_2112.15463_Delta={:.1f}".format(Deltas[Delta_index]) + "_%s" % bkg_string + ".txt"
+                
+                mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+                mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+                mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+                mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]) for m_c in mc_SLN_evolved]
+                mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[Delta_index]**2)
+                
+                ax.plot(m_delta_values, f_max, color="b", linestyle=linestyles[0], linewidth=linewidth)
+                ax.plot(mp_LN, f_PBH_LN_evolved, color="b", linestyle=linestyles[1], linewidth=linewidth)
+                ax.plot(mp_SLN, f_PBH_SLN_evolved, color="b", linestyle=linestyles[2], linewidth=linewidth)
+                ax.plot(mp_CC3_evolved, f_PBH_CC3_evolved, color="b", linestyle=linestyles[3], linewidth=linewidth)
+
         xmin, xmax = 1e16, 5e23
         ymin, ymax = 1e-3, 1
 
@@ -2091,8 +2153,11 @@ if "__main__" == __name__:
             ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
 
         # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].
-        NFW = False
+        NFW = True
         show_label = False
+        prop_A = True
+        with_bkg_subtr=True
+        prop_B_lower=False
 
         # Set axis limits
         xmin, xmax = 1e16, 5e23
@@ -2108,6 +2173,11 @@ if "__main__" == __name__:
         plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=linestyles[1], show_label=show_label)
         plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=CC3, linestyle=linestyles[3], show_label=show_label)
         plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=SLN, linestyle=linestyles[2], show_label=show_label)
+
+        plotter_BC19(Deltas, Delta_index, ax, color="r", mf=None, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower)
+        plotter_BC19(Deltas, Delta_index, ax, color="r", mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[1])
+        plotter_BC19(Deltas, Delta_index, ax, color="r", mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[2])
+        plotter_BC19(Deltas, Delta_index, ax, color="r", mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[3])
 
         ax.plot(0, 0, color="k", linestyle=linestyles[0], label="Delta func.")
         ax.plot(0, 0, color="k", linestyle=linestyles[1], label="LN")
@@ -2852,7 +2922,7 @@ if "__main__" == __name__:
             mp_KP23_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index],
                                      log_m_factor=3, n_steps=1000) for m_c in mc_KP23_SLN]
             ax.plot(mp_KP23_SLN, f_PBH_KP23_SLN, color="k", label="KP '23")
-            #mp_GC_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000) for m_c in mc_values_evap]
+            #mp_GC_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index]) for m_c in mc_values_evap]
             #ax.plot(mp_GC_SLN, f_PBH_GC_SLN, color="tab:grey", label="GC photons")
 
         elif plot_CC3:
@@ -3127,99 +3197,6 @@ if "__main__" == __name__:
     fig.subplots_adjust(hspace=0.1)
     fig.tight_layout(pad=0.3)
 
-# %% Version with different values of sigma shown in each figure, with m_c and m_p used as the x-axis.
-
-if "__main__" == __name__:
-
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
-        betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-
-    exponent_PL_lower = 2
-
-    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
-
-    fig, axes = plt.subplots(1, 2, figsize=(11, 5))
-
-    # Plot delta-function MF constraint from Boudaud & Cirelli (2019)
-    prop_A = False
-    with_bkg_subtr = True
-    prop_B_lower = True
-
-    # Load delta-function MF constraint from Boudaud & Cirelli (2019)
-    m_delta_BC19_loaded, f_max_BC19_loaded = load_data_Voyager_BC19(
-        Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
-    m_delta_BC19_extrapolated = 10**np.arange(11,
-                                              np.log10(min(m_delta_BC19_loaded))+0.01, 0.1)
-    f_max_BC19_extrapolated = min(f_max_BC19_loaded) * np.power(
-        m_delta_BC19_extrapolated / min(m_delta_BC19_loaded), exponent_PL_lower)
-    f_max_BC19 = np.concatenate((f_max_BC19_extrapolated, f_max_BC19_loaded))
-    m_delta_BC19 = np.concatenate(
-        (m_delta_BC19_extrapolated, m_delta_BC19_loaded))
-
-    # Range of characteristic masses for obtaining constraints
-    mc_Carr21 = 10**np.arange(14, 22.5, 0.1)
-    # Calculate delta-function MF constraints from Carr et al. (2021), using Eqs. 32-33 of 2002.12778 for beta_prime, and Eq. 57 to convert to f_PBH
-    m_min = 1e11
-    m_max = 1e20
-    epsilon = 0.4
-    m_star = 5.1e14
-
-    for i, ax in enumerate(axes.flatten()):
-
-        if i == 0:
-            sigma = sigmas_LN[-1]
-
-        else:
-            sigma = 2
-
-        ax.plot(m_delta_BC19, f_max_BC19, color="r")
-        ax.plot(m_delta_BC19 * np.exp(-sigma**2), f_max_BC19, color="b")
-
-        f_PBH_BC19_evolved = constraint_Carr(
-            mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=True)
-
-        mp_Carr21 = mc_Carr21 * np.exp(-sigma**2)
-
-        ax.text(7e17, 1.5e-3,
-                "$\sigma={:.1f}$".format(sigma), fontsize="small")
-        ax.set_ylabel(r"$f_{\rm PBH}$")
-        ax.set_xlim(1e14, 1e19)
-        ax.set_ylim(1e-3, 1)
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-
-        x_major = mpl.ticker.LogLocator(base=10.0, numticks=10)
-        ax.xaxis.set_major_locator(x_major)
-        x_minor = mpl.ticker.LogLocator(
-            base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=10)
-        ax.xaxis.set_minor_locator(x_minor)
-        ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-
-        ax.tick_params("x", pad=7)
-        if i == 0:
-            ax1 = ax.secondary_xaxis('top', functions=(
-                lambda x: x * np.exp(sigmas_LN[-1]**2), lambda x: x * np.exp(-sigmas_LN[-1]**2)), color="b")
-        else:
-            ax1 = ax.secondary_xaxis('top', functions=(
-                lambda x: x * np.exp(2**2), lambda x: x * np.exp(-2**2)), color="b")
-        x_major = mpl.ticker.LogLocator(base=10.0, numticks=100)
-        ax1.xaxis.set_major_locator(x_major)
-        x_minor = mpl.ticker.LogLocator(
-            base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=10)
-        ax1.xaxis.set_minor_locator(x_minor)
-        ax1.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-        ax1.tick_params("x", pad=7, which="both", color="b")
-
-        # Plot against m_c in the top two panels
-        ax1.set_xlabel(r"$m_c~[{\rm g}]$", labelpad=14, color="b")
-        ax.plot(mp_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted")
-
-        ax.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
-        ax.spines["top"].set_color("b")
-
-    fig.subplots_adjust(hspace=0.1)
-    fig.tight_layout(pad=0.3)
 
 # %% Version with different values of sigma shown in each panel, with m_c and m_p used as the x-axis.
 
@@ -3233,8 +3210,8 @@ if "__main__" == __name__:
 
     data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
 
-    original = False
-    generic_mass = True
+    original = True
+    generic_mass = False
     text_on_plot = False
 
     if generic_mass:
@@ -3250,20 +3227,12 @@ if "__main__" == __name__:
         comp_color = "r"
 
         # Plot delta-function MF constraint from Boudaud & Cirelli (2019)
-        prop_A = False
+        prop_A = True
         with_bkg_subtr = True
-        prop_B_lower = True
+        prop_B_lower = False
 
         # Load delta-function MF constraint from Boudaud & Cirelli (2019)
-        m_delta_loaded, f_max_loaded = load_data_Voyager_BC19(
-            Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
-
-        m_delta_extrapolated = 10**np.arange(11,
-                                             np.log10(min(m_delta_loaded))+0.01, 0.1)
-        f_max_extrapolated = min(
-            f_max_loaded) * np.power(m_delta_extrapolated / min(m_delta_loaded), exponent_PL_lower)
-        f_max = np.concatenate((f_max_extrapolated, f_max_loaded))
-        m_delta = np.concatenate((m_delta_extrapolated, m_delta_loaded))
+        m_delta_loaded, f_max_loaded = load_data_Voyager_BC19(Deltas=Deltas, Delta_index=0, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, mf=None)
 
     elif plot_KP23:
 
@@ -3275,8 +3244,13 @@ if "__main__" == __name__:
         exponent_PL_lower = 2.0
 
         # Load delta-function MF constraint from Boudaud & Cirelli (2019)
-        m_delta, f_max = load_data_KP23(
-            Deltas=Deltas, Delta_index=0, mf=None, exponent_PL_lower=exponent_PL_lower)
+        m_delta_loaded, f_max_loaded = load_data_KP23(Deltas=Deltas, Delta_index=0, mf=None, exponent_PL_lower=exponent_PL_lower)
+
+    m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_loaded))+0.01, 0.1)
+    f_max_extrapolated = min(f_max_loaded) * np.power(m_delta_extrapolated / min(m_delta_loaded), exponent_PL_lower)
+    f_max = np.concatenate((f_max_extrapolated, f_max_loaded))
+    m_delta = np.concatenate((m_delta_extrapolated, m_delta_loaded))
+
 
     # Range of characteristic masses for obtaining constraints
     mc_Carr21 = 10**np.arange(14, 22.5, 0.1)
@@ -3284,49 +3258,32 @@ if "__main__" == __name__:
     # Values of sigma (parameter in log-normal distribution)
     sigmas = [sigmas_LN[-1], 2]
 
-    f_PBH_evolved_sigma0 = constraint_Carr(
-        mc_Carr21, m_delta, f_max, LN, [sigmas[0]], evolved=True)
-    f_PBH_evolved_sigma1 = constraint_Carr(
-        mc_Carr21, m_delta, f_max, LN, [sigmas[1]], evolved=True)
+    f_PBH_evolved_sigma0 = constraint_Carr(mc_Carr21, m_delta, f_max, LN, [sigmas[0]], evolved=True)
+    f_PBH_evolved_sigma1 = constraint_Carr(mc_Carr21, m_delta, f_max, LN, [sigmas[1]], evolved=True)
     if original:
         ax.plot(m_delta, f_max, color="k", label="Delta func.")
-        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color,
-                linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
-        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color,
-                linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
-        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid",
-                label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_c$")
-        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted",
-                label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_c$")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_c$")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_c$")
     elif generic_mass:
         ax.plot(m_delta, f_max, color="k", label=r"Delta func., $m_{\rm x}=m$")
-        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color,
-                linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_{\rm p}$")
-        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color,
-                linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm x} = m_{\rm p}$")
-        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid",
-                label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_c$")
-        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted",
-                label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm x} = m_c$")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_{\rm p}$")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm x} = m_{\rm p}$")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_c$")
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm x} = m_c$")
     elif text_on_plot:
         ax.plot(m_delta, f_max, color="k", label="Delta func.")
-        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2),
-                f_PBH_evolved_sigma0, color=comp_color, linestyle="solid")
-        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2),
-                f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted")
         ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid")
         ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted")
 
-        ax.text(2.5e16, 1e-2, "Delta-func.", color="k",
-                rotation=80, fontsize="xx-small")
-        ax.text(2.5e17, 1.5e-3, "LN ($\sigma={:.1f}$), ".format(
-            sigmas[0]) + r"against $m_{\rm p}$", color="r", rotation=70, fontsize="xx-small")
-        ax.text(2e18, 3e-2, "LN ($\sigma={:.1f}$), ".format(
-            sigmas[1]) + r"against $m_{\rm p}$", color="r", rotation=70, fontsize="xx-small")
-        ax.text(1.3e19, 8e-3, "LN ($\sigma={:.1f}$), ".format(
-            sigmas[0]) + r"against $m_{c}$", color="b", rotation=70, fontsize="xx-small")
-        ax.text(5e19, 5e-3, "LN ($\sigma={:.1f}$), ".format(
-            sigmas[1]) + r"against $m_{c}$", color="b", rotation=70, fontsize="xx-small")
+        ax.text(2.5e16, 1e-2, "Delta-func.", color="k", rotation=80, fontsize="xx-small")
+        ax.text(2.5e17, 1.5e-3, "LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"against $m_{\rm p}$", color="r", rotation=70, fontsize="xx-small")
+        ax.text(2e18, 3e-2, "LN ($\sigma={:.1f}$), ".format(sigmas[1]) + r"against $m_{\rm p}$", color="r", rotation=70, fontsize="xx-small")
+        ax.text(1.3e19, 8e-3, "LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"against $m_{c}$", color="b", rotation=70, fontsize="xx-small")
+        ax.text(5e19, 5e-3, "LN ($\sigma={:.1f}$), ".format(sigmas[1]) + r"against $m_{c}$", color="b", rotation=70, fontsize="xx-small")
 
     ax.set_ylabel(r"$f_{\rm PBH}$")
     ax.set_ylim(1e-3, 1)
@@ -3336,123 +3293,20 @@ if "__main__" == __name__:
 
     x_major = mpl.ticker.LogLocator(base=10.0, numticks=10)
     ax.xaxis.set_major_locator(x_major)
-    x_minor = mpl.ticker.LogLocator(
-        base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=10)
+    x_minor = mpl.ticker.LogLocator(base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=10)
     ax.xaxis.set_minor_locator(x_minor)
     ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
     ax.tick_params("x", pad=7, which="both")
     ax.set_ylabel(r"$f_{\rm PBH}$")
 
     if not text_on_plot:
-        ax.legend(fontsize="xx-small")
+        ax.legend(fontsize="xx-small", loc="upper left")
     if not generic_mass:
         ax.set_xlabel(r"$m~[{\rm g}]$")
     elif generic_mass:
         ax.set_xlabel(r"$m_{\rm x}~[{\rm g}]$")
     fig.tight_layout(pad=0.3)
 
-
-# %% Version with different values of sigma shown in each figure, with m_c and m_p used as the x-axis.
-
-def mc_to_mp(m_c):
-    return m_c * np.exp(-sigma**2)
-
-
-def mp_to_mc(m_p):
-    return m_p * np.exp(sigma**2)
-
-
-if "__main__" == __name__:
-
-    # Load mass function parameters.
-    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3,
-        betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-
-    exponent_PL_lower = 2
-
-    data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower)
-
-    # Plot psi_N, f_max and the integrand in the same figure window
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-
-    # Plot delta-function MF constraint from Boudaud & Cirelli (2019)
-    prop_A = False
-    with_bkg_subtr = True
-    prop_B_lower = True
-
-    # Load delta-function MF constraint from Boudaud & Cirelli (2019)
-    m_delta_BC19_loaded, f_max_BC19_loaded = load_data_Voyager_BC19(
-        Deltas=Deltas, Delta_index=0, prop_A=False, with_bkg_subtr=True, prop_B_lower=True, mf=None)
-    m_delta_BC19_extrapolated = 10**np.arange(11,
-                                              np.log10(min(m_delta_BC19_loaded))+0.01, 0.1)
-    f_max_BC19_extrapolated = min(f_max_BC19_loaded) * np.power(
-        m_delta_BC19_extrapolated / min(m_delta_BC19_loaded), exponent_PL_lower)
-    f_max_BC19 = np.concatenate((f_max_BC19_extrapolated, f_max_BC19_loaded))
-    m_delta_BC19 = np.concatenate(
-        (m_delta_BC19_extrapolated, m_delta_BC19_loaded))
-
-    # Range of characteristic masses for obtaining constraints
-    mc_Carr21 = np.logspace(14, 22, 1000)
-    mc_Carr21 = 10**np.arange(14, 22.5, 0.1)
-
-    # Calculate delta-function MF constraint from Carr et al. (2021), using the fitting formula for beta prime
-    ax.plot(m_delta_BC19, f_max_BC19, color="k")
-    ax.plot(m_delta_BC19 * np.exp(-sigma**2), f_max_BC19, color="r")
-
-    for i, ax in enumerate(axes.flatten()):
-
-        plotter_BC19(Deltas, 0, ax, color="r", prop_A=prop_A,
-                     with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower)
-
-        ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
-
-        # Values of sigma (parameter in log-normal distribution)
-        sigmas = [sigmas_LN[-1], 2]
-
-        # Line styles to use for results obtained with different sigmas
-        alphas = [1, 0.5]
-
-        for k, sigma in enumerate(sigmas):
-            f_PBH_BC19_evolved = constraint_Carr(
-                mc_Carr21, m_delta_BC19, f_max_BC19, LN, [sigma], evolved=True)
-            mp_Carr21 = mc_Carr21 * np.exp(-sigma**2)
-            if i == 0:
-                ax.plot(mp_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted",
-                        alpha=alphas[k], label="$\sigma={:.1f}$".format(sigma))
-                ax.set_xlabel(r"$m_{\rm p}~[{\rm g}]$")
-                ax1.set_xlabel(r"$m_{\rm p}~[M_\odot]$", labelpad=14)
-                ax.legend(fontsize="small")
-            elif i == 1:
-                ax.plot(mc_Carr21, f_PBH_BC19_evolved, color="r", linestyle="dotted",
-                        alpha=alphas[k], label="$\sigma={:.1f}$".format(sigma))
-                ax.set_xlabel(r"$m_c~[{\rm g}]$")
-                ax1.set_xlabel(r"$m_c~[M_\odot]$", labelpad=14)
-
-        ax.set_ylabel(r"$f_{\rm PBH}$")
-        ax.set_xlim(1e16, 5e20)
-        ax.set_ylim(1e-3, 1)
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-
-        x_major = mpl.ticker.LogLocator(base=10.0, numticks=10)
-        ax.xaxis.set_major_locator(x_major)
-        x_minor = mpl.ticker.LogLocator(
-            base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=10)
-        ax.xaxis.set_minor_locator(x_minor)
-        ax.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-        ax.tick_params("x", pad=7)
-        ax1.tick_params("x")
-
-        x_major = mpl.ticker.LogLocator(base=10.0, numticks=10)
-        ax1.xaxis.set_major_locator(x_major)
-        x_minor = mpl.ticker.LogLocator(
-            base=10.0, subs=np.arange(1.0, 10.0) * 0.1, numticks=10)
-        ax1.xaxis.set_minor_locator(x_minor)
-        ax1.xaxis.set_minor_formatter(mpl.ticker.NullFormatter())
-        ax1.tick_params("x", pad=7)
-
-    fig.subplots_adjust(hspace=0.1)
-    fig.tight_layout(pad=0.3)
 
     # %%
 if "__main__" == __name__:
