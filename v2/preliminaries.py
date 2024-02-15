@@ -60,8 +60,8 @@ if "__main__" == __name__:
     
     # Check file loads correctly
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-    
   
+    
 #%% Functions
 
 def load_data(filename, directory="./Extracted_files/"):
@@ -346,7 +346,7 @@ def m_peak_LN(m_c, sigma):
     return m_c * np.exp(-sigma**2)   
 
 
-def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
+def m_max_SLN(m_c, sigma, alpha, log_m_factor=4, n_steps=1000):
     """
     Estimate the mass at which the skew-lognormal mass function is maximised.
     Parameters
@@ -359,10 +359,10 @@ def m_max_SLN(m_c, sigma, alpha, log_m_factor=5, n_steps=100000):
         Parameter controls the skewness (alpha=0 reduces to a lognormal).
     log_m_factor : Float, optional
         Number of multiples of sigma (in log-space) of masses around m_c to 
-        consider when estimating the maximum. The default is 5.
+        consider when estimating the maximum. The default is 4.
     n_steps : Integer, optional
         Number of masses to use for estimating the peak mass of the skew-
-        lognormal mass function. The default is 100000.
+        lognormal mass function. The default is 1000.
     Returns
     -------
     Float
@@ -620,9 +620,9 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
         mf_string += "_wide"
 
     # Load Isatis constraints data.
-    constraints_file = np.genfromtxt("%sresults_photons_%s.txt" % (
-        Isatis_path, mf_string), dtype="str", unpack=True)[1:]
-
+    constraints_file = np.genfromtxt("%sresults_photons_%s.txt" % (Isatis_path, mf_string), dtype="str", unpack=True)[1:]
+    print("%sresults_photons_%s.txt" % (Isatis_path, mf_string))
+    
     constraints_names = []
     f_PBH_Isatis = []
 
@@ -630,8 +630,7 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
     # (i.e. the constraints are non-zero and positive).
     for i in range(len(constraints_file)):
 
-        constraint = [float(constraints_file[i][j])
-                      for j in range(1, len(constraints_file[i]))]
+        constraint = [float(constraints_file[i][j])for j in range(1, len(constraints_file[i]))]
 
         if not(all(np.array(constraint) <= 0)):
 
@@ -983,7 +982,7 @@ if "__main__" == __name__:
     fig.tight_layout()
     
   
- #%% Reproduce Fig. 2 of Mosbech & Picker (2022)
+#%% Reproduce Fig. 2 of Mosbech & Picker (2022)
 
 if "__main__" == __name__:
     
@@ -992,6 +991,7 @@ if "__main__" == __name__:
     # corresponding to evolved masses at t=t_0 as low as a few times 10^11 g.
     #m_pbh_values_formation_to_evolve = np.concatenate((np.arange(7.473420349255e+14, 7.4734203494e+14, 5e2), np.arange(7.4734203494e+14, 7.47344e+14, 1e7), np.logspace(np.log10(7.474e14), 17, 500)))
     m_pbh_values_formation_to_evolve = np.concatenate((np.arange(m_star, m_star*(1+1e-11), 5e2), np.arange(m_star*(1+1e-11), m_star*(1+1e-6), 1e7), np.logspace(np.log10(m_star*(1+1e-4)), 17, 500)))
+
     m_pbh_values_evolved = mass_evolved(m_pbh_values_formation_to_evolve, t_0)
     m_pbh_t_init = mass_evolved(m_pbh_values_formation_to_evolve, 0)
 
@@ -2525,6 +2525,7 @@ if "__main__" == __name__:
             ax.set_yscale("log")
             ax.set_title("$\Delta={:.1f}$".format(Deltas[i]))
             fig.tight_layout()
+    
             
     #%% Illustrate issue of using trapezoidal rule to integrate non-continuous functions
     
@@ -2544,3 +2545,129 @@ if "__main__" == __name__:
     plt.ylabel("y")
     plt.tight_layout()
     
+    
+#%% Sanity check: calculate one value of the extended MF constraint (for Figs. 2-3)
+
+if "__main__" == __name__:
+    
+    m_pbh_GECCO, f_max_GECCO = load_data("2101.01370/2101.01370_Fig9_GC_NFW.csv")
+    m_pbh_Voyager, f_max_Voyager = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+    m_pbh_KP23, f_max_KP23 = load_data("2302.04408/2302.04408_MW_diffuse_SPI.csv")
+    
+    Delta_index = 6
+    if Delta_index < 6:
+        m_p = 1e17
+    else:
+        m_p = 1e18
+        
+    calc_GCC = True
+    calc_LN = False
+    calc_SLN = False    
+        
+    if calc_GCC:
+        mf = CC3
+        m_c = m_p
+        params = [alphas_CC3[Delta_index], betas[Delta_index]]
+    elif calc_LN:
+        mf = LN
+        m_c = m_p * np.exp(sigmas_LN[Delta_index]**2)
+        params = [sigmas_LN[Delta_index]]
+    elif calc_SLN:
+        mf = SLN
+        params = [sigmas_SLN[Delta_index], alphas_SLN[Delta_index]]
+        if Delta_index == 0:
+            m_c = 1.53 * m_p   # for Delta = 0
+        elif Delta_index == 5:
+            m_c = 3.24 * m_p   # for Delta = 2
+        elif Delta_index == 6:
+            m_c = 6.8 * m_p   # for Delta = 5
+        print("Peak mass (SLN) = {:.2e} g".format(m_max_SLN(m_c, *params)))
+
+    print("m_p = {:.2e} g".format(m_p))
+    
+    f_PBH_GECCO = 1 / np.trapz(mf(m_pbh_GECCO, m_c, *params) / f_max_GECCO, m_pbh_GECCO)
+    f_PBH_Voyager = 1 / np.trapz(mf(m_pbh_Voyager, m_c, *params) / f_max_Voyager, m_pbh_Voyager)
+    
+    m_pbh_KP23_extrapolated = np.logspace(11, 16, 51)
+    f_max_KP23_extrapolated = min(f_max_KP23) * np.power(m_pbh_KP23_extrapolated/min(m_pbh_KP23), 2)
+    
+    m_pbh_KP23_total = np.concatenate((m_pbh_KP23_extrapolated, m_pbh_KP23))
+    f_max_KP23_total = np.concatenate((f_max_KP23_extrapolated, f_max_KP23))
+    
+    f_PBH_KP23 = 1 / np.trapz(mf(m_pbh_KP23, m_c, *params) / f_max_KP23, m_pbh_KP23)
+    f_PBH_KP23_extrapolated = 1 / np.trapz(mf(m_pbh_KP23_total, m_c, *params) / f_max_KP23_total, m_pbh_KP23_total)
+
+    print("f_PBH (GECCO) = {:.3e}".format(f_PBH_GECCO))
+    print("f_PBH (Voyager 1) = {:.3e}".format(f_PBH_Voyager))
+    print("f_PBH (INTEGRAL) = {:.3e}".format(f_PBH_KP23))
+    print("f_PBH (INTEGRAL) [f_max extrapolated] = {:.3e}".format(f_PBH_KP23_extrapolated))
+  
+    m_pbh_HSC, f_max_HSC = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
+    m_pbh_Sugiyama, f_max_Sugiyama = load_data("1905.06066/1905.06066_Fig8_finite+wave.csv")
+
+    m_p = 1e23
+    
+    if calc_GCC:
+        mf = CC3
+        m_c = m_p
+        params = [alphas_CC3[Delta_index], betas[Delta_index]]
+    elif calc_LN:
+        mf = LN
+        m_c = m_p * np.exp(sigmas_LN[Delta_index]**2)
+        params = [sigmas_LN[Delta_index]]
+    elif calc_SLN:
+        mf = SLN
+        params = [sigmas_SLN[Delta_index], alphas_SLN[Delta_index]]
+        if Delta_index == 0:
+            m_c = 1.53 * m_p   # for Delta = 0
+        elif Delta_index == 5:
+            m_c = 3.24 * m_p   # for Delta = 2
+        elif Delta_index == 6:
+            m_c = 6.8 * m_p   # for Delta = 5
+        print("Peak mass (SLN) = {:.2e} g".format(m_max_SLN(m_c, *params)))
+
+    print("m_p = {:.2e} g".format(m_p))
+
+    print("\nm_p = {:.2e} g".format(m_p))
+    
+    f_PBH_HSC = 1 / np.trapz(mf(m_pbh_HSC, m_c, *params) / f_max_HSC, m_pbh_HSC)
+    f_PBH_Sugiyama = 1 / np.trapz(mf(m_pbh_Sugiyama, m_c, *params) / f_max_Sugiyama, m_pbh_Sugiyama)
+    print("f_PBH (HSC) = {:.3e}".format(f_PBH_HSC))
+    print("f_PBH (Sugiyama proposal) = {:.3e}".format(f_PBH_Sugiyama))
+
+
+#%% Sanity check: calculate one value of the extended MF constraint (for Fig. 4)
+
+if "__main__" == __name__:
+    
+    m_pbh_Voyager, f_max_Voyager = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
+    
+    mf = LN
+    
+    for sigma in [sigmas_LN[-1], 2]:
+        m_p = 1e18
+        print("sigma = {:.2f}".format(sigma))
+
+        m_c = m_p * np.exp(sigma**2)
+        params = [sigma]
+        
+        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_pbh_Voyager))+0.01, 0.1)
+        f_max_extrapolated = min(f_max_Voyager) * np.power(m_delta_extrapolated / min(m_pbh_Voyager), 2)
+    
+        f_max_total = np.concatenate((f_max_extrapolated, f_max_Voyager))
+        m_delta_total = np.concatenate((m_delta_extrapolated, m_pbh_Voyager))
+
+    
+        print("m_p = {:.2e} g".format(m_p))
+        f_PBH_Voyager = 1 / np.trapz(mf(m_pbh_Voyager, m_c, *params) / f_max_Voyager, m_pbh_Voyager)
+        f_PBH_Voyager_extrapolated = 1 / np.trapz(mf(m_delta_total, m_c, *params) / f_max_total, m_delta_total)
+        print("f_PBH (Voyager 1) = {:.3e}".format(f_PBH_Voyager))
+        print("f_PBH (Voyager 1) [f_max extrapolated] = {:.3e}".format(f_PBH_Voyager_extrapolated))
+    
+        m_c = 2e19 
+        print("m_c = {:.2e} g".format(m_c))
+        f_PBH_Voyager = 1 / np.trapz(mf(m_pbh_Voyager, m_c, *params) / f_max_Voyager, m_pbh_Voyager)
+        f_PBH_Voyager_extrapolated = 1 / np.trapz(mf(m_delta_total, m_c, *params) / f_max_total, m_delta_total)
+        print("f_PBH (Voyager 1) = {:.3e}".format(f_PBH_Voyager))
+        print("f_PBH (Voyager 1) [f_max extrapolated] = {:.3e}".format(f_PBH_Voyager_extrapolated))
+
