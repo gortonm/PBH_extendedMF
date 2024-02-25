@@ -1443,25 +1443,25 @@ if "__main__" == __name__:
         fname_base_SLN = "SL_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         fname_base_LN = "LN_D={:.1f}_dm{:.0f}_".format(Deltas[j], -np.log10(delta_log_m)) + energies_string + "_c{:.0f}".format(-np.log10(cutoff))
         
-        constraints_names_evap, f_PBH_SLN_unevolved = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
-        constraints_names_evap, f_PBH_CC3_unevolved = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
-        constraints_names, f_PBH_LN_unevolved = load_results_Isatis(mf_string=fname_base_LN, modified=True)
-        
-        mp_SLN_unevolved = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j]) for m_c in mc_values_old]
-        mp_LN_unevolved = mc_values_old * np.exp(-sigmas_LN[j]**2)
+        constraints_names, f_PBH_SLN_unevolved_old = load_results_Isatis(mf_string=fname_base_SLN, modified=True)
+        constraints_names, f_PBH_CC3_unevolved_old = load_results_Isatis(mf_string=fname_base_CC3, modified=True)
+        constraints_names, f_PBH_LN_unevolved_old = load_results_Isatis(mf_string=fname_base_LN, modified=True)
+
+        mp_SLN_unevolved_old = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j]) for m_c in mc_values_old]
+        mp_LN_unevolved_old = mc_values_old * np.exp(-sigmas_LN[j]**2)
         
         for i in range(len(constraints_names)):
             if plot_LN:
-                ax.plot(mp_LN_unevolved, f_PBH_LN_unevolved[i], label=constraints_names[i], color=colors_evap[i])
+                ax.plot(mp_LN_unevolved_old, f_PBH_LN_unevolved_old[i], label=constraints_names[i], color=colors_evap[i])
             elif plot_SLN:
-                ax.plot(mp_SLN_unevolved, f_PBH_SLN_unevolved[i], label=constraints_names[i], color=colors_evap[i])
+                ax.plot(mp_SLN_unevolved_old, f_PBH_SLN_unevolved_old[i], label=constraints_names[i], color=colors_evap[i])
             elif plot_CC3:
-                ax.plot(mc_values_old, f_PBH_CC3_unevolved[i], label=constraints_names[i], color=colors_evap[i])
+                ax.plot(mc_values_old, f_PBH_CC3_unevolved_old[i], label=constraints_names[i], color=colors_evap[i])
                 
             # Load and plot results for the unevolved mass functions
-            data_filename_LN_unevolved = "./Data-tests/unevolved" + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-            data_filename_SLN_unevolved = "./Data-tests/unevolved" + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
-            data_filename_CC3_unevolved = "./Data-tests/unevolved" + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_LN_unevolved = "./Data-tests/unevolved" + "/LN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_SLN_unevolved = "./Data-tests/unevolved" + "/SLN_GC_%s" % constraints_names_short[i]  + "_Delta={:.1f}_unevolved.txt".format(Deltas[j])
+            data_filename_CC3_unevolved = "./Data-tests/unevolved" + "/CC3_GC_%s" % constraints_names_short[i]  + "_Delta={:.1f}_unevolved.txt".format(Deltas[j])
 
             mc_LN_unevolved, f_PBH_LN_unevolved = np.genfromtxt(data_filename_LN_unevolved, delimiter="\t")
             mc_SLN_unevolved, f_PBH_SLN_unevolved = np.genfromtxt(data_filename_SLN_unevolved, delimiter="\t")
@@ -1478,9 +1478,9 @@ if "__main__" == __name__:
                 ax.plot(mp_CC3_unevolved, f_PBH_CC3_unevolved, color=colors_evap[i], linestyle="None", marker="x")                
 
             # Load and plot results for the 'evolved' mass functions evaluated at the initial time t_init = 0
-            data_filename_LN_t_init = "./Data-tests/t_initial" + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_SLN_t_init = "./Data-tests/t_initial" + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
-            data_filename_CC3_t_init = "./Data-tests/t_initial" + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_LN_t_init = "./Data-tests/t_initial" + "/LN_GC_%s" % constraints_names_short[i] + "_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_SLN_t_init = "./Data-tests/t_initial" + "/SLN_GC_%s" % constraints_names_short[i]  + "_Delta={:.1f}.txt".format(Deltas[j])
+            data_filename_CC3_t_init = "./Data-tests/t_initial" + "/CC3_GC_%s" % constraints_names_short[i]  + "_Delta={:.1f}.txt".format(Deltas[j])
 
             mc_LN_t_init, f_PBH_LN_t_init = np.genfromtxt(data_filename_LN_t_init, delimiter="\t")
             mc_SLN_t_init, f_PBH_SLN_t_init = np.genfromtxt(data_filename_SLN_t_init, delimiter="\t")
@@ -1491,13 +1491,13 @@ if "__main__" == __name__:
             
             if plot_LN:
                 ax.plot(mp_LN_t_init, f_PBH_LN_t_init, color=colors_evap[i], linestyle="None", marker="+")    
-                ax1.plot(mp_LN_unevolved, np.interp(mp_LN_unevolved, mp_LN_unevolved, f_PBH_SLN_unevolved) / f_PBH_LN_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
+                ax1.plot(mp_LN_unevolved, np.interp(mp_LN_unevolved, mp_LN_unevolved_old, f_PBH_LN_unevolved_old[i]) / f_PBH_LN_unevolved - 1, color=colors_evap[i], linestyle="None", marker="+")
             elif plot_SLN:
                 ax.plot(mp_SLN_t_init, f_PBH_SLN_t_init, color=colors_evap[i], linestyle="None", marker="+")   
-                ax1.plot(mp_SLN_unevolved, np.interp(mp_SLN_unevolved, mp_SLN_unevolved, f_PBH_SLN_unevolved) / f_PBH_SLN_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
+                ax1.plot(mp_SLN_unevolved, np.interp(mp_SLN_unevolved, mp_SLN_unevolved_old, f_PBH_SLN_unevolved_old[i]) / f_PBH_SLN_unevolved- 1, color=colors_evap[i], linestyle="None", marker="+")
             elif plot_CC3:
                 ax.plot(mp_CC3_t_init, f_PBH_CC3_t_init, color=colors_evap[i], linestyle="None", marker="+")
-                ax1.plot(mc_values_old, np.interp(mc_values_old, mp_CC3_unevolved, f_PBH_CC3_unevolved) / f_PBH_CC3_unevolved[i] - 1, color=colors_evap[i], linestyle="None", marker="+")
+                ax1.plot(mp_CC3_unevolved, np.interp(mp_CC3_unevolved, mc_values_old, f_PBH_CC3_unevolved_old[i]) / f_PBH_CC3_unevolved - 1, color=colors_evap[i], linestyle="None", marker="+")
                                     
         ax.plot(0, 0, linestyle="None", color="k", marker="+", label="Test (approximate): $t=0$")
         ax.plot(0, 0, linestyle="None", color="k", marker="x", label="Test (approximate): unevolved")
@@ -1706,11 +1706,6 @@ if "__main__" == __name__:
             f_PBH_instrument_SLN_evolved = []
             f_PBH_instrument_CC3_evolved = []
             
-            if extrapolate_numeric_lower:
-                extrapolate_numeric = "extrap_lower"
-            else:
-                extrapolate_numeric = ""
-
             for i in range(len(constraints_names)):
                 
                 if i in (0, 2, 4, 7):
@@ -1737,9 +1732,9 @@ if "__main__" == __name__:
                     data_filename_SLN = data_folder_unevolved + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
                     data_filename_CC3 = data_folder_unevolved + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_unevolved.txt".format(Deltas[j])
 
-                    data_filename_LN_evolved = data_folder + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-                    data_filename_SLN_evolved = data_folder + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
-                    data_filename_CC3_evolved = data_folder + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                    data_filename_LN_evolved = data_folder_evolved + "/LN_EXGB_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                    data_filename_SLN_evolved = data_folder_evolved + "/SLN_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
+                    data_filename_CC3_evolved = data_folder_evolved + "/CC3_EXGB_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx.txt".format(Deltas[j])
                         
                     mc_LN, f_PBH_LN = np.genfromtxt(data_filename_LN, delimiter="\t")
                     mc_SLN, f_PBH_SLN = np.genfromtxt(data_filename_SLN, delimiter="\t")
@@ -1764,9 +1759,9 @@ if "__main__" == __name__:
             mp_CC3 = mc_values
             
             # Plot the tightest constraint (of the different instruments) for each peak mass
-            ax1.plot(mp_LN, envelope(f_PBH_instrument_LN_evolved), style_markers[k], color="r")
-            ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN_evolved), style_markers[k], color="b")
-            ax3.plot(mp_CC3_evolved, envelope(f_PBH_instrument_CC3_evolved), style_markers[k], color="g")
+            ax1.plot(mp_LN, envelope(f_PBH_instrument_LN), style_markers[k], color="r")
+            ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN), style_markers[k], color="b")
+            ax3.plot(mp_CC3_evolved, envelope(f_PBH_instrument_CC3), style_markers[k], color="g")
 
             ax1.plot(mp_LN, envelope(f_PBH_instrument_LN), style_markers[k], color="r", alpha=0.4)
             ax2.plot(mp_SLN, envelope(f_PBH_instrument_SLN), style_markers[k], color="b", alpha=0.4)
@@ -2264,11 +2259,11 @@ if "__main__" == __name__:
 
                 ax0.plot(m_delta_extrapolated, f_max_extrapolated, style_markers[k], color=colors_evap[i])
                 ax0.plot(m_delta_values_loaded[m_delta_values_loaded > 1e15], f_max_loaded_truncated, color=colors_evap[i])
-
+                
                 # Load constraints for an evolved extended mass function obtained from each instrument
-                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_mmin=1e15g.txt".format(Deltas[j])
-                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_mmin=1e15g.txt".format(Deltas[j])
-                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_mmin=1e15g.txt".format(Deltas[j])
+                data_filename_LN = data_folder + "/LN_GC_%s" % constraints_names_short[i] + "_Carr_Delta={:.1f}_approx_mmin=1e15g.txt".format(Deltas[j])
+                data_filename_SLN = data_folder + "/SLN_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_mmin=1e15g.txt".format(Deltas[j])
+                data_filename_CC3 = data_folder + "/CC3_GC_%s" % constraints_names_short[i]  + "_Carr_Delta={:.1f}_approx_mmin=1e15g.txt".format(Deltas[j])
                     
                 mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
                 mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
@@ -2305,13 +2300,19 @@ if "__main__" == __name__:
             ax0.set_xscale("log")
             ax0.set_yscale("log")
             
+            # Plot extended MF constraints from Galactic Centre photons calculated using Isatis
+            plotter_GC_Isatis(Deltas, j, ax1, color="tab:grey", mf=LN, params=[sigmas_LN[j]], linestyle="dotted")
+            plotter_GC_Isatis(Deltas, j, ax2, color="tab:grey", mf=SLN, params=[sigmas_SLN[j], alphas_SLN[j]], linestyle="dotted")
+            plotter_GC_Isatis(Deltas, j, ax3, color="tab:grey", mf=CC3, params=[alphas_CC3[j], betas[j]], linestyle="dotted")
+
+            
             for ax in [ax1, ax2, ax3]:
                 
                 if Deltas[j] < 5:
                     ax.set_xlim(1e16, 3e17)
                 else:
                     ax.set_xlim(1e16, 1e18)
-                   
+                                       
                 ax.set_ylim(1e-4, 1)
                 ax.set_ylabel("$f_\mathrm{PBH}$")
                 ax.set_xlabel("$m_p~[\mathrm{g}]$")
@@ -2495,6 +2496,7 @@ if "__main__" == __name__:
     ax.set_xlabel("$m_i~[\mathrm{g}]$")
     ax.set_ylabel(r"$\beta '$")
     fig.tight_layout()
+    
     
 #%% Compare extragalactic gamma-ray background constraints calculated with PYTHIA and Hazma hadronisation tables.
 

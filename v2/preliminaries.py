@@ -859,6 +859,38 @@ if "__main__" == __name__:
         ax.set_ylabel("$\psi~[\mathrm{g}^{-1}]$")
         fig.tight_layout()
                         
+        
+#%% Plot the SLN at small masses, compare to (m/m_p)^|alpha|.
+
+if "__main__" == __name__:
+    
+    # Mass function parameter values, from 2009.03204.
+    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+
+    for Delta_index in range(len(Deltas)):
+        
+        print(Delta_index)
+        
+        fig, ax = plt.subplots(figsize=(6,6))
+        m_c = 1e20
+        m_p = m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000)
+        m_pbh_values = np.logspace(np.log10(m_p)-5, np.log10(m_p)+5, 1000)
+        
+        SLN_actual = SLN(m_pbh_values, m_c, sigmas_SLN[Delta_index], alphas_SLN[Delta_index])
+        SLN_fit_alpha_power = SLN_actual[0] * np.power(m_pbh_values/m_pbh_values[0], np.abs(alphas_SLN[Delta_index]))
+        
+        ax.plot(m_pbh_values[SLN_actual > 0], SLN_actual[SLN_actual > 0])
+        ax.plot(m_pbh_values, SLN_fit_alpha_power, linestyle="dotted", label=r"$\propto (m / m_\mathrm{p})^{|\alpha|}$")
+        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
+        ax.set_ylim(SLN_actual[0], 10*max(SLN_actual))
+        ax.set_title("SLN, $\Delta={:.1f}$".format(Deltas[Delta_index]))
+        ax.set_xscale("log")
+        ax.set_yscale("log")
+        ax.set_xlabel("$m~[\mathrm{g}]$")
+        ax.set_ylabel("$\psi~[\mathrm{g}^{-1}]$")
+        ax.legend()
+        fig.tight_layout()
+
                         
 #%% Plot the fitting functions for Delta = 5.0, showing the behaviour deep into the high-mass tail.
 if "__main__" == __name__:
@@ -1495,7 +1527,7 @@ if "__main__" == __name__:
     [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
     
     # Peak mass, in grams
-    m_p = 5e17
+    m_p = 4e18
     
     # Choose mass parameter values for the skew-lognormal corresponding to the peak mass chosen   
     if Delta == 0:
@@ -1617,27 +1649,33 @@ if "__main__" == __name__:
         # Voyager 1 cosmic ray constraints, from Boudaud & Cirelli (2019) [1807.03075]
         
         # Boolean determines which propagation model to load data from
-        prop_A = False
+        prop_A = True
         prop_B = not prop_A
  
         # If True, use constraints obtained with background subtraction
         with_bkg_subtr = True
         
         # If True, load the more stringent "prop B" constraint
-        prop_B_lower = True
+        prop_B_lower = False
 
-        
-        if with_bkg_subtr:
-            if not prop_B_lower:
-                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_bkg_upper.csv")
+        if prop_A:
+            if with_bkg_subtr:
+                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_A_bkg.csv")
             else:
-                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_bkg_lower.csv")                        
-        else:
-            if not prop_B_lower:
-                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_nobkg_upper.csv")
-            else:
-                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")                        
+                m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_A_nobkg.csv")
     
+        elif prop_B:
+            if with_bkg_subtr:
+                if not prop_B_lower:
+                    m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_bkg_upper.csv")
+                else:
+                    m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_bkg_lower.csv")                        
+            else:
+                if not prop_B_lower:
+                    m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_nobkg_upper.csv")
+                else:
+                    m_pbh_values_loaded, f_max_loaded = load_data("1807.03075/1807.03075_prop_B_nobkg_lower.csv")                        
+                
         exponent_PL_lower = 2
     
         m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_pbh_values_loaded))+0.01, 0.1)
@@ -2039,6 +2077,8 @@ if "__main__" == __name__:
     print("Integral ({:.1e}g < M < {:.1e}g) / total integral [LN] = {:.3f}".format(m_min, m_max_CC3, (integral_upper - integral_lower) / integral_total))
     print("1 / total integral [LN] = {:.2e}".format(1 / integral_total))
     print("constraint_Carr result [LN] = {:.2e}".format(constraint_Carr([m_p*np.exp(sigmas_LN[i]**2)], m_pbh_values, f_max, LN, [sigmas_LN[i]], evolved=False)[0]))       
+    
+    
 #%% Find characteristic mass for which the minimum mass to include in a calculation is larger than 1e21g, the maximum mass for which I have calculated using isatis_reproduction.py.
 
 if "__main__" == __name__:
@@ -2144,36 +2184,7 @@ if "__main__" == __name__:
         ax.set_ylim(5e-6, 1)
         ax.legend(fontsize="x-small")
         fig.tight_layout()
-#%% Plot the SLN at small masses, compare to (m/m_p)^|alpha|.
 
-if "__main__" == __name__:
-    
-    # Mass function parameter values, from 2009.03204.
-    [Deltas, sigmas_LN, ln_mc_SL, mp_SL, sigmas_SLN, alphas_SLN, mp_CC, alphas_CC, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
-
-    for Delta_index in range(len(Deltas)):
-        
-        print(Delta_index)
-        
-        fig, ax = plt.subplots(figsize=(6,6))
-        m_c = 1e20
-        m_p = m_max_SLN(m_c, sigma=sigmas_SLN[Delta_index], alpha=alphas_SLN[Delta_index], log_m_factor=3, n_steps=1000)
-        m_pbh_values = np.logspace(np.log10(m_p)-5, np.log10(m_p)+5, 1000)
-        
-        SLN_actual = SLN(m_pbh_values, m_c, sigmas_SLN[Delta_index], alphas_SLN[Delta_index])
-        SLN_fit_alpha_power = SLN_actual[0] * np.power(m_pbh_values/m_pbh_values[0], np.abs(alphas_SLN[Delta_index]))
-        
-        ax.plot(m_pbh_values[SLN_actual > 0], SLN_actual[SLN_actual > 0])
-        ax.plot(m_pbh_values, SLN_fit_alpha_power, linestyle="dotted", label=r"$\propto (m / m_\mathrm{p})^{|\alpha|}$")
-        ax.set_xlim(min(m_pbh_values), max(m_pbh_values))
-        ax.set_ylim(SLN_actual[0], 10*max(SLN_actual))
-        ax.set_title("SLN, $\Delta={:.1f}$".format(Deltas[Delta_index]))
-        ax.set_xscale("log")
-        ax.set_yscale("log")
-        ax.set_xlabel("$m~[\mathrm{g}]$")
-        ax.set_ylabel("$\psi~[\mathrm{g}^{-1}]$")
-        ax.legend()
-        fig.tight_layout()
     
 #%% Plot the initial PBH mass against the evolved mass, using Eq. 7 of Mosbech & Picker (2022) [2203.05743].
 if "__main__" == __name__:
@@ -2338,6 +2349,7 @@ if "__main__" == __name__:
 
 
 #%% Microlensing constraints with numeric MF: compare evolved to unevolved MF
+
 if "__main__" == __name__:
     
     m_delta_Subaru, f_max_Subaru = load_data("2007.12697/Subaru-HSC_2007.12697_dx=5.csv")
@@ -2527,8 +2539,10 @@ if "__main__" == __name__:
             fig.tight_layout()
     
             
-    #%% Illustrate issue of using trapezoidal rule to integrate non-continuous functions
-    
+#%% Illustrate issue of using trapezoidal rule to integrate non-continuous functions
+
+if "__main__" == __name__:
+   
     x_values = np.arange(0, 10)
     y_values = np.concatenate((np.zeros(3), np.ones(4), np.zeros(3)))
     print(np.trapz(y_values, x_values))
@@ -2560,9 +2574,9 @@ if "__main__" == __name__:
     else:
         m_p = 1e18
         
-    calc_GCC = True
+    calc_GCC = False
     calc_LN = False
-    calc_SLN = False    
+    calc_SLN = True
         
     if calc_GCC:
         mf = CC3
