@@ -647,6 +647,26 @@ def load_results_Isatis(mf_string="mono_E500", modified=True, test_mass_range=Fa
             constraints_names.append(temp2)
 
     return constraints_names, f_PBH_Isatis
+#%% Tests of the method frac_diff:
+
+if "__main__" == __name__:
+
+    # Constant fractional difference
+    y1, y2 = 1.5*np.ones(10), np.ones(10)
+    x1 = x2 = np.linspace(0, 10, 10)
+    print(frac_diff(y1, y2, x1, x2))
+
+    y1, y2 = 1.5*np.ones(10), np.ones(30)
+    x1 = np.linspace(0, 10, 10)
+    x2 = np.linspace(-10, 20, 30)
+    print(frac_diff(y1, y2, x1, x2))
+
+    # x-dependent fractional difference
+    x1 = x2 = np.linspace(1, 10, 10)
+    y1 = 1 + x1**2
+    y2 = np.ones(10)
+    print(frac_diff(y1, y2, x1, x2))
+
 #%% Test of the methods SLN and CC3 by comparing to Fig. 5 of 2009.03204.
 
 if "__main__" == __name__:
@@ -2685,3 +2705,51 @@ if "__main__" == __name__:
         print("f_PBH (Voyager 1) = {:.3e}".format(f_PBH_Voyager))
         print("f_PBH (Voyager 1) [f_max extrapolated] = {:.3e}".format(f_PBH_Voyager_extrapolated))
 
+
+#%% Calculate the skew of each mass function, for Delta=(0, 2,5)
+# Should find that the Delta=5 SLN is the only MF that has positive skew in log-space
+
+if "__main__" == __name__:
+    
+    m_p = 1e20
+    print("m_p = {:.2e} g".format(m_p))
+    m_values = np.logspace(np.log10(m_p)-6, np.log10(m_p)+6, 100000)
+   
+    calc_GCC = False
+    calc_LN = False
+    calc_SLN = True
+    
+    for Delta_index in [0, 5, 6]:
+        print("\nDelta = {:.0f}".format(Deltas[Delta_index]))
+                
+        if calc_GCC:
+            mf = CC3
+            m_c = m_p
+            params = [alphas_CC3[Delta_index], betas[Delta_index]]
+            
+        elif calc_LN:
+            mf = LN
+            m_c = m_p * np.exp(sigmas_LN[Delta_index]**2)
+            params = [sigmas_LN[Delta_index]]
+            print("sigma (parameter) = {:.2e}".format(sigmas_LN[Delta_index]))
+
+        elif calc_SLN:
+            mf = SLN
+            params = [sigmas_SLN[Delta_index], alphas_SLN[Delta_index]]
+            if Delta_index == 0:
+                m_c = 1.53 * m_p   # for Delta = 0
+            elif Delta_index == 5:
+                m_c = 3.24 * m_p   # for Delta = 2
+            elif Delta_index == 6:
+                m_c = 6.8 * m_p   # for Delta = 5
+            print("Peak mass (SLN) = {:.2e} g".format(m_max_SLN(m_c, *params)))
+
+        mean = np.trapz(mf(m_values, m_c, *params) * np.log(m_values), m_values)
+        print("mean = {:.2e} g".format(np.exp(mean)))
+        variance = np.trapz(mf(m_values, m_c, *params) * np.log(m_values)**2, m_values) - mean**2
+        print("sigma (calculated) = {:.2e}".format(np.sqrt(variance)))
+        
+        # Expression for skewness from https://en.wikipedia.org/wiki/Skewness, adapted to log-space scenario
+        # Sanity check: values for log-normal should be negligible
+        skew = np.trapz(mf(m_values, m_c, *params) * np.power((np.log(m_values) - mean) / np.sqrt(variance), 3), m_values)
+        print("skew = {:.2e}".format(skew))
