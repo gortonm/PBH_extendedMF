@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 from preliminaries import load_data, m_max_SLN, load_results_Isatis, envelope, LN, SLN, CC3, frac_diff
-from plot_constraints import load_data_KP23, load_data_Voyager_BC19, plotter_GC_Isatis, plotter_KP23, plotter_BC19, set_ticks_grid
+from plot_constraints import load_data_KP23, load_data_Voyager_BC19, plotter_GC_Isatis, plotter_KP23, plotter_BC19, plotter_GECCO, set_ticks_grid
 
 # Specify the plot style
 mpl.rcParams.update({'font.size': 20, 'font.family':'serif'})
@@ -1057,14 +1057,13 @@ if "__main__" == __name__:
             f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
             ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
         
-        # Plot extended MF constraints from Korwar & Profumo (2023)
-        plotter_KP23(Deltas, j, ax1, color="tab:grey", mf=LN, linestyle="dashed")
-        plotter_KP23(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dashed")
-        plotter_KP23(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dashed")
-        
         plotter_BC19(Deltas, j, ax1, color="tab:grey", mf=LN, with_bkg_subtr=True, prop_A=True, linestyle="dashdot")
         plotter_BC19(Deltas, j, ax2, color="tab:grey", mf=SLN, with_bkg_subtr=True, prop_A=True, linestyle="dashdot")
         plotter_BC19(Deltas, j, ax3, color="tab:grey", mf=CC3, with_bkg_subtr=True, prop_A=True, linestyle="dashdot")
+ 
+        plotter_GECCO(Deltas, j, ax1, color="tab:grey", mf=LN, linestyle="dotted")
+        plotter_GECCO(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dotted")
+        plotter_GECCO(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
         
         ax0.plot(m_delta_values, f_max, color="tab:grey")
         ax0.set_xlabel("$m$ [g]")
@@ -1093,8 +1092,6 @@ if "__main__" == __name__:
 
 
 #%% Plot results obtained using different power-law exponents in f_max at low masses (prospective constraints from Fig. 5 of 2204.05337 (AMEGO))
-
-from plot_constraints import plotter_GECCO
 
 if "__main__" == __name__:
     
