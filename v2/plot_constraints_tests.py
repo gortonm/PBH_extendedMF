@@ -1020,13 +1020,6 @@ if "__main__" == __name__:
     # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
     m_delta_values, f_max = load_data("2204.05337/2204.05337_Fig5_gamma_1.csv")
     
-    # If True, extrapolate the numeric MF at small masses using a power-law motivated by critical collapse
-    extrapolate_numeric_lower = False
-    if extrapolate_numeric_lower:
-        extrapolate_numeric = "extrap_lower"
-    else:
-        extrapolate_numeric = ""
-
     # Calculate uncertainty in 511 keV line from the propagation model
     for j in range(len(Deltas)):
         
@@ -1096,6 +1089,94 @@ if "__main__" == __name__:
         ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
         ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
         fig.suptitle("e-ASTROGAM [2204.05337], $\Delta={:.1f}$".format(Deltas[j]))
+        fig.tight_layout()
+
+
+#%% Plot results obtained using different power-law exponents in f_max at low masses (prospective constraints from Fig. 5 of 2204.05337 (AMEGO))
+
+from plot_constraints import plotter_GECCO
+
+if "__main__" == __name__:
+    
+    # Load mass function parameters.
+    [Deltas, sigmas_LN, ln_mc_SLN, mp_SLN, sigmas_SLN, alphas_SLN, mp_CC3, alphas_CC3, betas] = np.genfromtxt("MF_params.txt", delimiter="\t\t ", skip_header=1, unpack=True)
+    
+    # Power-law exponent to use between 1e11g and the smallest mass the delta-function MF constraint is calculated for.   
+    exponents_PL_lower = [0]
+    
+    linestyles = ["solid", "dashed", "dashdot", "dotted"]
+    
+    # Load delta function MF constraints calculated using Isatis, to use the method from 1705.05567.
+    m_delta_values, f_max = load_data("2102.06714/2102.06714_Fig3_a_0.csv")
+    
+    # Calculate uncertainty in 511 keV line from the propagation model
+    for j in range(len(Deltas)):
+        
+        fig, axes = plt.subplots(2, 2, figsize=(13, 13))
+        
+        ax0 = axes[0][0]
+        ax1 = axes[0][1]
+        ax2 = axes[1][0]
+        ax3 = axes[1][1]
+                
+        m_delta_extrapolated = 10**np.arange(11, np.log10(min(m_delta_values))+0.01, 0.1)
+                
+        for k, exponent_PL_lower in enumerate(exponents_PL_lower):
+            
+            data_folder = "./Data-tests/PL_exp_{:.0f}".format(exponent_PL_lower) 
+            data_filename_LN = data_folder + "/LN_2102.06714_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_SLN = data_folder + "/SLN_2102.06714_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+            data_filename_CC3 = data_folder + "/CC3_2102.06714_Delta={:.1f}_extrapolated_exp{:.0f}.txt".format(Deltas[j], exponent_PL_lower)
+           
+            mc_LN_evolved, f_PBH_LN_evolved = np.genfromtxt(data_filename_LN, delimiter="\t")
+            mc_SLN_evolved, f_PBH_SLN_evolved = np.genfromtxt(data_filename_SLN, delimiter="\t")
+            mp_CC3_evolved, f_PBH_CC3_evolved = np.genfromtxt(data_filename_CC3, delimiter="\t")
+            mp_SLN = [m_max_SLN(m_c, sigma=sigmas_SLN[j], alpha=alphas_SLN[j]) for m_c in mc_SLN_evolved]
+            mp_LN = mc_LN_evolved * np.exp(-sigmas_LN[j]**2)
+                        
+            ax1.plot(mp_LN, f_PBH_LN_evolved, linestyle=linestyles[k], color="r", marker="None")
+            ax2.plot(mp_SLN, f_PBH_SLN_evolved, linestyle=linestyles[k], color="b", marker="None")
+            ax3.plot(mp_CC3_evolved, f_PBH_CC3_evolved, linestyle=linestyles[k], color="g", marker="None")
+            
+            ax1.set_title("LN")
+            ax2.set_title("SLN")
+            ax3.set_title("CC3")
+            
+            ax1.plot(0, 0, marker="None", linestyle=linestyles[k], color="k", label="{:.0f}".format(exponent_PL_lower))
+            f_max_extrapolated = f_max[0] * np.power(m_delta_extrapolated / min(m_delta_values), exponent_PL_lower)
+            ax0.plot(m_delta_extrapolated, f_max_extrapolated, color="tab:grey", linestyle=linestyles[k], label="{:.0f}".format(exponent_PL_lower))
+                
+        plotter_BC19(Deltas, j, ax1, color="tab:grey", mf=LN, with_bkg_subtr=True, prop_A=True, linestyle="dashdot")
+        plotter_BC19(Deltas, j, ax2, color="tab:grey", mf=SLN, with_bkg_subtr=True, prop_A=True, linestyle="dashdot")
+        plotter_BC19(Deltas, j, ax3, color="tab:grey", mf=CC3, with_bkg_subtr=True, prop_A=True, linestyle="dashdot")
+ 
+        plotter_GECCO(Deltas, j, ax1, color="tab:grey", mf=LN, linestyle="dotted")
+        plotter_GECCO(Deltas, j, ax2, color="tab:grey", mf=SLN, linestyle="dotted")
+        plotter_GECCO(Deltas, j, ax3, color="tab:grey", mf=CC3, linestyle="dotted")
+ 
+        ax0.plot(m_delta_values, f_max, color="tab:grey")
+        ax0.set_xlabel("$m$ [g]")
+        ax0.set_ylabel("$f_\mathrm{max}$")
+        ax0.set_xscale("log")
+        ax0.set_yscale("log")
+        ax0.set_xlim(min(m_delta_extrapolated), 1e18)
+        ax0.set_ylim(min(f_max), 1)
+        
+        for ax in [ax1, ax2, ax3]:
+            if Deltas[j] < 5:
+                ax.set_xlim(1e16, 1e18)
+            else:
+                ax.set_xlim(1e16, 7e18)
+               
+            ax.set_ylim(1e-6, 1)
+            ax.set_ylabel("$f_\mathrm{PBH}$")
+            ax.set_xlabel("$m_p~[\mathrm{g}]$")
+            ax.set_xscale("log")
+            ax.set_yscale("log")
+
+        ax0.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")        
+        ax1.legend(fontsize="x-small", title="PL exponent in $f_\mathrm{max}$ \n " + "($m < {:.0e}".format(min(m_delta_values)) + "~\mathrm{g}$)")
+        fig.suptitle("AMEGO [2102.06714], $\Delta={:.1f}$".format(Deltas[j]))
         fig.tight_layout()
 
 
