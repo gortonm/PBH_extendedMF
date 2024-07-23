@@ -994,7 +994,7 @@ if "__main__" == __name__:
 
     plot_existing = True    # If True, plot existing constraints
     plot_prospective = True    # If True, plot prospective future constraints
-    paper_only = False    # If True, plot only the constraints used in the paper
+    paper_only = True    # If True, plot only the constraints used in the paper
 
     fig, ax = plt.subplots(figsize=(8.5, 5.5))
 
@@ -1023,7 +1023,12 @@ if "__main__" == __name__:
         
             plotter_GC_Isatis(Deltas, Delta_index, ax, color="magenta")
             ax.text(1.2e15, 3e-5, "  GC photons \n (Isatis)", fontsize="xx-small", color="magenta")
-            
+ 
+            m_EXGB_Isatis, f_PBH_EXGB_Isatis = load_data("2201.01265/2201.01265_Fig3_EGXB.csv")
+            ax.plot(m_EXGB_Isatis, f_PBH_EXGB_Isatis, color="purple", linestyle="dashed")
+            ax.text(1.2e15, 3e-6, "  EXGB \n (Isatis)", fontsize="xx-small", color="purple")
+           
+ 
             m_D20_v2, fPBH_D20 = load_data("1912.01014/1912.01014_Fig2_a__0_newaxes_2.csv")
             r_s = 20    # scale radius, in kpc
             R_min = 1.5    # minimum positron propagation distance, in kpc
@@ -1035,10 +1040,16 @@ if "__main__" == __name__:
             ax.plot(m_D20_v2, fPBH_D20, color="darkturquoise")
             ax.text(1.2e15, 5e-3, "511 keV line \n (Dasgupta et al.)", fontsize="xx-small", color="darkturquoise")
             
+            """
             m_EXGB_Carr = 10**np.arange(np.log10(1e14), np.log10(1e17), 0.1)
             fPBH_EXGB_Carr = f_PBH_beta_prime(m_EXGB_Carr, beta_prime_gamma_rays(m_EXGB_Carr))
             ax.plot(m_EXGB_Carr, fPBH_EXGB_Carr, color="purple")
             ax.text(1.2e15, 2e-4, "Extragalactic \n photons \n (using Carr \n et al. \n 2021 fit)", fontsize="xx-small", color="purple")
+            """
+            
+            m_delta_Carr21_Fig7, beta_prime_Carr21_Fig7 = load_data("/2002.12778/Carr+21_Fig7.csv")
+            ax.plot(m_delta_Carr21_Fig7, f_PBH_beta_prime(m_delta_Carr21_Fig7, beta_prime_Carr21_Fig7), color="purple")
+            ax.text(1.2e15, 2e-4, "EXGB \n (Carr et al. 2021)", fontsize="xx-small", color="purple")
             
             m_delta_values_Berteaud, f_max_Berteaud = load_data("2202.07483/2202.07483_Fig3.csv")
             ax.plot(m_delta_values_Berteaud, f_max_Berteaud, color="b")
@@ -1070,13 +1081,15 @@ if "__main__" == __name__:
     ax.set_yscale("log")
     ax.set_xscale("log")
     ax.set_ylabel("$f_\mathrm{PBH}$")
-    ax.set_xlabel("$m~[\mathrm{g}]$")
+    #ax.set_xlabel("$m~[\mathrm{g}]$")
+    ax.set_xlabel(r"$M_{\rm PBH}~[\mathrm{g}]$")  # for thesis
     ax.set_ylim(1e-5, 1)
     ax.set_xlim(1e15, 1e24)
     #ax.set_xlim(1e15, 2e18)
 
     ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
-    ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+    #ax1.set_xlabel("$m~[M_\odot]$", labelpad=14)
+    ax1.set_xlabel(r"$M_{\rm PBH}~[M_\odot]$", labelpad=14)  # for thesis
     ax1.tick_params("x")
 
     ax2 = ax.secondary_yaxis('right')
@@ -1963,7 +1976,8 @@ if "__main__" == __name__:
         ax.plot(0, 0, color="k", linestyle=linestyles[3], label="GCC")
 
         ax.tick_params("x", pad=7)
-        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
+        #ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
+        ax.set_xlabel("$M_\mathrm{p}~[\mathrm{g}]$")   # for thesis
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -1971,7 +1985,8 @@ if "__main__" == __name__:
         ax.set_ylim(ymin, ymax)
 
         ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
-        ax1.set_xlabel("$m_\mathrm{p}~[M_\odot]$", labelpad=14)
+        #ax1.set_xlabel("$m_\mathrm{p}~[M_\odot]$", labelpad=14)
+        ax1.set_xlabel("$M_\mathrm{p}~[M_\odot]$", labelpad=14)   # for thesis
         ax1.tick_params("x")
 
         ax2 = ax.secondary_yaxis('right')
@@ -1997,7 +2012,7 @@ if "__main__" == __name__:
         prop_B_lower = False
         
         # If True, plot the constraints for a lognormal MF
-        plot_LN = False
+        plot_LN = True
         
         with_bkg_subtr = True
 
@@ -2011,19 +2026,19 @@ if "__main__" == __name__:
 
         linewidth = 1
         
-        fig, ax = plt.subplots(figsize=(6, 6))
+        fig, ax = plt.subplots(figsize=(5.5, 5.5))
 
         plotter_KP23(Deltas, Delta_index, ax, color=colors[2], linestyle=linestyles[0], linewidth=linewidth)
         if plot_LN:
             plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=LN, linestyle=linestyles[1], linewidth=linewidth)
         plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=SLN, linestyle=linestyles[2], linewidth=linewidth)
-        plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=CC3, linestyle=linestyles[3], linewidth=linewidth)
+        #plotter_KP23(Deltas, Delta_index, ax, color=colors[2], mf=CC3, linestyle=linestyles[3], linewidth=linewidth)
 
         plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=None, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower)
         if plot_LN:
             plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[1], linewidth=linewidth)
         plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[2], linewidth=linewidth)
-        plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[3], linewidth=linewidth)
+        #plotter_BC19(Deltas, Delta_index, ax, color=colors[0], mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[3], linewidth=linewidth)
                 
         xmin, xmax = 1e16, 5e23
         ymin, ymax = 1e-3, 1
@@ -2035,13 +2050,13 @@ if "__main__" == __name__:
         if plot_LN:
             plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=LN,  linestyle=linestyles[1], linewidth=linewidth, show_label=show_label_Subaru)
         plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=SLN, linestyle=linestyles[2], linewidth=linewidth, show_label=show_label_Subaru)
-        plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth, show_label=show_label_Subaru)
+        #plotter_Subaru_Croon20(Deltas, Delta_index, ax, color=colors[3], mf=CC3, linestyle=linestyles[3], linewidth=linewidth, show_label=show_label_Subaru)
 
         ax.plot(0, 0, color="k", linestyle=linestyles[0], label="Delta func.")
         if plot_LN:
             ax.plot(0, 0, color="k", linestyle=linestyles[1], label="LN")
         ax.plot(0, 0, color="k", linestyle=linestyles[2], label="SLN")
-        ax.plot(0, 0, color="k", linestyle=linestyles[3], label="GCC")
+        #ax.plot(0, 0, color="k", linestyle=linestyles[3], label="GCC")
 
         ax.tick_params("x", pad=7)
         ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
@@ -2059,9 +2074,8 @@ if "__main__" == __name__:
         ax2.set_yticklabels([])
 
         ax.legend(fontsize="xx-small", loc="lower center")
-        ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), pad=25)
-
         plt.tight_layout(pad=0.1)
+
 
 # %% Prospective constraints
 # Version showing constraints obtained using different observations in different colours, and using line style to distinguish between fitting functions.
@@ -2125,7 +2139,8 @@ if "__main__" == __name__:
         ax.plot(0, 0, color="k", linestyle=linestyles[3], label="GCC")
 
         ax.tick_params("x", pad=7)
-        ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
+        #ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
+        ax.set_xlabel("$M_\mathrm{p}~[\mathrm{g}]$", labelpad=14)   # thesis version
         ax.set_ylabel("$f_\mathrm{PBH}$")
         ax.set_xscale("log")
         ax.set_yscale("log")
@@ -2133,7 +2148,8 @@ if "__main__" == __name__:
         ax.set_ylim(ymin, ymax)
 
         ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
-        ax1.set_xlabel("$m_\mathrm{p}~[M_\odot]$", labelpad=14)
+        #ax1.set_xlabel("$m_\mathrm{p}~[M_\odot]$", labelpad=14)
+        ax1.set_xlabel("$M_\mathrm{p}~[M_\odot]$", labelpad=14)   # thesis version
         ax1.tick_params("x")
 
         ax2 = ax.secondary_yaxis('right')
@@ -2165,7 +2181,7 @@ if "__main__" == __name__:
 
     Delta_index = 6
     
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(5.5, 5.5))
 
     # Plot prospective extended MF constraints from the white dwarf microlensing survey proposed in Sugiyama et al. (2020) [1905.06066].
     NFW = True
@@ -2182,26 +2198,26 @@ if "__main__" == __name__:
     plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, linestyle=linestyles[0])
     if plot_LN:
         plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, mf=LN, linestyle=linestyles[1])
-    plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, mf=CC3, linestyle=linestyles[3])
+    #plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, mf=CC3, linestyle=linestyles[3])
     plotter_GECCO(Deltas, Delta_index, ax, color=colors[0], NFW=NFW, mf=SLN, linestyle=linestyles[2])
 
     plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], linestyle=linestyles[0], show_label=show_label)
+    plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=SLN, linestyle=linestyles[2], show_label=show_label)
     if plot_LN:
         plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=LN, linestyle=linestyles[1], show_label=show_label)
-    plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=CC3, linestyle=linestyles[3], show_label=show_label)
-    plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=SLN, linestyle=linestyles[2], show_label=show_label)
+    #plotter_Sugiyama(Deltas, Delta_index, ax, color=colors[1], mf=CC3, linestyle=linestyles[3], show_label=show_label)
 
     plotter_BC19(Deltas, Delta_index, ax, color="r", mf=None, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower)
+    plotter_BC19(Deltas, Delta_index, ax, color="r", mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[2])
     if plot_LN:
         plotter_BC19(Deltas, Delta_index, ax, color="r", mf=LN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[1])
-    plotter_BC19(Deltas, Delta_index, ax, color="r", mf=SLN, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[2])
-    plotter_BC19(Deltas, Delta_index, ax, color="r", mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[3])
+    #plotter_BC19(Deltas, Delta_index, ax, color="r", mf=CC3, prop_A=prop_A, with_bkg_subtr=with_bkg_subtr, prop_B_lower=prop_B_lower, linestyle=linestyles[3])
 
     ax.plot(0, 0, color="k", linestyle=linestyles[0], label="Delta func.")
     if plot_LN:
         ax.plot(0, 0, color="k", linestyle=linestyles[1], label="LN")
     ax.plot(0, 0, color="k", linestyle=linestyles[2], label="SLN")
-    ax.plot(0, 0, color="k", linestyle=linestyles[3], label="GCC")
+    #ax.plot(0, 0, color="k", linestyle=linestyles[3], label="GCC")
 
     ax.tick_params("x", pad=7)
     ax.set_xlabel("$m_\mathrm{p}~[\mathrm{g}]$")
@@ -2219,8 +2235,6 @@ if "__main__" == __name__:
     ax2.set_yticklabels([])
 
     ax.legend(fontsize="xx-small", loc=[0.25, 0.05])
-    ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), pad=25)
-
     plt.tight_layout(pad=0.1)
 
 
@@ -3115,7 +3129,7 @@ if "__main__" == __name__:
 
         # Load delta-function MF constraint from Boudaud & Cirelli (2019)
         m_delta_values_comparison, f_max_comparison = load_data_KP23(
-            Deltas=Deltas, Delta_index=0, mf=None, exponent_PL_lower=exponent_PL_lower)
+            Deltas=Deltas, Delta_index=0, mf=None)
 
     # Range of characteristic masses for obtaining constraints
     mc_Carr21 = np.logspace(14, 22, 1000)
@@ -3277,10 +3291,14 @@ if "__main__" == __name__:
     f_PBH_evolved_sigma1 = constraint_Carr(mc_Carr21, m_delta, f_max, LN, [sigmas[1]], evolved=True)
     if original:
         ax.plot(m_delta, f_max, color="k", label="Delta func.")
-        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
-        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
-        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm c}$")
-        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm c}$")
+        #ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm p}$")
+        #ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm p}$")
+        #ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm c}$")
+        #ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$m_{\rm c}$")
+        ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$M_{\rm p}$")   # thesis version
+        ax.plot(mc_Carr21 * np.exp(-sigmas[1]**2), f_PBH_evolved_sigma1, color=comp_color, linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$M_{\rm p}$")       # thesis version   
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma0, color="b", linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$M_{\rm c}$")   # thesis version
+        ax.plot(mc_Carr21, f_PBH_evolved_sigma1, color="b", linestyle="dotted", label="LN ($\sigma={:.0f}$), ".format(sigmas[1]) + r"$M_{\rm c}$")   # thesis version
     elif generic_mass:
         ax.plot(m_delta, f_max, color="k", label=r"Delta func., $m_{\rm x}=m$")
         ax.plot(mc_Carr21 * np.exp(-sigmas[0]**2), f_PBH_evolved_sigma0, color=comp_color, linestyle="solid", label="LN ($\sigma={:.1f}$), ".format(sigmas[0]) + r"$m_{\rm x} = m_{\rm p}$")
@@ -3317,7 +3335,8 @@ if "__main__" == __name__:
     if not text_on_plot:
         ax.legend(fontsize="xx-small", loc="upper left")
     if not generic_mass:
-        ax.set_xlabel(r"$m~[{\rm g}]$")
+        #ax.set_xlabel(r"$m~[{\rm g}]$")
+        ax.set_xlabel(r"$M~[{\rm g}]$")    # thesis version
     elif generic_mass:
         ax.set_xlabel(r"$m_{\rm x}~[{\rm g}]$")
     fig.tight_layout(pad=0.3)
@@ -3436,3 +3455,44 @@ if "__main__" == __name__:
              f_max_A22, color="k", label="Auffinger '22")
     ax4.legend(fontsize="x-small")
     ax4.set_ylabel("$\psi_\mathrm{N}/f_\mathrm{max}~[\mathrm{g}^{-1}]$")
+
+#%%
+
+x = np.arange(0, 10.1, 1)
+y = x**2
+
+def secondary_x_axis(x):
+    
+    y_values = []
+    
+    for x_value in x:
+        if x_value < 3:
+            y_values.append("a")
+        elif x_value < 7:
+            y_values.append("b")
+        else:
+            y_values.append(x) 
+    
+    return y_values
+    
+def inverse_function(y):
+    
+    x_values = []
+    for y_value in y_values:
+        if y_value == "a":
+            x_values.append(3.5)
+        elif y_value == "b":
+            x_values.append(5.5)
+        else:
+            x_values.append(y_value)
+            
+    return x_values
+
+fig, ax = plt.subplots(figsize=(5,5))    
+ax.plot(x, y)
+ax.set_xlabel("x")
+ax.set_ylabel("y")
+
+ax1 = ax.secondary_xaxis('top', functions=(secondary_x_axis, inverse_function))
+ax1.set_xlabel("secondary x axis")
+ax1.tick_params("x")
