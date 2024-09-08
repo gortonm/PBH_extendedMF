@@ -1934,9 +1934,9 @@ if "__main__" == __name__:
 
     linewidth = 1
 
-    if len(Delta_indices) == 4:
-        plt.figure(figsize=(12, 12))
-        ax0 = plt.subplot(2, 2, 1)
+    if len(Delta_indices) == 3:   # for thesis
+        plt.figure(figsize=(10, 12))   # for thesis
+        ax = plt.subplot(2, 2, 1)   # for thesis
 
     elif len(Delta_indices) == 3:
         plt.figure(figsize=(14, 5.5))
@@ -1944,7 +1944,7 @@ if "__main__" == __name__:
 
     for axis_index, Delta_index in enumerate(Delta_indices):
 
-        if len(Delta_indices) == 4:
+        if len(Delta_indices) == 3:
             ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
         elif len(Delta_indices) == 3:
             ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
@@ -1992,15 +1992,20 @@ if "__main__" == __name__:
         ax2 = ax.secondary_yaxis('right')
         ax2.set_yticklabels([])
 
+        """
         if Deltas[Delta_index] in (1, 2):
             ax.legend(fontsize="xx-small", loc="lower center")
-
+        """
+        if Deltas[Delta_index] == 5:
+            ax.legend(loc=[1.4, 0.3])   # for thesis
+        
         ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), pad=25)
 
-    plt.tight_layout(pad=0.1)
-    plt.subplots_adjust(wspace=0.3)
-    
-    
+    #plt.tight_layout(pad=0.1)
+    #plt.subplots_adjust(wspace=0.3)
+    plt.subplots_adjust(wspace=0.35, hspace=0.9)   # for thesis
+    plt.savefig("constraints_existing.pdf")
+  
     # %% Existing constraints (talk version)
     # Version showing constraints obtained using different observations in different colours, and using line style to distinguish between fitting functions.
 
@@ -2074,6 +2079,7 @@ if "__main__" == __name__:
         ax2.set_yticklabels([])
 
         ax.legend(fontsize="xx-small", loc="lower center")
+        
         plt.tight_layout(pad=0.1)
 
 
@@ -2091,9 +2097,9 @@ if "__main__" == __name__:
 
     Delta_indices = [0, 5, 6]
 
-    if len(Delta_indices) == 4:
-        plt.figure(figsize=(12, 12))
-        ax0 = plt.subplot(2, 2, 1)
+    if len(Delta_indices) == 3:   # for thesis
+        plt.figure(figsize=(10, 12))   # for thesis
+        ax = plt.subplot(2, 2, 1)   # for thesis
 
     elif len(Delta_indices) == 3:
         plt.figure(figsize=(14, 5.5))
@@ -2101,7 +2107,7 @@ if "__main__" == __name__:
 
     for axis_index, Delta_index in enumerate(Delta_indices):
 
-        if len(Delta_indices) == 4:
+        if len(Delta_indices) == 3:   # for thesis
             ax = plt.subplot(2, 2, axis_index + 1, sharex=ax)
         elif len(Delta_indices) == 3:
             ax = plt.subplot(1, 3, axis_index + 1, sharex=ax)
@@ -2154,14 +2160,19 @@ if "__main__" == __name__:
 
         ax2 = ax.secondary_yaxis('right')
         ax2.set_yticklabels([])
-
+        """
         if Deltas[Delta_index] in (1, 2):
             ax.legend(fontsize="xx-small", loc=[0.21, 0.05])
-
+        """
+        if Deltas[Delta_index] == 5:
+            ax.legend(loc=[1.4, 0.3])   # for thesis
+        
         ax.set_title("$\Delta={:.0f}$".format(Deltas[Delta_index]), pad=25)
 
-    plt.tight_layout(pad=0.1)
-    plt.subplots_adjust(wspace=0.3)
+    #plt.tight_layout(pad=0.1)
+    #plt.subplots_adjust(wspace=0.3)
+    plt.subplots_adjust(wspace=0.35, hspace=0.9)   # for thesis
+    plt.savefig("constraints_prospective.pdf")
 
 
 # %% Prospective constraints (talk version)
