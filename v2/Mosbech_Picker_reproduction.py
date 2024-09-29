@@ -373,6 +373,24 @@ if "__main__" == __name__:
     ax.legend(fontsize="small")
     fig.tight_layout()
     
+    # Plot derivative of alpha_eff (calculated approximately)
+    alpha_eff_extracted_values = alpha_eff_extracted(m_pbh_values_formation_wide)
+    derivative_approx = np.diff(alpha_eff_extracted_values) / np.diff(m_pbh_values_formation_wide)
+    
+    # = ħ * c^4 / G^2 in units of g^3 / s
+    prefactor = 1.912e29
+    t_0 = 13.7e9 * 365.25 * 86400  # age of Universe, in s
+    
+    fig, ax = plt.subplots(figsize=(6, 5))
+    ax.plot(m_pbh_values_formation_wide[:-1], prefactor*t_0*np.abs(derivative_approx)/np.power(m_pbh_values_formation_wide[:-1], 2), linestyle="None", marker="x")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlabel(r"Formation mass ${M_0} \, [{\rm g}]$")
+    ax.set_ylabel(r"$\frac{\hbar c^4}{G^2}|\frac{{\rm d}\alpha_\mathrm{eff}}{\rm{d}M_0}| / {M_0}^2$")
+    ax.legend(fontsize="small")
+    fig.tight_layout()
+
+    
     # Plot the present mass against formation mass
     fig, ax = plt.subplots(figsize=(6, 6))
     m_pbh_values_formation_plot = np.logspace(np.log10(5e14), 16, 500)
