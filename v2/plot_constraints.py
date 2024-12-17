@@ -3093,6 +3093,72 @@ if "__main__" == __name__:
     fig.tight_layout()
 
 
+# %% Plot the constraints shown in Fig. 20 of Carr et al. (2021) [2002.12778] (for thesis)
+
+if "__main__" == __name__:
+
+    fig, ax = plt.subplots(figsize=(6, 5.5))
+    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
+
+    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    
+    m_delta_values_Fig20, f_max_Fig20 = load_data("2002.12778/Subaru-HSC_2002.12778_mono.csv")
+    ax.plot(m_delta_values_Fig20 * 1.989e33, f_max_Fig20, color="k")
+
+    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded,color="k", label="Delta func.")
+    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="b", label=r"LN ($\sigma=2$), $M_{\rm c}$")
+
+    # Microlensing constraints from Smyth & Profumo (2019)
+    mc_values_Fig20, f_PBH_Fig20 = load_data("2002.12778/Subaru-HSC_2002.12778_LN.csv")    
+    ax.plot(mc_values_Fig20 * 1.989e33, f_PBH_Fig20, color="b")
+   
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xlabel(r"$M \, [\mathrm{g}]$", labelpad=14)
+    ax1.set_xlabel(r"$M \, [M_\odot]$", labelpad=14)
+    ax.legend(fontsize="xx-small")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e16, 5e25)
+    ax.set_ylim(1e-3, 1)
+    ax.tick_params(pad=7, which="both")
+    fig.tight_layout(pad=0.3)
+
+# %% Plot the constraints shown in Fig. 20 of Carr et al. (2021) [2002.12778] (for thesis, other version)
+
+if "__main__" == __name__:
+
+    fig, ax = plt.subplots(figsize=(5.5, 5.7))
+    ax1 = ax.secondary_xaxis('top', functions=(g_to_Solmass, Solmass_to_g))
+    
+    m_delta_values_loaded, f_max_loaded = load_data("./2002.12778/Carr+21_mono_RH.csv")
+    mc_LN_values_loaded, f_PBH_loaded = load_data("./2002.12778/Carr+21_Gamma_ray_LN_RH.csv")
+    
+    ax.plot(0, 0, color="k", label="Delta func.")
+    ax.plot(0, 0, color="k", linestyle="dotted", label=r"LN ($\sigma=2$), $M_{\rm c}$")
+    
+    ax.plot(m_delta_values_loaded * 1.989e33, f_max_loaded,color="purple")
+    ax.plot(mc_LN_values_loaded * 1.989e33, f_PBH_loaded, color="purple", linestyle="dotted")
+
+    # Microlensing constraints from Smyth & Profumo (2019)
+    
+    m_delta_values_Fig20, f_max_Fig20 = load_data("2002.12778/Subaru-HSC_2002.12778_mono.csv")
+    mc_values_Fig20, f_PBH_Fig20 = load_data("2002.12778/Subaru-HSC_2002.12778_LN.csv")    
+    ax.plot(m_delta_values_Fig20 * 1.989e33, f_max_Fig20, color="b")
+    ax.plot(mc_values_Fig20 * 1.989e33, f_PBH_Fig20, color="b", linestyle="dotted")
+   
+    ax.set_ylabel("$f_\mathrm{PBH}$")
+    ax.set_xlabel(r"$M \, [\mathrm{g}]$", labelpad=14)
+    ax1.set_xlabel(r"$M \, [M_\odot]$", labelpad=14)
+    ax.legend(fontsize="xx-small")
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e16, 2e25)
+    ax.set_ylim(1e-3, 1)
+    ax.tick_params(pad=7, which="both")
+    fig.tight_layout(pad=0.3)
+
+
 # %% Plot extended MF constraints shown in Fig. 20 of 2002.12778 on the same axes as in that figure.
 
 if "__main__" == __name__:
