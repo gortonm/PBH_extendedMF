@@ -386,7 +386,7 @@ if "__main__" == __name__:
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel(r"Formation mass ${M_0} \, [{\rm g}]$")
-    ax.set_ylabel(r"$\frac{\hbar c^4}{G^2}|\frac{{\rm d}\alpha_\mathrm{eff}}{\rm{d}M_0}| / {M_0}^2$")
+    ax.set_ylabel(r"$\frac{\hbar c^4}{G^2}|\frac{{\rm d}\alpha_\mathrm{eff}}{\rm{d}M_0}| t_0/ {M_0}^2$")
     ax.legend(fontsize="small")
     fig.tight_layout()
 
